@@ -321,25 +321,25 @@ For SDR, this becomes extremely useful because a complex sample can represent bo
 Introduce:
 
 $$
-z=I+jQ
+z = I + jQ
 $$
 
 Magnitude:
 
 $$
-|z|=\sqrt{I^2+Q^2}
+|z| = \sqrt{I^2 + Q^2}
 $$
 
 Phase:
 
 $$
-\theta=\operatorname{atan2}(Q,I)
+\theta = \mathrm{atan2}(Q,I)
 $$
 
 Then gradually introduce:
 
 $$
-e^{j\theta}=\cos(\theta)+j\sin(\theta)
+e^{j\theta} = \cos(\theta) + j\sin(\theta)
 $$
 
 ## GNU Radio Experiment
