@@ -1,19 +1,32 @@
 # SDR with GNU Radio: Chapter Plan
 
-## Purpose of This Book
+**Version 0.2**
 
-This book introduces Software Defined Radio from the ground up using simple explanations, visual intuition, essential mathematics, and hands-on GNU Radio experiments.
+---
 
-The aim is not just to teach the reader how to connect GNU Radio blocks.
+# Purpose of This Book
 
-The reader should understand **why the blocks are there, what happens to the signal inside them, and what goes wrong when they are configured incorrectly**.
+This book introduces Software Defined Radio from the ground up.
 
-Each chapter therefore develops two things in parallel:
+The aim is not to teach GNU Radio by asking the reader to copy flowgraphs, and it is not to teach SDR by beginning with pages of equations.
 
-1. **SDR and signal-processing understanding**
-2. **Practical GNU Radio skills**
+Instead, we will try to understand what is actually happening to a signal.
 
-The book begins with simple software-generated signals. Real SDR hardware is introduced only after the reader understands the fundamental ideas behind the processing chain.
+Whenever possible, a new idea will begin with a question, a simple example, or a problem that needs to be solved. We will build the intuition first, use figures and numerical examples where they help, and then introduce the mathematics needed to describe the idea properly.
+
+GNU Radio will be our laboratory.
+
+We will use it to:
+
+- generate signals
+- look at signals in different ways
+- change parameters while the system is running
+- test our predictions
+- deliberately create problems
+- understand why those problems occur
+- build increasingly realistic transmitters and receivers
+
+By the end of the book, the reader should be able to look at an SDR problem and think about what needs to happen to the signal before deciding which GNU Radio blocks to use.
 
 ---
 
@@ -29,74 +42,78 @@ What makes a radio "software defined"?
 
 ## Concepts
 
-* What a radio actually does
-* Traditional hardware radio
-* Software Defined Radio
-* Analog and digital processing
-* Basic transmitter chain
-* Basic receiver chain
-* RF front end
-* ADC and DAC
-* Baseband processing
-* Why SDR is useful
-* What GNU Radio is
-* Where GNU Radio fits into an SDR system
+- What a radio actually does
+- Traditional hardware radio
+- Software Defined Radio
+- Analog and digital signal processing
+- Basic transmitter
+- Basic receiver
+- RF front end
+- ADC
+- DAC
+- Baseband processing
+- Why SDR is useful
+- What GNU Radio is
+- Where GNU Radio fits into an SDR system
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
 A radio is fundamentally a chain of operations performed on signals.
 
-In a traditional radio, many of these operations are performed by dedicated hardware.
+Traditional radios perform many of those operations using dedicated hardware.
 
-In an SDR, many of them can be performed digitally in software.
+An SDR moves many of them into the digital domain, where software can perform and change the processing.
 
-GNU Radio gives us a way to build and experiment with those processing chains.
+GNU Radio gives us a practical way to build those signal-processing chains.
 
 ## Mathematics
 
-Very little mathematics is required.
+Keep mathematics very light.
 
-Introduce only the idea of representing a sinusoidal signal as:
+Introduce a sinusoidal signal only as an example of how a signal can be described:
 
 $$
 x(t)=A\cos(2\pi ft+\phi)
 $$
 
-The equation is introduced as a description of a signal rather than something to derive.
+There is no need to derive this yet.
 
 ## GNU Radio Experiment
 
-Build the reader's first flowgraph:
+Build the first flowgraph:
 
+```text
 Signal Source → Throttle → QT GUI Time Sink
+```
 
-Generate a simple sinusoidal signal and observe it.
-
-## Expected Observation
-
-The reader sees a waveform that previously existed only as an equation become visible inside GNU Radio.
+Generate a sinusoid and observe it.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* GNU Radio Companion
-* Flowgraphs
-* Blocks
-* Connections
-* Source blocks
-* Sink blocks
-* Run and Stop
-* Block properties
-* Basic data flow
+- GNU Radio Companion
+- block library
+- blocks
+- connections
+- source blocks
+- sink blocks
+- block properties
+- Run
+- Stop
+- basic flowgraph errors
 
-## Break-the-Flowgraph Idea
+Briefly point out that GNU Radio ports have different colours, without explaining data types in detail yet.
 
-Disconnect a block, change incompatible settings, or remove an essential connection and observe how GNU Radio reports problems.
+## Now Break the Flowgraph
+
+- Disconnect a block
+- Leave an important parameter invalid
+- Observe how GNU Radio reports a problem
 
 ## Leads Into
 
-Understanding signals themselves.
+What signals actually are.
 
 ---
 
@@ -108,24 +125,28 @@ What exactly is a signal?
 
 ## Concepts
 
-* Signals as information
-* Time-domain representation
-* Amplitude
-* Frequency
-* Period
-* Phase
-* DC offset
-* Sinusoids
-* Multiple signals
-* Adding signals
-* Waveform shape
-* Basic distinction between continuous-time and discrete-time signals
+- Signals as information
+- Time-domain representation
+- Amplitude
+- Frequency
+- Period
+- Phase
+- DC offset
+- Sinusoids
+- Multiple signals
+- Adding signals
+- Waveform shape
+- Continuous-time and discrete-time signals
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-A signal is simply a quantity that changes and carries information.
+A signal is a quantity that changes and carries information.
 
-Amplitude tells us "how much," frequency tells us "how fast," and phase tells us "where in the cycle."
+Amplitude tells us how large the signal is.
+
+Frequency tells us how quickly it repeats.
+
+Phase tells us where it is in its cycle.
 
 ## Mathematics
 
@@ -135,46 +156,44 @@ $$
 T=\frac{1}{f}
 $$
 
-and
+and revisit:
 
 $$
 x(t)=A\cos(2\pi ft+\phi)
 $$
 
-Use plots to show what happens when (A), (f), and (\phi) are changed independently.
+Use numerical examples instead of leaving the expressions abstract.
 
 ## GNU Radio Experiment
 
-Create an interactive signal generator.
+Generate a sinusoid.
 
-Use GUI controls to change:
+Change:
 
-* amplitude
-* frequency
-* phase
+- amplitude
+- frequency
+- phase
+- offset
 
-Observe the results in real time.
-
-Then add two sinusoidal signals together.
-
-## Expected Observation
-
-The reader directly sees how amplitude, frequency, and phase affect a waveform.
+Then generate two signals and add them.
 
 ## GNU Radio Direction
 
 Introduce or expand:
 
-* Signal Source
-* Throttle
-* QT GUI Time Sink
-* Variables
-* Add block
-* Basic QT GUI controls
+- Signal Source
+- Throttle
+- QT GUI Time Sink
+- Variable
+- Add
+- Time Sink display controls
+- multiple signal paths
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Set unusual amplitudes, frequencies, phases, and offsets and predict what the Time Sink should display.
+Use unusual values for amplitude, frequency, phase and offset.
+
+Before running the flowgraph, predict what should happen.
 
 ## Leads Into
 
@@ -182,34 +201,33 @@ Sampling.
 
 ---
 
-# Chapter 3: Sampling: How a Computer Sees a Signal
+# Chapter 3: Sampling and Aliasing
 
 ## Main Question
 
-How can a computer represent a continuous waveform using only numbers?
+How does a computer see a continuous signal?
 
 ## Concepts
 
-* Continuous signals
-* Discrete samples
-* Sampling
-* Sampling frequency
-* Sampling period
-* Samples per cycle
-* Nyquist criterion
-* Nyquist frequency
-* Undersampling
-* Aliasing
-* Apparent frequency
-* Why sample rate matters in SDR
+- Continuous signals
+- Samples
+- Discrete-time signals
+- Sampling frequency
+- Sampling period
+- Samples per cycle
+- Nyquist criterion
+- Nyquist frequency
+- Undersampling
+- Aliasing
+- Apparent frequency
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-GNU Radio does not see a smooth continuous waveform.
+A computer does not see the smooth curve we draw on paper.
 
-It processes a sequence of samples.
+It sees individual numbers taken at particular moments.
 
-If those samples are taken incorrectly, two different analog signals can become indistinguishable after sampling.
+If those measurements are taken too slowly, different analog signals can produce the same sequence of samples.
 
 ## Mathematics
 
@@ -225,53 +243,50 @@ $$
 N=\frac{f_s}{f}
 $$
 
-Nyquist criterion:
+Then introduce the Nyquist criterion:
 
 $$
 f_s>2f_{\max}
 $$
 
-Introduce aliasing mathematically only after it has been demonstrated visually.
+Only introduce aliasing mathematically after the reader has seen it.
 
 ## GNU Radio Experiment
 
 Generate a fixed-frequency sinusoid.
 
-Gradually change the sample rate while observing the waveform.
+Gradually reduce the sample rate.
 
-Example sequence:
+Observe both the Time Sink and Frequency Sink.
 
-48 kHz → 10 kHz → 4 kHz → 2.5 kHz → 2 kHz → 1.5 kHz → 1 kHz → 500 Hz
+Distinguish carefully between:
 
-## Expected Observation
-
-The waveform gradually becomes poorly represented and eventually appears as another frequency or an apparently stationary pattern.
+- having only a few samples per cycle
+- poor-looking waveform reconstruction
+- reaching the Nyquist boundary
+- actual aliasing
 
 ## GNU Radio Direction
 
 Introduce:
 
-* QT GUI Range
-* Runtime parameter adjustment
-* Sample-rate variables
-* Relationship between block parameters
-* Time Sink sample rate
-* Frequency Sink introduction
-* Why software-only flowgraphs use Throttle
+- QT GUI Range
+- runtime parameter control
+- sample-rate variables
+- QT GUI Frequency Sink lightly
+- sample-rate relationships
+- Throttle in greater depth
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Deliberately violate Nyquist.
-
-Remove Throttle.
-
-Use inconsistent sample-rate variables.
-
-Observe what changes and what does not.
+- Violate Nyquist deliberately
+- Try special relationships such as signal frequency equal to sample rate
+- Remove Throttle
+- Use inconsistent sample-rate values
 
 ## Leads Into
 
-Discrete-time signals and complex signal representation.
+The numbers GNU Radio uses to represent signals.
 
 ---
 
@@ -279,26 +294,27 @@ Discrete-time signals and complex signal representation.
 
 ## Main Question
 
-Why does radio engineering use imaginary numbers to describe real signals?
+Why would a radio need imaginary numbers to describe a real signal?
 
 ## Concepts
 
-* Real numbers
-* Imaginary numbers
-* Complex numbers
-* Real and imaginary components
-* Complex plane
-* Magnitude
-* Phase
-* Euler's formula
-* Rotating vectors
-* Complex exponential
+- Real numbers
+- Imaginary numbers
+- Complex numbers
+- Real component
+- Imaginary component
+- Complex plane
+- Magnitude
+- Phase
+- Euler's formula
+- Complex exponential
+- Rotating-vector interpretation
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-Complex numbers give us a convenient way to describe both amplitude and phase at the same time.
+A complex number gives us a convenient way to keep two related quantities together.
 
-They are not imaginary in the everyday sense. They are a mathematical representation that makes radio signals much easier to process.
+For SDR, this becomes extremely useful because a complex sample can represent both magnitude and phase information.
 
 ## Mathematics
 
@@ -308,53 +324,54 @@ $$
 z=I+jQ
 $$
 
+Magnitude:
+
 $$
 |z|=\sqrt{I^2+Q^2}
 $$
 
-$$
-\theta=\tan^{-1}\left(\frac{Q}{I}\right)
-$$
-
-and eventually:
+Phase:
 
 $$
-e^{j\theta}=\cos\theta+j\sin\theta
+\theta=\operatorname{atan2}(Q,I)
+$$
+
+Then gradually introduce:
+
+$$
+e^{j\theta}=\cos(\theta)+j\sin(\theta)
 $$
 
 ## GNU Radio Experiment
 
-Generate real and complex signals.
+Generate real and complex samples.
 
-Separate a complex signal into its real and imaginary components and display both.
+Separate a complex signal into its real and imaginary components.
 
-## Expected Observation
-
-The reader sees that a complex signal contains two related streams of information.
+Display both.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* GNU Radio data types
-* Float streams
-* Complex streams
-* Float to Complex
-* Complex to Real
-* Complex to Imag
-* Data-type colours and port compatibility
+- GNU Radio data types
+- Float
+- Complex
+- Float to Complex
+- Complex to Real
+- Complex to Imag
+- port colours
+- type compatibility
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Attempt incompatible data-type connections.
-
-Remove one component of the complex signal.
-
-Swap real and imaginary inputs.
+- Connect incompatible types
+- Swap real and imaginary components
+- Remove one component
 
 ## Leads Into
 
-I/Q representation.
+I and Q.
 
 ---
 
@@ -366,78 +383,69 @@ Why do SDR receivers represent signals using I and Q?
 
 ## Concepts
 
-* In-phase component
-* Quadrature component
-* 90-degree relationship
-* Complex baseband
-* Rotating-vector interpretation
-* Magnitude
-* Phase
-* Positive rotation
-* Negative rotation
-* Why SDR hardware produces IQ samples
+- In-phase component
+- Quadrature component
+- 90-degree relationship
+- Complex baseband
+- Magnitude
+- Phase
+- Complex rotation
+- Positive and negative rotation
+- Why SDR hardware produces IQ samples
 
-## Intuition We Want the Reader to Leave With
+## Important Connection
 
-I and Q allow the receiver to preserve information about both the magnitude and phase of a signal.
-
-Together they allow us to distinguish rotations that a single real waveform cannot distinguish.
-
-## Mathematics
-
-Develop:
+The real and imaginary components from the previous chapter now receive their radio names:
 
 $$
 x[n]=I[n]+jQ[n]
 $$
 
-and connect this representation to the complex exponential.
+## Intuition We Want to Build
+
+I and Q are not two unrelated signals.
+
+Together they describe one complex signal.
+
+This representation lets us preserve information that would be lost if we kept only a single real waveform.
 
 ## GNU Radio Experiment
 
-Construct I and Q signals separately.
+Generate I and Q separately.
 
 Combine them into a complex stream.
 
 Display:
 
-* I versus time
-* Q versus time
-* complex spectrum
-* constellation
-
-## Expected Observation
-
-I and Q appear as sinusoidal components separated by 90 degrees.
-
-Together they form a rotating complex vector.
+- I against time
+- Q against time
+- magnitude
+- phase
+- constellation
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Complex Signal Source
-* Float to Complex
-* Complex to Mag
-* Complex to Arg
-* QT GUI Constellation Sink
-* Multiple GUI sinks
+- Signal Source configured for Complex output
+- Float to Complex
+- Complex to Mag
+- Complex to Arg
+- QT GUI Constellation Sink
+- multiple GUI views
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Make I and Q identical.
+- Make I and Q identical
+- Set Q to zero
+- Reverse Q
+- Change their phase relationship
 
-Change the phase relationship from 90 degrees.
-
-Reverse Q.
-
-Set Q to zero.
-
-Observe what happens to the constellation and spectrum.
+Observe what happens to the complex signal.
 
 ## Leads Into
 
-Frequency-domain analysis.
+Looking inside signals using frequency.
 
 ---
 
@@ -449,33 +457,27 @@ Frequency-domain analysis.
 
 ## Main Question
 
-How can we discover which frequencies are hidden inside a waveform?
+How can several frequencies exist inside one waveform?
 
 ## Concepts
 
-* Time domain
-* Frequency domain
-* Sinusoidal decomposition
-* Fourier transform intuition
-* Discrete Fourier Transform
-* FFT
-* FFT bins
-* Frequency resolution
-* Magnitude spectrum
-* Windowing
-* Spectral leakage
+- Time domain
+- Frequency domain
+- Sinusoidal decomposition
+- Fourier transform intuition
+- DFT
+- FFT
+- FFT bins
+- Frequency resolution
+- Magnitude spectrum
+- Windowing
+- Spectral leakage
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-A complicated waveform can often be understood as a combination of simpler sinusoidal components.
+The time-domain waveform and frequency-domain spectrum are two different views of the same signal.
 
-The FFT gives us another way to look at exactly the same signal.
-
-## Mathematics
-
-Introduce the Fourier/DFT idea gradually.
-
-Focus first on interpretation rather than derivation.
+A complicated-looking waveform may simply be several sinusoids added together.
 
 ## GNU Radio Experiment
 
@@ -483,35 +485,40 @@ Generate several tones.
 
 Add them together.
 
-Observe the combined waveform in the Time Sink and individual components in the Frequency Sink.
+Observe the same signal using:
 
-Change FFT size and window settings.
+- Time Sink
+- Frequency Sink
+
+Then experiment with:
+
+- FFT size
+- frequency resolution
+- window functions
 
 ## GNU Radio Direction
 
-Introduce:
+Introduce in depth:
 
-* QT GUI Frequency Sink in depth
-* FFT size
-* FFT averaging
-* Window functions
-* Frequency axis
-* dB scale
-* Update rate
+- QT GUI Frequency Sink
+- FFT size
+- FFT averaging
+- window functions
+- dB scale
+- frequency axis
+- Waterfall Sink
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Use a poor FFT size.
+Create spectral leakage deliberately.
 
-Choose frequencies that do not align with FFT bins.
+Use poor FFT resolution.
 
-Disable or change windowing.
-
-Observe spectral leakage.
+Compare different windows.
 
 ## Leads Into
 
-Positive and negative frequency.
+Positive and negative frequencies.
 
 ---
 
@@ -523,21 +530,20 @@ What does a negative frequency actually mean?
 
 ## Concepts
 
-* Positive frequency
-* Negative frequency
-* Direction of complex rotation
-* Real cosine spectrum
-* Spectral symmetry
-* Complex exponential
-* One-sided complex tones
-* Relationship to IQ
-* Frequency relative to a local oscillator
+- Positive frequency
+- Negative frequency
+- Direction of complex rotation
+- Real cosine spectrum
+- Spectral symmetry
+- Complex exponential
+- One-sided complex tones
+- Frequencies relative to a reference
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-Negative frequency does not mean that a physical electromagnetic wave is travelling backward.
+Negative frequency does not mean that an electromagnetic wave is travelling backward.
 
-It describes the opposite direction of rotation in the complex plane and becomes extremely useful when representing frequencies relative to a reference.
+It describes the opposite direction of rotation in the complex plane.
 
 ## Mathematics
 
@@ -545,8 +551,7 @@ Compare:
 
 $$
 \cos(2\pi ft)
-=============
-
+=
 \frac{1}{2}e^{j2\pi ft}
 +
 \frac{1}{2}e^{-j2\pi ft}
@@ -560,30 +565,23 @@ $$
 
 ## GNU Radio Experiment
 
-Compare the FFT of:
+Compare the spectra of:
 
-* a real cosine
-* a positive complex tone
-* a negative complex tone
+- a real cosine
+- a positive complex tone
+- a negative complex tone
 
 ## Expected Observation
 
-The real cosine produces symmetric components at (+f) and (-f).
+A real cosine contains symmetric components at positive and negative frequencies.
 
-A complex tone can produce only one spectral component.
+A complex tone can contain only one of them.
 
-## GNU Radio Direction
+## Now Break the Flowgraph
 
-Reinforce:
+Convert the complex tone to a real signal.
 
-* Float versus Complex signals
-* Frequency Sink interpretation
-* Complex Signal Source
-* Spectrum centre
-
-## Break-the-Flowgraph Idea
-
-Convert the complex signal to real and observe the missing spectral component reappear as a mirror.
+Observe the mirror component appear.
 
 ## Leads Into
 
@@ -591,7 +589,7 @@ Noise and real-world signals.
 
 ---
 
-# Chapter 8: Noise and Signal-to-Noise Ratio
+# Chapter 8: Noise, Power and SNR
 
 ## Main Question
 
@@ -599,21 +597,23 @@ Why do real signals never look perfectly clean?
 
 ## Concepts
 
-* Noise
-* Random signals
-* White noise
-* Gaussian noise
-* Noise floor
-* Signal power
-* Noise power
-* SNR
-* SNR in dB
-* Detectability
-* Dynamic range
+- Noise
+- Random signals
+- Gaussian noise
+- White noise
+- Noise floor
+- Signal power
+- Noise power
+- SNR
+- Decibels
+- Detectability
+- Dynamic range
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-Noise is not simply an ugly waveform added to a signal. It determines how reliably information can be detected and recovered.
+Noise is not simply an ugly waveform added to our signal.
+
+It determines how reliably we can detect and recover information.
 
 ## Mathematics
 
@@ -623,40 +623,46 @@ $$
 \mathrm{SNR}=\frac{P_s}{P_n}
 $$
 
-and
+and:
 
 $$
-\mathrm{SNR}*{dB}=10\log*{10}\left(\frac{P_s}{P_n}\right)
+\mathrm{SNR}_{dB}
+=
+10\log_{10}
+\left(
+\frac{P_s}{P_n}
+\right)
 $$
 
 ## GNU Radio Experiment
 
-Generate a tone and add adjustable Gaussian noise.
-
-Gradually increase the noise level.
+Add adjustable Gaussian noise to a sinusoid.
 
 Observe the signal in:
 
-* Time Sink
-* Frequency Sink
+- time
+- frequency
+
+Later construct a proper signal/noise power measurement rather than treating Number Sink as an automatic SNR meter.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Noise Source
-* Add
-* Multiply Const
-* QT GUI Range for noise control
-* Number Sink where useful
+- Noise Source
+- Multiply Const
+- Number Sink where useful
+- averaging
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Gradually bury the signal below the visible noise floor and investigate whether it can still be identified in the spectrum.
+Gradually bury the signal in noise.
+
+Ask when it becomes difficult to identify in time and frequency.
 
 ## Leads Into
 
-Mixing and frequency translation.
+Moving signals around the spectrum.
 
 ---
 
@@ -672,53 +678,55 @@ How does a radio move a signal from one frequency to another?
 
 ## Concepts
 
-* Mixer
-* Local oscillator
-* Frequency translation
-* Upconversion
-* Downconversion
-* Sum and difference frequencies
-* Complex mixing
-* Baseband
-* Frequency offset
+- Mixer
+- Local oscillator
+- Frequency translation
+- Upconversion
+- Downconversion
+- Sum frequency
+- Difference frequency
+- Real mixing
+- Complex mixing
+- Baseband
+- Frequency offset
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-Mixing does not destroy the information in a signal. It moves that information to another part of the spectrum.
+Mixing moves information from one part of the spectrum to another.
 
-## Mathematics
+Real and complex mixing do not behave in exactly the same way.
 
-Introduce multiplication identities and complex multiplication.
+## GNU Radio Experiment 1: Real Mixing
 
-## GNU Radio Experiment
+Multiply a real signal by a real local oscillator.
 
-Multiply a signal by a local oscillator.
+Observe the sum and difference frequencies.
 
-Watch the spectrum move as the LO frequency changes.
+## GNU Radio Experiment 2: Complex Mixing
 
-Then demonstrate complex downconversion.
+Repeat the experiment using complex signals.
+
+Observe how complex mixing can translate the spectrum in one direction.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Multiply
-* Multiply Conjugate where appropriate
-* Complex oscillators
-* Frequency translation
-* Runtime LO control
+- Multiply
+- complex oscillators
+- runtime LO control
+- frequency translation
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Mistune the LO deliberately.
-
-Place the signal above and below the LO.
-
-Observe positive and negative baseband frequencies.
+- Mistune the LO
+- Place the signal above the LO
+- Place it below the LO
+- Reverse the complex LO
 
 ## Leads Into
 
-Filtering.
+Channel selection and filtering.
 
 ---
 
@@ -730,27 +738,24 @@ How can a receiver keep the signal it wants and reject everything else?
 
 ## Concepts
 
-* Filtering
-* Low-pass filter
-* High-pass filter
-* Band-pass filter
-* Band-stop filter
-* Cutoff frequency
-* Transition bandwidth
-* Passband
-* Stopband
-* Filter order
-* FIR filters
-* Basic IIR idea
-* Channel selection
+- Filtering
+- Low-pass filter
+- High-pass filter
+- Band-pass filter
+- Band-stop filter
+- Cutoff frequency
+- Transition bandwidth
+- Passband
+- Stopband
+- FIR filters
+- Filter order
+- Channel selection
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-A filter does not simply "remove noise." It selectively changes different frequency components.
+A filter does not simply "remove noise."
 
-## Mathematics
-
-Introduce frequency response and filter taps at an intuitive level.
+It changes different parts of the spectrum by different amounts.
 
 ## GNU Radio Experiment
 
@@ -758,102 +763,102 @@ Generate several signals at different frequencies.
 
 Add them together.
 
-Use filters to select or reject individual components.
+Use filters to keep or remove selected components.
+
+Observe the signal before and after filtering.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Low Pass Filter
-* High Pass Filter
-* Band Pass Filter
-* Band Reject Filter
-* FIR taps
-* Filter design parameters
-* QT GUI Frequency Sink before and after filtering
+- Low Pass Filter
+- High Pass Filter
+- Band Pass Filter
+- Band Reject Filter
+- filter taps
+- filter windows
+- decimation
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Use the wrong cutoff frequency.
-
-Use an extremely narrow transition band.
-
-Change decimation unexpectedly.
-
-Observe both signal quality and computational effects.
+- Use the wrong cutoff
+- Use an unrealistic transition width
+- use the wrong sample rate
+- change decimation unexpectedly
 
 ## Leads Into
 
-Convolution and impulse response.
+What a filter is actually doing to the signal.
 
 ---
 
-# Chapter 11: Convolution and Impulse Response
+# Chapter 11: Impulse Response and Convolution
 
 ## Main Question
 
-If we know how a system reacts to one impulse, can we predict how it reacts to any signal?
+If we know how a system responds to one impulse, can we predict how it responds to any signal?
 
 ## Concepts
 
-* Systems
-* Impulse
-* Impulse response
-* Convolution
-* FIR filtering
-* Input/output relationship
-* Why convolution appears everywhere in DSP
+- System
+- Impulse
+- Impulse response
+- Linear time-invariant system intuition
+- Convolution
+- FIR filtering
+- Input/output relationship
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-A signal can be thought of as a collection of shifted impulses.
+A complicated signal can be thought of as many shifted and scaled impulses.
 
-If we know how a system responds to an impulse, convolution allows us to predict its response to a complete signal.
+If we know what the system does to one impulse, we can build its response to the entire signal.
 
 ## Mathematics
 
-Introduce:
+Only after building the intuition, introduce:
 
 $$
-y[n]=x[n]*h[n]
+y[n]
+=
+\sum_{k=-\infty}^{\infty}
+x[k]h[n-k]
 $$
-
-and expand it only after establishing the visual interpretation.
 
 ## GNU Radio Experiment
 
-Send a simple impulse or short sequence through an FIR filter and observe its response.
+Use simple finite sequences first.
 
-Then use a longer signal.
+Observe the impulse response of an FIR filter.
+
+Then pass a more complicated signal through the same system.
 
 ## GNU Radio Direction
 
-Introduce:
+Introduce or expand:
 
-* FIR Filter in greater depth
-* Filter taps
-* Vector Source
-* Repeat behaviour
-* Head block where useful
-* File Sink where useful
+- FIR Filter
+- filter taps
+- Vector Source
+- Head
+- Repeat
+- finite sequences
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Change taps.
+- Change the taps
+- Reverse the taps
+- insert unexpected tap values
 
-Reverse taps.
-
-Use unexpected tap values.
-
-Observe how the system response changes.
+Observe how the output changes.
 
 ## Leads Into
 
-Correlation and detection.
+Correlation.
 
 ---
 
-# Chapter 12: Correlation and Finding Signals
+# Chapter 12: Correlation, Matched Filtering and Signal Detection
 
 ## Main Question
 
@@ -861,60 +866,58 @@ How can a receiver find a known signal hidden inside another signal?
 
 ## Concepts
 
-* Similarity
-* Cross-correlation
-* Autocorrelation
-* Time delay
-* Signal detection
-* Matched filtering
-* Synchronization intuition
+- Similarity
+- Cross-correlation
+- Autocorrelation
+- Delay estimation
+- Detection
+- Correlation peak
+- Matched-filter intuition
+- Noise and detection
 
-## Intuition We Want the Reader to Leave With
+## Intuition We Want to Build
 
-Correlation answers a simple question:
+Correlation asks:
 
-"How much does this part of the received signal look like the signal I am searching for?"
-
-## Mathematics
-
-Introduce discrete correlation and its relationship to convolution.
+> How much does this part of the received signal look like the signal I am searching for?
 
 ## GNU Radio Experiment
 
 Create a known sequence.
 
-Delay it and add noise.
+Delay it.
 
-Use correlation to locate the sequence.
+Add noise.
+
+Try to find where the sequence occurs.
+
+The exact GNU Radio implementation should be finalized only after testing several approaches and choosing the clearest one for a beginner.
 
 ## GNU Radio Direction
 
-Introduce progressively:
+Possible tools include:
 
-* Delay
-* Conjugate
-* Multiply
-* Moving Average
-* Vector concepts
-* Stream-to-Vector where appropriate
+- Delay
+- Conjugate
+- Multiply
+- Moving Average
+- Vector processing
+- correlation-related blocks
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Use the wrong reference sequence.
-
-Change the delay.
-
-Increase noise.
-
-Observe when detection becomes unreliable.
+- Use the wrong reference
+- increase noise
+- change delay
+- weaken the signal
 
 ## Leads Into
 
-Communication and modulation.
+Putting information onto carriers.
 
 ---
 
-# Part IV: Putting Information on Radio Waves
+# Part IV: Analog Communication
 
 ---
 
@@ -926,32 +929,24 @@ Why can't we simply transmit the original information signal directly?
 
 ## Concepts
 
-* Baseband
-* Passband
-* Carrier
-* Modulation
-* Spectrum allocation
-* Antenna considerations
-* Frequency division
-* Bandwidth
-
-## Intuition We Want the Reader to Leave With
-
-Modulation allows information to be moved to a frequency range where it can be transmitted, separated from other users, and efficiently received.
+- Baseband
+- Passband
+- Carrier
+- Modulation
+- Spectrum allocation
+- antenna considerations
+- frequency sharing
+- bandwidth
 
 ## GNU Radio Experiment
 
-Move a low-frequency message signal onto a higher-frequency carrier.
+Take a low-frequency message and move it to a higher-frequency region.
 
-Observe both signals in the frequency domain.
-
-## GNU Radio Direction
-
-Reuse mixing blocks while introducing modulation-oriented flowgraph organization.
+Observe the spectrum before and after.
 
 ## Leads Into
 
-Analog modulation.
+Amplitude modulation.
 
 ---
 
@@ -963,38 +958,41 @@ How can information be carried by changing the amplitude of a carrier?
 
 ## Concepts
 
-* Carrier
-* Message
-* AM
-* Modulation index
-* Sidebands
-* Carrier power
-* Envelope
-* AM demodulation
+- Carrier
+- Message
+- AM
+- Modulation index
+- Sidebands
+- Carrier component
+- Envelope
+- Overmodulation
+- AM demodulation
 
 ## GNU Radio Experiment
 
-Build an AM transmitter and receiver.
+Construct AM from simple blocks first rather than hiding the operation inside an all-in-one block.
 
-Message → Modulator → Channel → Demodulator
+Conceptually:
 
-Compare the original and recovered signals.
+```text
+Message
+   ↓
+Scaling
+   ↓
+Add carrier/DC term
+   ↓
+Multiply by Carrier
+```
 
-## GNU Radio Direction
+Observe the waveform and spectrum at each stage.
 
-Introduce:
+Then build the receiver.
 
-* AM-related processing blocks
-* Audio Sink where appropriate
-* Hierarchical organization concepts
+## Now Break the Flowgraph
 
-## Break-the-Flowgraph Idea
+Overmodulate deliberately.
 
-Overmodulate the carrier.
-
-Use incorrect demodulation parameters.
-
-Add noise.
+Observe what happens to the envelope and recovered signal.
 
 ## Leads Into
 
@@ -1010,304 +1008,1013 @@ What happens if information changes the instantaneous frequency instead of ampli
 
 ## Concepts
 
-* FM
-* Instantaneous frequency
-* Frequency deviation
-* Modulation index
-* FM bandwidth
-* FM demodulation
-* Narrowband versus wideband FM
+- FM
+- Instantaneous frequency
+- Frequency deviation
+- Modulation index
+- FM bandwidth
+- FM demodulation
+- Narrowband FM
+- Wideband FM
 
 ## GNU Radio Experiment
 
-Build an FM transmitter and receiver entirely in software.
+Build an FM transmitter and receiver in software.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* NBFM/WBFM concepts and blocks
-* Audio rates
-* Decimation
-* Interpolation
-* Resampling
+- NBFM/WBFM processing
+- Audio Source
+- Audio Sink
+- quadrature rate
+- audio rate
+- interpolation
+- decimation
+- Rational Resampler
 
-## Break-the-Flowgraph Idea
+## Important Connection
 
-Use incorrect quadrature rate, audio rate, or resampling values.
+This is where the reader begins working seriously with several sample rates inside one flowgraph.
 
-Observe distortion.
+## Now Break the Flowgraph
+
+Use incorrect:
+
+- quadrature rate
+- audio rate
+- interpolation
+- decimation
+
+Listen to and observe the result.
 
 ## Leads Into
 
-Digital modulation.
+Digital communication.
 
 ---
 
-# Part V: Digital Radio
+# Part V: From Bits to Waveforms
 
 ---
 
-# Chapter 16: From Bits to Symbols
+# Chapter 16: Bits, Symbols and Digital Communication
 
 ## Main Question
 
-How can zeros and ones become a radio waveform?
+How can zeros and ones eventually become a radio waveform?
 
 ## Concepts
 
-* Bits
-* Symbols
-* Symbol rate
-* Bit rate
-* BPSK
-* QPSK
-* QAM
-* Symbol mapping
-* Constellations
+- Bits
+- Bit rate
+- Symbols
+- Symbol rate
+- Bits per symbol
+- Mapping
+- Binary data
+- Why symbols are useful
+
+## Intuition We Want to Build
+
+A transmitter does not normally send abstract zeros and ones directly.
+
+It maps groups of bits onto physical signal states that can be transmitted.
+
+## Mathematics
+
+Introduce the relationship between bit rate and symbol rate using simple examples.
+
+For a modulation carrying $k$ bits per symbol:
+
+$$
+R_b=kR_s
+$$
 
 ## GNU Radio Experiment
 
-Generate random bits and map them to BPSK and QPSK symbols.
+Generate digital data.
+
+Group bits into symbols.
+
+Inspect the values before modulation.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Random Source
-* Symbol mapping
-* Constellation objects
-* Digital modulation blocks
-
-## Break-the-Flowgraph Idea
-
-Change symbol mappings and constellation parameters.
+- Random Source
+- byte streams
+- bit manipulation
+- Repack Bits where useful
+- Vector Source for controlled examples
 
 ## Leads Into
 
-Constellation analysis.
+The simplest forms of linear digital modulation.
 
 ---
 
-# Chapter 17: Reading Constellation Diagrams
+# Chapter 17: Linear Modulation and PAM
 
 ## Main Question
 
-What can a constellation diagram tell us about a communication system?
+What if we represent information using different signal amplitudes?
 
 ## Concepts
 
-* Ideal constellation points
-* Decision regions
-* Noise
-* Phase offset
-* Frequency offset
-* Amplitude error
-* IQ imbalance
-* EVM intuition
+- Linear modulation
+- Baseband symbols
+- Pulse Amplitude Modulation
+- 2-PAM
+- 4-PAM
+- symbol levels
+- decision thresholds
+- symbol energy
+- noise and wrong decisions
+
+## Intuition We Want to Build
+
+A digital symbol can be represented by choosing one signal level from a known set.
+
+For example:
+
+```text
+Bit 0 → -1
+Bit 1 → +1
+```
+
+Now the receiver's problem becomes:
+
+> Which level was most likely transmitted?
 
 ## GNU Radio Experiment
 
-Create a QPSK signal and deliberately introduce impairments one at a time.
+Generate a known bit sequence.
 
-## GNU Radio Direction
+Map it to 2-PAM.
 
-Explore:
+Then try 4-PAM.
 
-* QT GUI Constellation Sink in depth
-* Channel Model
-* Noise voltage
-* Frequency offset
-* Timing offset
+Add noise and observe how the received levels spread.
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-This entire chapter can act as a controlled "break the signal" laboratory.
+Increase the noise until symbols begin crossing decision boundaries.
 
 ## Leads Into
 
-Pulse shaping.
+Using both I and Q to carry symbols.
 
 ---
 
-# Chapter 18: Pulse Shaping and Symbol Timing
+# Chapter 18: BPSK, QPSK and QAM
 
 ## Main Question
 
-Why can't we simply transmit perfect rectangular digital pulses?
+How can I and Q carry digital information?
 
 ## Concepts
 
-* Bandwidth
-* Symbols
-* Intersymbol interference
-* Pulse shaping
-* Raised cosine
-* Root-raised cosine
-* Samples per symbol
-* Eye diagram intuition
-* Symbol timing
+- BPSK
+- QPSK
+- M-PSK idea
+- QAM
+- 16-QAM
+- constellation points
+- bits per symbol
+- decision regions
+- symbol mapping
+- Gray coding intuition
+
+## Important Connection
+
+Earlier we learned:
+
+$$
+x[n]=I[n]+jQ[n]
+$$
+
+Now we use those two dimensions to represent information.
+
+## Intuition We Want to Build
+
+A constellation point is simply a particular combination of I and Q.
+
+Different points can represent different groups of bits.
 
 ## GNU Radio Experiment
 
-Compare unfiltered symbols with pulse-shaped symbols.
+Progress through:
 
-## GNU Radio Direction
+```text
+BPSK
+↓
+QPSK
+↓
+16-QAM
+```
 
-Introduce:
-
-* RRC taps
-* Interpolation
-* Decimation
-* Samples per symbol
-* Timing-related processing
-
-## Break-the-Flowgraph Idea
-
-Use incorrect samples-per-symbol values or mismatched pulse-shaping filters.
-
-## Leads Into
-
-Synchronization.
-
----
-
-# Chapter 19: Synchronization
-
-## Main Question
-
-How does a receiver know when and where to look at the transmitted symbols?
-
-## Concepts
-
-* Carrier frequency offset
-* Carrier phase
-* Symbol timing
-* Clock recovery
-* Carrier recovery
-* AGC
-* Costas loop
-* Frame synchronization introduction
-
-## GNU Radio Experiment
-
-Transmit a digital signal with controlled impairments and progressively recover it.
+Display each using the Constellation Sink.
 
 ## GNU Radio Direction
 
 Introduce:
 
-* AGC
-* Clock Synchronization
-* Costas Loop
-* Frequency Lock Loop where appropriate
-* Tags and synchronization concepts
+- constellation objects
+- symbol mapping
+- digital modulation tools
+- Constellation Sink in greater depth
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Disable synchronization stages one at a time and observe the constellation.
+Introduce:
 
-## Leads Into
+- amplitude error
+- phase rotation
+- noise
 
-Packet and stream processing.
-
----
-
-# Chapter 20: Streams, Vectors, Tags, Messages and PDUs
-
-## Main Question
-
-How does GNU Radio move more than just a continuous stream of samples?
-
-## Concepts
-
-* Streams
-* Items
-* Vectors
-* Stream tags
-* Messages
-* Message ports
-* PDUs
-* Metadata
-* Packet-oriented processing
-
-## Intuition We Want the Reader to Leave With
-
-Not every piece of information in a radio system is simply another sample.
-
-GNU Radio provides different mechanisms for continuous sample processing and event- or packet-oriented information.
-
-## GNU Radio Experiment
-
-Create small examples showing:
-
-* stream processing
-* stream-to-vector conversion
-* tags
-* message passing
-* simple PDU processing
-
-## GNU Radio Direction
-
-This chapter focuses strongly on GNU Radio architecture itself.
-
-## Break-the-Flowgraph Idea
-
-Lose tag alignment, mismatch vector lengths, or route messages incorrectly and inspect the results.
+Observe how the constellation changes.
 
 ## Leads Into
 
-Building larger GNU Radio systems.
+Turning symbols into practical waveforms.
 
 ---
 
-# Part VI: Becoming Independent with GNU Radio
-
----
-
-# Chapter 21: Building Larger GNU Radio Flowgraphs
+# Chapter 19: Pulse Shaping and Matched Filtering
 
 ## Main Question
 
-How do we stop a large flowgraph from becoming an unreadable collection of blocks?
+Why can't we simply transmit abrupt rectangular symbols over the air?
 
 ## Concepts
 
-* Flowgraph organization
-* Reusable processing chains
-* Hierarchical blocks
-* Parameters
-* Embedded Python Blocks
-* Custom processing
-* Debugging
-* Logging
-* File input/output
-* Network input/output
-* UDP/TCP concepts
-* Reproducible experiments
+- Symbol waveform
+- Bandwidth
+- Rectangular pulses
+- Intersymbol interference
+- Pulse shaping
+- Nyquist pulse-shaping idea
+- Raised cosine
+- Root-raised cosine
+- Samples per symbol
+- Matched filtering
+- Eye diagram
+
+## Intuition We Want to Build
+
+The way we shape each transmitted symbol affects both bandwidth and how easily neighbouring symbols can be distinguished.
+
+The receiver can use a matching filter to improve detection.
 
 ## GNU Radio Experiment
 
-Take one of the earlier large flowgraphs and reorganize it.
+Compare:
 
-Create a reusable hierarchical block.
+- unshaped symbols
+- rectangular pulses
+- RRC-shaped symbols
 
-Implement a small custom operation with an Embedded Python Block.
+Then add the receiver matched filter.
+
+Observe:
+
+- time waveform
+- spectrum
+- constellation
+- eye behaviour where practical
 
 ## GNU Radio Direction
 
 Introduce:
 
-* Hierarchical Blocks
-* Embedded Python Block
-* File Source/Sink
-* network blocks
-* probes/debugging tools
-* generated Python awareness
+- RRC taps
+- interpolation
+- samples per symbol
+- matched filtering
+- timing visualization
 
-## Break-the-Flowgraph Idea
+## Now Break the Flowgraph
 
-Introduce parameter mismatches and investigate errors systematically.
+- use mismatched filters
+- use the wrong samples per symbol
+- change roll-off
+- remove the matched filter
+
+## Leads Into
+
+What happens between transmitter and receiver.
+
+---
+
+# Part VI: The Wireless Channel
+
+---
+
+# Chapter 20: What Happens to a Signal Over the Air?
+
+## Main Question
+
+Why does the receiver never see exactly what the transmitter sent?
+
+## Concepts
+
+- Wireless channel
+- Path loss
+- Attenuation
+- AWGN
+- Delay
+- Multipath
+- Reflections
+- Fading
+- Flat fading
+- Frequency-selective fading
+- Doppler introduction
+- Channel impulse response
+
+## Intuition We Want to Build
+
+The receiver may receive several delayed and weakened copies of the same transmitted signal.
+
+These copies add together.
+
+Sometimes they help each other.
+
+Sometimes they partially cancel.
+
+## GNU Radio Experiment
+
+Begin with a clean digital signal.
+
+Pass it through progressively more realistic channels:
+
+```text
+Clean
+↓
+Noise
+↓
+Attenuation
+↓
+Frequency offset
+↓
+Multipath
+```
+
+Observe the constellation and spectrum after each impairment.
+
+## GNU Radio Direction
+
+Introduce in depth:
+
+- Channel Model
+- noise voltage
+- frequency offset
+- timing/sample-rate offset
+- multipath taps
+
+## Now Break the Flowgraph
+
+This chapter is largely a controlled signal-breaking laboratory.
+
+## Leads Into
+
+Multipath distortion and equalization.
+
+---
+
+# Chapter 21: Multipath, ISI and Equalization
+
+## Main Question
+
+If the channel distorts our symbols, can the receiver undo some of that distortion?
+
+## Concepts
+
+- Multipath revisited
+- Delayed copies
+- Channel impulse response
+- Intersymbol interference
+- Equalization
+- Zero-forcing intuition
+- Adaptive equalization intuition
+- Training sequence
+- Decision-directed operation
+
+## Intuition We Want to Build
+
+Equalization attempts to compensate for distortion introduced by the channel.
+
+It does not magically recreate information that has disappeared. It tries to undo predictable channel effects.
+
+## GNU Radio Experiment
+
+Start with a clean QPSK or QAM signal.
+
+Then:
+
+```text
+Clean signal
+↓
+Multipath channel
+↓
+Distorted constellation
+↓
+Equalizer
+↓
+Improved constellation
+```
+
+## GNU Radio Direction
+
+Introduce suitable GNU Radio equalization tools only after the underlying problem is visible.
+
+## Now Break the Flowgraph
+
+- use the wrong equalizer settings
+- increase multipath
+- remove training
+- add more noise
+
+## Leads Into
+
+Receiver synchronization.
+
+---
+
+# Part VII: Teaching the Receiver Where to Look
+
+---
+
+# Chapter 22: PLL and Carrier Synchronization
+
+## Main Question
+
+The transmitter and receiver have different oscillators. How can the receiver lock onto the transmitted carrier?
+
+## Concepts
+
+- Oscillator mismatch
+- Carrier frequency offset
+- Carrier phase offset
+- Phase detector
+- Feedback
+- Loop filter
+- Oscillator correction
+- Phase-Locked Loop
+- Carrier recovery
+- Costas Loop
+- Lock
+- Acquisition
+- Tracking
+
+## Intuition We Want to Build
+
+A PLL repeatedly asks:
+
+> Am I ahead or behind the signal I am trying to follow?
+
+It uses the answer to continuously correct its local oscillator.
+
+## Learning Order
+
+First:
+
+- simple phase error
+
+Then:
+
+- PLL intuition
+
+Then:
+
+- frequency error
+
+Then:
+
+- carrier recovery for modulated signals
+
+Finally:
+
+- Costas Loop
+
+## GNU Radio Experiment
+
+Create a signal with controlled carrier phase and frequency errors.
+
+Observe the constellation before and after recovery.
+
+## GNU Radio Direction
+
+Introduce:
+
+- PLL-related tools
+- Costas Loop
+- frequency/phase controls
+- loop bandwidth concept
+
+## Now Break the Flowgraph
+
+- increase frequency offset
+- increase phase offset
+- use an inappropriate loop bandwidth
+- disable carrier recovery
+
+## Leads Into
+
+Symbol timing.
+
+---
+
+# Chapter 23: Clock and Symbol Timing Synchronization
+
+## Main Question
+
+How does the receiver know exactly when to measure each symbol?
+
+## Concepts
+
+- Transmitter clock
+- Receiver clock
+- Symbol timing
+- Timing offset
+- Clock mismatch
+- Sampling instant
+- Timing error
+- Eye diagram
+- Timing recovery
+- Symbol synchronization
+
+## Intuition We Want to Build
+
+Even if the receiver knows the correct carrier frequency and phase, it can still make wrong decisions if it looks at the waveform at the wrong moment.
+
+## GNU Radio Experiment
+
+Create a pulse-shaped digital signal.
+
+Introduce timing error.
+
+Observe what happens when samples are taken:
+
+- near the centre of the symbol
+- too early
+- too late
+
+Then apply timing recovery.
+
+## GNU Radio Direction
+
+Introduce:
+
+- Symbol Sync
+- timing-error concepts
+- clock recovery tools where appropriate
+
+## Now Break the Flowgraph
+
+- disable Symbol Sync
+- introduce timing offset
+- introduce sample-rate mismatch
+
+## Leads Into
+
+Finding packets and frames.
+
+---
+
+# Chapter 24: Frame Synchronization and Packet Detection
+
+## Main Question
+
+Even after recovering the symbols, how does the receiver know where a message begins?
+
+## Concepts
+
+- Continuous symbol stream
+- Frames
+- Packets
+- Preambles
+- Access codes
+- Known sequences
+- Correlation revisited
+- Packet detection
+- Frame synchronization
+- False detection
+- Detection threshold
+
+## Important Connection
+
+Return to Chapter 12.
+
+Correlation is no longer an isolated mathematical idea.
+
+It now solves a real receiver problem.
+
+## GNU Radio Experiment
+
+Create:
+
+```text
+Preamble + Payload
+```
+
+Transmit it repeatedly.
+
+Add noise.
+
+Detect the preamble and determine where each frame begins.
+
+## GNU Radio Direction
+
+Introduce appropriate:
+
+- correlation blocks
+- access-code tools
+- tags where useful
+
+Do not explain the complete GNU Radio tag architecture yet. That comes later.
+
+## Now Break the Flowgraph
+
+- use the wrong preamble
+- shorten the preamble
+- increase noise
+- change detection threshold
+
+## Leads Into
+
+Putting the complete digital receiver together.
+
+---
+
+# Chapter 25: Building a Complete Single-Carrier Digital Receiver
+
+## Main Question
+
+Can we now combine everything into one receiver?
+
+## Purpose
+
+This chapter brings together the ideas developed since Chapter 16.
+
+## Conceptual Receiver
+
+```text
+Received IQ
+    ↓
+Channel Filtering
+    ↓
+AGC
+    ↓
+Matched Filter
+    ↓
+Carrier Recovery
+    ↓
+Timing Recovery
+    ↓
+Equalization
+    ↓
+Symbol Decisions
+    ↓
+Frame Detection
+    ↓
+Recovered Bits
+```
+
+The exact order of some stages may depend on the receiver design. This itself should become part of the discussion.
+
+## GNU Radio Experiment
+
+Build a complete software transmitter, channel and receiver.
+
+Start with ideal conditions.
+
+Then introduce impairments one at a time.
+
+## Main Goal
+
+The reader should now understand why each receiver stage exists.
+
+## Now Break the Flowgraph
+
+Disable one receiver stage at a time.
+
+Observe what failure looks like.
+
+## Leads Into
+
+Multicarrier communication.
+
+---
+
+# Part VIII: OFDM and Multicarrier Communication
+
+---
+
+# Chapter 26: Why OFDM?
+
+## Main Question
+
+Why transmit data on many subcarriers instead of one fast carrier?
+
+## Concepts
+
+- Single-carrier communication
+- High symbol rate
+- Multipath problem
+- Multicarrier idea
+- Subcarriers
+- Orthogonality
+- OFDM
+- Subcarrier spacing
+- Parallel data streams
+
+## Intuition We Want to Build
+
+Instead of sending one very fast stream through a difficult multipath channel, OFDM divides the data among many slower subcarriers.
+
+The word "orthogonal" should be explained visually and intuitively before being treated mathematically.
+
+## GNU Radio Experiment
+
+Generate several equally spaced subcarriers.
+
+Observe:
+
+- individual subcarriers
+- combined waveform
+- combined spectrum
+
+Explore why overlapping spectra do not automatically mean that the subcarriers interfere.
+
+## Leads Into
+
+How an OFDM waveform is actually created.
+
+---
+
+# Chapter 27: Building an OFDM Signal with the IFFT
+
+## Main Question
+
+Do we really need hundreds of individual oscillators to generate hundreds of subcarriers?
+
+## Concepts
+
+- Frequency-domain symbols
+- Subcarrier bins
+- IFFT
+- FFT
+- OFDM symbol
+- Active subcarriers
+- Null subcarriers
+- DC carrier
+- Pilot carriers introduction
+
+## Important Connection
+
+Return to the FFT from Chapter 6.
+
+Earlier we used the FFT to **look at a signal**.
+
+Now we use the IFFT to **build a signal**.
+
+## Conceptual Transmitter
+
+```text
+Bits
+↓
+QAM Symbols
+↓
+Place Symbols on Subcarriers
+↓
+IFFT
+↓
+Time-Domain OFDM Symbol
+```
+
+## GNU Radio Experiment
+
+Construct a simple OFDM symbol.
+
+Inspect it in both time and frequency.
+
+Then recover the subcarrier symbols using an FFT.
+
+## Leads Into
+
+Multipath protection.
+
+---
+
+# Chapter 28: Cyclic Prefix, OFDM Channel and Basic Channel Estimation
+
+## Main Question
+
+How does OFDM deal with multipath?
+
+## Concepts
+
+- OFDM symbol duration
+- Multipath delay
+- Guard interval
+- Cyclic prefix
+- Why the prefix is copied rather than filled with zeros
+- Inter-symbol interference
+- Channel response
+- Pilot carriers
+- Basic channel estimation
+- One-tap equalization intuition
+- Frequency offset sensitivity
+
+## Intuition We Want to Build
+
+The cyclic prefix gives delayed copies of the previous part of the waveform somewhere safe to land, provided the channel delay is not too long.
+
+Channel estimation then helps us understand how each subcarrier has been altered.
+
+## GNU Radio Experiment
+
+Build:
+
+```text
+QAM
+↓
+IFFT
+↓
+Add Cyclic Prefix
+↓
+Multipath Channel
+↓
+Remove Cyclic Prefix
+↓
+FFT
+↓
+Channel Correction
+↓
+Recovered QAM
+```
+
+Compare the receiver:
+
+- without cyclic prefix
+- with cyclic prefix
+
+## Now Break the Flowgraph
+
+- make the cyclic prefix too short
+- increase multipath delay
+- introduce carrier frequency offset
+- remove channel correction
+
+## Leads Into
+
+Understanding GNU Radio itself more deeply.
+
+---
+
+# Part IX: Understanding GNU Radio Beyond Flowgraphs
+
+---
+
+# Chapter 29: Streams, Vectors, Tags, Messages and PDUs
+
+## Main Question
+
+What is actually moving between GNU Radio blocks?
+
+## Concepts
+
+- Items
+- Streams
+- Vectors
+- Stream to Vector
+- Vector to Stream
+- Stream tags
+- Tagged streams
+- Messages
+- Message ports
+- PMT concept
+- PDUs
+- Metadata
+- Packet-oriented processing
+
+## Intuition We Want to Build
+
+Not everything in a radio system is simply another endless stream of samples.
+
+GNU Radio provides different mechanisms for:
+
+- continuous sample processing
+- grouped data
+- metadata
+- asynchronous events
+- packets
+
+## GNU Radio Experiment
+
+Build small examples showing each mechanism separately.
+
+For example:
+
+```text
+Stream:
+1, 2, 3, 4, 5, 6 ...
+```
+
+then:
+
+```text
+Vector length 3:
+[1,2,3], [4,5,6] ...
+```
+
+Then demonstrate:
+
+- a stream tag
+- a message
+- a simple PDU
+
+## GNU Radio Direction
+
+Introduce in depth:
+
+- Stream to Vector
+- Vector to Stream
+- tags
+- tagged streams
+- Message Debug
+- PDUs
+- Tagged Stream to PDU
+- PDU to Tagged Stream
+
+## Leads Into
+
+Building larger GNU Radio applications.
+
+---
+
+# Chapter 30: Building Larger GNU Radio Systems
+
+## Main Question
+
+How do we move from experimental flowgraphs to reusable SDR applications?
+
+## Concepts
+
+- Flowgraph organization
+- Reusable processing chains
+- Hierarchical blocks
+- Parameters
+- Embedded Python Blocks
+- Generated Python
+- File input/output
+- Recorded IQ
+- Network input/output
+- Debugging
+- Logging
+- Scheduler intuition
+- Buffers
+- Performance
+- CPU limitations
+
+## Part A: Building Reusable Processing
+
+Introduce:
+
+- Hierarchical Blocks
+- parameters
+- Embedded Python Block
+- generated Python
+
+Take an existing processing chain and turn it into a reusable component.
+
+## Part B: Working with the Outside World
+
+Introduce:
+
+- File Source
+- File Sink
+- IQ recording
+- playback
+- network blocks
+- debugging
+- logging
+- performance awareness
+
+## Now Break the Flowgraph
+
+Introduce:
+
+- parameter mismatches
+- Python errors
+- excessive sample rates
+- expensive filters
+- too many GUI sinks
+
+Learn to locate where the problem begins.
 
 ## Leads Into
 
@@ -1315,134 +2022,150 @@ Real SDR hardware.
 
 ---
 
-# Part VII: Leaving the Simulation
+# Part X: Leaving the Simulation
 
 ---
 
-# Chapter 22: SDR Hardware
+# Chapter 31: SDR Hardware
 
 ## Main Question
 
-What changes when our samples come from an antenna instead of a Signal Source?
+What changes when our samples come from an antenna instead of Signal Source?
 
 ## Concepts
 
-* Antenna
-* RF front end
-* LNA
-* Mixer
-* ADC
-* DAC
-* Centre frequency
-* Sample rate
-* RF bandwidth
-* Gain
-* Dynamic range
-* Frequency accuracy
-* IQ samples
-* Hardware limitations
+- Antenna
+- RF front end
+- LNA
+- mixer
+- ADC
+- DAC
+- centre frequency
+- sample rate
+- RF bandwidth
+- gain
+- dynamic range
+- clipping
+- frequency accuracy
+- IQ samples
+- hardware limitations
 
 ## Hardware Examples
 
-Introduce common SDR platforms conceptually:
+Discuss common devices conceptually:
 
-* RTL-SDR
-* ADALM-Pluto
-* HackRF
-* USRP
+- RTL-SDR
+- ADALM-Pluto
+- HackRF
+- USRP
 
-The book should not depend entirely on one specific device.
+The book should not depend completely on one device.
 
 ## GNU Radio Experiment
 
-Connect supported SDR hardware and display a real RF spectrum.
+Connect supported SDR hardware.
 
-## GNU Radio Direction
+Display a real RF spectrum.
 
-Introduce:
+Explore:
 
-* Hardware Source blocks
-* Centre frequency
-* Sample rate
-* RF gain
-* bandwidth
-* antenna selection where supported
-* device arguments
+- centre frequency
+- sample rate
+- bandwidth
+- gain
 
-## Break-the-Flowgraph Idea
+## Important Distinction
 
-Use excessive gain.
+Make absolutely clear that:
 
-Use insufficient gain.
+**Centre frequency** determines where we are looking in the RF spectrum.
 
-Choose inappropriate sample rates.
+**Sample rate** determines how much spectrum can be represented around that centre and how many samples are produced per second.
 
-Tune away from the desired signal.
+## Now Break the Flowgraph
 
-Observe clipping, noise floor, and other real-world effects.
+- use too much gain
+- use too little gain
+- choose a poor sample rate
+- tune away from the signal
+
+Observe real-world consequences.
 
 ## Leads Into
 
-A complete receiver.
+Receiving a real transmission.
 
 ---
 
-# Chapter 23: Receiving a Real Radio Signal
+# Chapter 32: Receiving a Real Radio Signal
 
 ## Main Question
 
-Can we now use everything we have learned to receive an actual transmission?
+Can we follow a real radio signal all the way from the antenna to recovered information?
 
-## Concepts
+## First Practical Receiver
 
-Bring together:
+Build a broadcast FM receiver.
 
-* IQ
-* sampling
-* spectrum
-* tuning
-* mixing
-* filtering
-* resampling
-* demodulation
-* gain
-* audio
+Conceptually:
 
-## GNU Radio Experiment
-
-Build a complete broadcast FM receiver.
-
-Conceptual chain:
-
+```text
 Antenna
 ↓
 SDR Source
 ↓
-Channel Selection
+IQ Samples
 ↓
 Frequency Translation
 ↓
-Filtering
+Channel Filter
 ↓
-Resampling
+Decimation / Resampling
 ↓
 FM Demodulation
 ↓
 Audio Processing
 ↓
 Audio Sink
+```
 
-## Expected Observation
+## Concepts Revisited
 
-For the first time, the reader follows a real RF signal all the way from antenna samples to recovered information.
+Bring together:
 
-## Break-the-Flowgraph Idea
+- IQ
+- sampling
+- FFT
+- centre frequency
+- mixing
+- filtering
+- resampling
+- gain
+- demodulation
+- audio
 
-Disable or misconfigure each major stage individually.
+## GNU Radio Direction
+
+Introduce where useful:
+
+- hardware Source
+- Frequency Translating FIR Filter
+- GUI layout
+- Waterfall
+- runtime tuning
+- gain controls
+
+## Now Break the Flowgraph
+
+Misconfigure one stage at a time.
 
 Ask:
 
-"What does this failure look and sound like?"
+> What does this failure look like?
+
+and, where applicable:
+
+> What does this failure sound like?
 
 ## Leads Into
 
@@ -1450,60 +2173,64 @@ Independent SDR design.
 
 ---
 
-# Chapter 24: Build an SDR Receiver from a Blank Flowgraph
+# Chapter 33: Build an SDR System from a Blank Flowgraph
 
 ## Main Question
 
-Can you design an SDR system without following a recipe?
+Can you now solve an SDR problem without following somebody else's flowgraph?
 
 ## Purpose
 
 This is the capstone chapter.
 
-Instead of providing the complete flowgraph immediately, the reader is given a requirement and must decide what processing stages are needed.
+The reader begins with a blank GNU Radio Companion window.
 
-## Challenge
+Instead of receiving a finished flowgraph, they receive a requirement.
 
-Start with a blank GNU Radio Companion window.
+They must decide:
 
-Determine:
-
-1. What source is required?
-2. What sample rate should be used?
-3. How should the desired channel be selected?
+1. What signal enters the system?
+2. What sample rate is appropriate?
+3. Where is the desired signal in the spectrum?
 4. Is frequency translation required?
 5. What filtering is required?
-6. Is resampling necessary?
-7. Which demodulator is required?
-8. How should the result be displayed or played?
+6. Is resampling required?
+7. Is synchronization required?
+8. How should information be recovered?
+9. How should intermediate signals be inspected?
+10. How can the design be tested before hardware is used?
 
-## Final Goal
+## Main Goal
 
-The reader should be able to look at a radio problem and think:
+The reader should no longer begin with:
 
-"I understand what needs to happen to the signal, so I can decide which GNU Radio blocks I need."
+> Which GNU Radio block should I use?
 
-That is the final goal of the book.
+They should begin with:
+
+> What needs to happen to the signal?
+
+Then choose the GNU Radio tools that perform those operations.
 
 ---
 
 # Appendix A: GNU Radio Quick Reference
 
-A compact reference for commonly used blocks and parameters.
+A compact reference to commonly used GNU Radio blocks and important parameters.
 
 ---
 
 # Appendix B: GNU Radio Data Types
 
-Reference for:
+Cover:
 
-* Byte
-* Short
-* Integer
-* Float
-* Complex
-* Vectors
-* Type conversions
+- Byte
+- Short
+- Integer
+- Float
+- Complex
+- Vectors
+- type conversions
 
 ---
 
@@ -1511,117 +2238,241 @@ Reference for:
 
 Examples:
 
-* incompatible data types
-* invalid sample rates
-* missing blocks
-* flowgraph generation errors
-* Python errors
-* hardware connection errors
-* buffer and performance problems
+- incompatible data types
+- invalid parameters
+- sample-rate mistakes
+- missing dependencies
+- Python errors
+- hardware connection problems
+- buffer problems
+- performance problems
+
+Include both:
+
+**Flowgraph errors**
+
+and:
+
+**Flowgraph runs, but the signal processing is wrong**
 
 ---
 
 # Appendix D: GNU Radio Block Index
 
-Alphabetical list of GNU Radio blocks introduced in the book with the chapter in which each one first appears.
+Alphabetical index of the important GNU Radio blocks used in the book.
+
+For each block, record the chapter where it is first introduced.
 
 ---
 
-# Appendix E: Experiment Index
+# Appendix E: GNU Radio Experiment Index
 
-List of all GNU Radio experiments and corresponding `.grc` files.
+List every experiment and its corresponding `.grc` file.
+
+For example:
+
+```text
+Chapter 03
+├── basic-sampling.grc
+├── interactive-sampling.grc
+└── aliasing.grc
+```
 
 ---
 
 # Appendix F: Mathematics for SDR
 
-A compact reference covering the mathematical ideas used throughout the book.
+A compact reference to mathematics used throughout the book.
 
-This is a reference appendix rather than a prerequisite mathematics chapter.
+Possible topics:
+
+- complex numbers
+- trigonometry
+- logarithms
+- decibels
+- summation
+- convolution
+- correlation
+- Fourier transform
+- probability basics
+
+This appendix is a reference.
+
+It should not become a prerequisite mathematics course that the reader must finish before beginning Chapter 1.
 
 ---
 
-# Appendix G: Where to Go Next
+# Appendix G: GNU Radio Toolbox Index
 
-Topics for further study:
+List every GNU Radio Toolbox entry in the book.
 
-* OFDM
-* channel coding
-* packet radio
-* synchronization in greater depth
-* channel estimation
-* spectrum sensing
-* cognitive radio
-* direction finding
-* radar
-* satellite communications
-* wireless security
-* GNU Radio OOT modules
-* FPGA acceleration
-* advanced SDR hardware
+Examples:
+
+- Signal Source
+- Throttle
+- Variable
+- QT GUI Range
+- Time Sink
+- Frequency Sink
+- Constellation Sink
+- Channel Model
+- Symbol Sync
+- Costas Loop
+- Stream Tags
+- Message Debug
+- Embedded Python Block
+
+---
+
+# Appendix H: Where to Go Next
+
+Topics that deserve deeper study after this book:
+
+- advanced OFDM
+- MIMO
+- channel coding
+- forward error correction
+- convolutional codes
+- LDPC
+- polar codes
+- advanced channel estimation
+- adaptive filters
+- advanced equalization
+- spread spectrum
+- DSSS
+- frequency hopping
+- cognitive radio
+- spectrum sensing
+- direction finding
+- beamforming
+- radar
+- satellite communications
+- GNSS
+- wireless security
+- GNU Radio OOT modules
+- custom C++ blocks
+- FPGA acceleration
+- RFNoC
 
 ---
 
 # Overall Learning Path
 
-The book follows this progression:
+The book now follows this progression:
 
+```text
+What Is SDR?
+        ↓
 Signals
-↓
+        ↓
 Sampling
-↓
+        ↓
 Complex Numbers
-↓
+        ↓
 I/Q
-↓
+        ↓
 FFT and Spectrum
-↓
+        ↓
 Positive and Negative Frequencies
-↓
+        ↓
 Noise and SNR
-↓
+        ↓
 Mixing
-↓
+        ↓
 Filtering
-↓
+        ↓
 Convolution
-↓
-Correlation
-↓
-Modulation
-↓
-Analog Communications
-↓
-Digital Communications
-↓
-Constellations
-↓
-Pulse Shaping
-↓
-Synchronization
-↓
-GNU Radio Streams, Tags, Messages and PDUs
-↓
-Advanced GNU Radio Usage
-↓
+        ↓
+Correlation and Detection
+        ↓
+Why Modulation?
+        ↓
+AM
+        ↓
+FM
+        ↓
+Bits and Symbols
+        ↓
+PAM
+        ↓
+BPSK / QPSK / QAM
+        ↓
+Pulse Shaping and Matched Filtering
+        ↓
+Wireless Channel
+        ↓
+Multipath and Equalization
+        ↓
+PLL and Carrier Recovery
+        ↓
+Clock / Symbol Timing Recovery
+        ↓
+Frame Synchronization
+        ↓
+Complete Digital Receiver
+        ↓
+Why OFDM?
+        ↓
+IFFT / FFT OFDM
+        ↓
+Cyclic Prefix and Channel Estimation
+        ↓
+GNU Radio Streams / Vectors / Tags / Messages / PDUs
+        ↓
+Larger GNU Radio Systems
+        ↓
 SDR Hardware
-↓
-Real RF Reception
-↓
+        ↓
+Real RF Receiver
+        ↓
 Independent SDR Design
+```
+
+---
+
+# A Rule for Advanced Chapters
+
+As the book progresses, the subjects naturally become more advanced.
+
+The writing style should not suddenly become more difficult just because the topic is difficult.
+
+For topics such as:
+
+- equalization
+- PLL
+- carrier recovery
+- timing synchronization
+- OFDM
+- channel estimation
+
+always begin with the **problem**.
+
+For example, do not begin the PLL chapter by deriving a feedback-loop transfer function.
+
+Begin with:
+
+> The transmitter and receiver each have their own oscillator. What happens if those oscillators are not exactly the same?
+
+Let the reader see the problem.
+
+Then try to solve it.
+
+Only introduce the mathematics needed to explain why the solution works.
 
 ---
 
 # Core Principle
 
-Every chapter should answer three questions:
+Every major concept in this book should eventually answer four questions:
+
+**What problem are we trying to solve?**
 
 **What is happening to the signal?**
 
-**Why are we doing it?**
+**Why does the solution work?**
 
-**How can I see it for myself in GNU Radio?**
+**Can I see it happen in GNU Radio?**
 
-The reader should never be asked to use a GNU Radio block simply because "this is the block we need."
+The reader should not finish the book having memorized a collection of flowgraphs.
 
-By the end of the book, the reader should understand both the signal-processing reason for each operation and how GNU Radio implements that operation.
+They should finish with enough understanding to build their own.
