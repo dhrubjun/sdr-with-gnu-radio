@@ -551,7 +551,7 @@ Compare:
 
 $$
 \cos(2\pi ft)
-=
+\=
 \frac{1}{2}e^{j2\pi ft}
 +
 \frac{1}{2}e^{-j2\pi ft}
@@ -627,7 +627,7 @@ and:
 
 $$
 \mathrm{SNR}_{dB}
-=
+\=
 10\log_{10}
 \left(
 \frac{P_s}{P_n}
@@ -820,7 +820,7 @@ Only after building the intuition, introduce:
 
 $$
 y[n]
-=
+\=
 \sum_{k=-\infty}^{\infty}
 x[k]h[n-k]
 $$
@@ -976,11 +976,11 @@ Conceptually:
 
 ```text
 Message
-   ↓
+   ↓
 Scaling
-   ↓
+   ↓
 Add carrier/DC term
-   ↓
+   ↓
 Multiply by Carrier
 ```
 
@@ -1129,10 +1129,12 @@ What if we represent information using different signal amplitudes?
 - Pulse Amplitude Modulation
 - 2-PAM
 - 4-PAM
-- symbol levels
-- decision thresholds
-- symbol energy
-- noise and wrong decisions
+- Symbol levels
+- Symbol decisions
+- Hard decisions
+- Decision thresholds
+- Symbol energy
+- Noise and wrong decisions
 
 ## Intuition We Want to Build
 
@@ -1158,6 +1160,24 @@ Map it to 2-PAM.
 Then try 4-PAM.
 
 Add noise and observe how the received levels spread.
+
+## Important Receiver Idea
+
+At the receiver, the measured value will not usually land exactly on one of the ideal symbol levels.
+
+The receiver therefore has to make a decision.
+
+For a simple 2-PAM signal, a received value might look like:
+
+```text
+Received value: +0.82
+        ↓
+Which valid symbol is closest?
+        ↓
+Detected symbol: +1
+```
+
+The same idea will later extend from points on a line to points in the I/Q plane.
 
 ## Now Break the Flowgraph
 
@@ -1268,6 +1288,22 @@ Why can't we simply transmit abrupt rectangular symbols over the air?
 The way we shape each transmitted symbol affects both bandwidth and how easily neighbouring symbols can be distinguished.
 
 The receiver can use a matching filter to improve detection.
+
+## Watch Out: Two Different Nyquist Ideas
+
+We already met Nyquist in Chapter 3 when discussing sampling.
+
+There, the question was:
+
+> How fast must we sample a signal to avoid aliasing?
+
+Here, Nyquist appears again in a different context.
+
+Now the question is:
+
+> How can we shape transmitted pulses so that neighbouring symbols do not interfere at the correct sampling instants?
+
+These are different problems. Do not confuse the Nyquist sampling criterion with the Nyquist zero-ISI pulse-shaping criterion.
 
 ## GNU Radio Experiment
 
@@ -1645,11 +1681,146 @@ Do not explain the complete GNU Radio tag architecture yet. That comes later.
 
 ## Leads Into
 
-Putting the complete digital receiver together.
+Error detection and forward error correction.
 
 ---
 
-# Chapter 25: Building a Complete Single-Carrier Digital Receiver
+# Chapter 25: Error Detection and Forward Error Correction
+
+## Main Question
+
+Why would a communication system intentionally transmit extra bits?
+
+## Concepts
+
+- Transmission errors
+- Redundancy
+- Error detection
+- Error correction
+- Parity intuition
+- Forward Error Correction
+- Coding rate
+- Coding gain intuition
+- Trade-off between reliability and data rate
+- Hard decisions
+- Soft decisions introduction
+- Why practical communication systems use channel coding
+
+## Intuition We Want to Build
+
+Noise and channel distortion sometimes cause the receiver to make the wrong symbol or bit decision.
+
+One way to improve reliability is to add carefully structured redundancy before transmission.
+
+Those extra bits give the receiver clues that can help it detect, and in some cases correct, errors.
+
+## A Simple Example
+
+Begin with a deliberately simple repetition example.
+
+Instead of sending one bit:
+
+```text
+1
+```
+
+suppose we send:
+
+```text
+1 1 1
+```
+
+If the receiver gets:
+
+```text
+1 0 1
+```
+
+it can still make a reasonable guess that the original bit was `1`.
+
+This is not an efficient coding method, but it makes the basic idea easy to see: we spend extra transmitted data in exchange for greater reliability.
+
+## Mathematics
+
+If $k$ information bits become $n$ coded bits, the coding rate is
+
+$$
+R_c=rac{k}{n}
+$$
+
+For example, if 2 information bits become 3 coded bits:
+
+$$
+R_c=rac{2}{3}
+$$
+
+Do not begin with generator matrices or advanced coding theory.
+
+## GNU Radio Experiment
+
+Build a simple coded digital link:
+
+```text
+Bits
+↓
+Encoder
+↓
+Modulation
+↓
+Noisy Channel
+↓
+Demodulation
+↓
+Decoder
+↓
+Recovered Bits
+```
+
+Compare the received data:
+
+```text
+Without coding
+```
+
+and:
+
+```text
+With coding
+```
+
+The exact GNU Radio FEC block chain should be validated using the supported GNU Radio version before this chapter is written.
+
+## GNU Radio Direction
+
+Introduce conceptually:
+
+- FEC encoder
+- FEC decoder
+- coding rate
+- hard versus soft information where useful
+
+Do not try to teach the complete GNU Radio FEC API here.
+
+## Now Break the Flowgraph
+
+- increase the channel noise
+- remove the decoder
+- use mismatched encoder and decoder settings
+- compare coded and uncoded performance
+
+## What We Want the Reader to Understand
+
+The reader does not need to become a coding-theory specialist.
+
+They should understand why practical communication systems deliberately add redundancy and where coding sits inside an SDR transmitter and receiver.
+
+## Leads Into
+
+Building the complete single-carrier digital receiver.
+
+---
+
+# Chapter 26: Building a Complete Single-Carrier Digital Receiver
 
 ## Main Question
 
@@ -1663,23 +1834,23 @@ This chapter brings together the ideas developed since Chapter 16.
 
 ```text
 Received IQ
-    ↓
+    ↓
 Channel Filtering
-    ↓
+    ↓
 AGC
-    ↓
+    ↓
 Matched Filter
-    ↓
+    ↓
 Carrier Recovery
-    ↓
+    ↓
 Timing Recovery
-    ↓
+    ↓
 Equalization
-    ↓
+    ↓
 Symbol Decisions
-    ↓
+    ↓
 Frame Detection
-    ↓
+    ↓
 Recovered Bits
 ```
 
@@ -1713,7 +1884,7 @@ Multicarrier communication.
 
 ---
 
-# Chapter 26: Why OFDM?
+# Chapter 27: Why OFDM?
 
 ## Main Question
 
@@ -1755,7 +1926,7 @@ How an OFDM waveform is actually created.
 
 ---
 
-# Chapter 27: Building an OFDM Signal with the IFFT
+# Chapter 28: Building an OFDM Signal with the IFFT
 
 ## Main Question
 
@@ -1777,9 +1948,9 @@ Do we really need hundreds of individual oscillators to generate hundreds of sub
 
 Return to the FFT from Chapter 6.
 
-Earlier we used the FFT to **look at a signal**.
+Earlier we used the FFT to **\*\*look at a signal\*\***.
 
-Now we use the IFFT to **build a signal**.
+Now we use the IFFT to **\*\*build a signal\*\***.
 
 ## Conceptual Transmitter
 
@@ -1809,7 +1980,7 @@ Multipath protection.
 
 ---
 
-# Chapter 28: Cyclic Prefix, OFDM Channel and Basic Channel Estimation
+# Chapter 29: Cyclic Prefix, OFDM Channel and Basic Channel Estimation
 
 ## Main Question
 
@@ -1879,7 +2050,7 @@ Understanding GNU Radio itself more deeply.
 
 ---
 
-# Chapter 29: Streams, Vectors, Tags, Messages and PDUs
+# Chapter 30: Streams, Vectors, Tags, Messages and PDUs
 
 ## Main Question
 
@@ -1956,7 +2127,7 @@ Building larger GNU Radio applications.
 
 ---
 
-# Chapter 30: Building Larger GNU Radio Systems
+# Chapter 31: Building Larger GNU Radio Systems
 
 ## Main Question
 
@@ -2026,7 +2197,7 @@ Real SDR hardware.
 
 ---
 
-# Chapter 31: SDR Hardware
+# Chapter 32: SDR Hardware
 
 ## Main Question
 
@@ -2049,6 +2220,25 @@ What changes when our samples come from an antenna instead of Signal Source?
 - frequency accuracy
 - IQ samples
 - hardware limitations
+- DC offset
+- Centre-frequency or DC spike
+- IQ imbalance introduction
+- Oscillator frequency error
+
+## Real Hardware Does Not Look Perfect
+
+When we first connect an actual SDR, the spectrum may contain things that did not appear in our simulations.
+
+For example:
+
+- a strong component at the exact centre of the spectrum
+- a small frequency error
+- unequal I and Q behaviour
+- additional spurious components
+
+These are not necessarily real radio transmissions. Some may come from imperfections inside the receiver itself.
+
+We will introduce these effects here without turning this chapter into an RF calibration course.
 
 ## Hardware Examples
 
@@ -2078,9 +2268,9 @@ Explore:
 
 Make absolutely clear that:
 
-**Centre frequency** determines where we are looking in the RF spectrum.
+**\*\*Centre frequency\*\*** determines where we are looking in the RF spectrum.
 
-**Sample rate** determines how much spectrum can be represented around that centre and how many samples are produced per second.
+**\*\*Sample rate\*\*** determines how much spectrum can be represented around that centre and how many samples are produced per second.
 
 ## Now Break the Flowgraph
 
@@ -2097,7 +2287,7 @@ Receiving a real transmission.
 
 ---
 
-# Chapter 32: Receiving a Real Radio Signal
+# Chapter 33: Receiving a Real Radio Signal
 
 ## Main Question
 
@@ -2173,7 +2363,7 @@ Independent SDR design.
 
 ---
 
-# Chapter 33: Build an SDR System from a Blank Flowgraph
+# Chapter 34: Build an SDR System from a Blank Flowgraph
 
 ## Main Question
 
@@ -2249,11 +2439,11 @@ Examples:
 
 Include both:
 
-**Flowgraph errors**
+**\*\*Flowgraph errors\*\***
 
 and:
 
-**Flowgraph runs, but the signal processing is wrong**
+**\*\*Flowgraph runs, but the signal processing is wrong\*\***
 
 ---
 
@@ -2330,11 +2520,12 @@ Topics that deserve deeper study after this book:
 
 - advanced OFDM
 - MIMO
-- channel coding
-- forward error correction
-- convolutional codes
+- advanced channel coding
+- convolutional codes in depth
+- turbo codes
 - LDPC
 - polar codes
+- coding theory
 - advanced channel estimation
 - adaptive filters
 - advanced equalization
@@ -2362,69 +2553,69 @@ The book now follows this progression:
 
 ```text
 What Is SDR?
-        ↓
+        ↓
 Signals
-        ↓
+        ↓
 Sampling
-        ↓
+        ↓
 Complex Numbers
-        ↓
+        ↓
 I/Q
-        ↓
+        ↓
 FFT and Spectrum
-        ↓
+        ↓
 Positive and Negative Frequencies
-        ↓
+        ↓
 Noise and SNR
-        ↓
+        ↓
 Mixing
-        ↓
+        ↓
 Filtering
-        ↓
+        ↓
 Convolution
-        ↓
+        ↓
 Correlation and Detection
-        ↓
+        ↓
 Why Modulation?
-        ↓
+        ↓
 AM
-        ↓
+        ↓
 FM
-        ↓
+        ↓
 Bits and Symbols
-        ↓
+        ↓
 PAM
-        ↓
+        ↓
 BPSK / QPSK / QAM
-        ↓
+        ↓
 Pulse Shaping and Matched Filtering
-        ↓
+        ↓
 Wireless Channel
-        ↓
+        ↓
 Multipath and Equalization
-        ↓
+        ↓
 PLL and Carrier Recovery
-        ↓
+        ↓
 Clock / Symbol Timing Recovery
-        ↓
+        ↓
 Frame Synchronization
-        ↓
+        ↓
 Complete Digital Receiver
-        ↓
+        ↓
 Why OFDM?
-        ↓
+        ↓
 IFFT / FFT OFDM
-        ↓
+        ↓
 Cyclic Prefix and Channel Estimation
-        ↓
+        ↓
 GNU Radio Streams / Vectors / Tags / Messages / PDUs
-        ↓
+        ↓
 Larger GNU Radio Systems
-        ↓
+        ↓
 SDR Hardware
-        ↓
+        ↓
 Real RF Receiver
-        ↓
+        ↓
 Independent SDR Design
 ```
 
@@ -2445,7 +2636,7 @@ For topics such as:
 - OFDM
 - channel estimation
 
-always begin with the **problem**.
+always begin with the **\*\*problem\*\***.
 
 For example, do not begin the PLL chapter by deriving a feedback-loop transfer function.
 
@@ -2465,13 +2656,13 @@ Only introduce the mathematics needed to explain why the solution works.
 
 Every major concept in this book should eventually answer four questions:
 
-**What problem are we trying to solve?**
+**\*\*What problem are we trying to solve?\*\***
 
-**What is happening to the signal?**
+**\*\*What is happening to the signal?\*\***
 
-**Why does the solution work?**
+**\*\*Why does the solution work?\*\***
 
-**Can I see it happen in GNU Radio?**
+**\*\*Can I see it happen in GNU Radio?\*\***
 
 The reader should not finish the book having memorized a collection of flowgraphs.
 

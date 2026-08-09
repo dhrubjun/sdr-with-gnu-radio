@@ -433,10 +433,10 @@ Introduce only when the reader has a reason to use them.
 | Noise Source | Ch. 8 | Controlled noise |
 | Vector Source | Ch. 11 | Finite known sequences |
 | Random Source | Ch. 16 | Digital data |
-| File Source | Ch. 30 | Recorded data/IQ |
+| File Source | Ch. 31 | Recorded data/IQ |
 | WAV File Source | Analog/audio chapters if useful | Audio |
-| SDR hardware source | Ch. 31 | Real RF |
-| Network source | Ch. 30 | External applications |
+| SDR hardware source | Ch. 32 | Real RF |
+| Network source | Ch. 31 | External applications |
 
 ---
 
@@ -518,7 +518,7 @@ Chapter 6
 
 ## Reused Heavily
 
-Chapter 31 onward with real RF.
+Chapter 33 onward with real RF.
 
 ## Purpose
 
@@ -613,18 +613,18 @@ Chapter 2 or 3.
 Example:
 
 ```text
-                    → Time Sink
+                    → Time Sink
 Signal Source →
-                    → Frequency Sink
+                    → Frequency Sink
 ```
 
 Later:
 
 ```text
-                    → Time Sink
+                    → Time Sink
 Complex Signal →
-                    → Frequency Sink
-                    → Constellation Sink
+                    → Frequency Sink
+                    → Constellation Sink
 ```
 
 ## Main Lesson
@@ -890,7 +890,7 @@ The reader should always know the output rate.
 
 $$
 f_{\text{out}}
-=
+\=
 f_{\text{in}}
 \frac{L}{M}
 $$
@@ -1139,7 +1139,7 @@ Multipath
 
 ## Reused
 
-Chapters 21 to 28.
+Chapters 21 to 29.
 
 ## Main Goal
 
@@ -1224,7 +1224,7 @@ Improved constellation
 
 ## First Major Use
 
-Chapter 22 or Chapter 25.
+Chapter 26: Building a Complete Single-Carrier Digital Receiver
 
 ## Feature
 
@@ -1401,11 +1401,48 @@ Say only enough for the experiment:
 
 > GNU Radio can attach information to a particular location in a stream.
 
-The formal explanation comes in Chapter 29.
+The formal explanation comes in Chapter 30.
 
 ---
 
-# 45. Complete Single-Carrier Receiver
+# 45. Error Detection and Forward Error Correction
+
+## First Introduced
+
+Chapter 25
+
+## Purpose
+
+Show where channel coding sits in a practical digital communication link and why deliberately adding redundancy can improve reliability.
+
+## Features
+
+Depending on the exact GNU Radio version and the experiment we validate, introduce only the pieces needed for a beginner-friendly example:
+
+- FEC encoder concept
+- FEC decoder concept
+- coding rate
+- hard-decision information
+- soft-decision information where useful
+- comparison of coded and uncoded links
+
+## Teaching Rule
+
+Do not begin by teaching the entire GNU Radio FEC framework.
+
+Begin with the communication problem:
+
+> Some received bits are wrong. Can structured redundancy help us detect or correct some of those errors?
+
+Then introduce the GNU Radio tools that demonstrate the answer.
+
+## Experimental Note
+
+The exact FEC block chain must be tested with the supported GNU Radio version before the chapter is written.
+
+---
+
+# 46. Complete Single-Carrier Receiver
 
 ## Chapter
 
@@ -1434,11 +1471,11 @@ The reader should see that earlier isolated blocks now form one receiver.
 
 ---
 
-# 46. OFDM: Teaching Strategy
+# 47. OFDM: Teaching Strategy
 
 ## Chapters
 
-26 to 28
+26 to 29
 
 ## Important Rule
 
@@ -1470,7 +1507,7 @@ Only after this is understood should convenience OFDM blocks be explored.
 
 ---
 
-# 47. FFT and IFFT for OFDM
+# 48. FFT and IFFT for OFDM
 
 ## First FFT Use
 
@@ -1478,7 +1515,7 @@ Chapter 6 for analysis.
 
 ## New Use
 
-Chapter 27 for synthesis and demodulation.
+Chapter 28 for synthesis and demodulation.
 
 ## Main Connection
 
@@ -1500,15 +1537,15 @@ Possible use of:
 - Vector to Stream
 - complex vectors
 
-This becomes a useful bridge into Chapter 29's deeper treatment of vectors.
+This becomes a useful bridge into Chapter 30's deeper treatment of vectors.
 
 ---
 
-# 48. OFDM Carrier Allocator
+# 49. OFDM Carrier Allocator
 
 ## First Introduced
 
-Chapter 27 after manual OFDM intuition.
+Chapter 28 after manual OFDM intuition.
 
 ## Purpose
 
@@ -1528,11 +1565,11 @@ The reader should understand why carrier allocation exists before using the bloc
 
 ---
 
-# 49. OFDM Cyclic Prefix
+# 50. OFDM Cyclic Prefix
 
 ## First Introduced
 
-Chapter 28
+Chapter 29
 
 ## Possible Feature
 
@@ -1562,7 +1599,7 @@ with cyclic prefix
 
 ---
 
-# 50. OFDM Channel Estimation and Equalization
+# 51. OFDM Channel Estimation and Equalization
 
 ## Chapter
 
@@ -1587,7 +1624,7 @@ Only then introduce channel estimation.
 
 ---
 
-# 51. Other OFDM Convenience Blocks
+# 52. Other OFDM Convenience Blocks
 
 Introduce only after the manual signal path is understood.
 
@@ -1606,7 +1643,7 @@ The goal is to understand what each stage is solving.
 
 ---
 
-# 52. Streams
+# 53. Streams
 
 ## Used Implicitly
 
@@ -1614,7 +1651,7 @@ From Chapter 1 onward.
 
 ## Explained Formally
 
-Chapter 29
+Chapter 30
 
 ## Concepts
 
@@ -1633,15 +1670,15 @@ Most early GNU Radio connections carry a stream of items.
 
 ---
 
-# 53. Vectors
+# 54. Vectors
 
 ## First Practical Encounter
 
-Possibly Chapter 27 with FFT/IFFT.
+Possibly Chapter 28 with FFT/IFFT.
 
 ## Explained Formally
 
-Chapter 29
+Chapter 30
 
 ## Example
 
@@ -1670,11 +1707,11 @@ The reader should understand that a vector is one stream item containing several
 
 ---
 
-# 54. Stream Tags
+# 55. Stream Tags
 
 ## Formal Treatment
 
-Chapter 29
+Chapter 30
 
 ## Concepts
 
@@ -1690,8 +1727,8 @@ Chapter 29
 
 ```text
 sample sample sample sample sample sample
-                    ↑
-                   TAG
+                    ↑
+                   TAG
 ```
 
 ## Goal
@@ -1700,11 +1737,11 @@ The reader should understand that metadata can travel alongside a continuous str
 
 ---
 
-# 55. Tagged Streams
+# 56. Tagged Streams
 
 ## Formal Treatment
 
-Chapter 29
+Chapter 30
 
 ## Concepts
 
@@ -1721,11 +1758,11 @@ Chapter 29
 
 ---
 
-# 56. Messages
+# 57. Messages
 
 ## Formal Treatment
 
-Chapter 29
+Chapter 30
 
 ## Concepts
 
@@ -1755,11 +1792,11 @@ The reader should understand that messages do not behave like continuous sample 
 
 ---
 
-# 57. PDUs
+# 58. PDUs
 
 ## Formal Treatment
 
-Chapter 29
+Chapter 30
 
 ## Conceptual Structure
 
@@ -1780,11 +1817,11 @@ Packet-oriented information sometimes makes more sense as a complete object than
 
 ---
 
-# 58. Message Debug
+# 59. Message Debug
 
 ## First Major Use
 
-Chapter 29
+Chapter 30
 
 ## Purpose
 
@@ -1796,11 +1833,11 @@ Packet and debugging work.
 
 ---
 
-# 59. Hierarchical Blocks
+# 60. Hierarchical Blocks
 
 ## First Introduced
 
-Chapter 30
+Chapter 31
 
 ## Main Experiment
 
@@ -1824,11 +1861,11 @@ Hierarchical blocks are useful because a large design can be built from smaller 
 
 ---
 
-# 60. Embedded Python Block
+# 61. Embedded Python Block
 
 ## First Introduced
 
-Chapter 30
+Chapter 31
 
 ## Start Very Simply
 
@@ -1858,11 +1895,11 @@ If the desired operation does not exist as a standard block, custom processing c
 
 ---
 
-# 61. Generated Python
+# 62. Generated Python
 
 ## First Introduced
 
-Chapter 30
+Chapter 31
 
 ## Concepts
 
@@ -1882,11 +1919,11 @@ Do not turn this into a generated-code programming chapter.
 
 ---
 
-# 62. File Input and Output
+# 63. File Input and Output
 
 ## First Major Use
 
-Chapter 30
+Chapter 31
 
 ## Blocks
 
@@ -1908,11 +1945,11 @@ Recorded IQ data can become a bridge between the simulation chapters and hardwar
 
 ---
 
-# 63. Network Input and Output
+# 64. Network Input and Output
 
 ## First Introduced
 
-Chapter 30 if useful.
+Chapter 31 if useful.
 
 ## Possible Tools
 
@@ -1929,11 +1966,11 @@ Show that a GNU Radio flowgraph can exchange information with another applicatio
 
 ---
 
-# 64. Scheduler and Buffer Intuition
+# 65. Scheduler and Buffer Intuition
 
 ## Formal Introduction
 
-Chapter 30
+Chapter 31
 
 ## Concepts
 
@@ -1956,11 +1993,11 @@ Do not introduce internal scheduler mathematics unless it directly helps.
 
 ---
 
-# 65. Performance Awareness
+# 66. Performance Awareness
 
 ## Developed Throughout
 
-More explicit in Chapter 30.
+More explicit in Chapter 31.
 
 ## Factors to Explore
 
@@ -1979,7 +2016,7 @@ A mathematically valid flowgraph may still fail to operate in real time if the c
 
 ---
 
-# 66. Debugging Strategy
+# 67. Debugging Strategy
 
 Debugging should be taught throughout the book.
 
@@ -2016,7 +2053,7 @@ The reader should learn signal-processing debugging, not only software-error deb
 
 ---
 
-# 67. Two Kinds of GNU Radio Failure
+# 68. Two Kinds of GNU Radio Failure
 
 This distinction should appear repeatedly.
 
@@ -2050,11 +2087,11 @@ This second kind is especially important.
 
 ---
 
-# 68. Hardware Sources
+# 69. Hardware Sources
 
 ## First Introduced
 
-Chapter 31
+Chapter 32
 
 ## Possible Hardware Families
 
@@ -2077,14 +2114,17 @@ Teach:
 - antenna/source channel where supported
 - device arguments
 - frequency correction where relevant
+- DC offset / centre spike
+- oscillator frequency error
+- IQ imbalance introduction
 
 ---
 
-# 69. Centre Frequency vs Sample Rate
+# 70. Centre Frequency vs Sample Rate
 
 ## Formal Treatment
 
-Chapter 31
+Chapter 32
 
 This distinction should be reinforced repeatedly.
 
@@ -2102,11 +2142,11 @@ These are completely different quantities even though both are measured in hertz
 
 ---
 
-# 70. Hardware Gain
+# 71. Hardware Gain
 
 ## First Introduced
 
-Chapter 31
+Chapter 32
 
 ## Concepts
 
@@ -2134,11 +2174,11 @@ Observe weak-signal visibility.
 
 ---
 
-# 71. Frequency Translating FIR Filter
+# 72. Frequency Translating FIR Filter
 
 ## First Major Use
 
-Chapter 32
+Chapter 33
 
 ## Why It Is Important
 
@@ -2160,7 +2200,7 @@ First connect every part of the block to an earlier chapter.
 
 ---
 
-# 72. Real Receiver GUI
+# 73. Real Receiver GUI
 
 ## Chapter
 
@@ -2183,7 +2223,7 @@ The reader should learn that a usable SDR application includes both processing a
 
 ---
 
-# 73. GNU Radio Toolbox Coverage by Chapter
+# 74. GNU Radio Toolbox Coverage by Chapter
 
 This is the working chapter-level map.
 
@@ -2562,7 +2602,26 @@ Find message boundaries in a continuous stream.
 
 ---
 
-## Chapter 25: Complete Single-Carrier Receiver
+## Chapter 25: Error Detection and Forward Error Correction
+
+### New GNU Radio Features
+
+- FEC encoder concept
+- FEC decoder concept
+- coding-rate awareness
+- hard/soft decoding introduction where useful
+
+### Main Skill
+
+Understand where channel coding fits in a digital SDR link and compare coded and uncoded performance.
+
+### Experimental Note
+
+The exact GNU Radio FEC block chain must be validated using the supported GNU Radio version before this chapter is written.
+
+---
+
+## Chapter 26: Complete Single-Carrier Receiver
 
 ### New Features
 
@@ -2582,7 +2641,7 @@ Integrate:
 
 ---
 
-## Chapter 26: Why OFDM?
+## Chapter 27: Why OFDM?
 
 ### New Features
 
@@ -2596,7 +2655,7 @@ Understand orthogonal multicarrier transmission.
 
 ---
 
-## Chapter 27: Building OFDM with IFFT
+## Chapter 28: Building OFDM with IFFT
 
 ### New Features
 
@@ -2612,7 +2671,7 @@ Build OFDM symbols from frequency-domain data.
 
 ---
 
-## Chapter 28: Cyclic Prefix and OFDM Channel
+## Chapter 29: Cyclic Prefix and OFDM Channel
 
 ### New Features
 
@@ -2627,7 +2686,7 @@ Understand how OFDM handles a multipath channel.
 
 ---
 
-## Chapter 29: Streams, Vectors, Tags, Messages and PDUs
+## Chapter 30: Streams, Vectors, Tags, Messages and PDUs
 
 ### New Features
 
@@ -2650,7 +2709,7 @@ Understand GNU Radio's different data-transfer mechanisms.
 
 ---
 
-## Chapter 30: Building Larger GNU Radio Systems
+## Chapter 31: Building Larger GNU Radio Systems
 
 ### New Features
 
@@ -2671,7 +2730,7 @@ Move from experiments to reusable GNU Radio applications.
 
 ---
 
-## Chapter 31: SDR Hardware
+## Chapter 32: SDR Hardware
 
 ### New Features
 
@@ -2689,7 +2748,7 @@ Acquire and interpret real RF samples.
 
 ---
 
-## Chapter 32: Real Radio Receiver
+## Chapter 33: Real Radio Receiver
 
 ### New Features
 
@@ -2705,7 +2764,7 @@ Build and debug a complete real receiver.
 
 ---
 
-## Chapter 33: Independent SDR Design
+## Chapter 34: Independent SDR Design
 
 ### New Features
 
@@ -2719,7 +2778,7 @@ Choose GNU Radio tools from the signal-processing requirement rather than from a
 
 ---
 
-# 74. GNU Radio Toolbox Checklist
+# 75. GNU Radio Toolbox Checklist
 
 Whenever a block or feature receives a Toolbox section, make sure we can answer:
 
@@ -2740,7 +2799,7 @@ If we cannot explain those things simply, we are probably introducing the featur
 
 ---
 
-# 75. Now Break the Flowgraph Map
+# 76. Now Break the Flowgraph Map
 
 Every chapter does not require an artificial error, but most practical chapters should contain a useful failure experiment.
 
@@ -2780,7 +2839,7 @@ Every chapter does not require an artificial error, but most practical chapters 
 
 ---
 
-# 76. Features That Should Be Revisited Several Times
+# 77. Features That Should Be Revisited Several Times
 
 Some GNU Radio features are too important to appear only once.
 
@@ -2847,7 +2906,7 @@ The reader learns a tool by using it in different situations.
 
 ---
 
-# 77. Features We Should Not Force Into the Main Book
+# 78. Features We Should Not Force Into the Main Book
 
 GNU Radio contains many specialised blocks.
 
@@ -2858,7 +2917,8 @@ The book should teach the major concepts and block families well enough that the
 Topics that may be left for a later volume or advanced appendix include:
 
 - detailed FEC API
-- convolutional coding
+- convolutional coding in depth
+- turbo coding
 - LDPC
 - polar coding
 - advanced trellis processing
@@ -2877,11 +2937,11 @@ Topics that may be left for a later volume or advanced appendix include:
 - custom C++ blocks
 - full OOT-module development
 
-We may later decide to add one beginner-friendly FEC chapter, but it should not be inserted simply to increase coverage.
+The main book includes only an introductory FEC chapter. Detailed coding theory and the full GNU Radio FEC API remain outside the main scope.
 
 ---
 
-# 78. Features That Need Experimental Validation Before We Freeze the Book
+# 79. Features That Need Experimental Validation Before We Freeze the Book
 
 Some chapters should not have their final block chain decided on paper.
 
@@ -2897,13 +2957,13 @@ In particular:
 - Chapter 23 Symbol Sync demonstration
 - Chapter 24 packet detection
 - Chapters 27–28 OFDM
-- hardware-independent flowgraphs for Chapter 31/32
+- hardware-independent flowgraphs for Chapter 32/32
 
 For these topics, choose the flowgraph that makes the idea easiest to understand rather than the one that uses the fewest blocks.
 
 ---
 
-# 79. GNU Radio Version Check Before Publication
+# 80. GNU Radio Version Check Before Publication
 
 Before the first release of the book:
 
@@ -2922,7 +2982,7 @@ Do not assume that a flowgraph created months earlier still matches the final so
 
 ---
 
-# 80. Final GNU Radio Goal
+# 81. Final GNU Radio Goal
 
 At the beginning of the book, the reader may think:
 
