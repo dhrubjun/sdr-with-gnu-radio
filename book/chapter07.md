@@ -1575,3 +1575,598 @@ So far, we have mainly treated noise as a broadband background that makes a usef
 But noise also has statistical properties, and not all types of noise behave in the same way.
 
 That is where we go next.
+
+## 7.22 Experiment 4: How Bandwidth Affects Noise Power
+
+In the previous experiments, we looked at noise from several different angles. We first observed Gaussian noise by itself, then added it to a sinusoidal signal, and finally measured signal power, noise power, and SNR directly.
+
+There is one more important question that naturally follows from those experiments:
+
+**Does the amount of noise we receive depend on how much bandwidth we are looking at?**
+
+The answer is yes, and this turns out to be extremely important in practical receivers.
+
+A receiver does not collect noise only at one frequency. Noise is spread across a range of frequencies. Therefore, if we allow a wider range of frequencies into the receiver, we also allow more noise into it.
+
+In this experiment, we will see this directly in GNU Radio.
+
+---
+
+## 7.23 The Basic Idea
+
+Consider a noise source whose power is spread approximately uniformly over frequency. This is the basic idea behind white noise.
+
+If the noise power spectral density is $N_0$, then the amount of noise power collected over a bandwidth $B$ is approximately
+
+$$
+P_n = N_0 B
+$$
+
+where:
+
+- $P_n$ is the total noise power,
+- $N_0$ is the noise power spectral density,
+- $B$ is the bandwidth over which the noise is collected.
+
+The important part for this experiment is the relationship
+
+$$
+P_n \propto B
+$$
+
+In simple words:
+
+> **More bandwidth means more noise power.**
+
+If the bandwidth doubles, we therefore expect the measured noise power to approximately double.
+
+For example,
+
+$$
+B \rightarrow 2B
+$$
+
+should approximately give
+
+$$
+P_n \rightarrow 2P_n
+$$
+
+This is what we are going to test experimentally.
+
+---
+
+## 7.24 Building the Experiment in GNU Radio
+
+The GNU Radio flowgraph used for this experiment is shown below.
+
+![GNU Radio flowgraph for measuring noise power as a function of bandwidth](../figures/ch07/ch07-exp4-noise-power-bandwidth-flowgraph.png)
+
+The experiment begins with a Gaussian Noise Source.
+
+The main settings are:
+
+- Sample rate: 32 kS/s
+- Noise type: Gaussian
+- Noise amplitude: 1
+- Mean: 0
+- Averaging length: 10000 samples
+
+The noise is then divided into two paths.
+
+The first path measures the power of the original noise before filtering.
+
+The second path sends the noise through a low-pass filter and then measures the power remaining after the filter.
+
+This gives us two useful measurements:
+
+**Input Noise Power**
+
+and
+
+**Filtered Noise Power**
+
+The input noise power acts as a reference. The filtered noise power tells us how much noise remains after restricting the bandwidth.
+
+---
+
+## 7.25 Measuring the Noise Power
+
+The power calculation follows the same idea that we used in Experiment 3.
+
+For a real-valued signal $x[n]$, the average power can be estimated from
+
+$$
+P = \frac{1}{N}\sum_{n=0}^{N-1}x^2[n]
+$$
+
+In the GNU Radio flowgraph, the signal is therefore multiplied by itself:
+
+$$
+x[n] \times x[n] = x^2[n]
+$$
+
+The Moving Average block then averages these squared samples.
+
+For the original noise,
+
+$$
+P_{\text{input}} \approx \text{average}\left(x^2[n]\right)
+$$
+
+and after the low-pass filter,
+
+$$
+P_{\text{filtered}} \approx \text{average}\left(y^2[n]\right)
+$$
+
+where $y[n]$ is the filtered noise signal.
+
+We used an averaging length of 10000 samples. A relatively long averaging interval is useful here because instantaneous noise power fluctuates continuously. Averaging gives us a much more stable estimate.
+
+---
+
+## 7.26 Why We Measure the Input Noise Power Too
+
+At first, it may seem unnecessary to measure the input noise power. After all, our main interest is the filtered noise.
+
+However, the input measurement gives us an important reference.
+
+With the Gaussian Noise Source amplitude set to 1, the measured input noise power stays close to
+
+$$
+P_{\text{input}} \approx 1
+$$
+
+It will not remain exactly equal to 1 at every instant because the signal is random, but with sufficient averaging it should stay reasonably close.
+
+This allows us to see that the noise source itself has not changed while we adjust the filter bandwidth.
+
+The quantity we intentionally change is the amount of that noise spectrum allowed through the low-pass filter.
+
+---
+
+## 7.27 Changing the Receiver Bandwidth
+
+A QT GUI Range was connected to the cutoff frequency of the Low Pass Filter.
+
+We tested four cutoff frequencies:
+
+| LPF Cutoff Frequency | Purpose |
+|---:|---|
+| 500 Hz | Narrow bandwidth |
+| 1 kHz | Twice the previous cutoff |
+| 2 kHz | Twice again |
+| 4 kHz | Widest bandwidth tested |
+
+The transition width of the filter was kept at 500 Hz.
+
+Nothing about the noise source was changed between these measurements.
+
+Only the filter cutoff frequency was changed.
+
+This is important because it allows us to isolate the effect of bandwidth itself.
+
+---
+
+## 7.28 What We Expect to See
+
+Before looking at the GNU Radio results, we can make a prediction.
+
+Suppose the first bandwidth is $B$.
+
+If the noise is approximately white, then
+
+$$
+P_n \propto B
+$$
+
+Therefore,
+
+$$
+B \rightarrow 2B
+$$
+
+should produce approximately
+
+$$
+P_n \rightarrow 2P_n
+$$
+
+So when we increase the cutoff frequency from 500 Hz to 1 kHz, the measured noise power should increase.
+
+Increasing it again to 2 kHz should increase the noise power further.
+
+The same should happen when going from 2 kHz to 4 kHz.
+
+The relationship will not be perfectly exact because we are using a practical digital filter rather than an ideal rectangular filter, but the overall trend should be very clear.
+
+---
+
+## 7.29 Experimental Results
+
+The following figure combines the four measurements obtained using cutoff frequencies of 500 Hz, 1 kHz, 2 kHz, and 4 kHz.
+
+![Effect of low-pass filter bandwidth on measured Gaussian noise power](../figures/ch07/ch07-exp4-noise-power-vs-bandwidth.png)
+
+The measured values were approximately:
+
+| LPF Cutoff | Input Noise Power | Filtered Noise Power |
+|---:|---:|---:|
+| 500 Hz | 0.996 | 0.025 |
+| 1 kHz | 0.977 | 0.055 |
+| 2 kHz | 0.999 | 0.122 |
+| 4 kHz | 0.992 | 0.242 |
+
+The exact numbers move slightly from run to run because the input is random noise. What matters here is the overall pattern.
+
+The input noise power remains approximately constant:
+
+$$
+P_{\text{input}} \approx 1
+$$
+
+At the same time, the filtered noise power increases as the filter bandwidth increases.
+
+That is exactly the behaviour we expected.
+
+---
+
+## 7.30 Looking at the Spectrum
+
+The Frequency Sink makes the experiment much easier to understand visually.
+
+At a cutoff frequency of 500 Hz, only a narrow region around 0 Hz is allowed through the low-pass filter.
+
+When the cutoff is increased to 1 kHz, the visible noise spectrum becomes wider.
+
+At 2 kHz, an even larger portion of the noise spectrum passes through.
+
+Finally, at 4 kHz, the passed noise occupies a much wider region.
+
+The important point is that the noise level at any particular frequency has not suddenly become much larger.
+
+Instead, we are allowing noise from **more frequencies** to reach the output.
+
+That additional frequency range contributes additional power.
+
+This is why the total measured noise power increases.
+
+---
+
+## 7.31 Comparing 500 Hz and 1 kHz
+
+Let us look at the first two measurements.
+
+For approximately 500 Hz cutoff, we measured
+
+$$
+P_{500} \approx 0.025
+$$
+
+At approximately 1 kHz,
+
+$$
+P_{1000} \approx 0.055
+$$
+
+The cutoff frequency was doubled:
+
+$$
+500 \rightarrow 1000\text{ Hz}
+$$
+
+and the measured noise power increased by roughly a factor of two.
+
+The ratio is approximately
+
+$$
+\frac{P_{1000}}{P_{500}}
+=
+\frac{0.055}{0.025}
+\approx 2.2
+$$
+
+It is not exactly 2, but it is close enough to show the expected relationship.
+
+---
+
+## 7.32 Continuing to Wider Bandwidths
+
+The same trend continues as the cutoff frequency is increased.
+
+At approximately 2 kHz,
+
+$$
+P_{2000} \approx 0.122
+$$
+
+and at approximately 4 kHz,
+
+$$
+P_{4000} \approx 0.242
+$$
+
+The ratio between the last two measurements is approximately
+
+$$
+\frac{P_{4000}}{P_{2000}}
+=
+\frac{0.242}{0.122}
+\approx 1.98
+$$
+
+This is remarkably close to 2.
+
+So in this part of the experiment,
+
+$$
+B \times 2
+\quad \Rightarrow \quad
+P_n \times 2
+$$
+
+which is exactly what the theoretical relationship predicts for white noise.
+
+---
+
+## 7.33 What Happens in Decibels?
+
+There is another useful way to look at the same result.
+
+Power ratios are often expressed in decibels.
+
+For two power values,
+
+$$
+\Delta P_{\text{dB}}
+=
+10\log_{10}
+\left(
+\frac{P_2}{P_1}
+\right)
+$$
+
+If the bandwidth doubles and the noise power also doubles, then
+
+$$
+\Delta P_{\text{dB}}
+=
+10\log_{10}(2)
+$$
+
+which gives approximately
+
+$$
+\Delta P_{\text{dB}}
+\approx 3.01\text{ dB}
+$$
+
+This gives us a very useful engineering rule:
+
+> **Doubling the noise bandwidth increases the total noise power by approximately 3 dB.**
+
+Likewise, halving the noise bandwidth reduces the total noise power by approximately 3 dB.
+
+This simple rule appears repeatedly in communication systems, RF receivers, radar systems, and SDR.
+
+---
+
+## 7.34 Why the Measurements Are Not Perfectly Proportional
+
+Our measured values do not follow the theoretical relationship perfectly.
+
+For example, doubling the cutoff from 500 Hz to 1 kHz did not produce exactly twice the measured noise power.
+
+There are several reasons for this.
+
+First, the input is random noise. Even with averaging, the measured value still fluctuates slightly.
+
+Second, our low-pass filter is not an ideal filter.
+
+An ideal low-pass filter would have a perfectly rectangular frequency response:
+
+- everything inside the passband would pass unchanged,
+- everything outside the passband would be completely removed,
+- and the transition between the two would occur instantly.
+
+A real FIR filter cannot behave like that.
+
+Our GNU Radio filter has a transition width of 500 Hz, so the boundary between the passband and stopband occupies a finite frequency range.
+
+Noise inside this transition region is only partially attenuated.
+
+As a result, the effective noise bandwidth is not exactly the same as the cutoff frequency entered into the block.
+
+---
+
+## 7.35 Cutoff Frequency and Noise Bandwidth Are Not Exactly the Same Thing
+
+This distinction is worth remembering.
+
+When we set
+
+`Cutoff Frequency = 1 kHz`
+
+we should not automatically interpret that as saying that the filter passes an ideal, perfectly rectangular 1 kHz noise bandwidth.
+
+The actual filter response has a shape.
+
+Some frequencies pass almost completely, some are attenuated partially in the transition region, and frequencies sufficiently far into the stopband are strongly suppressed.
+
+Therefore, the amount of noise passed by a real filter depends on the complete frequency response of that filter.
+
+Later, when we study filters in more detail, this leads to the idea of **equivalent noise bandwidth**.
+
+For now, the important point is simpler:
+
+> The cutoff frequency controls how much of the noise spectrum we allow through, but a practical filter does not have an infinitely sharp boundary.
+
+---
+
+## 7.36 Why This Matters for an SDR Receiver
+
+This experiment is directly related to how an SDR receiver operates.
+
+Imagine that we want to receive a signal occupying only a small region of spectrum.
+
+Suppose the useful signal occupies approximately
+
+$$
+B_{\text{signal}} = 20\text{ kHz}
+$$
+
+but our receiver processes
+
+$$
+B_{\text{receiver}} = 2\text{ MHz}
+$$
+
+The receiver is then accepting much more spectrum than the desired signal actually requires.
+
+That extra spectrum contains noise.
+
+If we apply an appropriate filter and reduce the bandwidth around the desired signal, much of that unwanted noise can be removed.
+
+The signal itself may remain almost unchanged, provided that the filter is still wide enough to contain the entire useful signal.
+
+The result can therefore be a better signal-to-noise ratio.
+
+This is one of the fundamental reasons filtering is so important in receivers.
+
+---
+
+## 7.37 Why We Cannot Keep Reducing the Bandwidth Forever
+
+At this point, it might seem that the solution to noise is simply to make the filter as narrow as possible.
+
+Unfortunately, that does not work.
+
+A real communication signal occupies some finite bandwidth.
+
+If the receiver filter becomes narrower than the signal itself, part of the desired signal will also be removed.
+
+So there is always a trade-off.
+
+We want the receiver bandwidth to be:
+
+**wide enough to preserve the desired signal, but not unnecessarily wide.**
+
+This is a much more useful way of thinking about receiver bandwidth than simply saying that "narrower is better."
+
+---
+
+## 7.38 Connecting This Experiment to SNR
+
+Experiment 3 introduced the signal-to-noise ratio:
+
+$$
+\text{SNR}
+=
+\frac{P_s}{P_n}
+$$
+
+or in decibels,
+
+$$
+\text{SNR}_{\text{dB}}
+=
+10\log_{10}
+\left(
+\frac{P_s}{P_n}
+\right)
+$$
+
+Experiment 4 now tells us something important about the denominator.
+
+The noise power depends on bandwidth:
+
+$$
+P_n = N_0B
+$$
+
+Therefore,
+
+$$
+\text{SNR}
+=
+\frac{P_s}{N_0B}
+$$
+
+If the desired signal power remains approximately constant while the noise bandwidth increases, then the SNR decreases.
+
+Likewise, reducing unnecessary bandwidth can reduce noise power and improve SNR.
+
+This connects filtering, noise, bandwidth, and SNR into one picture.
+
+---
+
+## 7.39 A Useful Way to Visualise It
+
+One way to think about white noise is to imagine a long strip of sand spread across the frequency axis.
+
+The height of the sand represents the noise power density.
+
+Now imagine placing a window over part of that strip.
+
+A narrow window collects only a small amount of sand.
+
+A wider window collects more.
+
+The height of the sand did not need to change. We simply collected it over a wider region.
+
+That is essentially what happened in this experiment.
+
+The low-pass filter controlled the width of the frequency region that we accepted.
+
+Increasing that width allowed more noise through, so the total measured noise power increased.
+
+---
+
+## 7.40 What Experiment 4 Taught Us
+
+This experiment demonstrated an important property of noise that is easy to miss when looking only at a time-domain waveform.
+
+Noise power depends on the bandwidth over which we measure it.
+
+For approximately white noise,
+
+$$
+P_n \propto B
+$$
+
+and therefore
+
+$$
+P_n = N_0B
+$$
+
+provides the basic relationship between noise power and bandwidth.
+
+In our GNU Radio experiment, increasing the low-pass filter cutoff from 500 Hz to 1 kHz, 2 kHz, and finally 4 kHz progressively increased the measured filtered noise power.
+
+The original noise power remained approximately constant, while the amount of noise allowed through the filter increased.
+
+We also observed the practical rule that doubling the bandwidth approximately doubles the noise power, corresponding to an increase of about
+
+$$
+3\text{ dB}
+$$
+
+This gives us an important lesson for SDR receivers:
+
+> **Every extra piece of bandwidth that we accept can bring extra noise with it.**
+
+The goal is therefore not simply to use the widest possible receiver bandwidth. We normally want enough bandwidth to preserve the desired signal without collecting unnecessary noise.
+
+This experiment also gives us a natural bridge to the next question.
+
+So far, we have been talking about **total noise power**.
+
+But when we look at a spectrum, the noise is distributed across many FFT bins.
+
+That raises another question:
+
+**What exactly does the height of the noise floor in an FFT represent, and why does FFT averaging make that floor look smoother even though the actual noise has not disappeared?**
+
+That is the next piece we need to understand.
