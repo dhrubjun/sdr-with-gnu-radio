@@ -1299,7 +1299,7 @@ We have built the equation ourselves.
 
 The complete flowgraph is shown below.
 
-![GNU Radio flowgraph for measuring signal power, noise power, and SNR.](../figures/ch07/ch07-exp3-power-snr-flowgraph.png)
+![GNU Radio flowgraph for measuring signal power, noise power, and SNR.](../figures/ch07/ch07_exp3_power_snr_flowgraph.png)
 
 The signal branch calculates
 
@@ -1421,7 +1421,7 @@ $$
 
 Only the noise amplitude changes.
 
-![Measured signal power, noise power, and SNR for different Gaussian-noise amplitudes.](../figures/ch07/ch07-exp3-snr-vs-noise-amplitude.png)
+![Measured signal power, noise power, and SNR for different Gaussian-noise amplitudes.](../figures/ch07/ch07_exp3_snr_vs_noise_amplitude.png)
 
 The values measured during our experiment were approximately:
 
@@ -2596,7 +2596,70 @@ This gives us an important lesson for SDR receivers:
 
 ---
 
-## 7.42 Chapter 7: What We Now Know
+---
+
+## 7.42 GNU Radio Toolbox: What We Added in This Chapter
+
+Along the way, we used several GNU Radio blocks that had not played a major role in the earlier chapters.
+
+It is worth collecting them in one place before moving on.
+
+| GNU Radio Block | What We Used It For |
+|---|---|
+| Noise Source | Generated Gaussian noise for our experiments |
+| Add | Combined the cosine and noise into one signal |
+| Multiply | Multiplied a real signal by itself to obtain \(x^2[n]\) for power measurement |
+| Moving Average | Averaged the squared samples to estimate signal or noise power |
+| Divide | Calculated the power ratio \(P_s/P_n\) |
+| Log10 | Took the base-10 logarithm of the power ratio |
+| Multiply Const | Multiplied the logarithmic result by 10 to obtain SNR in dB |
+| QT GUI Number Sink | Displayed measured signal power, noise power, and SNR |
+| QT GUI Range | Allowed parameters such as noise amplitude or filter cutoff to be changed while the flowgraph was running |
+| Low Pass Filter | Restricted the noise bandwidth in Experiment 4 |
+
+A few of these blocks are simple mathematically, but together they show something important about GNU Radio.
+
+We are no longer using GNU Radio only to generate signals and look at them.
+
+We are beginning to **measure and process signals inside the flowgraph itself**.
+
+For example, our SNR measurement was built directly from ordinary processing blocks:
+
+$$
+\boxed{
+x[n]
+\rightarrow
+x^2[n]
+\rightarrow
+\text{Average}
+\rightarrow
+P
+}
+$$
+
+and then
+
+$$
+\boxed{
+P_s,P_n
+\rightarrow
+\text{Divide}
+\rightarrow
+\log_{10}
+\rightarrow
+\times 10
+\rightarrow
+\mathrm{SNR}_{\mathrm{dB}}
+}
+$$
+
+This way of thinking will become increasingly useful in the next chapters.
+
+Instead of looking for one block that performs an entire task, we can often build the operation ourselves from smaller blocks.
+
+---
+
+## 7.43 Chapter 7: What We Now Know
 
 We started this chapter with a simple question:
 
