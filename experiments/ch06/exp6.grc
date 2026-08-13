@@ -81,7 +81,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [816, 176.0]
+    coordinate: [808, 176.0]
     rotation: 0
     state: enabled
 - name: blocks_stream_to_vector_0
@@ -141,7 +141,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [592, 144.0]
+    coordinate: [584, 144.0]
     rotation: 0
     state: enabled
 - name: qtgui_vector_sink_f_0
@@ -215,7 +215,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1024, 128.0]
+    coordinate: [1000, 128.0]
     rotation: 0
     state: enabled
 
