@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: Impulse Response of an FIR Filter
+# Title: Basic Correlation
 # GNU Radio version: 3.10.12.0
 
 from PyQt5 import Qt
@@ -29,9 +29,9 @@ import threading
 class exp1(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Impulse Response of an FIR Filter", catch_exceptions=True)
+        gr.top_block.__init__(self, "Basic Correlation", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Impulse Response of an FIR Filter")
+        self.setWindowTitle("Basic Correlation")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -69,7 +69,7 @@ class exp1(gr.top_block, Qt.QWidget):
         ##################################################
 
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
-            32, #size
+            44, #size
             samp_rate, #samp_rate
             "", #name
             2, #number of inputs
@@ -81,7 +81,7 @@ class exp1(gr.top_block, Qt.QWidget):
         self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
 
         self.qtgui_time_sink_x_0.enable_tags(True)
-        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0, 0, 0, "")
         self.qtgui_time_sink_x_0.enable_autoscale(True)
         self.qtgui_time_sink_x_0.enable_grid(True)
         self.qtgui_time_sink_x_0.enable_axis_labels(True)
@@ -89,7 +89,7 @@ class exp1(gr.top_block, Qt.QWidget):
         self.qtgui_time_sink_x_0.enable_stem_plot(False)
 
 
-        labels = ['Input Impulse', 'Impulse Response', 'Signal 3', 'Signal 4', 'Signal 5',
+        labels = ['Received Sequence', 'Correlation Output', 'Signal 3', 'Signal 4', 'Signal 5',
             'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
@@ -97,7 +97,7 @@ class exp1(gr.top_block, Qt.QWidget):
             'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0]
-        styles = [3, 3, 1, 1, 1,
+        styles = [1, 3, 1, 1, 1,
             1, 1, 1, 1, 1]
         markers = [0, 0, -1, -1, -1,
             -1, -1, -1, -1, -1]
@@ -116,9 +116,9 @@ class exp1(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
-        self.fir_filter_xxx_0 = filter.fir_filter_fff(1,  (1, 0.5, 0.25))
+        self.fir_filter_xxx_0 = filter.fir_filter_fff(1,  (1, -1, 1, 1))
         self.fir_filter_xxx_0.declare_sample_delay(0)
-        self.blocks_vector_source_x_0 = blocks.vector_source_f((1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), True, 1, [])
+        self.blocks_vector_source_x_0 = blocks.vector_source_f((0,)*20 + (1, 1, -1, 1) + (0,)*76, False, 1, [])
 
 
         ##################################################
