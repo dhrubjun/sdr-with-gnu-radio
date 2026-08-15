@@ -522,74 +522,7 @@ Positive and negative frequencies.
 
 ---
 
-# Chapter 7: Positive and Negative Frequencies
-
-## Main Question
-
-What does a negative frequency actually mean?
-
-## Concepts
-
-- Positive frequency
-- Negative frequency
-- Direction of complex rotation
-- Real cosine spectrum
-- Spectral symmetry
-- Complex exponential
-- One-sided complex tones
-- Frequencies relative to a reference
-
-## Intuition We Want to Build
-
-Negative frequency does not mean that an electromagnetic wave is travelling backward.
-
-It describes the opposite direction of rotation in the complex plane.
-
-## Mathematics
-
-Compare:
-
-$$
-\cos(2\pi ft)
-\=
-\frac{1}{2}e^{j2\pi ft}
-+
-\frac{1}{2}e^{-j2\pi ft}
-$$
-
-with:
-
-$$
-e^{j2\pi ft}
-$$
-
-## GNU Radio Experiment
-
-Compare the spectra of:
-
-- a real cosine
-- a positive complex tone
-- a negative complex tone
-
-## Expected Observation
-
-A real cosine contains symmetric components at positive and negative frequencies.
-
-A complex tone can contain only one of them.
-
-## Now Break the Flowgraph
-
-Convert the complex tone to a real signal.
-
-Observe the mirror component appear.
-
-## Leads Into
-
-Noise and real-world signals.
-
----
-
-# Chapter 8: Noise, Power and SNR
+# Chapter 7: Noise, Power and SNR
 
 ## Main Question
 
@@ -670,7 +603,7 @@ Moving signals around the spectrum.
 
 ---
 
-# Chapter 9: Mixing and Frequency Translation
+# Chapter 8: Mixing and Frequency Translation
 
 ## Main Question
 
@@ -730,7 +663,7 @@ Channel selection and filtering.
 
 ---
 
-# Chapter 10: Filters and Channel Selection
+# Chapter 9: Filters and Channel Selection
 
 ## Main Question
 
@@ -792,7 +725,7 @@ What a filter is actually doing to the signal.
 
 ---
 
-# Chapter 11: Impulse Response and Convolution
+# Chapter 10: Impulse Response and Convolution
 
 ## Main Question
 
@@ -858,7 +791,7 @@ Correlation.
 
 ---
 
-# Chapter 12: Correlation, Matched Filtering and Signal Detection
+# Chapter 11: Correlation, Matched Filtering and Signal Detection
 
 ## Main Question
 
@@ -921,7 +854,7 @@ Putting information onto carriers.
 
 ---
 
-# Chapter 13: Why Modulation Exists
+# Chapter 12: Why Modulation Exists
 
 ## Main Question
 
@@ -950,7 +883,7 @@ Amplitude modulation.
 
 ---
 
-# Chapter 14: Amplitude Modulation
+# Chapter 13: Amplitude Modulation
 
 ## Main Question
 
@@ -1000,7 +933,7 @@ Frequency modulation.
 
 ---
 
-# Chapter 15: Frequency Modulation
+# Chapter 14: Frequency Modulation
 
 ## Main Question
 
@@ -1059,7 +992,7 @@ Digital communication.
 
 ---
 
-# Chapter 16: Bits, Symbols and Digital Communication
+# Chapter 15: Bits, Symbols and Digital Communication
 
 ## Main Question
 
@@ -1116,7 +1049,7 @@ The simplest forms of linear digital modulation.
 
 ---
 
-# Chapter 17: Linear Modulation and PAM
+# Chapter 16: Linear Modulation and PAM
 
 ## Main Question
 
@@ -1189,7 +1122,7 @@ Using both I and Q to carry symbols.
 
 ---
 
-# Chapter 18: BPSK, QPSK and QAM
+# Chapter 17: BPSK, QPSK and QAM
 
 ## Main Question
 
@@ -1263,7 +1196,7 @@ Turning symbols into practical waveforms.
 
 ---
 
-# Chapter 19: Pulse Shaping and Matched Filtering
+# Chapter 18: Pulse Shaping and Matched Filtering
 
 ## Main Question
 
@@ -1349,7 +1282,7 @@ What happens between transmitter and receiver.
 
 ---
 
-# Chapter 20: What Happens to a Signal Over the Air?
+# Chapter 19: What Happens to a Signal Over the Air?
 
 ## Main Question
 
@@ -1420,7 +1353,7 @@ Multipath distortion and equalization.
 
 ---
 
-# Chapter 21: Multipath, ISI and Equalization
+# Chapter 20: Multipath, ISI and Equalization
 
 ## Main Question
 
@@ -1483,7 +1416,7 @@ Receiver synchronization.
 
 ---
 
-# Chapter 22: PLL and Carrier Synchronization
+# Chapter 21: PLL and Carrier Synchronization
 
 ## Main Question
 
@@ -1563,7 +1496,7 @@ Symbol timing.
 
 ---
 
-# Chapter 23: Clock and Symbol Timing Synchronization
+# Chapter 22: Clock and Symbol Timing Synchronization
 
 ## Main Question
 
@@ -1620,7 +1553,7 @@ Finding packets and frames.
 
 ---
 
-# Chapter 24: Frame Synchronization and Packet Detection
+# Chapter 23: Frame Synchronization and Packet Detection
 
 ## Main Question
 
@@ -1685,7 +1618,7 @@ Error detection and forward error correction.
 
 ---
 
-# Chapter 25: Error Detection and Forward Error Correction
+# Chapter 24: Error Detection and Forward Error Correction
 
 ## Main Question
 
@@ -1820,7 +1753,7 @@ Building the complete single-carrier digital receiver.
 
 ---
 
-# Chapter 26: Building a Complete Single-Carrier Digital Receiver
+# Chapter 25: Building a Complete Single-Carrier Digital Receiver
 
 ## Main Question
 
@@ -1884,7 +1817,7 @@ Multicarrier communication.
 
 ---
 
-# Chapter 27: Why OFDM?
+# Chapter 26: Why OFDM?
 
 ## Main Question
 
@@ -1926,7 +1859,7 @@ How an OFDM waveform is actually created.
 
 ---
 
-# Chapter 28: Building an OFDM Signal with the IFFT
+# Chapter 27: Building an OFDM Signal with the IFFT
 
 ## Main Question
 
@@ -1980,7 +1913,7 @@ Multipath protection.
 
 ---
 
-# Chapter 29: Cyclic Prefix, OFDM Channel and Basic Channel Estimation
+# Chapter 28: Cyclic Prefix, OFDM Channel and Basic Channel Estimation
 
 ## Main Question
 
@@ -2050,7 +1983,7 @@ Understanding GNU Radio itself more deeply.
 
 ---
 
-# Chapter 30: Streams, Vectors, Tags, Messages and PDUs
+# Chapter 29: Streams, Vectors, Tags, Messages and PDUs
 
 ## Main Question
 
@@ -2127,7 +2060,7 @@ Building larger GNU Radio applications.
 
 ---
 
-# Chapter 31: Building Larger GNU Radio Systems
+# Chapter 30: Building Larger GNU Radio Systems
 
 ## Main Question
 
@@ -2197,7 +2130,7 @@ Real SDR hardware.
 
 ---
 
-# Chapter 32: SDR Hardware
+# Chapter 31: SDR Hardware
 
 ## Main Question
 
@@ -2287,7 +2220,7 @@ Receiving a real transmission.
 
 ---
 
-# Chapter 33: Receiving a Real Radio Signal
+# Chapter 32: Receiving a Real Radio Signal
 
 ## Main Question
 
@@ -2363,7 +2296,7 @@ Independent SDR design.
 
 ---
 
-# Chapter 34: Build an SDR System from a Blank Flowgraph
+# Chapter 33: Build an SDR System from a Blank Flowgraph
 
 ## Main Question
 
