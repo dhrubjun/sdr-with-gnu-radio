@@ -36,27 +36,27 @@ original message.
 By the end of the chapter, we will have built a small but complete
 communication chain:
 
-```
+\`\`\`
 Information
-    |
-    v
+    |
+    v
 Modulation
-    |
-    v
+    |
+    v
 Different frequency region
-    |
-    v
+    |
+    v
 Shared medium
-    |
-    v
+    |
+    v
 Channel selection
-    |
-    v
+    |
+    v
 Demodulation
-    |
-    v
+    |
+    v
 Recovered information
-```
+\`\`\`
 
 The purpose is not yet to study every type of analog modulation. That
 comes next.
@@ -90,18 +90,14 @@ $$
 
 where
 
--   $\lambda$ is the wavelength,
--   $c$ is the speed of light, approximately $3\times10^8$ m/s,
--   $f$ is the frequency.
+-   $\lambda$ is the wavelength,
+-   $c$ is the speed of light, approximately $3\times10^8$ m/s,
+-   $f$ is the frequency.
 
 For a 1 kHz electromagnetic wave,
 
 $$
-\lambda
-=
-\frac{3\times10^8}{1000}
-=
-300\,000\text{ m}.
+\lambda = \frac{3\times10^8}{1000} = 300\,000\text{ m}.
 $$
 
 Therefore,
@@ -147,7 +143,7 @@ $$
 L\approx\frac{300\text{ km}}{4}=75\text{ km}.
 $$
 
-This does ****not**** mean that radiation at 1 kHz is impossible unless we
+This does **not** mean that radiation at 1 kHz is impossible unless we
 build a 75 km antenna. It means that an antenna that is tiny compared
 with such an enormous wavelength becomes difficult to use as an
 efficient practical radiator, with additional matching and bandwidth
@@ -156,11 +152,7 @@ challenges.
 Now compare that with 100 MHz:
 
 $$
-\lambda
-=
-\frac{3\times10^8}{100\times10^6}
-=
-3\text{ m}.
+\lambda = \frac{3\times10^8}{100\times10^6} = 3\text{ m}.
 $$
 
 A quarter wavelength is then
@@ -171,14 +163,14 @@ $$
 
 The scale has changed completely.
 
-    Frequency   Wavelength   Approx. quarter wavelength
-**  ----------- ------------ ----------------------------**
-        1 kHz       300 km                        75 km
-      100 kHz         3 km                        750 m
-        1 MHz        300 m                         75 m
-       10 MHz         30 m                        7.5 m
-      100 MHz          3 m                       0.75 m
-        1 GHz        0.3 m                       7.5 cm
+| Frequency | Wavelength | Approx. quarter wavelength |
+|---:|---:|---:|
+| 1 kHz | 300 km | 75 km |
+| 100 kHz | 3 km | 750 m |
+| 1 MHz | 300 m | 75 m |
+| 10 MHz | 30 m | 7.5 m |
+| 100 MHz | 3 m | 0.75 m |
+| 1 GHz | 0.3 m | 7.5 cm |
 
 This gives us the first major reason for using a carrier:
 
@@ -221,7 +213,7 @@ $$
 f_c=10\text{ kHz}.
 $$
 
-We will call this the ****carrier****:
+We will call this the **carrier**:
 
 $$
 c(t)=\cos(2\pi f_c t).
@@ -238,9 +230,9 @@ $$
 
 For this experiment, use
 
-```
+\`\`\`
 samp_rate = 64k
-```
+\`\`\`
 
 so that the Nyquist frequency is
 
@@ -253,56 +245,56 @@ multiplication.
 
 ### GNU Radio settings
 
-Use two ****Signal Source**** blocks.
+Use two **Signal Source** blocks.
 
 For the message:
 
-  Setting         Value
-**  --------------- -------------**
-  Output Type     Float
-  Waveform        Cosine
-  Frequency       `1k`
-  Amplitude       `1`
-  Offset          `0`
-  Initial Phase   `0`
-  Sample Rate     `samp_rate`
+| Setting | Value |
+| --- | --- |
+| Output Type | Float |
+| Waveform | Cosine |
+| Frequency | \`1k\` |
+| Amplitude | \`1\` |
+| Offset | \`0\` |
+| Initial Phase | \`0\` |
+| Sample Rate | \`samp_rate\` |
 
 For the carrier:
 
-  Setting         Value
-**  --------------- -------------**
-  Output Type     Float
-  Waveform        Cosine
-  Frequency       `10k`
-  Amplitude       `1`
-  Offset          `0`
-  Initial Phase   `0`
-  Sample Rate     `samp_rate`
+| Setting | Value |
+| --- | --- |
+| Output Type | Float |
+| Waveform | Cosine |
+| Frequency | \`10k\` |
+| Amplitude | \`1\` |
+| Offset | \`0\` |
+| Initial Phase | \`0\` |
+| Sample Rate | \`samp_rate\` |
 
-Connect both to a ****Multiply**** block.
+Connect both to a **Multiply** block.
 
 Use a Throttle at
 
-```
+\`\`\`
 samp_rate
-```
+\`\`\`
 
 because this is a simulated flowgraph with no hardware source or sink
 controlling the sample rate.
 
 Use a QT GUI Frequency Sink with three inputs so that we can compare:
 
--   `Message`
--   `Carrier`
--   `Message * Carrier`
+-   \`Message\`
+-   \`Carrier\`
+-   \`Message * Carrier\`
 
 A useful Frequency Sink configuration is:
 
-  Setting            Value
-**  ------------------ -------------**
-  FFT Size           `2048`
-  Center Frequency   `0`
-  Bandwidth          `samp_rate`
+| Setting | Value |
+| --- | --- |
+| FFT Size | \`2048\` |
+| Center Frequency | \`0\` |
+| Bandwidth | \`samp_rate\` |
 
 The complete flowgraph is shown below.
 
@@ -354,29 +346,19 @@ Now the mathematics explains what GNU Radio has already shown us.
 Using
 
 $$
-\cos A\cos B
-=
-\frac{1}{2}\cos(A-B)
-+
-\frac{1}{2}\cos(A+B),
+\cos A\cos B = \frac{1}{2}\cos(A-B) + \frac{1}{2}\cos(A+B),
 $$
 
 we obtain
 
 $$
-s(t)
-=
-\cos(2\pi f_m t)\cos(2\pi f_c t)
+s(t) = \cos(2\pi f_m t)\cos(2\pi f_c t)
 $$
 
 and therefore
 
 $$
-s(t)
-=
-\frac{1}{2}\cos\left[2\pi(f_c-f_m)t\right]
-+
-\frac{1}{2}\cos\left[2\pi(f_c+f_m)t\right].
+s(t) = \frac{1}{2}\cos\left[2\pi(f_c-f_m)t\right] + \frac{1}{2}\cos\left[2\pi(f_c+f_m)t\right].
 $$
 
 With
@@ -406,11 +388,7 @@ $$
 So
 
 $$
-s(t)
-=
-\frac{1}{2}\cos(2\pi 9000t)
-+
-\frac{1}{2}\cos(2\pi 11000t).
+s(t) = \frac{1}{2}\cos(2\pi 9000t) + \frac{1}{2}\cos(2\pi 11000t).
 $$
 
 GNU Radio has shown us our first frequency translation.
@@ -421,7 +399,7 @@ $$
 f_c-f_m,
 $$
 
-is called the ****lower sideband****.
+is called the **lower sideband**.
 
 The component above the carrier,
 
@@ -429,7 +407,7 @@ $$
 f_c+f_m,
 $$
 
-is called the ****upper sideband****.
+is called the **upper sideband**.
 
 For this experiment,
 
@@ -464,7 +442,7 @@ transmission that we need to remove. Together with the
 positive-frequency components, they form the mathematical Fourier
 representation of one real waveform.
 
-This is also different from the terms ****lower sideband**** and **upper
+This is also different from the terms **lower sideband** and **upper
 sideband**.
 
 On the positive-frequency side, 9 kHz is the lower sideband and 11 kHz
@@ -478,21 +456,21 @@ of a real RF spectrum.
 
 > **### GNU Radio Toolbox: Multiply**
 >
-> ****Multiply**** multiplies its input streams sample by sample.
+> **Multiply** multiplies its input streams sample by sample.
 >
 > If the two inputs are sinusoids at frequencies $f_1$ and $f_2$,
 > multiplication creates components at the sum and difference
 > frequencies:
 >
 > $$
-> f_1+f_2
-> $$
+> f_1+f_2 >
+$$
 >
 > and
 >
 > $$
-> |f_1-f_2|.
-> $$
+> |f_1-f_2|. >
+$$
 >
 > This makes multiplication one of the fundamental operations used for
 > frequency translation, mixing, modulation, and demodulation.
@@ -541,13 +519,7 @@ $$
 Add them together:
 
 $$
-m(t)
-=
-\cos(2\pi500t)
-+
-\cos(2\pi1000t)
-+
-\cos(2\pi2000t).
+m(t) = \cos(2\pi500t) + \cos(2\pi1000t) + \cos(2\pi2000t).
 $$
 
 Then multiply the complete message by the same 10 kHz carrier.
@@ -559,46 +531,46 @@ the Multiply block.
 
 Use:
 
-```
+\`\`\`
 samp_rate = 64k
-```
+\`\`\`
 
 ### Message Signal Sources
 
 Use three Float Signal Sources:
 
-  Source                  Frequency   Amplitude Waveform
-**  --------------------- ----------- ----------- ----------**
-  Message component 1         `500`         `1` Cosine
-  Message component 2          `1k`         `1` Cosine
-  Message component 3          `2k`         `1` Cosine
+| Source | Frequency | Amplitude Waveform |
+| --- | --- | --- |
+| Message component 1 | \`500\` | \`1\` Cosine |
+| Message component 2 | \`1k\` | \`1\` Cosine |
+| Message component 3 | \`2k\` | \`1\` Cosine |
 
 All three use
 
-```
+\`\`\`
 Sample Rate = samp_rate
 Offset = 0
 Initial Phase = 0
-```
+\`\`\`
 
-Add the three signals using an ****Add**** block.
+Add the three signals using an **Add** block.
 
 The carrier remains:
 
-```
+\`\`\`
 Frequency = 10k
 Amplitude = 1
 Waveform = Cosine
 Sample Rate = samp_rate
-```
+\`\`\`
 
 Multiply the combined message by the carrier.
 
 Use a QT GUI Frequency Sink to compare:
 
--   `Message`
--   `Carrier`
--   `Message * Carrier`
+-   \`Message\`
+-   \`Carrier\`
+-   \`Message * Carrier\`
 
 The flowgraph is:
 
@@ -619,16 +591,16 @@ $$
 After multiplication by the 10 kHz carrier, every component produces a
 lower and an upper translated component.
 
-**  -----------------------------------------------------------------------**
-         Original message          Lower sideband          Upper sideband
-                component               component               component
-**  ----------------------- ----------------------- -----------------------**
-                  0.5 kHz                 9.5 kHz                10.5 kHz
+**  -----------------------------------------------------------------------**
+         Original message          Lower sideband          Upper sideband
+| component | component | component |
+| --- | --- | --- |
+| 0.5 kHz | 9.5 kHz | 10.5 kHz |
 
-                    1 kHz                   9 kHz                  11 kHz
+                    1 kHz                   9 kHz                  11 kHz
 
-                    2 kHz                   8 kHz                  12 kHz
-**  -----------------------------------------------------------------------**
+                    2 kHz                   8 kHz                  12 kHz
+**  -----------------------------------------------------------------------**
 
 The green trace therefore occupies a region around 10 kHz.
 
@@ -719,17 +691,13 @@ $$
 The two modulated signals are
 
 $$
-s_A(t)
-=
-m_A(t)\cos(2\pi f_{cA}t)
+s_A(t) = m_A(t)\cos(2\pi f_{cA}t)
 $$
 
 and
 
 $$
-s_B(t)
-=
-m_B(t)\cos(2\pi f_{cB}t).
+s_B(t) = m_B(t)\cos(2\pi f_{cB}t).
 $$
 
 Finally, add them:
@@ -740,9 +708,9 @@ $$
 
 Use
 
-```
+\`\`\`
 samp_rate = 64k
-```
+\`\`\`
 
 throughout the experiment.
 
@@ -750,42 +718,42 @@ throughout the experiment.
 
 Station A:
 
-  Block                     Frequency   Amplitude
-**  ----------------------- ----------- -----------**
-  Message Signal Source         `500`         `1`
-  Carrier Signal Source         `10k`         `1`
+| Block | Frequency | Amplitude |
+| --- | --- | --- |
+| Message Signal Source | \`500\` | \`1\` |
+| Carrier Signal Source | \`10k\` | \`1\` |
 
 Station B:
 
-  Block                     Frequency   Amplitude
-**  ----------------------- ----------- -----------**
-  Message Signal Source          `2k`         `1`
-  Carrier Signal Source         `20k`         `1`
+| Block | Frequency | Amplitude |
+| --- | --- | --- |
+| Message Signal Source | \`2k\` | \`1\` |
+| Carrier Signal Source | \`20k\` | \`1\` |
 
 All four Signal Sources use:
 
-```
+\`\`\`
 Output Type = Float
 Waveform = Cosine
 Offset = 0
 Initial Phase = 0
 Sample Rate = samp_rate
-```
+\`\`\`
 
 Use one Multiply block for each station and an Add block to combine the
 two modulated signals.
 
 Use a QT GUI Frequency Sink with three traces:
 
--   `Station A`
--   `Station B`
--   `Combined Signal`
+-   \`Station A\`
+-   \`Station B\`
+-   \`Combined Signal\`
 
 A useful title for the Options block and display is:
 
-```
+\`\`\`
 Two Signals on Different Carriers
-```
+\`\`\`
 
 The flowgraph is:
 
@@ -795,41 +763,25 @@ flowgraph](../figures/ch12/ch12_exp03_two_signals_different_carriers_flowgraph.p
 For Station A,
 
 $$
-f_{cA}-f_{mA}
-=
-10-0.5
-=
-9.5\text{ kHz},
+f_{cA}-f_{mA} = 10-0.5 = 9.5\text{ kHz},
 $$
 
 and
 
 $$
-f_{cA}+f_{mA}
-=
-10+0.5
-=
-10.5\text{ kHz}.
+f_{cA}+f_{mA} = 10+0.5 = 10.5\text{ kHz}.
 $$
 
 For Station B,
 
 $$
-f_{cB}-f_{mB}
-=
-20-2
-=
-18\text{ kHz},
+f_{cB}-f_{mB} = 20-2 = 18\text{ kHz},
 $$
 
 and
 
 $$
-f_{cB}+f_{mB}
-=
-20+2
-=
-22\text{ kHz}.
+f_{cB}+f_{mB} = 20+2 = 22\text{ kHz}.
 $$
 
 The result is:
@@ -845,14 +797,14 @@ Station A is around 10 kHz.
 
 Station B is around 20 kHz.
 
-This is the basic idea behind ****frequency-division multiplexing****:
+This is the basic idea behind **frequency-division multiplexing**:
 different signals can share the same medium by occupying different
 frequency regions.
 
 We do not need a full treatment of multiplexing here. What matters is
 the communication idea:
 
-> ****A carrier gives a transmitter an address in frequency.****
+> **A carrier gives a transmitter an address in frequency.**
 
 That is why many radio stations can be present in the air at the same
 time.
@@ -873,17 +825,17 @@ we want. Many signals can arrive at the antenna together.
 
 Conceptually:
 
-```
+\`\`\`
 Station A ──► frequency region A ──┐
-                                    │
+                                    │
 Station B ──► frequency region B ──┼──► Air ──► Receiver antenna
-                                    │
+                                    │
 Station C ──► frequency region C ──┘
-```
+\`\`\`
 
 The receiver must decide which part of the spectrum it wants.
 
-This is what makes the familiar act of ****tuning**** a radio meaningful.
+This is what makes the familiar act of **tuning** a radio meaningful.
 
 When we tune an FM radio to a station around 100 MHz, the music itself
 is not a 100 MHz sound. Human ears could never hear such a frequency.
@@ -897,29 +849,29 @@ At the receiver, tuning means selecting the desired frequency region.
 
 But there is another important point:
 
-> ****Tuning is not the same as demodulation.****
+> **Tuning is not the same as demodulation.**
 
-Selecting a station gives us the desired ****modulated channel****.
+Selecting a station gives us the desired **modulated channel**.
 
 We still have to recover the original information from it.
 
 The receiver story is therefore
 
-```
+\`\`\`
 Many received channels
-        |
-        v
+        |
+        v
 Select desired channel
-        |
-        v
+        |
+        v
 Desired modulated signal
-        |
-        v
+        |
+        v
 Demodulate
-        |
-        v
+        |
+        v
 Original information
-```
+\`\`\`
 
 We can demonstrate both steps in GNU Radio.
 
@@ -936,7 +888,7 @@ Now imagine that this combined signal has arrived at the receiver and we
 want Station A.
 
 We already know a tool that can select a particular frequency region: a
-****band-pass filter****.
+**band-pass filter**.
 
 Station A contains components at
 
@@ -952,40 +904,40 @@ $$
 
 So use a Band-Pass Filter with:
 
-  Setting                 Value
-**  ----------------------- -------------**
-  Decimation              `1`
-  Gain                    `1`
-  Sample Rate             `samp_rate`
-  Low Cutoff Frequency    `9k`
-  High Cutoff Frequency   `11k`
-  Transition Width        `1k`
-  Window                  Hamming
+| Setting | Value |
+| --- | --- |
+| Decimation | \`1\` |
+| Gain | \`1\` |
+| Sample Rate | \`samp_rate\` |
+| Low Cutoff Frequency | \`9k\` |
+| High Cutoff Frequency | \`11k\` |
+| Transition Width | \`1k\` |
+| Window | Hamming |
 
 Use two QT GUI Frequency Sinks.
 
 The first is titled:
 
-```
+\`\`\`
 Transmitted Signals
-```
+\`\`\`
 
 and displays:
 
--   `Station A`
--   `Station B`
--   `Combined Signal`
+-   \`Station A\`
+-   \`Station B\`
+-   \`Combined Signal\`
 
 The second is titled:
 
-```
+\`\`\`
 Receiver Channel Selection
-```
+\`\`\`
 
 and displays:
 
--   `Combined Received Signal`
--   `Selected Station A`
+-   \`Combined Received Signal\`
+-   \`Selected Station A\`
 
 A clear GUI arrangement is to place the two sinks in separate rows or
 otherwise give each enough horizontal space to make the frequency
@@ -1073,7 +1025,7 @@ The Band-Pass Filter selected those components.
 Now suppose the receiver multiplies the selected signal by another 10
 kHz sinusoid.
 
-This receiver sinusoid is called a ****local oscillator****, or LO.
+This receiver sinusoid is called a **local oscillator**, or LO.
 
 Consider the 9.5 kHz component.
 
@@ -1129,28 +1081,28 @@ Signal Source.
 
 Use this new Signal Source as the receiver local oscillator:
 
-  Setting         Value
-**  --------------- -------------**
-  Output Type     Float
-  Waveform        Cosine
-  Frequency       `10k`
-  Amplitude       `1`
-  Offset          `0`
-  Initial Phase   `0`
-  Sample Rate     `samp_rate`
+| Setting | Value |
+| --- | --- |
+| Output Type | Float |
+| Waveform | Cosine |
+| Frequency | \`10k\` |
+| Amplitude | \`1\` |
+| Offset | \`0\` |
+| Initial Phase | \`0\` |
+| Sample Rate | \`samp_rate\` |
 
 Then pass the mixer output through a Low-Pass Filter.
 
 Use:
 
-  Setting            Value
-**  ------------------ -------------**
-  Decimation         `1`
-  Gain               `1`
-  Sample Rate        `samp_rate`
-  Cutoff Frequency   `1k`
-  Transition Width   `300`
-  Window             Hamming
+| Setting | Value |
+| --- | --- |
+| Decimation | \`1\` |
+| Gain | \`1\` |
+| Sample Rate | \`samp_rate\` |
+| Cutoff Frequency | \`1k\` |
+| Transition Width | \`300\` |
+| Window | Hamming |
 
 Why a 1 kHz cutoff?
 
@@ -1172,50 +1124,50 @@ For this experiment, use three QT GUI Frequency Sinks.
 
 Display:
 
--   `Station A`
--   `Station B`
--   `Combined Signal`
+-   \`Station A\`
+-   \`Station B\`
+-   \`Combined Signal\`
 
 ### Receiver Channel Selection
 
 Display:
 
--   `Combined Received Signal`
--   `Selected Station A`
+-   \`Combined Received Signal\`
+-   \`Selected Station A\`
 
 ### Message Recovery
 
 Display:
 
--   `Original Message`
--   `After Receiver Mixer`
--   `Recovered Message`
+-   \`Original Message\`
+-   \`After Receiver Mixer\`
+-   \`Recovered Message\`
 
 A useful GUI layout is:
 
-```
+\`\`\`
 ┌────────────────────────┬────────────────────────┐
-│  Transmitted Signals   │ Receiver Channel       │
-│                        │ Selection              │
+│  Transmitted Signals   │ Receiver Channel       │
+│                        │ Selection              │
 └────────────────────────┴────────────────────────┘
 ┌─────────────────────────────────────────────────┐
-│               Message Recovery                  │
+│               Message Recovery                  │
 └─────────────────────────────────────────────────┘
-```
+\`\`\`
 
 The corresponding GUI Hints are:
 
-```
-Transmitted Signals:          0,0,1,1
-Receiver Channel Selection:   0,1,1,1
-Message Recovery:             1,0,1,2
-```
+\`\`\`
+Transmitted Signals:          0,0,1,1
+Receiver Channel Selection:   0,1,1,1
+Message Recovery:             1,0,1,2
+\`\`\`
 
 Use the Options title:
 
-```
+\`\`\`
 Recovering the Original Message
-```
+\`\`\`
 
 The complete flowgraph is:
 
@@ -1281,7 +1233,7 @@ We have brought the information back to baseband.
 
 > **### GNU Radio Toolbox: Band-Pass Filter**
 >
-> A ****Band-Pass Filter**** passes a selected range of frequencies while
+> A **Band-Pass Filter** passes a selected range of frequencies while
 > attenuating frequencies outside that range.
 >
 > In Experiment 12.4, the combined received signal contains two
@@ -1311,9 +1263,9 @@ We have brought the information back to baseband.
 >
 > This combination,
 >
-> ``` text
+> \`\`\` text
 > Mixer -> Low-Pass Filter
-> ```
+> \`\`\`
 >
 > is a fundamental receiver structure that we will encounter again.
 
@@ -1335,29 +1287,19 @@ $$
 At the receiver, we multiply by the same carrier frequency again:
 
 $$
-s(t)\cos(2\pi f_ct)
-=
-m(t)\cos^2(2\pi f_ct).
+s(t)\cos(2\pi f_ct) = m(t)\cos^2(2\pi f_ct).
 $$
 
 Using
 
 $$
-\cos^2\theta
-=
-\frac{1}{2}
-+
-\frac{1}{2}\cos(2\theta),
+\cos^2\theta = \frac{1}{2} + \frac{1}{2}\cos(2\theta),
 $$
 
 we obtain
 
 $$
-m(t)\cos^2(2\pi f_ct)
-=
-\frac{1}{2}m(t)
-+
-\frac{1}{2}m(t)\cos(4\pi f_ct).
+m(t)\cos^2(2\pi f_ct) = \frac{1}{2}m(t) + \frac{1}{2}m(t)\cos(4\pi f_ct).
 $$
 
 The first term is our recovered baseband message:
@@ -1407,50 +1349,50 @@ Low-Pass Filter to recover the original message.
 
 The complete chain is:
 
-```
-                         TRANSMITTER
+\`\`\`
+                         TRANSMITTER
 
 500 Hz Message A
-       |
-       v
+       |
+       v
 Multiply by 10 kHz carrier
-       |
-       v
-Station A around 10 kHz --------\\
-                                  \\
-                                   +--> Shared medium
-                                  /
+       |
+       v
+Station A around 10 kHz --------\\\\
+                                  \\\\
+                                   +--> Shared medium
+                                  /
 Station B around 20 kHz --------/
-       ^
-       |
+       ^
+       |
 Multiply by 20 kHz carrier
-       ^
-       |
+       ^
+       |
 2 kHz Message B
 
 
-                          RECEIVER
+                          RECEIVER
 
-                    Both stations arrive
-                            |
-                            v
-                   Select around 10 kHz
-                            |
-                            v
-                       Station A
-                            |
-                            v
-                    Multiply by 10 kHz LO
-                            |
-                            v
-              Baseband + high-frequency products
-                            |
-                            v
-                      Low-Pass Filter
-                            |
-                            v
-                    Recovered 500 Hz message
-```
+                    Both stations arrive
+                            |
+                            v
+                   Select around 10 kHz
+                            |
+                            v
+                       Station A
+                            |
+                            v
+                    Multiply by 10 kHz LO
+                            |
+                            v
+              Baseband + high-frequency products
+                            |
+                            v
+                      Low-Pass Filter
+                            |
+                            v
+                    Recovered 500 Hz message
+\`\`\`
 
 This is deliberately simplified, but the ideas are real.
 
@@ -1458,19 +1400,7 @@ A practical radio has more stages, and actual modulation schemes can be
 more sophisticated. Yet the basic logic remains recognizable:
 
 $$
-\boxed{
-\text{information}
-\rightarrow
-\text{modulation}
-\rightarrow
-\text{channel}
-\rightarrow
-\text{selection}
-\rightarrow
-\text{demodulation}
-\rightarrow
-\text{information}
-}
+\boxed{ \text{information} \rightarrow \text{modulation} \rightarrow \text{channel} \rightarrow \text{selection} \rightarrow \text{demodulation} \rightarrow \text{information} }
 $$
 
 ------------------------------------------------------------------------
@@ -1497,17 +1427,17 @@ The stations therefore use different RF channels.
 
 Conceptually:
 
-```
+\`\`\`
 Audio A -> modulation -> RF channel A
 Audio B -> modulation -> RF channel B
 Audio C -> modulation -> RF channel C
-```
+\`\`\`
 
 All three electromagnetic waves can reach the same receiving antenna.
 
 The receiver then chooses the desired RF channel.
 
-This is why a radio has something to ****tune****.
+This is why a radio has something to **tune**.
 
 When we tune to a station, we are not choosing the frequency of the
 sound we want to hear. We are choosing the RF frequency region in which
@@ -1524,8 +1454,8 @@ So the everyday action
 
 really hides two different ideas:
 
-1. ****Select the desired RF channel.****
-2. ****Demodulate that channel to recover the information.****
+1. **Select the desired RF channel.**
+2. **Demodulate that channel to recover the information.**
 
 Experiment 12.4 demonstrated the first.
 
@@ -1584,21 +1514,21 @@ $$
 For a sinusoidal message, this produces two sidebands but no separate
 carrier component at $f_c$.
 
-This modulation method is called ****double-sideband suppressed-carrier****,
-usually abbreviated ****DSB-SC****.
+This modulation method is called **double-sideband suppressed-carrier**,
+usually abbreviated **DSB-SC**.
 
 We did not begin the chapter by giving it that name because the name is
 less important than understanding what the multiplication actually does.
 
 Now that we have seen the spectrum, the terminology makes sense:
 
--   ****double-sideband**** because both the lower and upper sidebands are
-    present,
--   ****suppressed-carrier**** because the transmitted product does not
-    contain a separate carrier spectral line at $f_c$.
+-   **double-sideband** because both the lower and upper sidebands are
+    present,
+-   **suppressed-carrier** because the transmitted product does not
+    contain a separate carrier spectral line at $f_c$.
 
 Our receiver also used a matching local oscillator to recover the
-message. This is a form of ****coherent demodulation****.
+message. This is a form of **coherent demodulation**.
 
 For our controlled GNU Radio experiment, the transmitter carrier and
 receiver local oscillator were both exactly 10 kHz and had matching
@@ -1684,7 +1614,7 @@ $$
 
 So both statements are true:
 
-> ****Physical RF waveforms are real-valued.****
+> **Physical RF waveforms are real-valued.**
 
 and
 
@@ -1716,11 +1646,7 @@ symmetry.
 For example, a real cosine can be written as
 
 $$
-\cos(2\pi ft)
-=
-\frac{1}{2}e^{j2\pi ft}
-+
-\frac{1}{2}e^{-j2\pi ft}.
+\cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} + \frac{1}{2}e^{-j2\pi ft}.
 $$
 
 The $+f$ and $-f$ terms together describe the real cosine.
@@ -1757,12 +1683,12 @@ interfere with the other.
 
 Real communication systems therefore care about:
 
--   signal bandwidth,
--   channel bandwidth,
--   channel spacing,
--   filtering,
--   adjacent-channel interference,
--   frequency allocation.
+-   signal bandwidth,
+-   channel bandwidth,
+-   channel spacing,
+-   filtering,
+-   adjacent-channel interference,
+-   frequency allocation.
 
 We do not need another GNU Radio experiment for those ideas yet. The
 important point follows directly from Experiment 12.2:
@@ -1786,12 +1712,12 @@ differently in the real world.
 Depending on frequency and environment, radio waves can differ in how
 they:
 
--   propagate over long distances,
--   interact with the ground and terrain,
--   penetrate buildings and materials,
--   diffract around obstacles,
--   interact with the atmosphere or ionosphere,
--   support available communication bandwidth.
+-   propagate over long distances,
+-   interact with the ground and terrain,
+-   penetrate buildings and materials,
+-   diffract around obstacles,
+-   interact with the atmosphere or ionosphere,
+-   support available communication bandwidth.
 
 We will not turn this chapter into a propagation chapter.
 
@@ -1855,49 +1781,49 @@ And demodulation brings it back.
 
 In this chapter, we built the reason for modulation experimentally.
 
--   A low-frequency information signal can be perfectly useful in a wire
-    but inconvenient for direct radio radiation.
--   Wavelength is related to frequency by $$
-    \lambda=\frac{c}{f}.
-    $$
--   A quarter-wave monopole is a useful reference for understanding
-    antenna scale, although not every antenna must be exactly
-    $\lambda/4$ long.
--   Multiplying a message by a sinusoidal carrier creates sum and
-    difference frequencies.
--   A 1 kHz message multiplied by a 10 kHz carrier produced components
-    at 9 kHz and 11 kHz.
--   These are the lower and upper sidebands.
--   A complete multi-frequency message spectrum can be translated around
-    a carrier.
--   Real-valued signals have conjugate-symmetric positive- and
-    negative-frequency spectra.
--   The negative-frequency half is not something that should simply be
-    removed with an LPF.
--   Different messages can be placed around different carrier
-    frequencies.
--   This allows several transmissions to coexist in the same medium.
--   Tuning means selecting the desired frequency region.
--   Tuning and demodulation are different operations.
--   Mixing the selected channel with a local oscillator can bring the
-    information back toward baseband.
--   A Low-Pass Filter can then remove unwanted high-frequency mixing
-    products.
--   Our recovered 500 Hz message appeared at the same frequency as the
-    original.
--   The recovered amplitude was half the original in our ideal coherent
-    multiplication experiment, which follows directly from the $\cos^2$
-    identity.
--   The simple modulation used here is DSB-SC.
--   Physical RF signals are real-valued, while SDRs commonly use complex
-    I/Q samples internally.
--   Modulated signals occupy bandwidth, so practical channels need
-    appropriate spacing and filtering.
+-   A low-frequency information signal can be perfectly useful in a wire
+    but inconvenient for direct radio radiation.
+-   Wavelength is related to frequency by $$
+\lambda=\frac{c}{f}.
+$$
+-   A quarter-wave monopole is a useful reference for understanding
+    antenna scale, although not every antenna must be exactly
+    $\lambda/4$ long.
+-   Multiplying a message by a sinusoidal carrier creates sum and
+    difference frequencies.
+-   A 1 kHz message multiplied by a 10 kHz carrier produced components
+    at 9 kHz and 11 kHz.
+-   These are the lower and upper sidebands.
+-   A complete multi-frequency message spectrum can be translated around
+    a carrier.
+-   Real-valued signals have conjugate-symmetric positive- and
+    negative-frequency spectra.
+-   The negative-frequency half is not something that should simply be
+    removed with an LPF.
+-   Different messages can be placed around different carrier
+    frequencies.
+-   This allows several transmissions to coexist in the same medium.
+-   Tuning means selecting the desired frequency region.
+-   Tuning and demodulation are different operations.
+-   Mixing the selected channel with a local oscillator can bring the
+    information back toward baseband.
+-   A Low-Pass Filter can then remove unwanted high-frequency mixing
+    products.
+-   Our recovered 500 Hz message appeared at the same frequency as the
+    original.
+-   The recovered amplitude was half the original in our ideal coherent
+    multiplication experiment, which follows directly from the $\cos^2$
+    identity.
+-   The simple modulation used here is DSB-SC.
+-   Physical RF signals are real-valued, while SDRs commonly use complex
+    I/Q samples internally.
+-   Modulated signals occupy bandwidth, so practical channels need
+    appropriate spacing and filtering.
 
 Most importantly, we have moved from treating modulation as a word to
 seeing what it actually does.
 
-It ****moves information in frequency****.
+It **moves information in frequency**.
 
 That one operation makes practical antennas, frequency sharing, tuning,
 and radio communication possible.
@@ -1925,7 +1851,7 @@ A very natural next question is:
 > **What if we make the amplitude of a carrier vary according to the
 > message?**
 
-That leads us to ****Amplitude Modulation****.
+That leads us to **Amplitude Modulation**.
 
 In the next chapter, we will look carefully at how ordinary AM differs
 from the DSB-SC signal we built here, why a carrier component appears in
@@ -1937,4 +1863,4 @@ unexplained formula.
 
 We already know why modulation is needed.
 
-Now we are ready to study ****how a particular modulation scheme works****.
+Now we are ready to study **how a particular modulation scheme works**.
