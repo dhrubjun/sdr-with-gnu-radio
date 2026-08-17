@@ -1,6 +1,6 @@
 # GNU Radio Block Master List
 
-**Updated through Chapter 9**
+**Updated through Chapter 14: Frequency Modulation**
 
 ---
 
@@ -71,47 +71,37 @@ The blocks are grouped into four levels.
 - ⏳ **Later** — useful, but the corresponding topic has not been reached yet.
 - ➖ **Optional** — useful in some situations, but not required for the main learning path.
 
-The status of this document should be updated as the book progresses.
+A block should only be marked **Used** after it has actually appeared in a completed experiment.
 
 ---
 
 # 1. Signal and Data Sources
 
-Source blocks create the data that enters a flowgraph.
+Source blocks create data that enters a flowgraph.
 
-During the early chapters, artificial sources are especially useful because they allow us to work with signals whose behaviour we already know.
-
-| Block | Importance | Status | What it does | First introduced |
+| Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **Signal Source** | Essential | ✅ Used | Generates periodic signals such as sine and cosine waves | Earlier chapters |
-| **Noise Source** | Essential | ✅ Used | Generates random noise using distributions such as Gaussian noise | Chapter 7 |
-| **Fast Noise Source** | Important | ⏳ Later | Generates noise using a computationally efficient implementation | Later |
-| **Random Source** | Important | ⏳ Later | Generates sequences of random values | Later digital communication chapters |
+| **Noise Source** | Essential | ✅ Used | Generates random noise such as Gaussian noise | Chapter 7; reused Chapter 14 |
+| **Constant Source** | Important | ✅ Used | Produces a constant-valued stream | Chapter 13 |
+| **Vector Source** | Important | ✅ Used | Produces a predefined sequence of values | Chapter 10 |
+| **VCO** | Important | ✅ Used | Generates a frequency-controlled oscillator | Chapter 14 |
+| **VCO (Complex)** | Important | ✅ Used | Generates a complex frequency-controlled oscillator | Chapter 14 |
+| **Fast Noise Source** | Important | ⏳ Later | Efficient noise generation | Later |
+| **Random Source** | Important | 🔜 Planned | Generates random digital values | Digital communication chapters |
 | **Random Uniform Source** | Important | ⏳ Later | Generates uniformly distributed random values | Later |
-| **Constant Source** | Important | ⏳ Later | Produces a stream containing a constant value | Later |
-| **GLFSR Source** | Important | ⏳ Later | Generates pseudo-random sequences using a linear-feedback shift register | Later digital communications |
-| **VCO** | Important | ⏳ Later | Generates an oscillator whose instantaneous frequency is controlled by another signal | Later modulation chapters |
-| **VCO (Complex)** | Important | ⏳ Later | Complex-output voltage-controlled oscillator | Later modulation and SDR chapters |
-| **File Source** | Important | ⏳ Later | Reads previously stored samples from a file | Later |
-| **Vector Source** | Important | 🔜 Planned | Produces a repeating or finite sequence of predefined values | Chapter 10 |
+| **GLFSR Source** | Important | ⏳ Later | Generates pseudo-random sequences | Later digital communications |
+| **File Source** | Important | ⏳ Later | Reads stored samples | Later |
 
 ---
 
 ## 1.1 Signal Source
 
-### What it does
+Signal Source remains one of the main laboratory tools in the book.
 
-Signal Source generates known periodic waveforms inside GNU Radio.
+It is useful when we want a signal whose properties are completely known before the experiment begins.
 
-Common waveform choices include:
-
-- cosine;
-- sine;
-- square;
-- triangle;
-- constant.
-
-### Important parameters
+Important settings include:
 
 - Output Type
 - Sample Rate
@@ -121,951 +111,568 @@ Common waveform choices include:
 - Offset
 - Initial Phase
 
-### Why it matters
+It has been reused for:
 
-Signal Source is one of our main laboratory tools.
-
-It lets us create a signal whose properties are known before the experiment begins.
-
-That makes it possible to predict what should happen and then compare our prediction with GNU Radio.
-
-### Chapter 8 use
-
-Signal Source became especially important when we studied mixing and frequency translation.
-
-We used known frequencies so that we could predict where new spectral components should appear after multiplication.
-
-### Chapter 9 use
-
-We combined several Signal Sources to create a multi-frequency test signal.
-
-That allowed us to see directly which components were passed or rejected by different filters.
+- waveform fundamentals;
+- sampling;
+- I/Q;
+- FFT experiments;
+- mixing;
+- filtering;
+- modulation;
+- correlation test signals.
 
 ### Watch out
 
-Signal Source does not generate a physical analog voltage.
-
-It generates numerical samples inside GNU Radio.
+Signal Source generates **digital samples inside GNU Radio**. It does not directly create a physical RF voltage at an antenna connector.
 
 ---
 
 ## 1.2 Noise Source
 
-### What it does
+Noise Source generates random samples according to a selected distribution.
 
-Noise Source generates random samples according to a selected statistical distribution.
-
-In Chapter 7 we used **Gaussian noise**.
-
-### Important parameters
+Important parameters include:
 
 - Output Type
 - Noise Type
 - Amplitude
 - Seed
 
-### Why it matters
+It was first used to study:
 
-Noise Source allows us to investigate:
+- noise;
+- power;
+- SNR;
+- noise bandwidth.
 
-- random signals;
-- noise power;
-- signal-to-noise ratio;
-- noise floor;
-- bandwidth-dependent noise power;
-- receiver behaviour in noise.
+In Chapter 14 it was reused in a new way: a **complex Gaussian Noise Source** was added directly to an FM signal to simulate additive channel noise.
 
-### Important observation
+That experiment reinforced an important distinction:
 
-Noise amplitude and noise power are not the same thing.
+```text
+Multiplicative amplitude variation
+        ≠
+Additive complex channel noise
+```
 
-For the Gaussian noise used in our Chapter 7 experiments, the measured average power followed approximately
-
-$$
-P_n \approx A_n^2
-$$
-
-where $A_n$ is the Noise Source amplitude parameter.
+The second can disturb both magnitude and phase.
 
 ---
 
-## 1.3 Vector Source
+## 1.3 Constant Source
 
-### What it does
+Constant Source produces the same value continuously.
+
+In Chapter 13 it was useful when numerical quantities such as AM power percentages were sent to a QT GUI Number Sink.
+
+Typical uses include:
+
+- DC values;
+- fixed control streams;
+- numerical displays;
+- testing.
+
+---
+
+## 1.4 Vector Source
 
 Vector Source produces samples from a predefined list.
 
-For example, a sequence such as
+For example:
 
 ```text
-1, 0, 0, 0
+(1, 0, 0, 0)
 ```
 
-can be supplied directly instead of generating a continuous sinusoid.
+Chapter 10 used it extensively for:
 
-Depending on its settings, the sequence can be repeated or used as part of a finite-sequence experiment.
+- impulses;
+- delayed impulses;
+- scaled impulses;
+- short finite sequences;
+- convolution experiments.
 
-### Why it matters
+This was an important transition from continuously generated sinusoids to deliberately constructed discrete-time sequences.
 
-Vector Source will become useful in Chapter 10 because impulse response and convolution are easier to understand when we begin with short, known sequences rather than continuous sine waves.
+---
 
-It will allow us to construct inputs such as:
+## 1.5 VCO
+
+VCO stands for **Voltage-Controlled Oscillator**.
+
+In GNU Radio, the input controls the oscillator's phase rate and therefore its instantaneous frequency.
+
+Chapter 14 used the VCO to build FM from first principles.
+
+Conceptually:
 
 ```text
-1, 0, 0, 0, ...
+Control input
+     ↓
+Phase rotates faster or slower
+     ↓
+Instantaneous frequency changes
 ```
 
-and
+This made the physical meaning of FM visible before using any all-in-one FM transmitter block.
+
+---
+
+## 1.6 VCO (Complex)
+
+The complex VCO produces a rotating complex phasor rather than only a real cosine.
+
+A useful representation is:
+
+$$
+x(t)=Ae^{j\phi(t)}
+$$
+
+Chapter 14 used the complex VCO because the Quadrature Demod block needs a complex signal whose phase evolution can be measured directly.
+
+Important settings used:
 
 ```text
-1, 2, 0, 1, ...
+Sample Rate: samp_rate
+Sensitivity: 2*pi
+Amplitude: 1
 ```
 
-and observe exactly how an FIR system responds.
+Using:
 
-### Status
+```text
+from math import pi
+```
 
-We have not yet completed an experiment with Vector Source.
-
-It therefore remains **Planned** until Chapter 10.
+allowed `2*pi` to be entered directly instead of typing a decimal approximation.
 
 ---
 
 # 2. Flow Control and Flowgraph Utilities
 
-These blocks and objects help control how a GNU Radio flowgraph operates.
-
-They may not always change the mathematical signal directly, but they are essential for building practical experiments.
-
-| Block / Object | Importance | Status | What it does | First introduced |
+| Block / Object | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **Throttle** | Essential | ✅ Used | Limits processing rate in software-only flowgraphs | Earlier chapters |
-| **Variable** | Essential | ✅ Used | Stores a value that can be reused by multiple blocks | Earlier chapters |
-| **Head** | Important | 🔜 Planned | Allows only a specified number of items to pass | Chapter 10 |
+| **Variable** | Essential | ✅ Used | Stores reusable values | Earlier chapters |
+| **Import** | Important | ✅ Used | Makes Python names/functions available to generated flowgraph code | Chapter 14 |
+| **Head** | Important | ✅ Used | Passes only a selected number of items | Chapter 10/11 finite-sequence work |
 
 ---
 
 ## 2.1 Throttle
 
-### What it does
+Throttle limits the rate at which a software-only flowgraph processes samples.
 
-Throttle limits how quickly samples move through a software-only flowgraph.
+A useful rule remains:
 
-### Why we use it
+> If no hardware device or other real-time sink/source controls the rate, a Throttle block is often needed.
 
-A flowgraph containing only software-generated sources may otherwise run as quickly as the CPU allows.
-
-Throttle gives the flowgraph an approximate processing rate.
-
-### Watch out
-
-Throttle does **not** perform analog-to-digital sampling.
-
-The data inside GNU Radio is already represented as samples.
+Throttle does **not** perform sampling. The signal is already represented by samples.
 
 ---
 
 ## 2.2 Variable
 
-### What it does
+Variables keep important parameters consistent across a flowgraph.
 
-A Variable stores a value that can be referenced by other blocks.
-
-A common example is:
-
-```text
-samp_rate = 32000
-```
-
-Instead of entering `32000` separately into every block, we can use:
+Examples include:
 
 ```text
 samp_rate
+fc
+fm
+freq_dev
 ```
 
-### Why it matters
+As the book progresses, variables increasingly describe relationships instead of isolated numbers.
 
-Variables make flowgraphs:
-
-- easier to read;
-- easier to modify;
-- less error-prone;
-- easier to control at runtime.
-
-### Chapter 9 use
-
-Variables became particularly useful when filter settings and sample-rate changes had to be shared between several blocks.
-
-For example, after decimation we could describe the new rate using:
+For example:
 
 ```text
-samp_rate/decimation
+1.0/freq_dev
 ```
 
-rather than manually entering a different value into every downstream block.
+lets a demodulator automatically remain correctly normalized when the deviation changes.
 
 ---
 
-## 2.3 Head
+## 2.3 Import
 
-### What it does
+The Import object lets GNU Radio's generated Python code use external Python names.
 
-Head allows only a specified number of items to pass through and then stops forwarding additional items.
+Chapter 14 used:
 
-### Why it will matter
+```python
+from math import pi
+```
 
-Most of our earlier experiments used continuous streams.
+This allowed expressions such as:
 
-Chapter 10 will begin working with short finite sequences.
+```text
+2*pi
+```
 
-Head can therefore become useful when we want an experiment to contain only a controlled number of samples.
+inside VCO and Quadrature Demod settings.
 
-### Status
+### Why it matters
 
-Head remains **Planned** until we actually use it in a Chapter 10 experiment.
+Expressions are usually clearer than unexplained decimal constants.
+
+For example:
+
+```text
+2*pi
+```
+
+communicates the conversion between cycles and radians immediately.
+
+---
+
+## 2.4 Head
+
+Head allows only a specified number of items to pass.
+
+It is useful when an experiment should work with a finite observation rather than an endless stream.
+
+This became relevant once the book moved from continuous sinusoidal experiments toward short sequences, convolution, and detection.
 
 ---
 
 # 3. Mathematical Operations
 
-These blocks perform mathematical operations directly on samples.
-
-They are simple individually, but combining them allows us to construct surprisingly powerful measurements and signal-processing operations.
-
 | Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Add** | Essential | ✅ Used | Adds input streams sample by sample | Earlier chapters / Chapter 7 / Chapter 9 |
-| **Multiply** | Essential | ✅ Used | Multiplies input streams sample by sample | Chapter 7 / Chapter 8 |
-| **Divide** | Important | ✅ Used | Divides one input stream by another | Chapter 7 SNR measurement |
-| **Multiply Const** | Essential | ✅ Used | Multiplies every sample by a fixed constant | Chapter 7 SNR measurement |
-| **Log10** | Important | ✅ Used | Calculates the base-10 logarithm | Chapter 7 SNR measurement |
-| **Add Const** | Important | ⏳ Later | Adds a constant to every sample | Later |
-| **Subtract** | Important | ⏳ Later | Subtracts one stream from another | Later |
-| **Abs** | Important | ⏳ Later | Calculates absolute value | Later |
+| **Add** | Essential | ✅ Used | Adds streams sample by sample | Earlier chapters |
+| **Multiply** | Essential | ✅ Used | Multiplies streams sample by sample | Chapters 7–14 |
+| **Divide** | Important | ✅ Used | Divides one stream by another | Chapter 7 |
+| **Multiply Const** | Essential | ✅ Used | Scales every sample by a constant | Chapter 7; reused Chapter 14 |
+| **Add Const** | Important | ✅ Used | Adds a constant to every sample | Chapter 11; reused Chapters 13–14 |
+| **Log10** | Important | ✅ Used | Calculates base-10 logarithm | Chapter 7 |
+| **Abs** | Important | ✅ Used | Calculates absolute value | Chapter 13 |
+| **Subtract** | Important | ⏳ Later | Subtracts streams | Later |
 
 ---
 
 ## 3.1 Add
 
-For two input streams,
-
-$$
-x[n]
-$$
-
-and
-
-$$
-y[n]
-$$
-
-the Add block produces
+For two streams:
 
 $$
 z[n]=x[n]+y[n]
 $$
 
-### Chapter 7 use
+Important uses have included:
 
-We used Add to construct a noisy signal:
+- adding signal and noise;
+- building multi-tone test signals;
+- combining modulation branches;
+- adding complex channel noise to FM.
 
-$$
-r[n]=s[n]+w[n]
-$$
-
-where:
-
-- $s[n]$ was our cosine;
-- $w[n]$ was Gaussian noise.
-
-### Chapter 9 use
-
-We used Add to combine several tones into one multi-frequency signal.
-
-For example,
+Chapter 14's additive-noise experiment used:
 
 $$
-x(t)
-=
-\cos(2\pi 2000t)
-+
-\cos(2\pi 5000t)
-+
-\cos(2\pi 9000t)
+r(t)=s_{\mathrm{FM}}(t)+n(t)
 $$
 
-This created a controlled spectrum that we could use to test low-pass, high-pass, band-pass, and band-reject filters.
+This was deliberately different from multiplying the FM signal by a varying amplitude.
 
 ---
 
 ## 3.2 Multiply
 
-Multiply performs sample-by-sample multiplication.
-
-For two inputs,
-
-$$
-x[n]
-$$
-
-and
-
-$$
-y[n]
-$$
-
-the output is
+Multiply performs sample-by-sample multiplication:
 
 $$
 z[n]=x[n]y[n]
 $$
 
-### Chapter 7 use
+It has taken on several different roles:
 
-To measure the power of a real signal, we connected the same signal to both inputs:
+- squaring a real signal for power measurement;
+- mixing;
+- modulation;
+- applying multiplicative amplitude disturbance.
 
-$$
-x[n]\times x[n]=x^2[n]
-$$
-
-This gave us the first step of our power estimator.
-
-### Chapter 8 use
-
-Multiply became one of the central blocks in our mixing experiments.
-
-When two sinusoidal signals are multiplied, new frequency components appear.
-
-Using
-
-$$
-\cos A\cos B
-=
-\frac{1}{2}
-\left[
-\cos(A-B)+\cos(A+B)
-\right]
-$$
-
-we saw that multiplying tones at $f_1$ and $f_2$ produces components related to
-
-$$
-f_1-f_2
-$$
-
-and
-
-$$
-f_1+f_2
-$$
-
-This gave us the practical foundation for mixing and frequency translation.
+This is a good example of why the book focuses on **operations**, not memorized block recipes.
 
 ---
 
-## 3.3 Divide
+## 3.3 Multiply Const
 
-For two input streams, Divide calculates
+Multiply Const scales a signal by a fixed or variable-controlled value.
 
-$$
-z[n]=\frac{x[n]}{y[n]}
-$$
+Chapter 14 used it for several conceptually meaningful operations:
 
-### Chapter 7 use
+```text
+Message × freq_dev
+```
 
-We used it to calculate the signal-to-noise power ratio:
+to convert a normalized message into frequency deviation, and:
 
-$$
-\frac{P_s}{P_n}
-$$
+```text
+Demodulated deviation × (1/freq_dev)
+```
 
----
-
-## 3.4 Log10
-
-Log10 calculates the base-10 logarithm of its input.
-
-### Chapter 7 use
-
-It formed part of our SNR calculation:
-
-$$
-\log_{10}
-\left(
-\frac{P_s}{P_n}
-\right)
-$$
+to recover a normalized message.
 
 ---
 
-## 3.5 Multiply Const
+## 3.4 Add Const
 
-Multiply Const multiplies every sample by a fixed value.
+Add Const became important in Chapter 11 for threshold detection.
 
-### Chapter 7 use
-
-Using a constant of `10`, we completed the power-ratio conversion to decibels:
+To test:
 
 $$
-\mathrm{SNR}_{\mathrm{dB}}
-=
-10\log_{10}
-\left(
-\frac{P_s}{P_n}
-\right)
+y[n]>8
 $$
+
+we used:
+
+```text
+Add Const = -8
+```
+
+before a Binary Slicer.
+
+It was later reused in modulation work.
+
+For FM:
+
+```text
++fc
+```
+
+created the desired instantaneous-frequency control:
+
+$$
+f_i(t)=f_c+\Delta f\,m(t)
+$$
+
+At the receiver:
+
+```text
+-fc
+```
+
+removed the carrier-frequency offset.
+
+---
+
+## 3.5 Abs
+
+Abs outputs the absolute value of each real sample.
+
+Chapter 13 used it as the first stage of a simple AM envelope detector:
+
+```text
+AM signal
+   ↓
+Abs
+   ↓
+Low Pass Filter
+   ↓
+DC Blocker
+```
+
+The experiment also showed why rectification alone does not recover a clean message.
 
 ---
 
 # 4. Complex-Signal and Type-Conversion Blocks
 
-These blocks become important once we start working with I/Q and complex-valued signals.
-
-| Block | Importance | Status | What it does | First introduced |
+| Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Float to Complex** | Essential | ✅ Used | Combines two float streams into one complex stream | Earlier I/Q chapters |
-| **Complex to Real** | Essential | ✅ Used | Extracts the real part of a complex signal | Earlier I/Q chapters |
-| **Complex to Imag** | Essential | ✅ Used | Extracts the imaginary part of a complex signal | Earlier I/Q chapters |
-| **Complex to Mag** | Essential | ✅ Used | Calculates complex magnitude | Earlier I/Q chapters |
+| **Float to Complex** | Essential | ✅ Used | Combines float streams into a complex stream | Earlier I/Q chapters; reused Chapter 14 |
+| **Complex to Real** | Essential | ✅ Used | Extracts real/I component | Earlier I/Q chapters |
+| **Complex to Imag** | Essential | ✅ Used | Extracts imaginary/Q component | Earlier I/Q chapters |
+| **Complex to Mag** | Essential | ✅ Used | Calculates complex magnitude | Earlier I/Q chapters; reused Chapter 14 |
 | **Complex to Arg** | Essential | ✅ Used | Calculates complex phase | Earlier I/Q chapters |
 | **Complex to Mag²** | Essential | ✅ Used | Calculates squared complex magnitude | Chapter 6 |
+| **Char to Float** | Important | ✅ Used | Converts byte/char samples to float | Chapter 11 |
 | **Complex to Float** | Important | ⏳ Later | Separates complex data into float components | Later |
-| **Char to Float** | Important | ⏳ Later | Converts byte/char samples to float | Later digital communications |
-| **Float to Char** | Important | ⏳ Later | Converts float samples to byte/char representation | Later |
+| **Float to Char** | Important | ⏳ Later | Converts float values to byte/char representation | Later |
 
 ---
 
 ## 4.1 Float to Complex
 
-Float to Complex combines two real-valued streams:
-
-$$
-I[n]
-$$
-
-and
-
-$$
-Q[n]
-$$
-
-into
+Float to Complex forms:
 
 $$
 z[n]=I[n]+jQ[n]
 $$
 
-This was one of the first blocks that allowed us to construct I/Q signals explicitly.
+Chapter 14 reused it in the controlled amplitude-disturbance experiment.
 
-It also became important for understanding why a complex signal can distinguish positive from negative frequency.
-
----
-
-## 4.2 Complex to Real
-
-For
-
-$$
-z[n]=I[n]+jQ[n]
-$$
-
-Complex to Real returns
-
-$$
-I[n]
-$$
+A real amplitude-control stream was converted to a complex stream with zero imaginary component so it could multiply the complex FM signal without intentionally adding phase rotation.
 
 ---
 
-## 4.3 Complex to Imag
+## 4.2 Complex to Mag
 
-Complex to Imag returns
+Complex to Mag calculates:
 
 $$
-Q[n]
+|z[n]|=\sqrt{I^2[n]+Q^2[n]}
 $$
+
+Chapter 14 gave this familiar block a new role.
+
+It allowed us to see the difference between:
+
+- ideal constant-envelope FM;
+- multiplicative amplitude variation;
+- additive complex noise.
+
+The magnitude display was especially useful because the recovered message could remain clean even when magnitude varied strongly, provided the phase trajectory was preserved.
 
 ---
 
-## 4.4 Complex to Mag
+## 4.3 Char to Float
 
-Complex to Mag calculates
+Binary Slicer produces byte/char output.
 
-$$
-|z[n]|
-=
-\sqrt{I^2[n]+Q^2[n]}
-$$
+Chapter 11 used Char to Float so the binary detector output could be displayed alongside floating-point matched-filter data.
 
----
+Conceptually:
 
-## 4.5 Complex to Arg
+```text
+0 -> 0.0
+1 -> 1.0
+```
 
-Complex to Arg calculates the phase angle of a complex sample.
-
-Conceptually,
-
-$$
-\phi[n]
-=
-\operatorname{atan2}(Q[n],I[n])
-$$
-
----
-
-## 4.6 Complex to Mag²
-
-Complex to Mag² calculates
-
-$$
-|z[n]|^2
-=
-I^2[n]+Q^2[n]
-$$
-
-This is especially useful when working with complex-signal power.
+It changes representation, not the detection decision.
 
 ---
 
 # 5. Stream and Vector Operations
 
-GNU Radio normally processes continuous streams of items.
-
-Some operations, however, work on groups of samples represented as vectors or deliberately select only part of a stream.
-
-| Block | Importance | Status | What it does | First introduced |
+| Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Stream to Vector** | Essential | ✅ Used | Groups consecutive stream samples into vectors | Chapter 6 |
-| **Vector to Stream** | Essential | ⏳ Later | Converts vectors back into a continuous stream | Later |
-| **Keep 1 in N** | Important | ✅ Used | Keeps one item from every group of N items | Chapter 9 |
-| **Head** | Important | 🔜 Planned | Allows only a specified number of items to pass | Chapter 10 |
-| **Delay** | Important | 🔜 Planned | Delays a stream by a specified number of samples | Chapter 11 |
+| **Stream to Vector** | Essential | ✅ Used | Groups stream samples into vectors | Chapter 6 |
+| **Keep 1 in N** | Important | ✅ Used | Keeps one item out of every N | Chapter 9 |
+| **Head** | Important | ✅ Used | Limits a stream to a finite number of items | Chapter 10/11 |
+| **Delay** | Important | ✅ Used | Delays a signal by a chosen number of samples | Chapter 11 |
+| **Vector to Stream** | Essential | ⏳ Later | Converts vectors to streams | Later OFDM/vector work |
+| **Repeat** | Important | ⏳ Later / optional | Repeats samples/items | Later if required |
 
 ---
 
-## 5.1 Stream to Vector
+## 5.1 Delay
 
-Suppose a stream contains:
+Delay shifts a stream by a specified number of samples.
 
-```text
-x0, x1, x2, x3, x4, x5, ...
-```
+It became useful in correlation and detection because known delays let us test whether a correlation peak appears at the expected position.
 
-With a vector length of 4, Stream to Vector produces:
+Delay is a simple block, but it represents a major receiver concept:
 
 ```text
-[x0, x1, x2, x3]
-[x4, x5, x6, x7]
-...
+Known waveform
+     ↓
+Channel / propagation delay
+     ↓
+Receiver searches for shifted match
 ```
-
-### Why we needed it
-
-The FFT operates on a block of samples rather than on one isolated sample.
-
-Stream to Vector allowed us to collect consecutive samples into FFT-sized groups.
-
----
-
-## 5.2 Keep 1 in N
-
-### What it does
-
-Keep 1 in N keeps one item from every group of $N$ input items.
-
-For example, if
-
-```text
-N = 4
-```
-
-it keeps one sample and discards the next three according to the configured selection.
-
-The resulting sample rate is effectively reduced by a factor of four.
-
-### Chapter 9 use
-
-We deliberately used Keep 1 in N to demonstrate what happens when a signal is downsampled **without anti-alias filtering**.
-
-With
-
-$$
-f_s=32\text{ kS/s}
-$$
-
-and
-
-$$
-N=4
-$$
-
-the new sample rate became
-
-$$
-f_s'
-=
-\frac{32}{4}
-=
-8\text{ kS/s}
-$$
-
-and the new Nyquist frequency became
-
-$$
-f_N'=4\text{ kHz}
-$$
-
-Frequency components above this new Nyquist limit folded into the retained spectrum.
-
-### Why it mattered
-
-Keep 1 in N gave us a deliberately incomplete decimator.
-
-It helped us see why simply discarding samples is not enough.
-
-The experiment led directly to the rule:
-
-> **Filter first. Decimate second.**
 
 ---
 
 # 6. Fourier and Spectrum Analysis
 
-These blocks allow us to move between time-domain and frequency-domain representations.
-
 | Block | Importance | Status | What it does | First introduced |
 |---|---|---|---|---|
-| **FFT** | Essential | ✅ Used | Computes the discrete Fourier transform efficiently | Chapter 6 |
-| **IFFT** | Essential | ⏳ Later | Converts frequency-domain values into a time-domain sequence | Later OFDM chapters |
-| **Goertzel** | Important | ⏳ Later | Efficiently evaluates selected frequency components | Later tone-detection work |
-| **Log Power FFT** | Important | ⏳ Later | Produces logarithmic spectral-power information | Later |
+| **FFT** | Essential | ✅ Used | Computes the DFT efficiently | Chapter 6 |
+| **IFFT** | Essential | ⏳ Later | Creates time-domain data from frequency-domain bins | OFDM chapters |
+| **Goertzel** | Important | ⏳ Later | Evaluates selected frequencies efficiently | Later |
+| **Log Power FFT** | Important | ⏳ Later | Produces logarithmic spectral power | Later |
 
----
+The FFT and Frequency Sink have now been reused to inspect:
 
-## 6.1 FFT
-
-The FFT is an efficient algorithm for computing the DFT.
-
-It transforms a vector of time-domain samples into a vector describing the signal in the frequency domain.
-
-### Why it matters
-
-The FFT allows us to investigate:
-
-- frequency components;
-- positive and negative frequencies;
-- spectral leakage;
-- FFT size;
-- frequency resolution;
-- windowing;
-- noise spectrum;
-- frequency translation;
-- filter behaviour;
-- aliasing after decimation.
-
-### Important distinction
-
-The FFT does not create frequencies that were not already represented by the input data.
-
-It gives us another way of describing the same sampled signal.
-
----
-
-## 6.2 Goertzel
-
-Goertzel is useful when we care about one particular frequency rather than an entire spectrum.
-
-Possible uses include:
-
-- tone detection;
-- DTMF detection;
-- known-frequency monitoring.
-
-We will introduce it later when there is a practical reason to use it.
-
----
-
-## 6.3 Log Power FFT
-
-Log Power FFT combines FFT processing with logarithmic power-spectrum calculation.
-
-It can be useful when we want spectral-power information directly.
-
-For now, it remains a later block because we already understand the individual operations behind it.
+- real and complex tones;
+- leakage;
+- noise;
+- mixing;
+- filtering;
+- AM;
+- DSB-SC;
+- SSB;
+- FM sidebands;
+- FM bandwidth.
 
 ---
 
 # 7. Averaging and Measurement
 
-These blocks help us turn changing sample values into useful measurements.
-
 | Block | Importance | Status | What it does | First introduced |
 |---|---|---|---|---|
-| **Moving Average** | Essential | ✅ Used | Calculates an average over a moving window | Chapter 7 |
+| **Moving Average** | Essential | ✅ Used | Averages over a moving window | Chapter 7 |
 | **RMS** | Important | ⏳ Later | Estimates root-mean-square magnitude | Later |
-| **Probe Signal** | Important | ⏳ Later | Allows values from a running flowgraph to be inspected programmatically | Later |
+| **Probe Signal** | Important | ⏳ Later | Exposes live values programmatically | Later |
 
----
-
-## 7.1 Moving Average
-
-Moving Average calculates an average over a finite number of samples.
-
-Conceptually,
-
-$$
-y[n]
-=
-\frac{1}{N}
-\sum_{k=0}^{N-1}
-x[n-k]
-$$
-
-where $N$ is the averaging length.
-
-### Chapter 7 use
-
-We first squared the signal:
-
-$$
-x^2[n]
-$$
-
-and then averaged those squared samples:
-
-$$
-P
-\approx
-\frac{1}{N}
-\sum_{n=0}^{N-1}
-x^2[n]
-$$
-
-This gave us an estimate of average signal power.
-
-### Important distinction
-
-Moving Average acts on the actual sample stream.
-
-This is different from the **Averaging** option inside the QT GUI Frequency Sink, which smooths successive spectral estimates used for display.
+Moving Average was first used for power estimation and later helped connect accumulation operations with correlation-style processing.
 
 ---
 
 # 8. Filters
 
-Filters allow us to treat different parts of a signal's spectrum differently.
-
-Chapter 7 gave us our first practical use of a low-pass filter when we investigated how noise power depends on bandwidth.
-
-Chapter 9 then studied filtering directly and used four major filter types for channel selection.
-
-| Block | Importance | Status | What it does | First introduced |
+| Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Low Pass Filter** | Essential | ✅ Used | Passes lower frequencies and attenuates higher frequencies | Chapter 7 / expanded Chapter 9 |
-| **High Pass Filter** | Essential | ✅ Used | Passes higher frequencies and attenuates lower frequencies | Chapter 9 |
-| **Band Pass Filter** | Essential | ✅ Used | Passes a selected frequency band | Chapter 9 |
-| **Band Reject Filter** | Essential | ✅ Used | Rejects a selected frequency band | Chapter 9 |
-| **Decimating FIR Filter** | Essential | ✅ Used | FIR filters while reducing sample rate | Chapter 9 |
-| **Frequency Xlating FIR Filter** | Advanced | ⏳ Later | Performs frequency translation and filtering together | Later SDR receiver chapters |
-| **DC Blocker** | Important | ⏳ Later | Suppresses unwanted DC components | Later |
-| **FFT Filter** | Important | ⏳ Later | Performs FIR filtering using FFT-based convolution | Later |
-| **FFT Low Pass Filter** | Important | ⏳ Later | Implements low-pass filtering using FFT-based processing | Later |
-| **Interpolating FIR Filter** | Important | ⏳ Later | FIR filters while increasing sample rate | Later |
-| **IIR Filter** | Important | ⏳ Later | Implements an infinite impulse response filter | Later |
-| **Single Pole IIR Filter** | Important | ⏳ Later | Performs simple recursive smoothing/filtering | Later |
-| **Hilbert** | Advanced | ⏳ Later | Produces a quadrature-related signal useful for analytic-signal processing | Later |
-| **Generic Filterbank** | Advanced | ⏳ Later | Applies a bank of filters to a signal | Later |
+| **Low Pass Filter** | Essential | ✅ Used | Passes lower frequencies | Chapter 7; expanded Chapter 9 |
+| **High Pass Filter** | Essential | ✅ Used | Passes higher frequencies | Chapter 9 |
+| **Band Pass Filter** | Essential | ✅ Used | Passes a selected band | Chapter 9; reused Chapter 13 |
+| **Band Reject Filter** | Essential | ✅ Used | Rejects a selected band | Chapter 9 |
+| **Decimating FIR Filter** | Essential | ✅ Used | FIR filtering with optional decimation | Chapters 9–11 |
+| **DC Blocker** | Important | ✅ Used | Removes DC/very-low-frequency offset | Chapter 13 |
+| **Frequency Xlating FIR Filter** | Advanced | ⏳ Later | Frequency translation + filtering + decimation | Real receiver chapter |
+| **FFT Filter** | Important | ⏳ Later | FIR filtering using FFT convolution | Later |
+| **FFT Low Pass Filter** | Important | ⏳ Later | FFT-based low-pass filtering | Later |
+| **Interpolating FIR Filter** | Important | ⏳ Later | FIR filtering while increasing sample rate | Later |
+| **IIR Filter** | Important | ⏳ Later | Infinite impulse response filtering | Later |
+| **Single Pole IIR Filter** | Important | ⏳ Later | Simple recursive filtering/smoothing | Later |
+| **Hilbert** | Advanced | ⏳ Later | Produces quadrature/analytic-signal processing | Discussed Chapter 13, not used |
+| **Generic Filterbank** | Advanced | ⏳ Later | Applies a bank of filters | Later |
 
 ---
 
-## 8.1 Low Pass Filter
+## 8.1 Band Pass Filter Reuse in SSB
 
-A Low Pass Filter allows lower-frequency components to pass while attenuating sufficiently high frequencies.
+Band Pass Filter was first learned as a channel-selection tool.
 
-### Important parameters
+Chapter 13 reused the same operation to build SSB from DSB-SC.
 
-- FIR Type
-- Decimation
-- Gain
-- Sample Rate
-- Cutoff Frequency
-- Transition Width
-- Window
-
-### Chapter 7 use
-
-We applied a low-pass filter to Gaussian noise.
-
-As the cutoff frequency increased, a wider portion of the noise spectrum passed through the filter.
-
-The measured output noise power increased with that bandwidth.
-
-This gave us direct experimental evidence that:
-
-> **Noise power depends on how much noise bandwidth we allow into the system.**
-
-### Chapter 9 use
-
-We used a multi-frequency input and selected the low-frequency component while attenuating the higher-frequency components.
-
-This allowed us to study:
-
-- passband;
-- stopband;
-- cutoff frequency;
-- transition width;
-- filter windows;
-- filter taps;
-- computational cost.
-
-### Watch out
-
-A practical filter does not change from perfectly passed to perfectly rejected at one infinitely sharp frequency.
-
-There is a transition region between the passband and stopband.
-
----
-
-## 8.2 High Pass Filter
-
-### What it does
-
-A High Pass Filter attenuates lower frequencies while allowing higher frequencies to pass.
-
-### Chapter 9 use
-
-We used it on our multi-frequency signal to suppress the lower-frequency components while retaining the high-frequency component.
-
-### Main idea
-
-Its frequency response is roughly the opposite of a low-pass filter.
-
-Low frequencies are attenuated.
-
-Higher frequencies are passed.
-
----
-
-## 8.3 Band Pass Filter
-
-### What it does
-
-A Band Pass Filter allows a selected frequency region to pass while attenuating frequencies outside that region.
-
-### Chapter 9 use
-
-We used it to isolate the middle component of our multi-frequency signal.
-
-This provided a simple model of **channel selection**.
-
-### Why it matters in SDR
-
-A receiver may contain several signals simultaneously.
-
-A band-pass response can be used to retain the frequency region containing the desired channel while suppressing neighbouring signals.
-
----
-
-## 8.4 Band Reject Filter
-
-### What it does
-
-A Band Reject Filter attenuates a selected frequency band while allowing frequencies outside that band to remain.
-
-### Chapter 9 use
-
-We used it to suppress the middle-frequency component while retaining components on either side.
-
-A very narrow rejected band is commonly called a **notch**.
-
----
-
-## 8.5 Decimating FIR Filter
-
-### What it does
-
-A Decimating FIR Filter combines two operations:
+Conceptually:
 
 ```text
-FIR filtering
-      ↓
-Downsampling
+DSB-SC
+  ↓
+Band Pass Filter
+  ↓
+One sideband retained
 ```
 
-If the input sample rate is $f_s$ and the decimation factor is $D$, then
-
-$$
-f_{s,\text{out}}
-=
-\frac{f_s}{D}
-$$
-
-### Important parameters
-
-- Type
-- Decimation
-- Taps
-- Sample Delay
-
-### Chapter 9 use
-
-We used the block with explicitly generated low-pass FIR taps.
-
-This allowed us to filter unwanted high-frequency components before reducing the sample rate.
-
-### Why it matters
-
-The filtering stage acts as an anti-alias filter.
-
-Without it, frequency components above the new Nyquist frequency can fold into the retained spectrum.
-
-This gave us the practical rule:
-
-> **Filter first. Decimate second.**
+The experiment also showed that practical sideband suppression depends on transition width and window choice.
 
 ---
 
-## 8.6 DC Blocker
+## 8.2 DC Blocker
 
-Real SDR receivers can contain an unwanted component around zero frequency.
+Chapter 13 used DC Blocker after envelope detection.
 
-The DC Blocker suppresses this component.
+The rectified and low-pass-filtered AM signal contained a DC component. The DC Blocker removed that offset so the recovered message could be centered around zero.
 
-Its purpose will become more meaningful once we work with real SDR hardware and baseband signals.
+Important settings used:
 
----
+```text
+Length: 32
+Long Form: True
+```
 
-## 8.7 FFT Filter
-
-FFT Filter implements FIR filtering using FFT-based convolution.
-
-This connects two concepts we are gradually bringing together:
-
-- convolution;
-- Fourier transforms.
-
-We will return to it after ordinary FIR convolution is understood.
-
----
-
-## 8.8 Hilbert
-
-The Hilbert block is closely related to:
-
-- analytic signals;
-- quadrature signals;
-- I/Q processing;
-- single-sideband modulation.
-
-We will introduce it when there is a clear experiment that makes its role intuitive.
+This gave the block a concrete role before its later use in real SDR baseband receivers.
 
 ---
 
 # 9. Filter-Tap Design Blocks
-
-GNU Radio provides blocks that generate **filter taps**.
-
-Filter taps are the coefficients of an FIR filter.
 
 | Block | Importance | Status | What it does | First introduced |
 |---|---|---|---|---|
@@ -1073,528 +680,293 @@ Filter taps are the coefficients of an FIR filter.
 | **High-pass Filter Taps** | Important | ⏳ Later | Generates high-pass FIR coefficients | Later |
 | **Band-pass Filter Taps** | Important | ⏳ Later | Generates band-pass FIR coefficients | Later |
 | **Band-reject Filter Taps** | Important | ⏳ Later | Generates band-reject FIR coefficients | Later |
-| **RRC Filter Taps** | Important | ⏳ Later | Generates root-raised-cosine filter coefficients | Later digital communications |
-| **Filter Taps Loader** | Advanced | ⏳ Later | Loads externally defined filter taps | Later |
+| **RRC Filter Taps** | Important | ⏳ Later | Generates root-raised-cosine taps | Digital communications |
+| **Filter Taps Loader** | Advanced | ⏳ Later | Loads externally defined taps | Later |
 
----
-
-## 9.1 Low-pass Filter Taps
-
-### What it does
-
-Low-pass Filter Taps generates the coefficient vector needed to implement an FIR low-pass filter.
-
-Instead of hiding filter design and filtering inside one convenient block, it allows us to separate the two operations:
+The key connection established by Chapters 9 and 10 is:
 
 ```text
-Filter specification
-        ↓
-Generate taps
-        ↓
-Apply taps with FIR filter
-        ↓
-Filtered output
-```
-
-### Chapter 9 use
-
-We generated a tap vector called:
-
-```text
-lpf_taps
-```
-
-and passed it to a Decimating FIR Filter.
-
-This exposed something that had previously been hidden inside the ordinary Low Pass Filter block.
-
-### Important parameters
-
-- Gain
-- Sample Rate
-- Cutoff Frequency
-- Transition Width
-- Window
-
-### Number of taps
-
-We created:
-
-```text
-num_taps = len(lpf_taps)
-```
-
-so that we could see how many coefficients GNU Radio generated.
-
-For the Hamming-window experiment, we observed approximately:
-
-| Transition Width | Number of Taps |
-|---:|---:|
-| 2000 Hz | 39 |
-| 1000 Hz | 77 |
-| 500 Hz | 155 |
-| 200 Hz | 385 |
-| 100 Hz | 771 |
-
-The trend was clear:
-
-$$
-N\propto\frac{f_s}{\Delta f}
-$$
-
-approximately, with the exact value depending on the filter-design method and window.
-
-A narrower transition width required more taps.
-
-We also observed that changing the window changed the required tap count.
-
-For example, using a Blackman window under the tested conditions produced a larger tap count than the corresponding Hamming-window design.
-
----
-
-## 9.2 Why Filter Taps Matter Beyond Chapter 9
-
-In Chapter 9, we mainly looked at taps as **filter coefficients**.
-
-But the taps have a deeper meaning.
-
-For an FIR filter,
-
-$$
-y[n]
-=
-\sum_{k=0}^{N-1}
-h[k]x[n-k]
-$$
-
-where the values
-
-$$
-h[0],h[1],\ldots,h[N-1]
-$$
-
-are the taps.
-
-This is a convolution operation.
-
-The taps also describe the FIR system's impulse response.
-
-That gives us an important connection:
-
-```text
-Filter specification
-        ↓
 Filter taps
-        ↓
-Impulse response
-        ↓
-Convolution with the input
-        ↓
+    =
+FIR impulse response
+    ↓
+Convolution with input
+    ↓
 Filtered output
 ```
 
-Chapter 9 showed us **what the taps do in practice**.
+---
 
-Chapter 10 will investigate **why this operation works**.
+# 10. Correlation, Matched Filtering and Detection
+
+Chapter 11 turned familiar FIR operations into a receiver detector.
+
+| Block / Operation | Importance | Status | Role |
+|---|---|---|---|
+| **Decimating FIR Filter** | Essential | ✅ Used | Implements correlation/matched filtering through selected taps |
+| **Add Const** | Important | ✅ Used | Moves a detection threshold to zero |
+| **Binary Slicer** | Essential | ✅ Used | Converts thresholded values into binary decisions |
+| **Char to Float** | Important | ✅ Used | Converts decisions for float-domain visualization |
+| **Delay** | Important | ✅ Used | Introduces/represents sample delay |
+| **Moving Average** | Essential | ✅ Used | Accumulation/smoothing where useful |
+| **Conjugate** | Important | Concept introduced | Required for general complex correlation |
+| **Correlate Access Code** | Important | ⏳ Later | Detects known bit patterns in digital streams |
 
 ---
 
-# 10. Root-Raised-Cosine Filtering
+## 10.1 Binary Slicer
 
-Two important blocks that will appear later are:
+Binary Slicer makes a binary decision around zero.
 
-- **Root Raised Cosine Filter**
-- **RRC Filter Taps**
+In Chapter 11 we wanted to test:
 
-Root-raised-cosine filtering becomes important in digital communication systems.
+$$
+y[n]>8
+$$
 
-It is commonly used for:
+so we first used:
 
-- pulse shaping;
-- bandwidth control;
-- reducing intersymbol interference.
+```text
+Add Const = -8
+```
 
-Introducing these blocks before we begin transmitting symbols would be premature, so they remain part of the later communication chapters.
+and then passed the shifted signal to Binary Slicer.
+
+Conceptually:
+
+```text
+Matched Filter
+      ↓
+Subtract threshold
+      ↓
+Binary Slicer
+      ↓
+0 or 1
+```
+
+This was the point where a similarity measurement became an actual detector decision.
 
 ---
 
 # 11. QT GUI Visualization
 
-These blocks allow us to observe what is happening inside a running flowgraph.
-
-Different sinks answer different questions about the same signal.
-
-| Block | Importance | Status | What it does | First introduced |
-|---|---|---|---|---|
-| **QT GUI Time Sink** | Essential | ✅ Used | Displays sample amplitude versus time | Earlier chapters |
-| **QT GUI Frequency Sink** | Essential | ✅ Used | Displays the spectrum of a signal | Earlier frequency-domain chapters |
-| **QT GUI Constellation Sink** | Essential | ✅ Used | Displays complex samples on the I/Q plane | Earlier I/Q chapters |
-| **QT GUI Number Sink** | Important | ✅ Used | Displays numerical values or measurements | Chapter 7 |
-| **QT GUI Vector Sink** | Important | ✅ Used | Displays vector values such as explicit FFT-bin outputs | Chapter 6 |
-| **QT GUI Waterfall Sink** | Important | ⏳ Later | Displays how the spectrum changes over time | Later |
-| **QT GUI Histogram Sink** | Important | ⏳ Later | Displays the statistical distribution of sample values | Later |
-| **QT GUI Eye Sink** | Important | ⏳ Later | Displays an eye diagram | Later digital communications |
-| **QT GUI Matrix Sink** | Specialized | ➖ Optional | Displays matrix-like data | Optional |
+| Block | Importance | Status | Main use |
+|---|---|---|---|
+| **QT GUI Time Sink** | Essential | ✅ Used | Time-domain waveform inspection |
+| **QT GUI Frequency Sink** | Essential | ✅ Used | Spectrum inspection |
+| **QT GUI Constellation Sink** | Essential | ✅ Used | I/Q-plane inspection |
+| **QT GUI Number Sink** | Important | ✅ Used | Numerical measurement display |
+| **QT GUI Vector Sink** | Important | ✅ Used | Vector-valued display |
+| **QT GUI Waterfall Sink** | Important | ✅ Used | Spectrum-versus-time display |
+| **QT GUI Histogram Sink** | Important | ⏳ Later | Sample distribution |
+| **QT GUI Eye Sink** | Important | ⏳ Later | Eye diagram |
+| **QT GUI Matrix Sink** | Specialized | ➖ Optional | Matrix-like data |
 
 ---
 
-## 11.1 QT GUI Time Sink
+## 11.1 QT GUI Number Sink
 
-The Time Sink displays signal amplitude against time.
+The Number Sink was first used for numerical measurements such as power and SNR.
 
-It helps us inspect:
+Chapter 13 reused it to display:
 
-- waveform shape;
-- amplitude;
-- period;
-- relative phase;
-- distortion;
-- time-domain noise;
-- effects of filtering;
-- effects of sample-rate changes.
+- carrier power percentage;
+- LSB power percentage;
+- USB power percentage;
+- total sideband power percentage.
 
-### Chapter 9 use
-
-The Time Sink helped us see how a complicated multi-tone waveform became simpler when selected frequency components were removed.
-
-It also showed how the same number of displayed samples corresponds to a longer time interval after decimation.
+This was a good reminder that a Frequency Sink is excellent for spectral structure but is not automatically the right tool for reporting exact engineering percentages.
 
 ---
 
-## 11.2 QT GUI Frequency Sink
+## 11.2 QT GUI Frequency Sink in Modulation Chapters
 
-The Frequency Sink displays a spectral estimate of the input signal.
+The Frequency Sink became central to Chapters 12–14.
 
-It helps us inspect:
+It was used to inspect:
 
-- spectral peaks;
-- positive and negative frequencies;
-- noise floor;
-- occupied bandwidth;
-- spectral leakage;
-- frequency translation;
-- filter behaviour;
-- aliasing.
+- baseband and translated spectra;
+- AM carrier and sidebands;
+- DSB-SC;
+- SSB-SC;
+- FM sideband spacing;
+- FM spectral spreading;
+- narrowband FM.
 
-### Important settings
+The FM experiments also reinforced an important display lesson:
 
-- Type
-- FFT Size
-- Window
-- Center Frequency
-- Bandwidth
-- Averaging
-- Y-axis range
+> Changing a Frequency Sink's center-frequency label does not itself frequency-shift the incoming signal.
 
-### Chapter 8 use
-
-The Frequency Sink was essential for seeing frequency translation.
-
-It allowed us to compare the spectrum before and after mixing.
-
-### Chapter 9 use
-
-It allowed us to see directly which components survived different filters.
-
-It was also essential in the decimation experiments because the displayed bandwidth had to be updated when the sample rate changed.
-
-For a decimation factor $D$,
-
-$$
-f_s'
-=
-\frac{f_s}{D}
-$$
-
-so the downstream Frequency Sink should use the new sample rate as its bandwidth.
-
-### Important distinction
-
-The Frequency Sink uses FFT processing internally for display.
-
-That does not mean every flowgraph containing a Frequency Sink contains an explicit FFT block in the signal path.
-
----
-
-## 11.3 QT GUI Constellation Sink
-
-The Constellation Sink displays complex samples on the I/Q plane.
-
-It helps us understand complex samples geometrically rather than only as separate I and Q waveforms.
-
-It has already helped us explore I/Q behaviour and the geometric interpretation of complex signals.
-
-Later it will become especially useful for:
-
-- BPSK;
-- QPSK;
-- QAM;
-- noise;
-- phase error;
-- synchronization.
-
----
-
-## 11.4 QT GUI Number Sink
-
-The Number Sink displays numerical values from a running flowgraph.
-
-### Chapter 7 use
-
-We used it to display:
-
-- signal power;
-- noise power;
-- SNR in dB;
-- filtered noise power.
-
-It is useful when the quantity we care about is a number rather than a waveform.
-
----
-
-## 11.5 QT GUI Vector Sink
-
-The Vector Sink displays vector-valued data.
-
-### Chapter 6 use
-
-It allowed us to inspect explicit FFT-bin values after:
-
-```text
-Stream to Vector
-        ↓
-FFT
-        ↓
-Complex to Mag²
-        ↓
-QT GUI Vector Sink
-```
-
-This helped distinguish between:
-
-> **displaying a spectrum**
-
-and
-
-> **processing the FFT output ourselves**.
+Signal processing and display labeling are different operations.
 
 ---
 
 # 12. QT GUI Controls
 
-QT GUI controls allow us to change flowgraph parameters while the flowgraph is running.
+| Block | Importance | Status | What it does |
+|---|---|---|---|
+| **QT GUI Range** | Essential | ✅ Used | Interactive numerical control |
+| **QT GUI Chooser** | Important | ✅ Used | Selects predefined values |
+| **QT GUI Push Button** | Important | ⏳ Later | Clickable runtime action |
+| **QT GUI Entry** | Important | ⏳ Later | Runtime numerical/text entry |
+| **QT GUI Check Box** | Important | ⏳ Later | Boolean control |
 
-This turns a static experiment into an interactive one.
-
-| Block | Importance | Status | What it does | First introduced / major use |
-|---|---|---|---|---|
-| **QT GUI Range** | Essential | ✅ Used | Provides an interactive numerical slider/control | Earlier chapters / Chapter 9 |
-| **QT GUI Chooser** | Important | ✅ Used | Allows selection from predefined values | Earlier experiments |
-| **QT GUI Push Button** | Important | ⏳ Later | Provides a clickable runtime control | Later |
-| **QT GUI Entry** | Important | ⏳ Later | Allows values to be entered at runtime | Later |
-| **QT GUI Check Box** | Important | ⏳ Later | Provides a Boolean runtime control | Later |
-
----
-
-## 12.1 QT GUI Range
-
-QT GUI Range allows a numerical parameter to be changed while the flowgraph is running.
-
-Typical settings include:
-
-- ID
-- Label
-- Default Value
-- Start
-- Stop
-- Step
-
-### Why it matters
-
-Instead of stopping the flowgraph, editing a parameter, and running it again, we can change the value interactively and immediately observe the effect.
-
-We have used this approach for parameters such as:
-
-- signal frequency;
-- sample rate;
-- noise amplitude;
-- filter cutoff frequency;
-- transition width;
-- decimation factor.
-
-### Chapter 9 use
-
-QT GUI Range became especially useful for understanding filter trade-offs.
-
-We could change transition width and immediately see how the response changed.
-
-We also used runtime control to investigate different decimation factors.
-
----
-
-## 12.2 QT GUI Chooser
-
-QT GUI Chooser allows the user to select one value from a predefined set.
-
-For example:
+Chapter 14 made heavy use of QT GUI Range for:
 
 ```text
-0.1
-0.5
-1.0
-2.0
+Frequency Deviation (Hz)
+Message Frequency (Hz)
+FM Amplitude Scale
+Amplitude Noise Level
+Channel Noise Amplitude
 ```
 
-### Range versus Chooser
-
-Use **QT GUI Range** when a parameter should move through a numerical interval.
-
-Use **QT GUI Chooser** when the experiment should use a small number of specific predefined values.
+The ranges allowed us to keep the flowgraph fixed while changing one physical property at a time.
 
 ---
 
 # 13. Resampling and Rate Change
 
-These blocks change the rate at which samples appear in a signal stream.
+| Block | Importance | Status | What it does |
+|---|---|---|---|
+| **Decimating FIR Filter** | Essential | ✅ Used | Filters while reducing sample rate |
+| **Keep 1 in N** | Important | ✅ Used | Direct downsampling without anti-alias filtering |
+| **Interpolating FIR Filter** | Essential | ⏳ Later | Filters while increasing sample rate |
+| **Rational Resampler** | Essential | ⏳ Later | Rational sample-rate conversion |
+| **Fractional Resampler** | Advanced | ⏳ Later | Non-integer resampling |
+| **Repeat** | Important | ⏳ Later | Repeats items |
 
-Chapter 9 gave us our first detailed practical look at **decimation**.
+Although the original chapter plan considered introducing Rational Resampler during FM, the experimentally developed Chapter 14 focused on FM fundamentals first.
 
-| Block | Importance | Status | What it does | First introduced |
-|---|---|---|---|---|
-| **Decimating FIR Filter** | Essential | ✅ Used | Filters while reducing sample rate | Chapter 9 |
-| **Keep 1 in N** | Important | ✅ Used | Keeps one sample out of every N | Chapter 9 |
-| **Interpolating FIR Filter** | Essential | ⏳ Later | Filters while increasing sample rate | Later |
-| **Rational Resampler** | Essential | ⏳ Later | Changes sample rate by a rational factor | Later |
-| **Fractional Resampler** | Advanced | ⏳ Later | Performs non-integer sample-rate conversion | Later |
-| **Repeat** | Important | 🔜 Planned | Repeats samples or items | Chapter 10 |
-
----
-
-## 13.1 Decimation
-
-If the original sample rate is $f_s$ and the decimation factor is $D$, then
-
-$$
-f_s'
-=
-\frac{f_s}{D}
-$$
-
-For example, starting with
-
-$$
-f_s=32\text{ kS/s}
-$$
-
-and choosing
-
-$$
-D=4
-$$
-
-gives
-
-$$
-f_s'=8\text{ kS/s}
-$$
-
-The new Nyquist frequency is therefore
-
-$$
-f_N'
-=
-\frac{f_s'}{2}
-=
-4\text{ kHz}
-$$
-
-### Chapter 9 lesson
-
-Reducing the sample rate also reduces the frequency range that can be represented without aliasing.
-
-Therefore, unwanted frequency components must normally be removed before downsampling.
-
----
-
-## 13.2 Filtered Decimation Versus Direct Downsampling
-
-Chapter 9 compared:
-
-```text
-Input
-  ↓
-FIR Filter
-  ↓
-Decimation
-```
-
-with:
-
-```text
-Input
-  ↓
-Keep 1 in N
-```
-
-The second path deliberately omitted the anti-alias filter.
-
-This allowed us to see frequency components fold into the new Nyquist region.
-
-That experiment gave us one of the most practical rules we have encountered so far:
-
-> **Do not reduce the sample rate until the signal bandwidth is compatible with the new sample rate.**
-
----
-
-## 13.3 Repeat
-
-Repeat duplicates input items.
-
-It may become useful in Chapter 10 when working with finite sequences and repeated impulse-response experiments.
-
-However, we will only mark it as **Used** if the Chapter 10 experiments actually require it.
+Audio-rate conversion and practical broadcast-FM resampling remain available for the later real-radio receiver chapter, where multiple hardware/audio sample rates will have a concrete purpose.
 
 ---
 
 # 14. Modulation and Demodulation
 
-These blocks will become important when we begin transmitting information rather than only studying test signals.
+| Block / Method | Importance | Status | First use / note |
+|---|---|---|---|
+| **Manual AM chain using Add/Multiply** | Essential concept | ✅ Used | Chapters 12–13 |
+| **Abs + LPF + DC Blocker envelope detector** | Important | ✅ Used | Chapter 13 |
+| **Band Pass Filter SSB method** | Important | ✅ Used | Chapter 13 |
+| **VCO** | Important | ✅ Used | Chapter 14 |
+| **VCO (Complex)** | Important | ✅ Used | Chapter 14 |
+| **Quadrature Demod** | Essential | ✅ Used | Chapter 14 |
+| **Frequency Mod** | Essential | ⏳ Later / convenience block | Underlying FM operation already understood |
+| **NBFM Transmit** | Important | ⏳ Later / optional | Convenience block |
+| **NBFM Receive** | Important | ⏳ Later / optional | Convenience block |
+| **WBFM Transmit** | Important | ⏳ Later / optional | Convenience block |
+| **WBFM Receive** | Important | ⏳ Later / practical receiver | Convenience block |
+| **AM Demod** | Important | ⏳ Later / convenience block | Manual AM demodulation already understood |
+| **Constellation Modulator** | Important | ⏳ Later | Digital modulation |
+| **Constellation Decoder** | Important | ⏳ Later | Digital demodulation |
 
-| Block | Importance | Status |
-|---|---|---|
-| **Frequency Mod** | Essential | ⏳ Later |
-| **Quadrature Demod** | Essential | ⏳ Later |
-| **NBFM Transmit** | Important | ⏳ Later |
-| **NBFM Receive** | Important | ⏳ Later |
-| **WBFM Transmit** | Important | ⏳ Later |
-| **WBFM Receive** | Important | ⏳ Later |
-| **AM Demod** | Important | ⏳ Later |
-| **Constellation Modulator** | Important | ⏳ Later |
-| **Constellation Decoder** | Important | ⏳ Later |
+---
+
+## 14.1 Why We Did Not Start with Convenience Modulation Blocks
+
+The book deliberately built AM and FM from simpler operations.
+
+For AM:
+
+```text
+Message
+   ↓
+Scaling / DC term
+   ↓
+Multiply by carrier
+```
+
+For FM:
+
+```text
+Message
+   ↓
+Scale by frequency deviation
+   ↓
+Add center-frequency term
+   ↓
+VCO
+```
+
+This keeps the signal-processing idea visible.
+
+Convenience blocks become much more useful after the reader understands what operation they are replacing.
+
+---
+
+## 14.2 Quadrature Demod
+
+Quadrature Demod estimates phase change between consecutive complex samples.
+
+If:
+
+$$
+x[n]=A[n]e^{j\phi[n]}
+$$
+
+then the phase of:
+
+$$
+x[n]x^*[n-1]
+$$
+
+contains the difference:
+
+$$
+\phi[n]-\phi[n-1]
+$$
+
+That phase change is related to instantaneous frequency.
+
+Chapter 14 used:
+
+```text
+Gain = samp_rate/(2*pi)
+```
+
+so the raw output could be interpreted approximately in hertz.
+
+For the 10 kHz carrier with ±2 kHz deviation, the raw demodulator output moved approximately between:
+
+```text
+8 kHz
+and
+12 kHz
+```
+
+Then:
+
+```text
+Add Const = -fc
+Multiply Const = 1.0/freq_dev
+```
+
+recovered the normalized message.
 
 ---
 
 # 15. Digital Communication Blocks
 
-These blocks become useful once the book begins working with bits, symbols, pulse shaping, and digital receivers.
+The next part of the book moves from continuous analog messages to bits and symbols.
 
 | Block | Importance | Status |
 |---|---|---|
-| **Chunks to Symbols** | Essential | ⏳ Later |
+| **Random Source** | Essential | 🔜 Planned |
+| **Vector Source** | Important | ✅ Used, new digital role coming |
+| **Chunks to Symbols** | Essential | 🔜 Planned |
 | **Map** | Important | ⏳ Later |
 | **Unpacked to Packed** | Important | ⏳ Later |
 | **Packed to Unpacked** | Important | ⏳ Later |
+| **Binary Slicer** | Essential | ✅ Used in detection; reused later |
 | **Differential Encoder** | Important | ⏳ Later |
 | **Differential Decoder** | Important | ⏳ Later |
-| **Binary Slicer** | Essential | ⏳ Later |
 | **Correlate Access Code** | Important | ⏳ Later |
 | **Additive Scrambler** | Important | ⏳ Later |
 
 ---
 
 # 16. Synchronization
-
-Synchronization blocks become necessary when the receiver must recover timing and carrier information from a received signal.
 
 | Block | Importance | Status |
 |---|---|---|
@@ -1605,54 +977,35 @@ Synchronization blocks become necessary when the receiver must recover timing an
 | **PLL Frequency Detector** | Advanced | ⏳ Later |
 | **FLL Band-Edge** | Advanced | ⏳ Later |
 
----
-
-# 17. Correlation and Detection
-
-Correlation will become the main topic of Chapter 11.
-
-The exact GNU Radio implementation will be finalized only after testing the clearest approach for a beginner.
-
-Possible blocks and operations include:
-
-| Block / Operation | Importance | Status | Possible role |
-|---|---|---|---|
-| **Delay** | Important | 🔜 Planned | Introduces a known sample delay |
-| **Multiply** | Essential | ✅ Used | Can participate in correlation-related operations |
-| **Moving Average** | Essential | ✅ Used | Can accumulate or smooth products |
-| **Conjugate** | Important | 🔜 Planned | Useful for complex correlation operations |
-| **Vector processing** | Important | 🔜 Planned | May be useful for finite-sequence correlation |
-| **Correlate Access Code** | Important | ⏳ Later | Detects known bit patterns in digital streams |
-
-We will not choose a correlation implementation merely because a block exists.
-
-The goal in Chapter 11 will be to make the idea of similarity, delay, and the correlation peak visually clear.
+These remain later topics because the current experiments still assume ideal timing and carrier references where required.
 
 ---
 
-# 18. Channel and Impairment Simulation
+# 17. Channel and Impairment Simulation
 
-These blocks allow us to deliberately make signals less ideal.
-
-| Block | Importance | Status |
+| Block / Method | Importance | Status |
 |---|---|---|
+| **Manual Noise Source + Add channel** | Essential concept | ✅ Used | Chapter 14 |
 | **Channel Model** | Essential | ⏳ Later |
 | **Dynamic Channel Model** | Advanced | ⏳ Later |
 | **Frequency Selective Fading Model** | Advanced | ⏳ Later |
 | **Selective Fading Model** | Advanced | ⏳ Later |
 
-These will eventually allow us to investigate:
+Chapter 14 gave us a first simple channel-like impairment without using Channel Model:
 
-- noise;
-- frequency offset;
-- timing offset;
-- multipath;
-- fading;
-- receiver robustness.
+```text
+Complex FM
+    +
+Complex Gaussian noise
+    ↓
+Noisy received FM
+```
+
+Later Channel Model will combine several impairments in one place.
 
 ---
 
-# 19. File and Data Storage
+# 18. File and Data Storage
 
 | Block | Importance | Status |
 |---|---|---|
@@ -1663,15 +1016,11 @@ These will eventually allow us to investigate:
 | **Metadata File Source** | Advanced | ⏳ Later |
 | **Metadata File Sink** | Advanced | ⏳ Later |
 
-These blocks will become useful when we start recording and replaying signals.
+Recorded IQ will later provide a bridge between simulated flowgraphs and real RF experiments.
 
 ---
 
-# 20. Message and PDU Processing
-
-GNU Radio is not limited to continuous sample streams.
-
-Later we will work with messages, metadata, packets, and PDUs.
+# 19. Message and PDU Processing
 
 | Block | Importance | Status |
 |---|---|---|
@@ -1682,9 +1031,7 @@ Later we will work with messages, metadata, packets, and PDUs.
 
 ---
 
-# 21. SDR Hardware Interfaces
-
-Eventually our samples will come from real RF hardware rather than Signal Source.
+# 20. SDR Hardware Interfaces
 
 | Block / Interface | Importance | Status |
 |---|---|---|
@@ -1697,11 +1044,11 @@ Eventually our samples will come from real RF hardware rather than Signal Source
 | **PlutoSDR Source** | Important | ⏳ Later |
 | **PlutoSDR Sink** | Important | ⏳ Later |
 
-The exact hardware interface used later will depend on the SDR hardware available for the experiments.
+The conceptual chapters should not depend on one hardware manufacturer.
 
 ---
 
-# 22. Custom and Advanced Processing
+# 21. Custom and Advanced Processing
 
 | Block / Feature | Importance | Status |
 |---|---|---|
@@ -1711,13 +1058,11 @@ The exact hardware interface used later will depend on the SDR hardware availabl
 | **Tagged Streams** | Essential | ⏳ Later |
 | **PDUs** | Important | ⏳ Later |
 
-These become useful once our flowgraphs grow beyond small experiments.
-
 ---
 
-# 23. Similar-Looking Blocks Are Not Necessarily the Same
+# 22. Similar-Looking Blocks Are Not Necessarily the Same
 
-One reason GNU Radio can initially feel overwhelming is that several blocks may appear to perform almost the same job.
+Several GNU Radio blocks can appear to solve similar problems.
 
 For example:
 
@@ -1728,273 +1073,224 @@ FFT Low Pass Filter
 Decimating FIR Filter
 ```
 
-These are not simply four different names for the same operation.
+They are not interchangeable names.
 
-They represent different levels or implementations of filtering.
+The important habit is to ask:
 
-The **Low Pass Filter** is a convenient complete filter.
+> What operation does my signal need?
 
-The **Low-pass Filter Taps** block generates coefficients that can be used elsewhere.
+Then ask:
 
-The **FFT Low Pass Filter** performs the filtering using an FFT-based implementation.
+> Which implementation is appropriate here?
 
-The **Decimating FIR Filter** applies FIR taps while also reducing the sample rate.
+The same principle now applies to modulation.
 
-Chapter 9 made this distinction much more concrete.
-
-Instead of treating a filter as one mysterious block, we separated:
+For example:
 
 ```text
-Filter design
-      ↓
-Filter taps
-      ↓
-FIR filtering
-      ↓
-Optional decimation
+Manual VCO-based FM
+Frequency Mod
+NBFM Transmit
+WBFM Transmit
 ```
 
-This gives us an important rule:
+All relate to FM, but they expose different amounts of the underlying processing.
 
-> **We do not need to learn every similar-looking block at the same time.**
-
-We first learn the underlying DSP operation using the clearest block.
-
-Once the concept is understood, alternative implementations become much easier to understand.
+The book should normally introduce the clearest underlying operation first and use convenience blocks later when they solve a real practical problem.
 
 ---
 
-# 24. Blocks We Have Used So Far
+# 23. Blocks We Have Used So Far
 
-At the end of Chapter 9, the core GNU Radio toolbox we have actually worked with includes:
+At the end of Chapter 14, the working GNU Radio toolbox includes:
 
 | Block / Feature | Status |
 |---|---|
 | Signal Source | ✅ |
 | Noise Source | ✅ |
+| Constant Source | ✅ |
+| Vector Source | ✅ |
+| VCO | ✅ |
+| VCO (Complex) | ✅ |
 | Throttle | ✅ |
 | Variable | ✅ |
+| Import | ✅ |
+| Head | ✅ |
 | Add | ✅ |
 | Multiply | ✅ |
 | Divide | ✅ |
 | Log10 | ✅ |
 | Multiply Const | ✅ |
+| Add Const | ✅ |
+| Abs | ✅ |
 | Float to Complex | ✅ |
 | Complex to Real | ✅ |
 | Complex to Imag | ✅ |
 | Complex to Mag | ✅ |
 | Complex to Mag² | ✅ |
 | Complex to Arg | ✅ |
+| Char to Float | ✅ |
 | Stream to Vector | ✅ |
+| Keep 1 in N | ✅ |
+| Delay | ✅ |
 | FFT | ✅ |
 | Moving Average | ✅ |
 | Low Pass Filter | ✅ |
 | High Pass Filter | ✅ |
 | Band Pass Filter | ✅ |
 | Band Reject Filter | ✅ |
-| Low-pass Filter Taps | ✅ |
 | Decimating FIR Filter | ✅ |
-| Keep 1 in N | ✅ |
+| DC Blocker | ✅ |
+| Low-pass Filter Taps | ✅ |
+| Binary Slicer | ✅ |
+| Quadrature Demod | ✅ |
 | QT GUI Time Sink | ✅ |
 | QT GUI Frequency Sink | ✅ |
 | QT GUI Constellation Sink | ✅ |
 | QT GUI Vector Sink | ✅ |
 | QT GUI Number Sink | ✅ |
+| QT GUI Waterfall Sink | ✅ |
 | QT GUI Range | ✅ |
 | QT GUI Chooser | ✅ |
 
-This is already enough to build much more than the small flowgraphs we started with.
+This is already a substantial toolbox.
 
-More importantly, we are beginning to think about these blocks as **operations**, not simply names to memorize.
-
-For example:
+More importantly, the blocks are beginning to map to operations naturally.
 
 ```text
-Need to observe a waveform
+Need a known periodic waveform
         ↓
-QT GUI Time Sink
+Signal Source
 ```
 
 ```text
-Need to inspect frequency content
+Need a known finite sequence
+        ↓
+Vector Source
+```
+
+```text
+Need to observe frequency content
         ↓
 QT GUI Frequency Sink
 ```
 
 ```text
-Need average power
+Need to translate frequency
         ↓
-Square the samples
-        ↓
-Moving Average
+Multiply by an oscillator
 ```
 
 ```text
-Need SNR
+Need a selected frequency region
         ↓
-Measure signal power and noise power
-        ↓
-Divide
-        ↓
-Log10
-        ↓
-Multiply by 10
+Appropriate filter
 ```
 
 ```text
-Need to move frequencies
+Need to detect a known waveform
         ↓
-Multiply signals
+Matched filter / correlation
         ↓
-Observe sum and difference components
+Threshold
+        ↓
+Binary Slicer
 ```
 
 ```text
-Need to keep low frequencies
+Need conventional AM
+        ↓
+Add the carrier/DC term
+        ↓
+Multiply by carrier
+```
+
+```text
+Need simple AM envelope recovery
+        ↓
+Abs
         ↓
 Low Pass Filter
+        ↓
+DC Blocker
 ```
 
 ```text
-Need to isolate a frequency band
+Need FM from first principles
         ↓
-Band Pass Filter
+Message × deviation
+        ↓
++ center frequency
+        ↓
+VCO
 ```
 
 ```text
-Need to reject a frequency band
+Need to recover FM
         ↓
-Band Reject Filter
+Quadrature Demod
+        ↓
+Remove center-frequency offset
+        ↓
+Normalize by deviation
 ```
 
 ```text
-Need a sharper transition
+Need to inspect complex-signal magnitude
         ↓
-Reduce transition width
-        ↓
-More FIR taps are required
+Complex to Mag
 ```
 
-```text
-Need to reduce sample rate safely
-        ↓
-Low-pass filtering
-        ↓
-Decimation
-```
+This way of thinking is more important than memorizing names.
 
-That way of thinking is more important than memorizing the block library.
+---
+
+# 24. Chapter-by-Chapter GNU Radio Growth Through Chapter 14
+
+This section records the practical progression the completed book has actually followed.
+
+| Chapter | Main GNU Radio development |
+|---|---|
+| 1 | GRC basics, Signal Source, Throttle, Time Sink |
+| 2 | Variables, expressions, Add, branching |
+| 3 | QT GUI Range, runtime changes, sampling/aliasing displays |
+| 4–5 | Complex data, Float to Complex, I/Q inspection, Constellation Sink |
+| 6 | FFT, Stream to Vector, Vector Sink, spectrum tools |
+| 7 | Noise, power, SNR, Moving Average, Number Sink |
+| 8 | Mixing and frequency translation using Multiply |
+| 9 | LPF/HPF/BPF/BRF, taps, decimation, Keep 1 in N |
+| 10 | Vector Source and explicit FIR impulse/convolution experiments |
+| 11 | Correlation, matched filtering, Add Const thresholding, Binary Slicer, Char to Float |
+| 12 | Reuse mixing/filtering tools to understand why modulation exists |
+| 13 | Conventional AM, envelope detection, DC Blocker, AM power display, SSB filtering |
+| 14 | VCO, Import, Quadrature Demod, FM sidebands, magnitude inspection, additive-noise testing |
+
+This table should be updated after each completed chapter rather than following the original plan mechanically.
 
 ---
 
 # 25. What Comes Next?
 
-The next major topic is:
+The next chapter begins the transition from analog communication to digital communication.
 
-# Chapter 10: Impulse Response and Convolution
+The new question is no longer:
 
-Chapter 9 introduced FIR filters from a practical point of view.
+> How should a continuous message change a carrier?
 
-We selected frequency components, changed transition widths, generated filter taps, and used those taps inside a Decimating FIR Filter.
+It becomes:
 
-We also encountered the FIR input/output relationship:
+> How do zeros and ones become physical signal states?
 
-$$
-y[n]
-=
-\sum_{k=0}^{N-1}
-h[k]x[n-k]
-$$
+The first likely GNU Radio additions are therefore digital-data and mapping tools such as:
 
-But we have not yet properly answered a deeper question:
+- Random Source;
+- controlled Vector Source sequences;
+- bit/byte manipulation where necessary;
+- Chunks to Symbols when symbol mapping begins.
 
-> **Why does this operation describe what the filter does?**
+The key teaching rule remains unchanged:
 
-To answer that, Chapter 10 will begin with the simplest possible discrete-time input:
-
-$$
-\delta[n]
-$$
-
-the impulse.
-
-We will investigate what happens when an impulse passes through an FIR system.
-
-This will lead to the idea of the **impulse response**:
-
-$$
-\delta[n]
-\rightarrow
-\boxed{\text{System}}
-\rightarrow
-h[n]
-$$
-
-Then we will build more complicated signals from shifted and scaled impulses.
-
-That will allow convolution to emerge naturally rather than appearing first as an equation.
-
-Only after the intuition is clear will we introduce the general convolution expression:
-
-$$
-y[n]
-=
-\sum_{k=-\infty}^{\infty}
-x[k]h[n-k]
-$$
-
-The GNU Radio experiments are expected to introduce or expand:
-
-- Vector Source;
-- FIR filtering with explicit taps;
-- Head;
-- Repeat, if useful;
-- finite sequences.
-
-The main question of Chapter 10 will be:
-
-> **If we know how a system responds to one impulse, can we predict how it responds to any signal?**
-
-After that, Chapter 11 will take the next step:
-
-# Chapter 11: Correlation, Matched Filtering and Signal Detection
-
-There the question changes from:
-
-> **What does this system do to a signal?**
-
-to:
-
-> **How can a receiver find a known signal hidden inside another signal?**
-
-This gives us the developing path:
-
-```text
-Chapter 8
-Mixing and Frequency Translation
-        ↓
-Move signals in frequency
-
-Chapter 9
-Filters and Channel Selection
-        ↓
-Keep the spectrum we want
-
-Chapter 10
-Impulse Response and Convolution
-        ↓
-Understand how an LTI system produces its output
-
-Chapter 11
-Correlation, Matched Filtering and Signal Detection
-        ↓
-Search for known signals
-
-Later Chapters
-Modulation and Communication Systems
-        ↓
-Put information onto carriers and recover it
-```
+> Introduce the operation because the communication problem requires it, not because a block happens to exist.
 
 ---
 
@@ -2003,22 +1299,13 @@ Put information onto carriers and recover it
 Whenever a new GNU Radio block becomes part of the book:
 
 1. Introduce it naturally when the signal-processing problem requires it.
-2. Explain it in the chapter's **GNU Radio Toolbox** if it is important enough to deserve a focused introduction.
-3. Use it in a real experiment.
+2. Explain it in the chapter's **GNU Radio Toolbox** when a focused explanation is useful.
+3. Use it in a completed experiment.
 4. Add or update it in this Master List.
-5. Mark its status as **Used** only after the corresponding experiment has actually been completed.
-6. Record where it was first introduced.
-7. Reuse it in later chapters without repeatedly teaching it from the beginning.
-
-The goal is not to collect GNU Radio blocks.
-
-The goal is to gradually reach the point where we can look at a signal-processing problem and decide:
-
-> **What operation needs to happen to this signal?**
-
-Only then should we ask:
-
-> **Which GNU Radio block performs that operation?**
+5. Mark its status as **Used** only after that experiment works.
+6. Record where it first appeared or first became important.
+7. Reuse it later without repeatedly teaching it from the beginning.
+8. If the actual experiments differ from the original chapter plan, update this Master List to reflect the experiments that were really completed.
 
 ---
 
@@ -2026,23 +1313,7 @@ Only then should we ask:
 
 This is a **living document**.
 
-As we progress through the GNU Radio experiments:
-
-- new blocks will be added;
-- statuses will change;
-- first-introduction references will become more precise;
-- some blocks may be reclassified;
-- practical notes from real experiments can be added.
-
-The purpose is not to memorize GNU Radio's block library.
-
-The purpose is to know:
-
-> **Which block should I reach for when I want to perform a particular DSP or SDR operation, and why?**
-
-At this point, we have moved beyond simply generating and viewing signals.
-
-We can now:
+At the end of Chapter 14, we can now do much more than generate and inspect simple signals.
 
 ```text
 Generate
@@ -2055,21 +1326,41 @@ Mix
    ↓
 Filter
    ↓
-Select
-   ↓
 Decimate
+   ↓
+Convolve
+   ↓
+Correlate
+   ↓
+Detect
+   ↓
+Modulate
+   ↓
+Demodulate
+   ↓
+Disturb with controlled noise
+   ↓
+Observe receiver degradation
 ```
 
-The next step is to understand something deeper:
+The next stage of the book will add a new layer:
 
 ```text
-Input signal
-     ↓
-System
-     ↓
-Output signal
+Bits
+  ↓
+Symbols
+  ↓
+Waveforms
+  ↓
+Digital communication
 ```
 
-and ask how the behaviour of that system can be completely described by what it does to one simple impulse.
+The purpose of the Master List is not to collect block names.
 
-That is where Chapter 10 begins.
+It is to help the reader gradually reach the point where they can look at a signal-processing requirement and ask:
+
+> **What operation needs to happen to this signal?**
+
+Only then:
+
+> **Which GNU Radio block should perform that operation?**
