@@ -2,7 +2,7 @@
 
 ## 1.1 What Does a Radio Actually Do?
 
-Before talking about Software Defined Radio, let's forget the word *software* for a moment and start with a simpler question:
+Before talking about Software Defined Radio, let's forget the word **software** for a moment and start with a simpler question:
 
 > What does a radio actually do?
 
@@ -16,21 +16,31 @@ At a very high level, we can picture the process like this:
 
 ```text
 Signal in the air
+
         ↓
+
 Receive the signal
+
         ↓
+
 Select the signal we want
+
         ↓
+
 Remove what we do not want
+
         ↓
+
 Recover the information
+
         ↓
+
 Audio / Data / Image / Something useful
 ```
 
 Of course, a real receiver is more complicated than this. But this simple picture already tells us something useful: a radio is essentially a chain of operations performed on a signal.
 
-What changes with Software Defined Radio is not necessarily *what* we need to do to the signal. The interesting change is **where and how we perform those operations**.
+What changes with Software Defined Radio is not necessarily **what** we need to do to the signal. The interesting change is **where and how we perform those operations**.
 
 ---
 
@@ -44,17 +54,29 @@ A very simplified receiver could look something like this:
 
 ```text
 Antenna
+
    ↓
+
 RF Amplifier
+
    ↓
+
 Analog Filter
+
    ↓
+
 Mixer
+
    ↓
+
 Another Filter
+
    ↓
+
 Demodulator
+
    ↓
+
 Audio
 ```
 
@@ -80,15 +102,25 @@ A simplified SDR receiver can be thought of as:
 
 ```text
 Antenna
+
    ↓
+
 RF Front End
+
    ↓
+
 ADC
+
    ↓
+
 Digital Samples
+
    ↓
+
 Software Processing
+
    ↓
+
 Information
 ```
 
@@ -140,15 +172,25 @@ A simplified SDR transmitter might look like this:
 
 ```text
 Information
+
     ↓
+
 Digital Signal Processing
+
     ↓
+
 Digital Samples
+
     ↓
+
 DAC
+
     ↓
+
 RF Front End
+
     ↓
+
 Antenna
 ```
 
@@ -162,6 +204,7 @@ A useful way to remember the two directions is:
 RECEIVER
 
 Analog Signal → ADC → Digital Samples → Software
+
 
 
 TRANSMITTER
@@ -261,6 +304,7 @@ For our first experiment, we will use:
 
 ```text
 Amplitude = 1
+
 Frequency = 1 kHz
 ```
 
@@ -268,7 +312,7 @@ Our goal is simple: ask GNU Radio to generate this signal and then display it.
 
 ---
 
-## 1.9 Build Your First GNU Radio Flowgraph
+## 1.9 Experiment 1: Build Your First GNU Radio Flowgraph
 
 Open **GNU Radio Companion** and create a new flowgraph.
 
@@ -282,6 +326,7 @@ Set:
 
 ```text
 ID: samp_rate
+
 Value: 32000
 ```
 
@@ -339,7 +384,9 @@ For this experiment, the settings we care about most are:
 
 ```text
 Type: Float
+
 Number of Points: 1024
+
 Sample Rate: samp_rate
 ```
 
@@ -375,9 +422,13 @@ More importantly, try to read the flowgraph from left to right:
 
 ```text
 Generate a cosine
+
         ↓
+
 Control the processing rate
+
         ↓
+
 Display the samples
 ```
 
@@ -403,7 +454,7 @@ Now run the flowgraph.
 
 ---
 
-## 1.11 What Did We Get?
+## 1.11 Observing the Result
 
 You should see something like this:
 
@@ -515,13 +566,13 @@ This gives us a perfect opportunity to deliberately break our first flowgraph.
 
 ---
 
-## 1.14 Now Break the Flowgraph
+## 1.14 Experiment 2: Break the Flowgraph on Purpose
 
 Getting a flowgraph to work is useful.
 
 Breaking it on purpose can teach us even more.
 
-### Experiment 1: Create a Type Mismatch
+### Create a Type Mismatch
 
 Stop the flowgraph and open the Signal Source properties.
 
@@ -543,13 +594,13 @@ Now look at the connection between the two blocks and try to run or reconnect th
 
 GNU Radio should indicate that the two ports are not compatible.
 
-We have not learned what complex samples are yet, so don't worry about *why* Float and Complex are different. That comes later.
+We have not learned what complex samples are yet, so don't worry about **why** Float and Complex are different. That comes later.
 
 The lesson for now is simply that the data leaving one block must be compatible with the data expected by the next block.
 
 When you are finished, change the Signal Source back to `Float`.
 
-### Experiment 2: Remove Throttle
+### Remove Throttle
 
 Restore the working flowgraph.
 
@@ -593,11 +644,17 @@ This is one reason we will keep using the same habit throughout the book:
 
 ```text
 Predict
+
    ↓
+
 Run
+
    ↓
+
 Observe
+
    ↓
+
 Explain
 ```
 
@@ -605,9 +662,13 @@ And quite often:
 
 ```text
 Break it
+
    ↓
+
 Observe what changed
+
    ↓
+
 Work out why
 ```
 
@@ -687,7 +748,7 @@ At its heart, a receiver takes a signal, selects and processes what we are inter
 
 Software Defined Radio changes how much of that processing can be carried out digitally and controlled through software.
 
-We also saw that *software defined* does not mean *hardware free*. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the bridge into the digital world, where the signal can be represented as samples and processed numerically.
+We also saw that **software defined** does not mean **hardware free**. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the bridge into the digital world, where the signal can be represented as samples and processed numerically.
 
 Most importantly, we built our first working GNU Radio flowgraph:
 
@@ -703,7 +764,7 @@ We first need to become comfortable looking at signals, changing them and asking
 
 ---
 
-## 1.18 Where Do We Go Next?
+## 1.18 Connecting to the Next Chapter
 
 Our first GNU Radio experiment generated a 1 kHz cosine.
 
@@ -721,6 +782,6 @@ What does adding an offset physically do to the signal?
 
 Instead of starting with definitions and equations, we will answer those questions by changing the signal and watching what happens.
 
-That is where Chapter 2 begins:
+That question leads naturally into Chapter 2:
 
 > **What exactly is a signal?**
