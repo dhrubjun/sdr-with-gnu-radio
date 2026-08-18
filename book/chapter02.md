@@ -35,8 +35,11 @@ At first sight, this equation may look like it contains a lot of information. Bu
 Here:
 
 - $A$ controls the amplitude
+
 - $f$ controls the frequency
+
 - $\phi$ controls the phase
+
 - $C$ controls the DC offset
 
 Instead of trying to understand all of them at once, we will change them one by one.
@@ -84,9 +87,13 @@ Let's see this directly.
 We will generate three cosine waves with the same frequency, phase, and offset, but different amplitudes.
 
 | Signal | Frequency | Amplitude | Phase | Offset |
+
 |---|---:|---:|---:|---:|
+
 | Signal 1 | 1 kHz | 0.5 | 0 | 0 |
+
 | Signal 2 | 1 kHz | 1 | 0 | 0 |
+
 | Signal 3 | 1 kHz | 2 | 0 | 0 |
 
 Our sample rate remains
@@ -103,7 +110,7 @@ Because frequency, phase, and offset are identical, any difference we see must c
 
 ![GNU Radio flowgraph for comparing three signal amplitudes.](../figures/ch02/amplitude-comparison-flowgraph.png)
 
-The three signals can be connected to the same QT GUI Time Sink by setting **Number of Inputs** to `3`.
+The three signals can be connected to the same QT GUI Time Sink by setting ****Number of Inputs**** to `3`.
 
 The result is:
 
@@ -120,10 +127,12 @@ That vertical size is the amplitude.
 You may notice that GNU Radio displays an amplitude of `0.5` as:
 
 ```text
+
 500m
+
 ```
 
-Here, `m` means *milli*.
+Here, `m` means **milli**.
 
 So:
 
@@ -214,9 +223,13 @@ We can reuse the same three-signal flowgraph from the amplitude experiment.
 This time, set all amplitudes to `1` and change only the frequencies:
 
 | Signal | Frequency | Amplitude |
+
 |---|---:|---:|
+
 | Signal 1 | 500 Hz | 1 |
+
 | Signal 2 | 1000 Hz | 1 |
+
 | Signal 3 | 2000 Hz | 1 |
 
 Keep the phase and offset at zero.
@@ -230,15 +243,21 @@ Look at the horizontal axis.
 In 4 ms:
 
 - the 500 Hz signal completes 2 cycles
+
 - the 1 kHz signal completes 4 cycles
+
 - the 2 kHz signal completes 8 cycles
 
 Their periods are:
 
 | Frequency | Period |
+
 |---:|---:|
+
 | 500 Hz | 2 ms |
+
 | 1000 Hz | 1 ms |
+
 | 2000 Hz | 0.5 ms |
 
 Notice what happens when frequency doubles: the period becomes half as large.
@@ -258,8 +277,11 @@ There is another useful lesson hidden inside this experiment.
 In Chapter 1, our QT GUI Time Sink used:
 
 ```text
+
 Number of Points = 1024
+
 Sample Rate = 32000
+
 ```
 
 That means the Time Sink displayed
@@ -281,7 +303,9 @@ For some of our Chapter 2 experiments, that was unnecessarily long. We wanted to
 For example, with
 
 ```text
+
 Number of Points = 128
+
 ```
 
 the displayed duration becomes
@@ -301,10 +325,7 @@ So the horizontal time window of the Time Sink is determined by both the number 
 A useful relationship is
 
 $$
-\text{Displayed time}
-=
-\frac{\text{Number of Points}}
-{\text{Sample Rate}}
+\text{Displayed time}=\frac{\text{Number of Points}}{\text{Sample Rate}}
 $$
 
 We will use this relationship repeatedly.
@@ -317,7 +338,7 @@ Two signals can have exactly the same amplitude and frequency and still not line
 
 One may reach its peak slightly earlier than the other.
 
-This difference is described by **phase**.
+This difference is described by ****phase****.
 
 Think of two people running around the same circular track at exactly the same speed. If they start side by side, they remain together. If one starts a quarter of the track ahead, they still run at the same speed, but their positions around the track are different.
 
@@ -332,14 +353,20 @@ $$
 Some useful phase values are:
 
 | Degrees | Radians |
+
 |---:|---:|
+
 | 0° | $0$ |
+
 | 90° | $\pi/2$ |
+
 | 180° | $\pi$ |
+
 | 270° | $3\pi/2$ |
+
 | 360° | $2\pi$ |
 
-GNU Radio's Signal Source specifies its initial phase in **radians**.
+GNU Radio's Signal Source specifies its initial phase in ****radians****.
 
 One point is worth remembering: phase becomes especially useful when we compare one signal with another. Saying that two signals are 90° apart tells us how their cycles are positioned relative to each other.
 
@@ -348,30 +375,43 @@ One point is worth remembering: phase becomes especially useful when we compare 
 For this experiment, keep:
 
 ```text
+
 Frequency = 1 kHz
+
 Amplitude = 1
+
 Offset = 0
+
 ```
 
 and use three initial phases:
 
 ```text
+
 Signal 1: 0
+
 Signal 2: pi/2
+
 Signal 3: pi
+
 ```
 
 To make `pi` available in our flowgraph, we used a Variable block:
 
 ```text
+
 ID: pi
+
 Value: 3.14159
+
 ```
 
 GNU Radio can then evaluate expressions such as:
 
 ```text
+
 pi/2
+
 ```
 
 This is useful because block properties do not always have to contain fixed numbers. They can also use variables and expressions.
@@ -383,7 +423,9 @@ The result is:
 At $t=0$:
 
 - the 0° cosine starts at +1
+
 - the 90° cosine starts at 0
+
 - the 180° cosine starts at -1
 
 Their amplitudes are the same. Their frequencies are the same.
@@ -422,7 +464,7 @@ The shape has not changed. The frequency has not changed. The amplitude is still
 
 The entire waveform has simply moved upward.
 
-That shift is called a **DC offset**.
+That shift is called a ****DC offset****.
 
 ### GNU Radio Experiment: Comparing Offset
 
@@ -431,17 +473,25 @@ Again, reuse the same three-signal structure.
 Keep:
 
 ```text
+
 Frequency = 1 kHz
+
 Amplitude = 1
+
 Phase = 0
+
 ```
 
 and use:
 
 ```text
+
 Signal 1: Offset = 0
+
 Signal 2: Offset = +1
+
 Signal 3: Offset = -1
+
 ```
 
 ![Cosine signals with different DC offsets.](../figures/ch02/dc-offset-comparison.png)
@@ -454,7 +504,7 @@ The third is centred at -1.
 
 There is an important detail here.
 
-The signal with offset +1 reaches a maximum value of +2, but its amplitude is **not 2**. It oscillates between 0 and 2, so its centre is +1 and its amplitude is still 1.
+The signal with offset +1 reaches a maximum value of +2, but its amplitude is ****not 2****. It oscillates between 0 and 2, so its centre is +1 and its amplitude is still 1.
 
 Amplitude describes the distance from the centre of the waveform, not necessarily the distance from zero.
 
@@ -475,7 +525,9 @@ They all have the same repetition rate, but they do not have the same shape.
 Generate:
 
 - a cosine wave
+
 - a square wave
+
 - a triangle wave
 
 with a repetition frequency of 1 kHz.
@@ -497,8 +549,11 @@ For our comparison, we wanted the square wave to switch between approximately -1
 With the GNU Radio Signal Source used in our experiment, we set:
 
 ```text
+
 Amplitude = 2
+
 Offset = -1
+
 ```
 
 to obtain the desired bipolar levels.
@@ -513,7 +568,7 @@ Yet they clearly have different shapes.
 
 Why?
 
-There is a deeper reason for this, and it becomes much clearer when we start looking at signals in the **frequency domain**.
+There is a deeper reason for this, and it becomes much clearer when we start looking at signals in the ****frequency domain****.
 
 For now, keep this observation in mind. We will return to it later.
 
@@ -596,18 +651,24 @@ GNU Radio lets us see this directly.
 For the first addition experiment, generate:
 
 ```text
+
 x1:
+
 Frequency = 1 kHz
+
 Amplitude = 1
 
 x2:
+
 Frequency = 2 kHz
+
 Amplitude = 0.5
+
 ```
 
 Then introduce a new block:
 
-**Add**
+****Add****
 
 ![GNU Radio flowgraph showing two signals being added.](../figures/ch02/signal-addition-flowgraph.png)
 
@@ -620,7 +681,9 @@ $$
 We also branch each original signal to the QT GUI Time Sink so that we can see:
 
 - $x_1$
+
 - $x_2$
+
 - $x_1+x_2$
 
 at the same time.
@@ -643,18 +706,20 @@ GNU Radio does not require a special splitter block for this.
 
 A stream can simply be connected to multiple downstream blocks.
 
-Also, branching a stream does **not** divide its amplitude. Each downstream block receives the same stream.
+Also, branching a stream does ****not**** divide its amplitude. Each downstream block receives the same stream.
 
 ---
 
 ## 2.10 Phase Changes the Result of Addition
 
-Now we can connect two ideas we have already learned: **phase** and **addition**.
+Now we can connect two ideas we have already learned: ****phase**** and ****addition****.
 
 Suppose two cosine signals have:
 
 - the same frequency
+
 - the same amplitude
+
 - different phases
 
 What happens when we add them?
@@ -666,7 +731,9 @@ Use two 1 kHz cosine signals, each with amplitude 1.
 Keep the first signal at:
 
 ```text
+
 Phase = 0
+
 ```
 
 For the second signal, we will test three different phase values. We stop the flowgraph, change its initial phase, and run the experiment again for each case.
@@ -751,19 +818,14 @@ This is complete destructive cancellation.
 
 ### The Bigger Lesson
 
-The result of adding signals depends not only on their amplitudes and frequencies. Their **relative phase** matters too.
+The result of adding signals depends not only on their amplitudes and frequencies. Their ****relative phase**** matters too.
 
 For two equal-amplitude sinusoids of the same frequency, the amplitude of the sum depends on their phase difference.
 
 For equal amplitudes $A$,
 
 $$
-A_{\text{sum}}
-=
-2A
-\left|
-\cos\left(\frac{\Delta\phi}{2}\right)
-\right|
+A_{\text{sum}}=2A\left|\cos\left(\frac{\Delta\phi}{2}\right)\right|
 $$
 
 You do not need to memorise this equation yet.
@@ -771,7 +833,9 @@ You do not need to memorise this equation yet.
 The important idea is already visible in GNU Radio:
 
 - 0° gives maximum reinforcement
+
 - 90° gives partial reinforcement
+
 - 180° gives complete cancellation
 
 ---
@@ -800,7 +864,7 @@ So their relative phase does not stay fixed.
 
 They gradually move out of alignment, become nearly opposite, and later line up again.
 
-This repeated movement in and out of alignment produces **beats**.
+This repeated movement in and out of alignment produces ****beats****.
 
 ### GNU Radio Experiment: Beats
 
@@ -809,13 +873,19 @@ Reuse the addition flowgraph.
 Set:
 
 ```text
+
 Signal 1:
+
 Frequency = 1000 Hz
+
 Amplitude = 1
 
 Signal 2:
+
 Frequency = 1050 Hz
+
 Amplitude = 1
+
 ```
 
 To see the slow variation clearly, increase the Time Sink display window to approximately 40 ms.
@@ -837,7 +907,9 @@ samples.
 So set:
 
 ```text
+
 Number of Points = 1280
+
 ```
 
 The result is:
@@ -900,33 +972,42 @@ Because their frequencies are slightly different, their relative phase keeps cha
 
 So beats connect several ideas from this chapter:
 
-**frequency → changing relative phase → addition → reinforcement and cancellation**
+****frequency → changing relative phase → addition → reinforcement and cancellation****
 
 That connection is more important than simply remembering the beat-frequency formula.
 
 ---
 
-## 2.12 What We Have Learned
+## 2.12 What We Learned
 
 We started this chapter with a single cosine wave.
 
 By changing one property at a time, we found that:
 
-- **amplitude** controls the vertical size of a signal
-- **frequency** tells us how many cycles occur per second
-- **period** tells us how long one cycle takes
-- **phase** describes a signal's position within its cycle relative to a reference
-- **DC offset** moves the centre of a waveform up or down
-- **waveform shape** describes how the signal changes during each cycle
+- ****amplitude**** controls the vertical size of a signal
+
+- ****frequency**** tells us how many cycles occur per second
+
+- ****period**** tells us how long one cycle takes
+
+- ****phase**** describes a signal's position within its cycle relative to a reference
+
+- ****DC offset**** moves the centre of a waveform up or down
+
+- ****waveform shape**** describes how the signal changes during each cycle
 
 Then we allowed signals to interact.
 
 We saw that:
 
 - signals can be added sample by sample
+
 - simple signals can combine into more complicated waveforms
+
 - phase affects whether signals reinforce or cancel
+
 - equal signals separated by 180° can cancel completely
+
 - slightly different frequencies produce beats
 
 These are not isolated ideas.
@@ -941,7 +1022,7 @@ This chapter also introduced several useful GNU Radio concepts.
 
 ### Multiple Time Sink Inputs
 
-A single QT GUI Time Sink can display several signals simultaneously by increasing **Number of Inputs**.
+A single QT GUI Time Sink can display several signals simultaneously by increasing ****Number of Inputs****.
 
 This allowed us to compare signals directly.
 
@@ -950,9 +1031,7 @@ This allowed us to compare signals directly.
 The displayed duration of a Time Sink depends on both its sample rate and Number of Points:
 
 $$
-T_{\text{display}}
-=
-\frac{N}{f_s}
+T_{\text{display}}=\frac{N}{f_s}
 $$
 
 We used this to choose suitable viewing windows for different experiments.
@@ -962,13 +1041,17 @@ We used this to choose suitable viewing windows for different experiments.
 We already used:
 
 ```text
+
 samp_rate
+
 ```
 
 and introduced another variable:
 
 ```text
+
 pi
+
 ```
 
 Variables make a flowgraph easier to understand and modify.
@@ -978,14 +1061,16 @@ Variables make a flowgraph easier to understand and modify.
 GNU Radio properties can use expressions such as:
 
 ```text
+
 pi/2
+
 ```
 
 rather than requiring us to calculate and type every decimal value manually.
 
 ### Multiple Inputs
 
-The **Add** block accepts multiple input streams and produces their sample-by-sample sum.
+The ****Add**** block accepts multiple input streams and produces their sample-by-sample sum.
 
 ### Branching
 
@@ -1008,23 +1093,33 @@ This is often a better way to experiment: keep everything else fixed and change 
 The GNU Radio Companion files for this chapter are stored in:
 
 ```text
+
 experiments/chapter02/
+
 ```
 
 The experiments developed in this chapter include:
 
 ```text
+
 amplitude-comparison.grc
+
 frequency-period-comparison.grc
+
 phase-comparison.grc
+
 dc-offset-comparison.grc
+
 waveform-shape-comparison.grc
+
 signal-addition.grc
+
 phase-addition.grc
+
 beats.grc
+
 ```
 
-Make sure these names match the actual filenames in your repository. If any of your saved `.grc` files use different names, update this list rather than renaming working experiments unnecessarily.
 
 You can open any of these files in GNU Radio Companion and reproduce the corresponding experiment.
 
@@ -1049,13 +1144,17 @@ What happens when the two signals are added? Will the resulting amplitude be clo
 4. Change the beat experiment from
 
 ```text
+
 1000 Hz + 1050 Hz
+
 ```
 
 to
 
 ```text
+
 1000 Hz + 1010 Hz
+
 ```
 
 Before running it, predict whether the beat pattern will become faster or slower.
@@ -1063,7 +1162,9 @@ Before running it, predict whether the beat pattern will become faster or slower
 5. Then try
 
 ```text
+
 1000 Hz + 1100 Hz
+
 ```
 
 and compare the result.
@@ -1076,11 +1177,11 @@ That habit will become increasingly useful as our flowgraphs become more complic
 
 ---
 
-## 2.16 Where We Go Next
+## 2.16 Connecting to the Next Chapter
 
 So far, we have treated these signals as though they already exist inside the computer.
 
-But an SDR works with **samples**.
+But an SDR works with ****samples****.
 
 A real-world signal must somehow be converted into a sequence of numbers before software can process it.
 
@@ -1096,4 +1197,4 @@ And why did changing the sample rate in GNU Radio sometimes make a smooth sinuso
 
 Those questions take us to one of the most important ideas in digital signal processing:
 
-**sampling and aliasing.**
+****sampling and aliasing.****
