@@ -12,11 +12,11 @@ Suppose a receiver is interested in a signal around 100 MHz. We may eventually w
 
 So radios routinely do something that may seem strange at first:
 
-> **They move signals from one frequency to another.**
+> ****They move signals from one frequency to another.****
 
 A signal at one part of the spectrum can be shifted somewhere else while preserving the information carried by it.
 
-This process is called **frequency translation**, and one of the main tools used to perform it is the **mixer**.
+This process is called ****frequency translation****, and one of the main tools used to perform it is the ****mixer****.
 
 In this chapter, we will build that idea gradually.
 
@@ -44,9 +44,9 @@ At first, we might imagine simply changing its frequency somehow.
 
 A mixer does something more specific.
 
-It **multiplies one signal by another**.
+It ****multiplies one signal by another****.
 
-The second signal is normally called the **local oscillator**, or **LO**.
+The second signal is normally called the ****local oscillator****, or ****LO****.
 
 So the basic structure is:
 
@@ -60,7 +60,7 @@ Let us see it before trying to explain it.
 
 ---
 
-# Experiment 1: Real Mixing
+## Experiment 1: Real Mixing
 
 ## 8.2 Building a Real Mixer
 
@@ -80,7 +80,7 @@ $$
 
 Both signals have amplitude 1.
 
-We multiply them using the GNU Radio **Multiply** block.
+We multiply them using the GNU Radio ****Multiply**** block.
 
 The flowgraph used for this experiment is shown below.
 
@@ -94,63 +94,87 @@ Set the common sample rate to:
 samp_rate = 32000
 ```
 
-For the first **Signal Source**:
+For the first ****Signal Source****:
 
 | Setting | Value |
+
 |---|---:|
+
 | Output Type | Float |
+
 | Sample Rate | `samp_rate` |
+
 | Waveform | Cosine |
+
 | Frequency | `6000` |
+
 | Amplitude | `1` |
+
 | Offset | `0` |
+
 | Initial Phase | `0` |
 
-For the LO **Signal Source**:
+For the LO ****Signal Source****:
 
 | Setting | Value |
+
 |---|---:|
+
 | Output Type | Float |
+
 | Sample Rate | `samp_rate` |
+
 | Waveform | Cosine |
+
 | Frequency | `lo_freq` |
+
 | Amplitude | `1` |
+
 | Offset | `0` |
+
 | Initial Phase | `0` |
 
-Add a **QT GUI Range** for the LO frequency.
+Add a ****QT GUI Range**** for the LO frequency.
 
 ```text
 ID: lo_freq
+
 Label: LO Frequency
+
 Default Value: 1000
+
 Start: 1000
+
 Stop: 7000
+
 Step: 500
 ```
 
-Connect the two Signal Sources to a **Multiply** block.
+Connect the two Signal Sources to a ****Multiply**** block.
 
-Send the mixer output through a **Throttle** block and then to:
+Send the mixer output through a ****Throttle**** block and then to:
 
 - a QT GUI Time Sink
+
 - a QT GUI Frequency Sink
 
 For the Frequency Sink, use:
 
 ```text
 Center Frequency: 0
+
 Bandwidth: samp_rate
+
 FFT Size: 1024
 ```
 
-The important point is that everything in this first experiment is **real-valued**.
+The important point is that everything in this first experiment is ****real-valued****.
 
 ---
 
-### GNU Radio Toolbox: Multiply
+### Reusing Multiply
 
-The **Multiply** block performs sample-by-sample multiplication.
+The ****Multiply**** block performs sample-by-sample multiplication.
 
 If its two inputs are $x[n]$ and $y[n]$, its output is
 
@@ -189,30 +213,19 @@ $$
 or
 
 $$
-y(t)=\cos(2\pi f_{\text{signal}}t)
-\cos(2\pi f_{\text{LO}}t)
+y(t)=\cos(2\pi f_{\text{signal}}t) \cos(2\pi f_{\text{LO}}t)
 $$
 
 Now we use the familiar trigonometric identity
 
 $$
-\cos A\cos B
-=
-\frac{1}{2}\cos(A-B)
-+
-\frac{1}{2}\cos(A+B)
+\cos A\cos B = \frac{1}{2}\cos(A-B) \+ \frac{1}{2}\cos(A+B)
 $$
 
 Therefore,
 
 $$
-y(t)
-=
-\frac{1}{2}
-\cos\left(2\pi(f_{\text{signal}}-f_{\text{LO}})t\right)
-+
-\frac{1}{2}
-\cos\left(2\pi(f_{\text{signal}}+f_{\text{LO}})t\right)
+y(t) = \frac{1}{2} \cos\left(2\pi(f_{\text{signal}}-f_{\text{LO}})t\right) \+ \frac{1}{2} \cos\left(2\pi(f_{\text{signal}}+f_{\text{LO}})t\right)
 $$
 
 This is the key result.
@@ -222,17 +235,13 @@ The mixer does not simply replace one frequency with another.
 For real cosine mixing, it produces two components:
 
 $$
-f_{\text{difference}}
-=
-f_{\text{signal}}-f_{\text{LO}}
+f_{\text{difference}} = f_{\text{signal}}-f_{\text{LO}}
 $$
 
 and
 
 $$
-f_{\text{sum}}
-=
-f_{\text{signal}}+f_{\text{LO}}
+f_{\text{sum}} = f_{\text{signal}}+f_{\text{LO}}
 $$
 
 For our first case,
@@ -250,21 +259,13 @@ $$
 so
 
 $$
-f_{\text{difference}}
-=
-6-1
-=
-5\text{ kHz}
+f_{\text{difference}} = 6-1 = 5\text{ kHz}
 $$
 
 while
 
 $$
-f_{\text{sum}}
-=
-6+1
-=
-7\text{ kHz}
+f_{\text{sum}} = 6+1 = 7\text{ kHz}
 $$
 
 We therefore expect components at 5 kHz and 7 kHz.
@@ -341,7 +342,7 @@ $$
 6+6=12\text{ kHz}
 $$
 
-This is our first glimpse of **downconversion to baseband**.
+This is our first glimpse of ****downconversion to baseband****.
 
 ### LO = 7 kHz
 
@@ -371,7 +372,7 @@ The most important lesson from Experiment 1 is not simply that we obtained sever
 
 It is this:
 
-> **Multiplication in time can move spectral components in frequency.**
+> ****Multiplication in time can move spectral components in frequency.****
 
 Changing the LO changes where the mixer products appear.
 
@@ -387,11 +388,11 @@ It is a tool we use to reposition another signal.
 
 Two words appear constantly in radio systems:
 
-**upconversion** and **downconversion**.
+****upconversion**** and ****downconversion****.
 
-If frequency translation moves the desired signal toward a higher frequency region, we call it **upconversion**.
+If frequency translation moves the desired signal toward a higher frequency region, we call it ****upconversion****.
 
-If it moves the desired signal toward a lower frequency region, we call it **downconversion**.
+If it moves the desired signal toward a lower frequency region, we call it ****downconversion****.
 
 For example, starting with a 6 kHz signal and using a 5 kHz LO gives a difference component at
 
@@ -421,7 +422,7 @@ That leads directly to our second experiment.
 
 ---
 
-# Experiment 2: Real Downconversion to Baseband
+## Experiment 2: Real Downconversion to Baseband
 
 ## 8.7 Mixing Is Only Part of the Receiver
 
@@ -433,7 +434,7 @@ $$
 
 and vary the LO around that frequency.
 
-This time, however, we place a **Low Pass Filter** after the mixer.
+This time, however, we place a ****Low Pass Filter**** after the mixer.
 
 The purpose is simple.
 
@@ -471,7 +472,9 @@ The input Signal Source remains:
 
 ```text
 Frequency: 6000
+
 Amplitude: 1
+
 Waveform: Cosine
 ```
 
@@ -481,36 +484,47 @@ Useful values for this experiment include:
 
 ```text
 4000 Hz
+
 5000 Hz
+
 5500 Hz
+
 6000 Hz
+
 6500 Hz
 ```
 
-For the **Low Pass Filter**, use:
+For the ****Low Pass Filter****, use:
 
 | Setting | Value |
+
 |---|---:|
+
 | Decimation | `1` |
+
 | Gain | `1` |
+
 | Sample Rate | `samp_rate` |
+
 | Cutoff Frequency | `1000` |
+
 | Transition Width | `500` |
+
 | Window | Hamming |
 
 Display the mixer output and the LPF output together so that we can compare them directly.
 
 ---
 
-### GNU Radio Toolbox: Low Pass Filter
+### Reusing the Low Pass Filter
 
-A **Low Pass Filter** allows low-frequency components to pass while attenuating components above its cutoff region.
+A ****Low Pass Filter**** allows low-frequency components to pass while attenuating components above its cutoff region.
 
 Here we are not yet trying to study filter design in detail. That is the subject of the next chapter.
 
 For now, the Low Pass Filter has one job:
 
-> **Keep the low-frequency mixer product and suppress the high-frequency mixer product.**
+> ****Keep the low-frequency mixer product and suppress the high-frequency mixer product.****
 
 The full Low Pass Filter reference is available in the GNU Radio Toolbox.
 
@@ -521,9 +535,7 @@ The full Low Pass Filter reference is available in the GNU Radio Toolbox.
 The difference frequency is
 
 $$
-f_{\text{difference}}
-=
-\left|f_{\text{signal}}-f_{\text{LO}}\right|
+f_{\text{difference}} = \left|f_{\text{signal}}-f_{\text{LO}}\right|
 $$
 
 for the real sinusoidal output we observe after mixing.
@@ -531,11 +543,17 @@ for the real sinusoidal output we observe after mixing.
 With the signal fixed at 6 kHz, we can predict:
 
 | LO Frequency | Difference Component | Sum Component |
+
 |---:|---:|---:|
+
 | 4 kHz | 2 kHz | 10 kHz |
+
 | 5 kHz | 1 kHz | 11 kHz |
+
 | 5.5 kHz | 0.5 kHz | 11.5 kHz |
+
 | 6 kHz | 0 Hz | 12 kHz |
+
 | 6.5 kHz | 0.5 kHz | 12.5 kHz |
 
 Now compare these frequencies with the low-pass filter.
@@ -590,7 +608,7 @@ This limitation becomes important later in the chapter.
 
 ## 8.11 What Is Baseband?
 
-We have used the word **baseband**, so let us make sure it means something concrete.
+We have used the word ****baseband****, so let us make sure it means something concrete.
 
 A baseband signal is a signal represented around zero frequency rather than around some higher carrier frequency.
 
@@ -608,20 +626,14 @@ $$
 
 The information has not necessarily disappeared.
 
-We have changed **where that information sits in the spectrum**.
+We have changed ****where that information sits in the spectrum****.
 
 That is the important idea.
 
 A receiver might therefore perform something conceptually like
 
 $$
-\text{RF signal}
-\rightarrow
-\text{Mixer}
-\rightarrow
-\text{Baseband}
-\rightarrow
-\text{Further processing}
+\text{RF signal} \rightarrow \text{Mixer} \rightarrow \text{Baseband} \rightarrow \text{Further processing}
 $$
 
 Once the signal is near baseband, many later operations become easier.
@@ -630,7 +642,7 @@ Once the signal is near baseband, many later operations become easier.
 
 ## 8.12 What Happens If the LO Is Not Exact?
 
-Experiment 2 also gives us a useful way to understand **frequency offset**.
+Experiment 2 also gives us a useful way to understand ****frequency offset****.
 
 Suppose the desired signal is at
 
@@ -668,7 +680,7 @@ The signal does not land at DC.
 
 It lands 500 Hz away.
 
-That remaining separation is a **frequency offset**.
+That remaining separation is a ****frequency offset****.
 
 This is not just a GNU Radio effect.
 
@@ -716,7 +728,7 @@ Complex signals change this.
 
 ---
 
-# Experiment 3: Complex Mixing and Frequency Translation
+## Experiment 3: Complex Mixing and Frequency Translation
 
 ## 8.14 Moving From Real Signals to Complex Signals
 
@@ -735,14 +747,10 @@ $$
 Using Euler's relation,
 
 $$
-e^{j2\pi ft}
-=
-\cos(2\pi ft)
-+
-j\sin(2\pi ft)
+e^{j2\pi ft} = \cos(2\pi ft) \+ j\sin(2\pi ft)
 $$
 
-Unlike a real cosine, an ideal complex exponential can represent a **single signed frequency**.
+Unlike a real cosine, an ideal complex exponential can represent a ****single signed frequency****.
 
 That changes the behaviour of mixing dramatically.
 
@@ -761,10 +769,7 @@ $$
 Then
 
 $$
-y(t)
-=
-e^{j2\pi f_{\text{signal}}t}
-e^{-j2\pi f_{\text{LO}}t}
+y(t) = e^{j2\pi f_{\text{signal}}t} e^{-j2\pi f_{\text{LO}}t}
 $$
 
 Using the exponent rule,
@@ -776,9 +781,7 @@ $$
 we obtain
 
 $$
-y(t)
-=
-e^{j2\pi(f_{\text{signal}}-f_{\text{LO}})t}
+y(t) = e^{j2\pi(f_{\text{signal}}-f_{\text{LO}})t}
 $$
 
 Notice what is missing.
@@ -819,18 +822,18 @@ Use the adjustable LO frequency:
 lo_freq
 ```
 
-For this experiment, the LO is applied in the **negative-frequency direction**, so that the output follows
+For this experiment, the LO is applied in the ****negative-frequency direction****, so that the output follows
 
 $$
-f_{\text{out}}
-=
-f_{\text{signal}}-f_{\text{LO}}
+f_{\text{out}} = f_{\text{signal}}-f_{\text{LO}}
 $$
 
 Observe:
 
 - the I component
+
 - the Q component
+
 - the complex output spectrum
 
 The I and Q traces allow us to see the complex tone in the time domain, while the Frequency Sink shows where the signed frequency lies.
@@ -848,9 +851,7 @@ $$
 Therefore,
 
 $$
-f_{\text{out}}
-=
-6\text{ kHz}-f_{\text{LO}}
+f_{\text{out}} = 6\text{ kHz}-f_{\text{LO}}
 $$
 
 Consider four LO values.
@@ -858,46 +859,30 @@ Consider four LO values.
 ### LO = 4 kHz
 
 $$
-f_{\text{out}}
-=
-6-4
-=
-+2\text{ kHz}
+f_{\text{out}} = 6-4 = +2\text{ kHz}
 $$
 
 ### LO = 5 kHz
 
 $$
-f_{\text{out}}
-=
-6-5
-=
-+1\text{ kHz}
+f_{\text{out}} = 6-5 = +1\text{ kHz}
 $$
 
 ### LO = 6 kHz
 
 $$
-f_{\text{out}}
-=
-6-6
-=
-0
+f_{\text{out}} = 6-6 = 0
 $$
 
 ### LO = 7 kHz
 
 $$
-f_{\text{out}}
-=
-6-7
-=
--1\text{ kHz}
+f_{\text{out}} = 6-7 = -1\text{ kHz}
 $$
 
 This is the behaviour we were unable to see cleanly with the real mixer.
 
-The signal can pass through DC and continue into **negative frequency**.
+The signal can pass through DC and continue into ****negative frequency****.
 
 ---
 
@@ -967,7 +952,7 @@ the I and Q values become constant rather than continuing to oscillate.
 
 The exact constant values depend on the phases and amplitudes used in the flowgraph, but the important observation is this:
 
-> **When a complex tone is translated exactly to DC, its rotating I/Q vector stops rotating.**
+> ****When a complex tone is translated exactly to DC, its rotating I/Q vector stops rotating.****
 
 That is why the time-domain traces become horizontal in the DC case.
 
@@ -1021,7 +1006,7 @@ $$
 
 the physical interpretation is not that time or frequency somehow becomes negative.
 
-Instead, the **complex rotation reverses direction**.
+Instead, the ****complex rotation reverses direction****.
 
 That distinction is invisible if we keep only a single real cosine.
 
@@ -1042,9 +1027,7 @@ $$
 produces
 
 $$
-\frac{1}{2}\cos\left(2\pi(f_1-f_2)t\right)
-+
-\frac{1}{2}\cos\left(2\pi(f_1+f_2)t\right)
+\frac{1}{2}\cos\left(2\pi(f_1-f_2)t\right) \+ \frac{1}{2}\cos\left(2\pi(f_1+f_2)t\right)
 $$
 
 So we obtain both a sum and a difference term.
@@ -1052,8 +1035,7 @@ So we obtain both a sum and a difference term.
 For ideal complex mixing,
 
 $$
-e^{j2\pi f_1t}
-e^{j2\pi f_2t}
+e^{j2\pi f_1t} e^{j2\pi f_2t}
 $$
 
 gives
@@ -1065,8 +1047,7 @@ $$
 and
 
 $$
-e^{j2\pi f_1t}
-e^{-j2\pi f_2t}
+e^{j2\pi f_1t} e^{-j2\pi f_2t}
 $$
 
 gives
@@ -1083,7 +1064,7 @@ This is powerful enough that we should test it directly.
 
 ---
 
-# Experiment 4: Reversing the Complex LO
+## Experiment 4: Reversing the Complex LO
 
 ## 8.21 Can We Choose the Direction?
 
@@ -1101,10 +1082,11 @@ $$
 
 This time, instead of sweeping only the LO magnitude, we allow ourselves to reverse its sign.
 
-We add a **QT GUI Chooser** with two options:
+We add a ****QT GUI Chooser**** with two options:
 
 ```text
 Downshift
+
 Upshift
 ```
 
@@ -1119,27 +1101,40 @@ The flowgraph is shown below.
 Create a QT GUI Chooser with:
 
 | Setting | Value |
+
 |---|---|
+
 | ID | `lo_direction` |
+
 | Label | `LO Direction` |
+
 | Type | Integer |
+
 | Num Options | `2` |
+
 | Default Option | `-1` |
+
 | Option 0 | `-1` |
+
 | Label 0 | `Downshift` |
+
 | Option 1 | `1` |
+
 | Label 1 | `Upshift` |
+
 | Widget | Radio Buttons |
+
 | Orientation | Horizontal |
 
 One small detail is important here.
 
-The **Default Option** is an actual option value, not the position of the option in the list.
+The ****Default Option**** is an actual option value, not the position of the option in the list.
 
 Since our available values are
 
 ```text
 -1
+
 1
 ```
 
@@ -1175,9 +1170,9 @@ as the complex LO frequency.
 
 ---
 
-### GNU Radio Toolbox: QT GUI Chooser
+### Reusing QT GUI Chooser
 
-The **QT GUI Chooser** lets us select one value from a predefined set while the flowgraph is running.
+The ****QT GUI Chooser**** lets us select one value from a predefined set while the flowgraph is running.
 
 Here we use it to choose between:
 
@@ -1210,17 +1205,13 @@ Downshift
 Then,
 
 $$
-\text{lo\_direction}=-1
+\text{lo\\_direction}=-1
 $$
 
 so the actual LO frequency becomes
 
 $$
-f_{\text{LO}}
-=
--1\times4\text{ kHz}
-=
--4\text{ kHz}
+f_{\text{LO}} = -1\times4\text{ kHz} = -4\text{ kHz}
 $$
 
 The input is at
@@ -1232,11 +1223,7 @@ $$
 Therefore,
 
 $$
-f_{\text{out}}
-=
-6+(-4)
-=
-+2\text{ kHz}
+f_{\text{out}} = 6+(-4) = +2\text{ kHz}
 $$
 
 The Frequency Sink shows a single peak at approximately
@@ -1262,25 +1249,19 @@ Nothing else changes.
 This time,
 
 $$
-\text{lo\_direction}=+1
+\text{lo\\_direction}=+1
 $$
 
 and therefore
 
 $$
-f_{\text{LO}}
-=
-+4\text{ kHz}
+f_{\text{LO}} = +4\text{ kHz}
 $$
 
 The output becomes
 
 $$
-f_{\text{out}}
-=
-6+4
-=
-+10\text{ kHz}
+f_{\text{out}} = 6+4 = +10\text{ kHz}
 $$
 
 The single spectral peak moves from approximately
@@ -1304,17 +1285,13 @@ This experiment makes the role of the LO sign very clear.
 With the negative complex LO,
 
 $$
-6\text{ kHz}
-\rightarrow
-2\text{ kHz}
+6\text{ kHz} \rightarrow 2\text{ kHz}
 $$
 
 With the positive complex LO,
 
 $$
-6\text{ kHz}
-\rightarrow
-10\text{ kHz}
+6\text{ kHz} \rightarrow 10\text{ kHz}
 $$
 
 We are not generating both results simultaneously.
@@ -1410,11 +1387,7 @@ $$
 So, in a simplified form,
 
 $$
-f_{\text{out}}
-=
-f_{\text{in}}
-+
-f_{\text{LO}}
+f_{\text{out}} = f_{\text{in}} \+ f_{\text{LO}}
 $$
 
 where the sign of $f_{\text{LO}}$ matters.
@@ -1439,18 +1412,14 @@ The LO simply tells the spectrum how far, and in which direction, to move.
 
 ## 8.27 What Does the Local Oscillator Actually Mean in a Receiver?
 
-The word **local oscillator** comes from radio hardware.
+The word ****local oscillator**** comes from radio hardware.
 
 A receiver generates an oscillator locally and combines it with the incoming signal in a mixer.
 
 Conceptually,
 
 $$
-\text{Received signal}
-+
-\text{Local oscillator}
-\rightarrow
-\text{Mixer}
+\text{Received signal} \+ \text{Local oscillator} \rightarrow \text{Mixer}
 $$
 
 although the actual mixer operation is multiplication, not addition.
@@ -1474,11 +1443,7 @@ $$
 Then,
 
 $$
-100.1\text{ MHz}
--
-100.1\text{ MHz}
-=
-0
+100.1\text{ MHz} - 100.1\text{ MHz} = 0
 $$
 
 The signal that was centred around 100.1 MHz is now centred around DC.
@@ -1504,9 +1469,7 @@ A digital complex mixer can multiply the sampled signal by a complex oscillator.
 So the same idea appears both in hardware and software:
 
 $$
-\text{frequency translation}
-=
-\text{signal}\times\text{oscillator}
+\text{frequency translation} = \text{signal}\times\text{oscillator}
 $$
 
 GNU Radio lets us see this operation directly rather than hiding it inside a radio.
@@ -1538,19 +1501,13 @@ $$
 But if the LO is slightly wrong,
 
 $$
-f_{\text{LO}}
-=
--f_{\text{signal}}+\Delta f
+f_{\text{LO}} = -f_{\text{signal}}+\Delta f
 $$
 
 then
 
 $$
-f_{\text{out}}
-=
-f_{\text{signal}}
-+
-\left(-f_{\text{signal}}+\Delta f\right)
+f_{\text{out}} = f_{\text{signal}} \+ \left(-f_{\text{signal}}+\Delta f\right)
 $$
 
 so
@@ -1563,7 +1520,7 @@ The remaining frequency is exactly the offset between the desired tuning and the
 
 This gives us a useful interpretation:
 
-> **A tone near DC after downconversion may represent a frequency mismatch between the received signal and the LO.**
+> ****A tone near DC after downconversion may represent a frequency mismatch between the received signal and the LO.****
 
 In an I/Q display, that offset appears as continued rotation.
 
@@ -1622,11 +1579,7 @@ Increase the magnitude of the negative LO to 7 kHz.
 Then,
 
 $$
-f_{\text{out}}
-=
-6-7
-=
--1\text{ kHz}
+f_{\text{out}} = 6-7 = -1\text{ kHz}
 $$
 
 The signal crosses through DC and appears at negative frequency.
@@ -1681,7 +1634,7 @@ This is a simple way to create a controlled frequency offset.
 
 We began this chapter with a simple question:
 
-> **How does a radio move a signal from one frequency to another?**
+> ****How does a radio move a signal from one frequency to another?****
 
 The answer is mixing.
 
@@ -1690,17 +1643,13 @@ A mixer multiplies a signal by an oscillator.
 For real cosine mixing, this multiplication produces both sum and difference frequencies:
 
 $$
-f_{\text{sum}}
-=
-f_{\text{signal}}+f_{\text{LO}}
+f_{\text{sum}} = f_{\text{signal}}+f_{\text{LO}}
 $$
 
 and
 
 $$
-f_{\text{difference}}
-=
-f_{\text{signal}}-f_{\text{LO}}
+f_{\text{difference}} = f_{\text{signal}}-f_{\text{LO}}
 $$
 
 By selecting the low-frequency difference component with a filter, we can downconvert a signal toward baseband.
@@ -1751,7 +1700,7 @@ That is why I/Q representation and complex mixing are so closely connected.
 
 ---
 
-## 8.32 One Last Question
+## 8.32 Connecting to the Next Chapter
 
 We now know how to move a signal.
 
@@ -1763,7 +1712,7 @@ After mixing, some of those signals may move into regions we do not want. Mixer 
 
 So the next problem is:
 
-> **How can the receiver keep the part of the spectrum it wants and reject the rest?**
+> ****How can the receiver keep the part of the spectrum it wants and reject the rest?****
 
 We already used a Low Pass Filter briefly in this chapter to keep a difference component.
 
@@ -1775,4 +1724,3 @@ We will look at low-pass, high-pass, band-pass, and band-stop filters, and see w
 
 That takes us to:
 
-# Chapter 9: Filters and Channel Selection
