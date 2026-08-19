@@ -11,7 +11,9 @@ It usually receives much more than the signal we actually want.
 Imagine that our receiver contains three signals:
 
 - one at 2 kHz,
+
 - one at 5 kHz,
+
 - one at 9 kHz.
 
 Suppose we are interested only in the 2 kHz signal.
@@ -28,7 +30,7 @@ A filter is not simply something that "removes noise." That description is too l
 
 A better way to think about a filter is:
 
-> **A filter treats different parts of the frequency spectrum differently.**
+> ****A filter treats different parts of the frequency spectrum differently.****
 
 Some frequencies are allowed through almost unchanged. Others are reduced, sometimes very strongly.
 
@@ -37,15 +39,25 @@ In this chapter, we will build a multi-frequency signal in GNU Radio and gradual
 We will work with:
 
 - low-pass filters,
+
 - high-pass filters,
+
 - band-pass filters,
+
 - band-reject filters,
+
 - cutoff frequencies,
+
 - passbands and stopbands,
+
 - transition width,
+
 - FIR filter taps,
+
 - filter windows,
+
 - decimation,
+
 - anti-alias filtering.
 
 Most importantly, we will not study these ideas only as equations.
@@ -81,19 +93,13 @@ $$
 Therefore,
 
 $$
-x(t)
-=
-\cos(2\pi 2000t)
-+
-\cos(2\pi 5000t)
-+
-\cos(2\pi 9000t)
+x(t) = \cos(2\pi 2000t) \+ \cos(2\pi 5000t) \+ \cos(2\pi 9000t)
 $$
 
 We will use a sample rate of
 
 $$
-f_s=32\,000\text{ samples/s}
+f_s=32\\,000\text{ samples/s}
 $$
 
 or
@@ -112,7 +118,7 @@ All three signals are below 16 kHz, so they can be represented correctly at this
 
 ---
 
-# Experiment 1: Building a Multi-Frequency Signal
+## Experiment 1: Building a Multi-Frequency Signal
 
 ## 9.3 Building the Test Signal in GNU Radio
 
@@ -120,11 +126,15 @@ Before filtering anything, let us first see what happens when several sinusoidal
 
 Build the flowgraph using:
 
-- three **Signal Source** blocks,
-- one **Add** block,
-- one **Throttle** block,
-- one **QT GUI Time Sink**,
-- one **QT GUI Frequency Sink**.
+- three ****Signal Source**** blocks,
+
+- one ****Add**** block,
+
+- one ****Throttle**** block,
+
+- one ****QT GUI Time Sink****,
+
+- one ****QT GUI Frequency Sink****.
 
 Use the following global sample rate:
 
@@ -138,10 +148,15 @@ Configure the three Signal Source blocks as follows.
 
 ```text
 Sample Rate:    samp_rate
+
 Waveform:       Cosine
+
 Frequency:      2k
+
 Amplitude:      1
+
 Offset:         0
+
 Initial Phase:  0
 ```
 
@@ -149,10 +164,15 @@ Initial Phase:  0
 
 ```text
 Sample Rate:    samp_rate
+
 Waveform:       Cosine
+
 Frequency:      5k
+
 Amplitude:      1
+
 Offset:         0
+
 Initial Phase:  0
 ```
 
@@ -160,10 +180,15 @@ Initial Phase:  0
 
 ```text
 Sample Rate:    samp_rate
+
 Waveform:       Cosine
+
 Frequency:      9k
+
 Amplitude:      1
+
 Offset:         0
+
 Initial Phase:  0
 ```
 
@@ -188,9 +213,7 @@ The frequency-domain view is much easier to interpret.
 We see spectral components at approximately
 
 $$
-\pm2\text{ kHz},\quad
-\pm5\text{ kHz},\quad
-\pm9\text{ kHz}
+\pm2\text{ kHz},\quad \pm5\text{ kHz},\quad \pm9\text{ kHz}
 $$
 
 Why do we see both positive and negative frequencies?
@@ -198,11 +221,7 @@ Why do we see both positive and negative frequencies?
 Because these are real cosine signals. As we saw earlier, a real cosine contains two complex exponential components:
 
 $$
-\cos(2\pi f_0t)
-=
-\frac{1}{2}e^{j2\pi f_0t}
-+
-\frac{1}{2}e^{-j2\pi f_0t}
+\cos(2\pi f_0t) = \frac{1}{2}e^{j2\pi f_0t} \+ \frac{1}{2}e^{-j2\pi f_0t}
 $$
 
 So each cosine produces a pair of spectral components at
@@ -261,11 +280,11 @@ $$
 
 that frequency is strongly suppressed.
 
-The region that is allowed through is called the **passband**.
+The region that is allowed through is called the ****passband****.
 
-The region that is strongly attenuated is called the **stopband**.
+The region that is strongly attenuated is called the ****stopband****.
 
-Between them lies the **transition band**.
+Between them lies the ****transition band****.
 
 Real filters do not normally change from perfect transmission to perfect rejection at one infinitely sharp frequency. There is always some transition.
 
@@ -273,7 +292,7 @@ We will see this directly in GNU Radio.
 
 ---
 
-# Experiment 2: Low-Pass Filtering
+## Experiment 2: Low-Pass Filtering
 
 ## 9.6 Keeping the Lowest-Frequency Component
 
@@ -299,17 +318,23 @@ Therefore, we expect the 2 kHz component to survive while the 5 kHz and 9 kHz co
 
 ## 9.7 GNU Radio Setup
 
-Add a **Low Pass Filter** block after the combined signal.
+Add a ****Low Pass Filter**** block after the combined signal.
 
 Use:
 
 ```text
 FIR Type:          Float -> Float (Decimating)
+
 Decimation:        1
+
 Gain:              1
+
 Sample Rate:       samp_rate
+
 Cutoff Freq:       3000
+
 Transition Width:  500
+
 Window:            Hamming
 ```
 
@@ -319,9 +344,9 @@ Compare the signal before and after the filter using both the Time Sink and Freq
 
 ---
 
-## 9.8 GNU Radio Toolbox: Low Pass Filter
+## 9.8 Low Pass Filter Settings That Matter Here
 
-This is the first point in the chapter where the filter properties themselves become part of what we are trying to understand.
+We have already used the Low Pass Filter in earlier chapters. Here, for the first time, its design parameters themselves become part of what we are trying to understand.
 
 ### FIR Type
 
@@ -449,7 +474,7 @@ Instead of the complicated three-tone waveform, the output now resembles a singl
 
 This gives us an important observation:
 
-> **Filtering is often easier to understand in the frequency domain than in the time domain.**
+> ****Filtering is often easier to understand in the frequency domain than in the time domain.****
 
 Also notice that the unwanted components do not necessarily disappear completely.
 
@@ -461,7 +486,7 @@ A practical filter changes different frequencies by different amounts rather tha
 
 ---
 
-# Experiment 3: High-Pass Filtering
+## Experiment 3: High-Pass Filtering
 
 ## 9.10 Keeping the Highest-Frequency Component
 
@@ -469,7 +494,7 @@ Now let us do the opposite.
 
 Instead of keeping the low-frequency signal, suppose we want to keep the high-frequency part of the spectrum.
 
-A **high-pass filter** attenuates frequencies below its cutoff region and passes frequencies above it.
+A ****high-pass filter**** attenuates frequencies below its cutoff region and passes frequencies above it.
 
 For our three-tone signal, we choose the filter so that the 9 kHz component remains while the 2 kHz and 5 kHz components are strongly reduced.
 
@@ -503,7 +528,7 @@ For a high-pass filter, the opposite is true.
 
 ---
 
-# Experiment 4: Band-Pass Filtering and Channel Selection
+## Experiment 4: Band-Pass Filtering and Channel Selection
 
 ## 9.11 What If the Desired Signal Is in the Middle?
 
@@ -525,7 +550,7 @@ A high-pass filter would tend to keep the 9 kHz component.
 
 What we want is a filter that passes only a selected range around 5 kHz.
 
-That is a **band-pass filter**.
+That is a ****band-pass filter****.
 
 A band-pass filter passes frequencies between two frequency boundaries.
 
@@ -538,6 +563,7 @@ $$
 where
 
 - $f_L$ is the lower cutoff frequency,
+
 - $f_H$ is the upper cutoff frequency.
 
 For this experiment, we choose the passband so that the 5 kHz signal lies inside it while the 2 kHz and 9 kHz signals lie outside.
@@ -558,7 +584,7 @@ $$
 
 while the 2 kHz and 9 kHz components are strongly attenuated.
 
-This is our first clear example of **channel selection**.
+This is our first clear example of ****channel selection****.
 
 ---
 
@@ -572,10 +598,13 @@ The receiver does not magically receive only the station we selected.
 
 Instead, the receiver performs operations such as:
 
-1. frequency translation,
-2. filtering,
-3. sample-rate reduction,
-4. demodulation.
+1\. frequency translation,
+
+2\. filtering,
+
+3\. sample-rate reduction,
+
+4\. demodulation.
 
 The mixing experiments from the previous chapter and the filtering experiments in this chapter therefore fit together.
 
@@ -583,21 +612,21 @@ A signal can first be translated to a convenient frequency and then filtered so 
 
 Conceptually:
 
-$$
-\text{RF spectrum}
-\rightarrow
-\text{frequency translation}
-\rightarrow
-\text{channel filter}
-\rightarrow
-\text{desired signal}
-$$
+```text
+RF spectrum
+    ↓
+Frequency translation
+    ↓
+Channel filter
+    ↓
+Desired signal
+```
 
 This is one of the central ideas behind software-defined radio.
 
 ---
 
-# Experiment 5: Band-Reject Filtering
+## Experiment 5: Band-Reject Filtering
 
 ## 9.13 Removing One Frequency Region Instead
 
@@ -609,9 +638,9 @@ We want to remove it.
 
 Suppose the 5 kHz component is interference and we want to retain the 2 kHz and 9 kHz components.
 
-A **band-reject filter**, also called a **band-stop filter**, suppresses frequencies within a selected range while allowing frequencies outside that range to remain.
+A ****band-reject filter****, also called a ****band-stop filter****, suppresses frequencies within a selected range while allowing frequencies outside that range to remain.
 
-If the rejected band is very narrow, the filter is often called a **notch filter**.
+If the rejected band is very narrow, the filter is often called a ****notch filter****.
 
 ![GNU Radio band-reject filter flowgraph](../figures/ch09/ch09-exp5-bandreject-flowgraph.png)
 
@@ -632,10 +661,15 @@ This is a useful reminder that frequency-domain plots often reveal the action of
 At this point we have used four common filter types.
 
 | Filter | What it does |
+
 |---|---|
+
 | Low-pass | Keeps lower-frequency components |
+
 | High-pass | Keeps higher-frequency components |
+
 | Band-pass | Keeps a selected frequency band |
+
 | Band-reject | Rejects a selected frequency band |
 
 Their shapes are different, but the underlying idea is the same:
@@ -652,18 +686,22 @@ How sharp can the boundary between passband and stopband actually be?
 
 ---
 
-# Experiment 6: Understanding Transition Width
+## Experiment 6: Understanding Transition Width
 
 ## 9.15 Real Filters Are Not Brick Walls
 
 An ideal low-pass filter might be written as
 
+An ideal low-pass filter would have
+
 $$
-H(f)=
-\begin{cases}
-1, & |f|\leq f_c \\
-0, & |f|>f_c
-\end{cases}
+H(f)=1 \quad 	ext{for } |f|\leq f_c
+$$
+
+and
+
+$$
+H(f)=0 \quad 	ext{for } |f|>f_c
 $$
 
 This describes an infinitely sharp boundary.
@@ -676,9 +714,9 @@ A practical finite-length FIR filter cannot behave exactly like this.
 
 Instead, the response changes gradually between the passband and stopband.
 
-That region is the **transition band**.
+That region is the ****transition band****.
 
-The width of this region is called the **transition width**.
+The width of this region is called the ****transition width****.
 
 We can write it conceptually as
 
@@ -718,11 +756,13 @@ We keep:
 
 ```text
 Sample Rate:       32k
+
 Cutoff Frequency:  3k
+
 Window:            Hamming
 ```
 
-and make the transition width adjustable using a **QT GUI Range**.
+and make the transition width adjustable using a ****QT GUI Range****.
 
 ![GNU Radio transition-width experiment flowgraph](../figures/ch09/ch09-exp6-transition-width-flowgraph.png)
 
@@ -730,8 +770,11 @@ We tested values including:
 
 ```text
 100 Hz
+
 500 Hz
+
 1000 Hz
+
 2000 Hz
 ```
 
@@ -763,36 +806,26 @@ To understand that cost, we need to look inside the FIR filter.
 
 ---
 
-# Experiment 7: Filter Taps and FIR Complexity
+## Experiment 7: Filter Taps and FIR Complexity
 
 ## 9.18 What Is an FIR Filter?
 
 The filters we have been using are FIR filters.
 
-FIR means **Finite Impulse Response**.
+FIR means ****Finite Impulse Response****.
 
 An FIR filter calculates each output sample from a weighted combination of input samples.
 
 A simple FIR filter can be written as
 
 $$
-y[n]
-=
-h[0]x[n]
-+
-h[1]x[n-1]
-+
-h[2]x[n-2]
-+\cdots+
-h[N-1]x[n-(N-1)]
+y[n] = h[0]x[n] \+ h[1]x[n-1] \+ h[2]x[n-2] +\cdots+ h[N-1]x[n-(N-1)]
 $$
 
 More compactly,
 
 $$
-y[n]
-=
-\sum_{k=0}^{N-1}h[k]x[n-k]
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
 $$
 
 The values
@@ -801,7 +834,7 @@ $$
 h[0],h[1],\ldots,h[N-1]
 $$
 
-are the **filter coefficients**, usually called **filter taps**.
+are the ****filter coefficients****, usually called ****filter taps****.
 
 So if a filter contains 155 taps, GNU Radio is using 155 coefficients in the FIR calculation.
 
@@ -818,7 +851,7 @@ where $h[n]$ is the filter impulse response.
 Its Fourier transform gives the filter frequency response:
 
 $$
-H(f)=\mathcal{F}\{h[n]\}
+H(f)=\mathcal{F}\\{h[n]\\}
 $$
 
 This connects the time-domain idea of convolution directly to the frequency-domain shape of the filter.
@@ -827,14 +860,15 @@ This connects the time-domain idea of convolution directly to the frequency-doma
 
 ## 9.19 Exposing the Filter Taps in GNU Radio
 
-Until now, the convenient **Low Pass Filter** block created and applied the coefficients internally.
+Until now, the convenient ****Low Pass Filter**** block created and applied the coefficients internally.
 
 For this experiment, we separate those two jobs.
 
 We use:
 
-- **Low-pass Filter Taps**
-- **Decimating FIR Filter**
+- ****Low-pass Filter Taps****
+
+- ****Decimating FIR Filter****
 
 The Low-pass Filter Taps block creates the coefficient vector.
 
@@ -846,10 +880,15 @@ The Low-pass Filter Taps block is configured with:
 
 ```text
 ID:                lpf_taps
+
 Gain:              1
+
 Sample Rate:       samp_rate
+
 Cutoff Frequency:  3k
+
 Transition Width:  500
+
 Window:            Hamming
 ```
 
@@ -857,8 +896,11 @@ The Decimating FIR Filter then uses:
 
 ```text
 Type:          Float -> Float (Real Taps)
+
 Decimation:    1
+
 Taps:          lpf_taps
+
 Sample Delay:  0
 ```
 
@@ -866,7 +908,7 @@ There is no signal wire between the Low-pass Filter Taps block and the Decimatin
 
 `lpf_taps` is a variable containing the coefficient vector.
 
-The FIR filter references that vector through its **Taps** field.
+The FIR filter references that vector through its ****Taps**** field.
 
 ---
 
@@ -931,13 +973,14 @@ lpf_taps
 If the vector contains $N$ coefficients, then the number of taps is simply
 
 $$
-N=\operatorname{len}(lpf\_taps)
+N=\operatorname{len}(lpf_taps)
 $$
 
 In GNU Radio, we created another variable:
 
 ```text
 ID:     num_taps
+
 Value:  len(lpf_taps)
 ```
 
@@ -949,8 +992,11 @@ For example, with:
 
 ```text
 Sample Rate:       32k
+
 Cutoff Frequency:  3k
+
 Transition Width:  500
+
 Window:            Hamming
 ```
 
@@ -985,11 +1031,17 @@ We then varied the transition width while keeping the Hamming window.
 The measured values were:
 
 | Transition Width | Number of Taps |
+
 |---:|---:|
+
 | 2000 Hz | 39 |
+
 | 1000 Hz | 77 |
+
 | 500 Hz | 155 |
+
 | 200 Hz | 385 |
+
 | 100 Hz | 771 |
 
 The trend is very clear.
@@ -1007,17 +1059,13 @@ The exact value depends on the design method and window, but the trend is what m
 For example,
 
 $$
-\Delta f=1000\text{ Hz}
-\Rightarrow
-N\approx77
+\Delta f=1000\text{ Hz} \Rightarrow N\approx77
 $$
 
 while
 
 $$
-\Delta f=500\text{ Hz}
-\Rightarrow
-N\approx155
+\Delta f=500\text{ Hz} \Rightarrow N\approx155
 $$
 
 Halving the transition width roughly doubles the number of taps.
@@ -1025,22 +1073,18 @@ Halving the transition width roughly doubles the number of taps.
 At the extreme we tested,
 
 $$
-\Delta f=100\text{ Hz}
-\Rightarrow
-N\approx771
+\Delta f=100\text{ Hz} \Rightarrow N\approx771
 $$
 
 This gives us one of the most important engineering trade-offs in filter design:
 
-$$
-\boxed{
-\text{Narrower transition}
-\Longrightarrow
-\text{more taps}
-\Longrightarrow
-\text{more computation}
-}
-$$
+```text
+Narrower transition
+        ↓
+More taps
+        ↓
+More computation
+```
 
 A sharper filter is useful, but it is not free.
 
@@ -1053,9 +1097,13 @@ The window also affects FIR filter design.
 Common windows include:
 
 - Rectangular,
+
 - Hann,
+
 - Hamming,
+
 - Blackman,
+
 - Kaiser.
 
 Different windows trade transition sharpness, stopband attenuation, and filter length differently.
@@ -1064,7 +1112,7 @@ We already explored and compared windows earlier, so there is no need to repeat 
 
 However, it is useful to keep the result in mind:
 
-> **The window is part of the filter design, not a cosmetic setting.**
+> ****The window is part of the filter design, not a cosmetic setting.****
 
 ![Comparison of FIR filter windows](../figures/ch09/ch09-exp7-filter-windows-comparison.png)
 
@@ -1081,9 +1129,7 @@ Each output sample of an FIR filter requires calculations involving its taps.
 For an $N$-tap filter,
 
 $$
-y[n]
-=
-\sum_{k=0}^{N-1}h[k]x[n-k]
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
 $$
 
 so increasing $N$ increases the number of multiply-and-add operations.
@@ -1096,11 +1142,11 @@ A practical SDR designer therefore does not simply ask:
 
 A better question is:
 
-> **How sharp does this filter actually need to be?**
+> ****How sharp does this filter actually need to be?****
 
 ---
 
-# Experiment 8: Filtering and Decimation
+## Experiment 8: Filtering and Decimation
 
 ## 9.25 Why Reduce the Sample Rate?
 
@@ -1108,16 +1154,14 @@ So far, our filters have mainly changed the spectrum.
 
 Now we will use the filter together with another important SDR operation:
 
-**decimation**.
+****decimation****.
 
 Decimation reduces the sample rate.
 
 If the input sample rate is $f_s$ and the decimation factor is $D$, then
 
 $$
-f_{s,\text{out}}
-=
-\frac{f_s}{D}
+f_{s,\text{out}} = \frac{f_s}{D}
 $$
 
 For our original sample rate,
@@ -1169,12 +1213,19 @@ $$
 For this experiment, we use:
 
 - the three Signal Sources,
+
 - Add,
+
 - Throttle,
+
 - Low-pass Filter Taps,
+
 - Decimating FIR Filter,
+
 - QT GUI Range,
+
 - QT GUI Time Sink,
+
 - QT GUI Frequency Sink.
 
 ![GNU Radio decimation flowgraph](../figures/ch09/ch09-exp8-decimation-flowgraph.png)
@@ -1185,10 +1236,15 @@ For example:
 
 ```text
 ID:             decimation
+
 Label:          Decimation
+
 Default Value:  1
+
 Start:          1
+
 Stop:           10
+
 Step:           1
 ```
 
@@ -1241,9 +1297,7 @@ Decimation = 4
 then
 
 $$
-f_{s,\text{out}}
-=
-\frac{f_{s,\text{in}}}{4}
+f_{s,\text{out}} = \frac{f_{s,\text{in}}}{4}
 $$
 
 ### Taps
@@ -1355,10 +1409,15 @@ $$
 The relationship is summarized below.
 
 | Decimation $D$ | Output Sample Rate | Nyquist Frequency |
+
 |---:|---:|---:|
+
 | 1 | 32 kS/s | 16 kHz |
+
 | 2 | 16 kS/s | 8 kHz |
+
 | 4 | 8 kS/s | 4 kHz |
+
 | 8 | 4 kS/s | 2 kHz |
 
 The same number of samples also covers more time as the sample rate becomes lower.
@@ -1366,13 +1425,7 @@ The same number of samples also covers more time as the sample rate becomes lowe
 That is why the Time Sink shows approximately:
 
 $$
-4\text{ ms}
-\rightarrow
-8\text{ ms}
-\rightarrow
-16\text{ ms}
-\rightarrow
-32\text{ ms}
+4\text{ ms} \rightarrow 8\text{ ms} \rightarrow 16\text{ ms} \rightarrow 32\text{ ms}
 $$
 
 for the same displayed number of points.
@@ -1390,9 +1443,7 @@ The allowable frequency range becomes smaller too.
 After decimation,
 
 $$
-f_N'
-=
-\frac{f_s'}{2}
+f_N' = \frac{f_s'}{2}
 $$
 
 For example, with
@@ -1427,7 +1478,7 @@ That is where filtering becomes essential.
 
 ---
 
-# Experiment 8a: What Happens If We Decimate Without Filtering?
+## Experiment 8a: What Happens If We Decimate Without Filtering?
 
 ## 9.30 Breaking the Correct Decimation Process
 
@@ -1439,9 +1490,13 @@ The first uses the correct method:
 
 ```text
 Combined Signal
+
     ↓
+
 Decimating FIR Filter
+
     ↓
+
 Filtered and Decimated Output
 ```
 
@@ -1449,9 +1504,13 @@ The second simply discards samples:
 
 ```text
 Combined Signal
+
     ↓
+
 Keep 1 in N
+
     ↓
+
 Directly Decimated Output
 ```
 
@@ -1468,11 +1527,7 @@ Decimation = 4
 The new sample rate is therefore
 
 $$
-f_s'
-=
-\frac{32}{4}
-=
-8\text{ kS/s}
+f_s' = \frac{32}{4} = 8\text{ kS/s}
 $$
 
 and the new Nyquist frequency is
@@ -1500,25 +1555,19 @@ If we simply downsample without filtering, those frequencies fold back into the 
 The 5 kHz component aliases to
 
 $$
-|5-8|
-=
-3\text{ kHz}
+|5-8| = 3\text{ kHz}
 $$
 
 The 9 kHz component aliases to
 
 $$
-|9-8|
-=
-1\text{ kHz}
+|9-8| = 1\text{ kHz}
 $$
 
 So after direct downsampling, we expect components around
 
 $$
-\pm1,\quad
-\pm2,\quad
-\pm3\text{ kHz}
+\pm1,\quad \pm2,\quad \pm3\text{ kHz}
 $$
 
 even though our original Signal Sources were at
@@ -1533,14 +1582,12 @@ $$
 
 ![Comparison of filtering before decimation and direct downsampling](../figures/ch09/ch09-exp8a-filter-before-decimation-comparison.png)
 
-Look first at the **Keep 1 in N output**.
+Look first at the ****Keep 1 in N output****.
 
 We see components around
 
 $$
-\pm1,\quad
-\pm2,\quad
-\pm3\text{ kHz}
+\pm1,\quad \pm2,\quad \pm3\text{ kHz}
 $$
 
 The 1 kHz and 3 kHz components were not present in the original signal.
@@ -1551,7 +1598,7 @@ The original 9 kHz signal has folded to approximately 1 kHz.
 
 The original 5 kHz signal has folded to approximately 3 kHz.
 
-Now look at the **Decimating FIR Filter output**.
+Now look at the ****Decimating FIR Filter output****.
 
 Before discarding samples, the FIR filter suppresses the high-frequency components that would violate the new Nyquist limit.
 
@@ -1575,17 +1622,13 @@ $$
 
 This leads to one of the most important rules in digital signal processing:
 
-$$
-\boxed{
-\text{Filter first. Decimate second.}
-}
-$$
+> **Filter first. Decimate second.**
 
 ---
 
 ## 9.33 GNU Radio Toolbox: Keep 1 in N
 
-The **Keep 1 in N** block performs a simple form of downsampling.
+The ****Keep 1 in N**** block performs a simple form of downsampling.
 
 If
 
@@ -1598,9 +1641,7 @@ then it keeps one sample out of every four input samples.
 The sample rate therefore becomes
 
 $$
-f_s'
-=
-\frac{f_s}{4}
+f_s' = \frac{f_s}{4}
 $$
 
 But the block does not automatically perform the anti-alias filtering needed before reducing the sample rate.
@@ -1661,7 +1702,7 @@ If the sink is left at 32 kHz, the samples will still be plotted, but the freque
 
 This is an important GNU Radio habit:
 
-> **Whenever the sample rate changes, check every downstream block that depends on the sample rate.**
+> ****Whenever the sample rate changes, check every downstream block that depends on the sample rate.****
 
 ---
 
@@ -1724,17 +1765,13 @@ A very narrow transition width can dramatically increase the number of taps.
 For our Hamming-window experiment:
 
 $$
-\Delta f=2000\text{ Hz}
-\Rightarrow
-N\approx39
+\Delta f=2000\text{ Hz} \Rightarrow N\approx39
 $$
 
 while
 
 $$
-\Delta f=100\text{ Hz}
-\Rightarrow
-N\approx771
+\Delta f=100\text{ Hz} \Rightarrow N\approx771
 $$
 
 That is a large increase in computation.
@@ -1767,7 +1804,7 @@ Once that aliasing has occurred, the aliased components are no longer distinguis
 
 ---
 
-## 9.37 What We Have Actually Learned
+## 9.37 What We Learned
 
 We started this chapter with three simple tones:
 
@@ -1796,9 +1833,7 @@ A narrower transition width gives us a sharper filter, but it requires more FIR 
 Those taps are the coefficients of the convolution
 
 $$
-y[n]
-=
-\sum_{k=0}^{N-1}h[k]x[n-k]
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
 $$
 
 The window used during filter design affects the response and the number of taps.
@@ -1819,19 +1854,17 @@ We can now connect several chapters together.
 
 A practical SDR receiver may perform something like
 
-$$
-\boxed{
-\text{Sample}
-\rightarrow
-\text{Frequency Translate}
-\rightarrow
-\text{Filter}
-\rightarrow
-\text{Decimate}
-\rightarrow
-\text{Demodulate}
-}
-$$
+```text
+Sample
+  ↓
+Frequency Translate
+  ↓
+Filter
+  ↓
+Decimate
+  ↓
+Demodulate
+```
 
 Each step solves a different problem.
 
@@ -1853,7 +1886,7 @@ It sits at the heart of a software-defined receiver.
 
 ## 9.39 GNU Radio Toolbox Summary
 
-We introduced several important GNU Radio blocks in this chapter.
+This chapter introduced several filter-design and decimation blocks, while also reusing familiar GNU Radio blocks in more advanced roles.
 
 ### Low Pass Filter
 
@@ -1863,10 +1896,15 @@ Important parameters include:
 
 ```text
 Decimation
+
 Gain
+
 Sample Rate
+
 Cutoff Frequency
+
 Transition Width
+
 Window
 ```
 
@@ -1897,9 +1935,7 @@ Applies FIR filtering and downsampling together.
 Conceptually:
 
 $$
-\text{FIR filtering}
-\rightarrow
-\text{keep every }D\text{th sample}
+\text{FIR filtering} \rightarrow \text{keep every }D\text{th sample}
 $$
 
 ### Keep 1 in N
@@ -1916,22 +1952,28 @@ This is especially useful in experiments because we can immediately see the effe
 
 ---
 
-## 9.40 Final Takeaway
+## 9.40 Key Design Takeaway
 
 If there is one idea to carry forward from this chapter, it is this:
 
-> **A filter is a way of deciding which parts of a signal's spectrum matter.**
+> ****A filter is a way of deciding which parts of a signal's spectrum matter.****
 
 But useful filter design involves more than choosing "low-pass" or "high-pass."
 
 We also have to think about:
 
 - where the passband should end,
+
 - where the stopband should begin,
+
 - how wide the transition region can be,
+
 - how many taps are reasonable,
+
 - which window is appropriate,
+
 - what the sample rate is,
+
 - whether that sample rate will change afterward.
 
 Those choices are connected.
@@ -1952,27 +1994,30 @@ That is the real goal of this chapter.
 
 ---
 
-## 9.41 Where We Go Next
+## 9.41 Connecting to the Next Chapter
 
 By the end of this chapter, we have learned how to shape a spectrum deliberately.
 
 We can:
 
 - keep low-frequency components,
+
 - keep high-frequency components,
+
 - isolate a selected band,
+
 - reject an unwanted band,
+
 - control the transition region,
+
 - inspect FIR filter taps,
+
 - and reduce the sample rate safely after filtering.
 
 We also saw that an FIR filter can be written as
 
 $$
-y[n]
-=
-\sum_{k=0}^{N-1}
-h[k]x[n-k]
+y[n] = \sum_{k=0}^{N-1} h[k]x[n-k]
 $$
 
 and that the values
@@ -1993,9 +2038,9 @@ To answer that, we need to look at filters from a different point of view.
 
 Instead of starting with frequency response, we will start with the simplest possible input:
 
-> **an impulse.**
+> ****an impulse.****
 
-If we send an impulse into a system and observe what comes out, we obtain the system's **impulse response**.
+If we send an impulse into a system and observe what comes out, we obtain the system's ****impulse response****.
 
 For an FIR filter, that impulse response is closely connected to the taps we have already been using.
 
@@ -2003,12 +2048,11 @@ Then something powerful happens.
 
 A more complicated signal can be thought of as a collection of shifted and scaled impulses. If we know how the system responds to one impulse, we can build the response to the entire input.
 
-That operation is called **convolution**.
+That operation is called ****convolution****.
 
 So the next question is:
 
-> **If we know how a system responds to one impulse, can we predict how it responds to any signal?**
+> ****If we know how a system responds to one impulse, can we predict how it responds to any signal?****
 
 That takes us to:
 
-# Chapter 10: Impulse Response and Convolution
