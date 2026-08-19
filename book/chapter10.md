@@ -6,13 +6,13 @@ We saw low-pass, high-pass, band-pass and band-reject filters in action. We chan
 
 But there is still an important question hiding underneath all of that:
 
-> **What is a filter actually doing to the individual samples of a signal?**
+> ****What is a filter actually doing to the individual samples of a signal?****
 
 To answer that, we are going to look at filters from a completely different direction.
 
 Instead of beginning with frequency response, we will begin with one of the simplest possible discrete-time signals:
 
-**a single impulse.**
+****a single impulse.****
 
 From there, we will gradually build our way toward convolution.
 
@@ -24,36 +24,29 @@ First, we will make GNU Radio show us what convolution actually means.
 
 ## 10.1 A System: Input Goes In, Output Comes Out
 
-Before talking about impulses or convolution, let us use the word **system** in a very simple sense.
+Before talking about impulses or convolution, let us use the word ****system**** in a very simple sense.
 
 A system takes an input and produces an output.
 
-$$
-x[n]
-\longrightarrow
-\boxed{\text{System}}
-\longrightarrow
-y[n]
-$$
+```text
+x[n] → System → y[n]
+```
 
 Here:
 
 - $x[n]$ is the input;
+
 - $y[n]$ is the output.
 
 A filter is one example of a system.
 
 If we pass a signal through an FIR filter,
 
-$$
-x[n]
-\longrightarrow
-\boxed{\text{FIR Filter}}
-\longrightarrow
-y[n]
-$$
+```text
+x[n] → FIR Filter → y[n]
+```
 
-the filter changes the input according to its coefficients, or **taps**.
+the filter changes the input according to its coefficients, or ****taps****.
 
 In Chapter 9, we mainly observed this change in the frequency domain.
 
@@ -67,19 +60,22 @@ A discrete-time impulse is one of the simplest signals we can create.
 
 It contains a value of $1$ at one sample and $0$ everywhere else:
 
+The discrete-time impulse is defined by
+
 $$
-\delta[n]
-=
-\begin{cases}
-1, & n=0 \\
-0, & n\neq0
-\end{cases}
+\delta[n]=1 \quad \text{for } n=0
+$$
+
+and
+
+$$
+\delta[n]=0 \quad \text{for } n\neq0
 $$
 
 As a sequence, we can imagine it as
 
 $$
-[1,\;0,\;0,\;0,\;0,\ldots]
+[1,\\;0,\\;0,\\;0,\\;0,\ldots]
 $$
 
 At first this may not look particularly useful.
@@ -99,14 +95,10 @@ That output tells us a great deal about the system itself.
 Suppose we apply an impulse to a system:
 
 $$
-\delta[n]
-\longrightarrow
-\boxed{\text{System}}
-\longrightarrow
-?
+\delta[n] \longrightarrow \boxed{\text{System}} \longrightarrow ?
 $$
 
-The output produced by the system is called its **impulse response**.
+The output produced by the system is called its ****impulse response****.
 
 We normally write it as
 
@@ -116,33 +108,29 @@ $$
 
 Therefore,
 
-$$
-\boxed{
-\delta[n]
-\longrightarrow
-h[n]
-}
-$$
+```text
+δ[n] → h[n]
+```
 
 This idea is especially useful for FIR filters.
 
 If an FIR filter has taps
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 then its impulse response is
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 Let us verify that directly in GNU Radio.
 
 ---
 
-# Experiment 1: Observing the Impulse Response of an FIR Filter
+## Experiment 1: Observing the Impulse Response of an FIR Filter
 
 ## 10.4 GNU Radio Flowgraph
 
@@ -156,7 +144,9 @@ The basic flow is:
 
 ```text
 Vector Source ───────────────→ QT GUI Time Sink
+
       │
+
       └→ Decimating FIR Filter ─→ QT GUI Time Sink
 ```
 
@@ -172,6 +162,7 @@ The filtered path lets us see the response of the FIR filter.
 
 ```text
 ID: samp_rate
+
 Value: 1k
 ```
 
@@ -181,18 +172,21 @@ Use a sequence containing one impulse followed by zeros:
 
 ```text
 Vector:
+
 (1, 0, 0, 0, 0, 0, 0, 0,
+
  0, 0, 0, 0, 0, 0, 0, 0)
 
 Tags: []
 
 Repeat: Yes
+
 Vector Length: 1
 ```
 
 We use `Repeat = Yes` only so that the impulse appears repeatedly in the continuously running GNU Radio display.
 
-Conceptually, the impulse response is the response to **one impulse**.
+Conceptually, the impulse response is the response to ****one impulse****.
 
 Repeating the sequence is simply a convenient way to visualize the experiment.
 
@@ -202,8 +196,11 @@ Because our impulse response lasts for only three samples and the impulses are s
 
 ```text
 Type: Float -> Float (Real Taps)
+
 Decimation: 1
+
 Taps: (1, 0.5, 0.25)
+
 Sample Delay: 0
 ```
 
@@ -213,7 +210,9 @@ Use:
 
 ```text
 Number of Points: 32
+
 Sample Rate: samp_rate
+
 Autoscale: Yes
 ```
 
@@ -241,55 +240,100 @@ Using visible point markers in the Time Sink is also helpful because we are deal
 
 ---
 
-> **GNU Radio Toolbox: Vector Source**
+> ****GNU Radio Toolbox: Vector Source****
+
 >
-> The **Vector Source** lets us enter a predefined sequence of sample values directly.
+
+> The ****Vector Source**** lets us enter a predefined sequence of sample values directly.
+
 >
+
 > This makes it particularly useful when we want to study DSP operations using small sequences such as
+
 >
+
 > $$
-> [1,\;0,\;0,\;0]
+
+> [1,\\;0,\\;0,\\;0]
+
 > $$
+
 >
+
 > rather than continuously generated sine waves.
+
 >
+
 > Important settings include:
+
 >
+
 > - Output Type
+
 > - Vector
+
 > - Tags
+
 > - Repeat
+
 > - Vector Length
+
 >
+
 > In this experiment, `Repeat = Yes` causes the vector to start again after its final sample.
 
 ---
 
-> **GNU Radio Toolbox: Decimating FIR Filter**
+> ****GNU Radio Toolbox: Decimating FIR Filter****
+
 >
-> The **Decimating FIR Filter** performs FIR filtering and can optionally reduce the sample rate.
+
+> The ****Decimating FIR Filter**** performs FIR filtering and can optionally reduce the sample rate.
+
 >
+
 > Important parameters include:
+
 >
+
 > - Type
+
 > - Decimation
+
 > - Taps
+
 > - Sample Delay
+
 >
+
 > In this experiment,
+
 >
+
 > ```text
+
 > Decimation = 1
+
 > ```
+
 >
+
 > so no sample-rate reduction takes place.
+
 >
+
 > The important parameter is
+
 >
+
 > ```text
+
 > Taps = (1, 0.5, 0.25)
+
 > ```
+
 >
+
 > These taps define the impulse response of the FIR filter.
 
 ---
@@ -305,13 +349,13 @@ $$
 The filter taps are
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 Therefore, if the taps really are the impulse response, an input impulse should produce
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 at the output.
@@ -333,24 +377,20 @@ $$
 Therefore,
 
 $$
-\boxed{
-h[n]=[1,\;0.5,\;0.25]
-}
+\boxed{ h[n]=[1,\\;0.5,\\;0.25] }
 $$
 
 and we have experimentally confirmed something very important:
 
 $$
-\boxed{
-\text{FIR filter taps}=\text{impulse response}
-}
+\boxed{ \text{FIR filter taps}=\text{impulse response} }
 $$
 
 This fact will become increasingly useful as the chapter continues.
 
 ---
 
-# Experiment 2: Response to a Delayed Impulse
+## Experiment 2: Response to a Delayed Impulse
 
 ## 10.7 What If the Impulse Arrives Later?
 
@@ -389,30 +429,26 @@ The impulse response has moved to the right by exactly the same amount.
 Originally,
 
 $$
-\delta[n]
-\longrightarrow
-h[n]
+\delta[n] \longrightarrow h[n]
 $$
 
 After delaying the input,
 
 $$
-\delta[n-4]
-\longrightarrow
-h[n-4]
+\delta[n-4] \longrightarrow h[n-4]
 $$
 
 The shape
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 has not changed.
 
 Only its position has changed.
 
-This is the intuition behind **time invariance**:
+This is the intuition behind ****time invariance****:
 
 > If we delay the input to a time-invariant system, its output is delayed by the same amount.
 
@@ -420,7 +456,7 @@ The system does not suddenly behave differently just because the signal arrived 
 
 ---
 
-# Experiment 3: Response to a Scaled Impulse
+## Experiment 3: Response to a Scaled Impulse
 
 ## 10.8 What If the Impulse Is Larger?
 
@@ -449,29 +485,25 @@ What should the filter do?
 Previously,
 
 $$
-\delta[n-4]
-\longrightarrow
-h[n-4]
+\delta[n-4] \longrightarrow h[n-4]
 $$
 
 If we double the input, we expect the output to double:
 
 $$
-2\delta[n-4]
-\longrightarrow
-2h[n-4]
+2\delta[n-4] \longrightarrow 2h[n-4]
 $$
 
 Since
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 we predict
 
 $$
-2h[n]=[2,\;1,\;0.5]
+2h[n]=[2,\\;1,\\;0.5]
 $$
 
 ![Response to a scaled impulse](../figures/ch10/ch10-exp3-scaled-impulse.png)
@@ -486,7 +518,7 @@ $$
 
 The complete response has simply been scaled by the same factor as the input.
 
-This is one part of the idea behind **linearity**.
+This is one part of the idea behind ****linearity****.
 
 ---
 
@@ -497,26 +529,22 @@ At this point, we know two important things.
 A delayed impulse creates a delayed copy of the impulse response:
 
 $$
-\delta[n-k]
-\longrightarrow
-h[n-k]
+\delta[n-k] \longrightarrow h[n-k]
 $$
 
 A scaled impulse creates a scaled copy:
 
 $$
-A\delta[n-k]
-\longrightarrow
-Ah[n-k]
+A\delta[n-k] \longrightarrow Ah[n-k]
 $$
 
-What happens if the input contains **more than one impulse**?
+What happens if the input contains ****more than one impulse****?
 
 That question takes us much closer to convolution.
 
 ---
 
-# Experiment 4: Response to Two Impulses
+## Experiment 4: Response to Two Impulses
 
 ## 10.10 Two Separate Impulses
 
@@ -526,17 +554,14 @@ This time set the Vector Source to contain two non-zero samples:
 
 ```text
 (1, 0, 0, 0, 0.5, 0, 0, 0,
+
  0, 0, 0, 0, 0, 0, 0, 0)
 ```
 
 The input can be written as
 
 $$
-x[n]
-=
-\delta[n]
-+
-0.5\delta[n-4]
+x[n] = \delta[n] \+ 0.5\delta[n-4]
 $$
 
 The first impulse has amplitude $1$.
@@ -544,17 +569,13 @@ The first impulse has amplitude $1$.
 It produces
 
 $$
-h[n]
-=
-[1,\;0.5,\;0.25]
+h[n] = [1,\\;0.5,\\;0.25]
 $$
 
 The second impulse has amplitude $0.5$, so it produces
 
 $$
-0.5h[n]
-=
-[0.5,\;0.25,\;0.125]
+0.5h[n] = [0.5,\\;0.25,\\;0.125]
 $$
 
 But the second impulse occurs four samples later.
@@ -564,11 +585,7 @@ Therefore its response also starts four samples later.
 We expect
 
 $$
-y[n]
-=
-h[n]
-+
-0.5h[n-4]
+y[n] = h[n] \+ 0.5h[n-4]
 $$
 
 ![Response to two impulses](../figures/ch10/ch10-exp4-two-impulses.png)
@@ -576,13 +593,16 @@ $$
 For one period, the samples can be written as:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
+
 | $x[n]$ | 1 | 0 | 0 | 0 | 0.5 | 0 | 0 | 0 |
+
 | $y[n]$ | 1 | 0.5 | 0.25 | 0 | 0.5 | 0.25 | 0.125 | 0 |
 
 Something important has happened.
 
-Each non-zero input sample has produced **its own copy of the impulse response**.
+Each non-zero input sample has produced ****its own copy of the impulse response****.
 
 The amplitude of the input sample controls the size of the copy.
 
@@ -592,7 +612,7 @@ This observation is going to become the central idea of convolution.
 
 ---
 
-# Experiment 5: When Impulse Responses Overlap
+## Experiment 5: When Impulse Responses Overlap
 
 ## 10.11 Move the Impulses Closer Together
 
@@ -604,29 +624,26 @@ Change the Vector Source to
 
 ```text
 (1, 0, 0.5, 0, 0, 0, 0, 0,
+
  0, 0, 0, 0, 0, 0, 0, 0)
 ```
 
 Now,
 
 $$
-x[n]
-=
-\delta[n]
-+
-0.5\delta[n-2]
+x[n] = \delta[n] \+ 0.5\delta[n-2]
 $$
 
 The first impulse produces
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 The second produces
 
 $$
-[0.5,\;0.25,\;0.125]
+[0.5,\\;0.25,\\;0.125]
 $$
 
 starting at $n=2$.
@@ -634,35 +651,33 @@ starting at $n=2$.
 Let us place the two contributions underneath each other:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $\delta[n]$ | 1 | 0.5 | 0.25 | 0 | 0 |
+
 | Contribution from $0.5\delta[n-2]$ | 0 | 0 | 0.5 | 0.25 | 0.125 |
-| **Total $y[n]$** | **1** | **0.5** | **0.75** | **0.25** | **0.125** |
+
+| ****Total $y[n]$**** | ****1**** | ****0.5**** | ****0.75**** | ****0.25**** | ****0.125**** |
 
 At $n=2$, both responses contribute.
 
 Therefore,
 
 $$
-y[2]
-=
-0.25+0.5
+y[2] = 0.25+0.5
 $$
 
 so
 
 $$
-\boxed{
-y[2]=0.75
-}
+\boxed{ y[2]=0.75 }
 $$
 
 The complete expected output is
 
 $$
-y[n]
-=
-[1,\;0.5,\;0.75,\;0.25,\;0.125]
+y[n] = [1,\\;0.5,\\;0.75,\\;0.25,\\;0.125]
 $$
 
 ![Overlapping impulse responses](../figures/ch10/ch10-exp5-overlapping-impulse-responses.png)
@@ -679,7 +694,7 @@ $$
 
 We have now discovered another important rule:
 
-> **When shifted impulse responses overlap, their contributions add.**
+> ****When shifted impulse responses overlap, their contributions add.****
 
 At this point, we already have almost everything we need to understand convolution.
 
@@ -694,7 +709,7 @@ So far, our input signals have been deliberately constructed from obvious impuls
 But consider a more ordinary finite sequence:
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 At first, this may seem different.
@@ -710,18 +725,12 @@ The third sample is an impulse of amplitude $1$ at $n=2$.
 Therefore,
 
 $$
-x[n]
-=
-\delta[n]
-+
-2\delta[n-1]
-+
-\delta[n-2]
+x[n] = \delta[n] \+ 2\delta[n-1] \+ \delta[n-2]
 $$
 
 This is the key idea:
 
-> **Any discrete-time sequence can be thought of as a collection of shifted and scaled impulses.**
+> ****Any discrete-time sequence can be thought of as a collection of shifted and scaled impulses.****
 
 Now our previous experiments become much more powerful.
 
@@ -729,27 +738,28 @@ We already know what the system does to each one of those impulses.
 
 ---
 
-# Experiment 6: Convolution of Two Simple Sequences
+## Experiment 6: Convolution of Two Simple Sequences
 
 ## 10.13 The Input and the Impulse Response
 
 Keep the same FIR filter:
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 Change the Vector Source to
 
 ```text
 (1, 2, 1, 0, 0, 0, 0, 0,
+
  0, 0, 0, 0, 0, 0, 0, 0)
 ```
 
 The non-zero part of the input is
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 Before looking at GNU Radio, let us work out what should happen.
@@ -775,13 +785,13 @@ $$
 Since
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 the contribution is
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 and it begins at $n=0$.
@@ -789,7 +799,9 @@ and it begins at $n=0$.
 So its contribution is:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $x[0]=1$ | 1 | 0.5 | 0.25 | 0 | 0 |
 
 ---
@@ -811,9 +823,7 @@ $$
 Therefore,
 
 $$
-2[1,\;0.5,\;0.25]
-=
-[2,\;1,\;0.5]
+2[1,\\;0.5,\\;0.25] = [2,\\;1,\\;0.5]
 $$
 
 But this input sample occurs at $n=1$.
@@ -821,7 +831,9 @@ But this input sample occurs at $n=1$.
 Therefore its response begins one sample later:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $x[1]=2$ | 0 | 2 | 1 | 0.5 | 0 |
 
 ---
@@ -837,15 +849,15 @@ $$
 It produces
 
 $$
-1h[n]
-=
-[1,\;0.5,\;0.25]
+1h[n] = [1,\\;0.5,\\;0.25]
 $$
 
 But because the sample occurs at $n=2$, this copy starts at $n=2$:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $x[2]=1$ | 0 | 0 | 1 | 0.5 | 0.25 |
 
 ---
@@ -855,11 +867,16 @@ But because the sample occurs at $n=2$, this copy starts at $n=2$:
 Now place all three contributions underneath one another:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $x[0]=1$ | 1 | 0.5 | 0.25 | 0 | 0 |
+
 | Contribution from $x[1]=2$ | 0 | 2 | 1 | 0.5 | 0 |
+
 | Contribution from $x[2]=1$ | 0 | 0 | 1 | 0.5 | 0.25 |
-| **Total $y[n]$** | **1** | **2.5** | **2.25** | **1** | **0.25** |
+
+| ****Total $y[n]$**** | ****1**** | ****2.5**** | ****2.25**** | ****1**** | ****0.25**** |
 
 Now the calculation becomes very easy.
 
@@ -872,9 +889,7 @@ $$
 At $n=1$,
 
 $$
-y[1]
-=
-0.5+2
+y[1] = 0.5+2
 $$
 
 so
@@ -886,9 +901,7 @@ $$
 At $n=2$,
 
 $$
-y[2]
-=
-0.25+1+1
+y[2] = 0.25+1+1
 $$
 
 so
@@ -900,9 +913,7 @@ $$
 At $n=3$,
 
 $$
-y[3]
-=
-0.5+0.5
+y[3] = 0.5+0.5
 $$
 
 so
@@ -920,11 +931,7 @@ $$
 Therefore,
 
 $$
-\boxed{
-y[n]
-=
-[1,\;2.5,\;2.25,\;1,\;0.25]
-}
+\boxed{ y[n] = [1,\\;2.5,\\;2.25,\\;1,\\;0.25] }
 $$
 
 Now let us compare that prediction with GNU Radio.
@@ -949,21 +956,20 @@ Instead, we discovered a process.
 
 For every input sample:
 
-1. take the system's impulse response;
-2. scale it by the value of that input sample;
-3. shift it to the position of that input sample;
-4. add it to all the other contributions.
+1\. take the system's impulse response;
 
-That process is called **convolution**.
+2\. scale it by the value of that input sample;
+
+3\. shift it to the position of that input sample;
+
+4\. add it to all the other contributions.
+
+That process is called ****convolution****.
 
 We write
 
 $$
-\boxed{
-y[n]
-=
-x[n]*h[n]
-}
+\boxed{ y[n] = x[n]*h[n] }
 $$
 
 where the symbol $*$ represents convolution.
@@ -977,12 +983,7 @@ Now that we know what the operation actually means, we are ready to write its fu
 For a discrete-time system,
 
 $$
-\boxed{
-y[n]
-=
-\sum_{k=-\infty}^{\infty}
-x[k]h[n-k]
-}
+\boxed{ y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k] }
 $$
 
 This equation can look intimidating when it is encountered for the first time.
@@ -995,7 +996,7 @@ Let us unpack it.
 
 ## 10.20 What Does $n$ Mean?
 
-The variable $n$ tells us **which output sample we are calculating**.
+The variable $n$ tells us ****which output sample we are calculating****.
 
 For example,
 
@@ -1024,7 +1025,7 @@ The variable $k$ is used to walk through the input samples.
 For
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 we have
@@ -1046,16 +1047,18 @@ $$
 As $k$ takes the values
 
 $$
-0,\;1,\;2
+0,\\;1,\\;2
 $$
 
 the summation visits each of those input samples.
 
 A useful way to remember the difference is:
 
-> $n$ asks, **"Which output sample am I calculating?"**
+> $n$ asks, ****"Which output sample am I calculating?"****
+
 >
-> $k$ asks, **"Which input sample is contributing to it?"**
+
+> $k$ asks, ****"Which input sample is contributing to it?"****
 
 ---
 
@@ -1064,13 +1067,13 @@ A useful way to remember the difference is:
 Our sequences are
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 and
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 Let us calculate the same output again, this time using the formal convolution equation.
@@ -1088,21 +1091,13 @@ $$
 Then
 
 $$
-y[0]
-=
-\sum_k x[k]h[0-k]
+y[0] = \sum_k x[k]h[0-k]
 $$
 
 For our finite input,
 
 $$
-y[0]
-=
-x[0]h[0]
-+
-x[1]h[-1]
-+
-x[2]h[-2]
+y[0] = x[0]h[0] \+ x[1]h[-1] \+ x[2]h[-2]
 $$
 
 Our impulse response is zero outside its defined samples, so
@@ -1120,21 +1115,13 @@ $$
 Therefore,
 
 $$
-y[0]
-=
-(1)(1)
-+
-(2)(0)
-+
-(1)(0)
+y[0] = (1)(1) \+ (2)(0) \+ (1)(0)
 $$
 
 Thus,
 
 $$
-\boxed{
-y[0]=1
-}
+\boxed{ y[0]=1 }
 $$
 
 ---
@@ -1150,33 +1137,19 @@ $$
 Therefore,
 
 $$
-y[1]
-=
-x[0]h[1]
-+
-x[1]h[0]
-+
-x[2]h[-1]
+y[1] = x[0]h[1] \+ x[1]h[0] \+ x[2]h[-1]
 $$
 
 Substituting the values,
 
 $$
-y[1]
-=
-(1)(0.5)
-+
-(2)(1)
-+
-(1)(0)
+y[1] = (1)(0.5) \+ (2)(1) \+ (1)(0)
 $$
 
 Hence,
 
 $$
-\boxed{
-y[1]=2.5
-}
+\boxed{ y[1]=2.5 }
 $$
 
 ---
@@ -1192,41 +1165,25 @@ $$
 Then,
 
 $$
-y[2]
-=
-x[0]h[2]
-+
-x[1]h[1]
-+
-x[2]h[0]
+y[2] = x[0]h[2] \+ x[1]h[1] \+ x[2]h[0]
 $$
 
 Substituting,
 
 $$
-y[2]
-=
-(1)(0.25)
-+
-(2)(0.5)
-+
-(1)(1)
+y[2] = (1)(0.25) \+ (2)(0.5) \+ (1)(1)
 $$
 
 Therefore,
 
 $$
-y[2]
-=
-0.25+1+1
+y[2] = 0.25+1+1
 $$
 
 and
 
 $$
-\boxed{
-y[2]=2.25
-}
+\boxed{ y[2]=2.25 }
 $$
 
 This is the location where all three shifted responses overlap.
@@ -1244,13 +1201,7 @@ $$
 we obtain
 
 $$
-y[3]
-=
-x[0]h[3]
-+
-x[1]h[2]
-+
-x[2]h[1]
+y[3] = x[0]h[3] \+ x[1]h[2] \+ x[2]h[1]
 $$
 
 Since
@@ -1262,21 +1213,13 @@ $$
 we have
 
 $$
-y[3]
-=
-(1)(0)
-+
-(2)(0.25)
-+
-(1)(0.5)
+y[3] = (1)(0) \+ (2)(0.25) \+ (1)(0.5)
 $$
 
 Therefore,
 
 $$
-\boxed{
-y[3]=1
-}
+\boxed{ y[3]=1 }
 $$
 
 ---
@@ -1286,13 +1229,7 @@ $$
 Finally,
 
 $$
-y[4]
-=
-x[0]h[4]
-+
-x[1]h[3]
-+
-x[2]h[2]
+y[4] = x[0]h[4] \+ x[1]h[3] \+ x[2]h[2]
 $$
 
 Since
@@ -1310,31 +1247,19 @@ $$
 we get
 
 $$
-y[4]
-=
-(1)(0)
-+
-(2)(0)
-+
-(1)(0.25)
+y[4] = (1)(0) \+ (2)(0) \+ (1)(0.25)
 $$
 
 Therefore,
 
 $$
-\boxed{
-y[4]=0.25
-}
+\boxed{ y[4]=0.25 }
 $$
 
 Putting everything together,
 
 $$
-\boxed{
-y[n]
-=
-[1,\;2.5,\;2.25,\;1,\;0.25]
-}
+\boxed{ y[n] = [1,\\;2.5,\\;2.25,\\;1,\\;0.25] }
 $$
 
 which is exactly the same result we obtained visually and experimentally.
@@ -1399,7 +1324,7 @@ Notice the order.
 
 It appears reversed as $k$ increases.
 
-This is where the familiar **flip-and-slide** interpretation of convolution comes from.
+This is where the familiar ****flip-and-slide**** interpretation of convolution comes from.
 
 However, for understanding what an FIR filter is doing, the viewpoint we developed earlier is often more intuitive:
 
@@ -1426,31 +1351,25 @@ $$
 The convolution result contained five samples:
 
 $$
-[1,\;2.5,\;2.25,\;1,\;0.25]
+[1,\\;2.5,\\;2.25,\\;1,\\;0.25]
 $$
 
 For two finite sequences of lengths $L_x$ and $L_h$, the full convolution has length
 
 $$
-\boxed{
-L_y=L_x+L_h-1
-}
+\boxed{ L_y=L_x+L_h-1 }
 $$
 
 Therefore,
 
 $$
-L_y
-=
-3+3-1
+L_y = 3+3-1
 $$
 
 so
 
 $$
-\boxed{
-L_y=5
-}
+\boxed{ L_y=5 }
 $$
 
 That is exactly what we observed.
@@ -1472,10 +1391,7 @@ For each output sample, the FIR filter calculates a weighted combination of pres
 One common FIR form is
 
 $$
-y[n]
-=
-\sum_{k=0}^{M-1}
-h[k]x[n-k]
+y[n] = \sum_{k=0}^{M-1} h[k]x[n-k]
 $$
 
 This is the finite FIR form of the same convolution operation.
@@ -1487,29 +1403,25 @@ The taps are not just arbitrary configuration numbers.
 They describe how the system responds to an impulse.
 
 $$
-\boxed{
-\text{FIR taps}=h[n]
-}
+\boxed{ \text{FIR taps}=h[n] }
 $$
 
 and filtering is the convolution
 
 $$
-\boxed{
-y[n]=x[n]*h[n]
-}
+\boxed{ y[n]=x[n]*h[n] }
 $$
 
 ---
 
-# Experiment 7: Change the Impulse Response
+## Experiment 7: Change the Impulse Response
 
 ## 10.26 Change the Taps, Change the System
 
 Until now, we kept
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 for most of our experiments.
@@ -1519,7 +1431,7 @@ Let us now keep the input unchanged and change the system.
 Use
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 Change the FIR taps to
@@ -1531,7 +1443,7 @@ Change the FIR taps to
 The new impulse response is therefore
 
 $$
-h[n]=[1,\;-1]
+h[n]=[1,\\;-1]
 $$
 
 Before running the flowgraph, we can predict the result using the same method.
@@ -1539,13 +1451,13 @@ Before running the flowgraph, we can predict the result using the same method.
 The first input sample produces
 
 $$
-[1,\;-1]
+[1,\\;-1]
 $$
 
 The second input sample has amplitude $2$, so it produces
 
 $$
-[2,\;-2]
+[2,\\;-2]
 $$
 
 one sample later.
@@ -1553,7 +1465,7 @@ one sample later.
 The third produces
 
 $$
-[1,\;-1]
+[1,\\;-1]
 $$
 
 starting two samples later.
@@ -1561,18 +1473,21 @@ starting two samples later.
 Aligning the contributions gives:
 
 | $n$ | 0 | 1 | 2 | 3 |
+
 |---:|---:|---:|---:|---:|
+
 | Contribution from $x[0]=1$ | 1 | -1 | 0 | 0 |
+
 | Contribution from $x[1]=2$ | 0 | 2 | -2 | 0 |
+
 | Contribution from $x[2]=1$ | 0 | 0 | 1 | -1 |
-| **Total $y[n]$** | **1** | **1** | **-1** | **-1** |
+
+| ****Total $y[n]$**** | ****1**** | ****1**** | ****-1**** | ****-1**** |
 
 Therefore,
 
 $$
-\boxed{
-y[n]=[1,\;1,\;-1,\;-1]
-}
+\boxed{ y[n]=[1,\\;1,\\;-1,\\;-1] }
 $$
 
 ![Changing the impulse response](../figures/ch10/ch10-exp7-change-impulse-response.png)
@@ -1584,7 +1499,7 @@ Notice what changed.
 The input remained
 
 $$
-[1,\;2,\;1]
+[1,\\;2,\\;1]
 $$
 
 Only the taps changed.
@@ -1601,7 +1516,7 @@ In other words, we changed the system itself.
 
 ---
 
-# Experiment 8: Effect of Reversing the FIR Taps
+## Experiment 8: Effect of Reversing the FIR Taps
 
 ## 10.27 Should We Reverse the Taps Ourselves?
 
@@ -1622,19 +1537,19 @@ Let us find out.
 Return to the original taps:
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 With
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 we already know the output is
 
 $$
-[1,\;2.5,\;2.25,\;1,\;0.25]
+[1,\\;2.5,\\;2.25,\\;1,\\;0.25]
 $$
 
 Now manually reverse the taps:
@@ -1646,7 +1561,7 @@ Now manually reverse the taps:
 The new impulse response is
 
 $$
-h_r[n]=[0.25,\;0.5,\;1]
+h_r[n]=[0.25,\\;0.5,\\;1]
 $$
 
 Let us predict the result.
@@ -1654,13 +1569,13 @@ Let us predict the result.
 From $x[0]=1$, we get
 
 $$
-[0.25,\;0.5,\;1]
+[0.25,\\;0.5,\\;1]
 $$
 
 From $x[1]=2$, we get
 
 $$
-[0.5,\;1,\;2]
+[0.5,\\;1,\\;2]
 $$
 
 starting one sample later.
@@ -1668,7 +1583,7 @@ starting one sample later.
 From $x[2]=1$, we get
 
 $$
-[0.25,\;0.5,\;1]
+[0.25,\\;0.5,\\;1]
 $$
 
 starting two samples later.
@@ -1676,20 +1591,21 @@ starting two samples later.
 Aligning the contributions gives:
 
 | $n$ | 0 | 1 | 2 | 3 | 4 |
+
 |---:|---:|---:|---:|---:|---:|
+
 | Contribution from $x[0]=1$ | 0.25 | 0.5 | 1 | 0 | 0 |
+
 | Contribution from $x[1]=2$ | 0 | 0.5 | 1 | 2 | 0 |
+
 | Contribution from $x[2]=1$ | 0 | 0 | 0.25 | 0.5 | 1 |
-| **Total $y[n]$** | **0.25** | **1** | **2.25** | **2.5** | **1** |
+
+| ****Total $y[n]$**** | ****0.25**** | ****1**** | ****2.25**** | ****2.5**** | ****1**** |
 
 Therefore,
 
 $$
-\boxed{
-y[n]
-=
-[0.25,\;1,\;2.25,\;2.5,\;1]
-}
+\boxed{ y[n] = [0.25,\\;1,\\;2.25,\\;2.5,\\;1] }
 $$
 
 ![Effect of reversing the FIR taps](../figures/ch10/ch10-exp8-reversed-fir-taps.png)
@@ -1703,28 +1619,28 @@ Again, GNU Radio agrees with our prediction.
 The original impulse response was
 
 $$
-h[n]=[1,\;0.5,\;0.25]
+h[n]=[1,\\;0.5,\\;0.25]
 $$
 
 The reversed sequence is
 
 $$
-h_r[n]=[0.25,\;0.5,\;1]
+h_r[n]=[0.25,\\;0.5,\\;1]
 $$
 
 These are not two different ways of entering the same filter.
 
-They describe **two different systems**.
+They describe ****two different systems****.
 
 If the intended impulse response is
 
 $$
-[1,\;0.5,\;0.25]
+[1,\\;0.5,\\;0.25]
 $$
 
 then those are the taps we should enter into GNU Radio.
 
-We should **not manually reverse them** just because convolution is sometimes explained using the phrase "flip and slide."
+We should ****not manually reverse them**** just because convolution is sometimes explained using the phrase "flip and slide."
 
 GNU Radio's FIR filter already performs the required convolution indexing internally.
 
@@ -1743,17 +1659,13 @@ We can now return to two terms that have quietly appeared throughout our experim
 Experiment 2 showed that
 
 $$
-\delta[n]
-\longrightarrow
-h[n]
+\delta[n] \longrightarrow h[n]
 $$
 
 and
 
 $$
-\delta[n-4]
-\longrightarrow
-h[n-4]
+\delta[n-4] \longrightarrow h[n-4]
 $$
 
 Delaying the input delayed the output by the same amount.
@@ -1767,24 +1679,20 @@ Experiment 3 showed that scaling the input scaled the output.
 If
 
 $$
-\delta[n]
-\longrightarrow
-h[n]
+\delta[n] \longrightarrow h[n]
 $$
 
 then
 
 $$
-2\delta[n]
-\longrightarrow
-2h[n]
+2\delta[n] \longrightarrow 2h[n]
 $$
 
 Experiments 4 and 5 also showed that when several input components were present, their output contributions could be added.
 
 These are the ideas behind linearity.
 
-A system that is both linear and time invariant is called an **LTI system**.
+A system that is both linear and time invariant is called an ****LTI system****.
 
 This is why impulse response is so powerful.
 
@@ -1802,7 +1710,7 @@ we can determine the response to an arbitrary input by convolution.
 
 We can now answer the main question of this chapter:
 
-> **If we know how a system responds to one impulse, can we predict how it responds to any signal?**
+> ****If we know how a system responds to one impulse, can we predict how it responds to any signal?****
 
 For an LTI system, yes.
 
@@ -1811,19 +1719,13 @@ The reason is that we can represent a discrete-time signal as a collection of sh
 For example,
 
 $$
-x[n]=[1,\;2,\;1]
+x[n]=[1,\\;2,\\;1]
 $$
 
 can be written as
 
 $$
-x[n]
-=
-\delta[n]
-+
-2\delta[n-1]
-+
-\delta[n-2]
+x[n] = \delta[n] \+ 2\delta[n-1] \+ \delta[n-2]
 $$
 
 If we know how the system responds to
@@ -1852,7 +1754,7 @@ In Chapter 9, our main question was:
 
 We used low-pass, high-pass, band-pass and band-reject filters and mainly observed their spectra.
 
-That was the **frequency-domain view** of filtering.
+That was the ****frequency-domain view**** of filtering.
 
 In this chapter, we asked a different question:
 
@@ -1863,17 +1765,13 @@ Now we know the answer.
 The FIR taps form the impulse response:
 
 $$
-h[n]
-=
-[\text{tap}_0,\text{tap}_1,\ldots,\text{tap}_{M-1}]
+h[n] = [\text{tap}_0,\text{tap}_1,\ldots,\text{tap}_{M-1}]
 $$
 
 The incoming signal is convolved with that impulse response:
 
 $$
-\boxed{
-y[n]=x[n]*h[n]
-}
+\boxed{ y[n]=x[n]*h[n] }
 $$
 
 The filters in Chapter 9 often had many more taps than the simple three-tap examples used here.
@@ -1887,19 +1785,13 @@ So Chapters 9 and 10 have shown us the same FIR filter from two different viewpo
 ### Time-domain viewpoint
 
 $$
-x[n]
-\longrightarrow
-h[n]
-\longrightarrow
-y[n]
+x[n] \longrightarrow h[n] \longrightarrow y[n]
 $$
 
 with
 
 $$
-\boxed{
-y[n]=x[n]*h[n]
-}
+\boxed{ y[n]=x[n]*h[n] }
 $$
 
 ### Frequency-domain viewpoint
@@ -1907,9 +1799,7 @@ $$
 The corresponding frequency-domain relationship is
 
 $$
-\boxed{
-Y(f)=X(f)H(f)
-}
+\boxed{ Y(f)=X(f)H(f) }
 $$
 
 In the time domain, filtering appears as convolution.
@@ -1925,10 +1815,7 @@ This connection will become increasingly important as we continue with DSP and S
 If the convolution equation ever feels abstract,
 
 $$
-y[n]
-=
-\sum_{k=-\infty}^{\infty}
-x[k]h[n-k]
+y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k]
 $$
 
 return to the experiments in this chapter.
@@ -1939,19 +1826,19 @@ Instead, imagine the input as individual samples.
 
 For every input sample:
 
-> **Take a copy of the impulse response.**
+> ****Take a copy of the impulse response.****
 
 Then:
 
-> **Scale it by the value of that input sample.**
+> ****Scale it by the value of that input sample.****
 
 Then:
 
-> **Shift it to the position of that sample.**
+> ****Shift it to the position of that sample.****
 
 Finally:
 
-> **Add all the overlapping copies.**
+> ****Add all the overlapping copies.****
 
 That is convolution.
 
@@ -1971,17 +1858,24 @@ Important settings:
 
 ```text
 Output Type
+
 Vector
+
 Tags
+
 Repeat
+
 Vector Length
 ```
 
 It is particularly useful when working with:
 
 - impulses;
+
 - finite sequences;
+
 - known sample patterns;
+
 - hand-verifiable DSP examples.
 
 ### Decimating FIR Filter
@@ -1996,8 +1890,11 @@ Important settings:
 
 ```text
 Type
+
 Decimation
+
 Taps
+
 Sample Delay
 ```
 
@@ -2008,6 +1905,7 @@ The taps are the impulse response of the FIR filter.
 Used to compare:
 
 - the input sequence;
+
 - the FIR output.
 
 For these experiments, visible sample markers are especially useful because the signals are discrete-time sequences.
@@ -2033,25 +1931,19 @@ From that simple experiment, we gradually discovered how FIR filtering works.
 An impulse applied to an FIR filter reveals its taps:
 
 $$
-\delta[n]
-\longrightarrow
-h[n]
+\delta[n] \longrightarrow h[n]
 $$
 
 A delayed impulse produces a delayed response:
 
 $$
-\delta[n-k]
-\longrightarrow
-h[n-k]
+\delta[n-k] \longrightarrow h[n-k]
 $$
 
 A scaled impulse produces a scaled response:
 
 $$
-A\delta[n-k]
-\longrightarrow
-Ah[n-k]
+A\delta[n-k] \longrightarrow Ah[n-k]
 $$
 
 Multiple input samples create multiple shifted and scaled copies of the impulse response.
@@ -2061,22 +1953,13 @@ When those copies overlap, their contributions add.
 That leads naturally to convolution:
 
 $$
-\boxed{
-y[n]
-=
-x[n]*h[n]
-}
+\boxed{ y[n] = x[n]*h[n] }
 $$
 
 or, formally,
 
 $$
-\boxed{
-y[n]
-=
-\sum_{k=-\infty}^{\infty}
-x[k]h[n-k]
-}
+\boxed{ y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k] }
 $$
 
 Most importantly, we now understand what this equation means rather than treating it as a formula to memorize.
@@ -2084,9 +1967,7 @@ Most importantly, we now understand what this equation means rather than treatin
 For an FIR filter,
 
 $$
-\boxed{
-\text{taps}=\text{impulse response}
-}
+\boxed{ \text{taps}=\text{impulse response} }
 $$
 
 Changing the taps changes the system.
@@ -2095,7 +1976,7 @@ And the output of that FIR system is produced by convolution.
 
 ---
 
-## 10.35 Before Moving On
+## 10.35 Connecting to the Next Chapter
 
 There is one broader lesson from this chapter worth keeping.
 
@@ -2116,33 +1997,3 @@ How can the receiver find it?
 That leads to our next chapter.
 
 ---
-
-# Chapter 11: Correlation, Matched Filtering and Signal Detection
-
-In Chapter 10, our central question was:
-
-> **If we know the impulse response of a system, can we predict its output?**
-
-In the next chapter, the question changes:
-
-> **If we know the signal we are looking for, can we find where it appears inside a received signal?**
-
-This leads us to **correlation**.
-
-We will begin with simple sequences again rather than starting with the correlation equation.
-
-We will create a known sequence, shift it in time, add noise, and ask GNU Radio to help us determine where that sequence is hiding.
-
-From there, we will build toward:
-
-- cross-correlation;
-- autocorrelation;
-- delay estimation;
-- correlation peaks;
-- signal detection;
-- noise and detection;
-- matched-filter intuition.
-
-Just as convolution became easier once we could see the shifted and scaled impulse responses, correlation will become easier once we can see what it means to slide a known pattern across a received signal and ask:
-
-> **How similar are these two signals at this position?**
