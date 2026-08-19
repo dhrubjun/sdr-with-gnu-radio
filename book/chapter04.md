@@ -12,7 +12,7 @@ What is a negative frequency?
 
 Why would frequency need a sign?
 
-And why do SDR systems so often work with **complex-valued samples** instead of ordinary real numbers?
+And why do SDR systems so often work with ****complex-valued samples**** instead of ordinary real numbers?
 
 Before we can answer those questions properly, we need to understand complex numbers.
 
@@ -24,7 +24,7 @@ and perhaps equations involving magnitude and phase.
 
 But our goal here is not to study complex numbers as an abstract mathematical topic.
 
-Instead, we are going to **build one in GNU Radio, take it apart, look at it from several different directions, and even deliberately break it**.
+Instead, we are going to ****build one in GNU Radio, take it apart, look at it from several different directions, and even deliberately break it****.
 
 By the end of the chapter, expressions such as
 
@@ -62,14 +62,16 @@ We can imagine placing it somewhere along a number line.
 
 Complex numbers extend this idea.
 
-Instead of using one number, we use **two related numbers together**:
+Instead of using one number, we use ****two related numbers together****:
 
 $$z=a+jb$$
 
 Here:
 
-- \(a\) is the **real component**
-- \(b\) is the **imaginary component**
+- \(a\) is the ****real component****
+
+- \(b\) is the ****imaginary component****
+
 - \(j\) is defined by
 
 $$j^2=-1$$
@@ -82,7 +84,7 @@ In electrical and communications engineering, \(j\) is normally used because \(i
 
 ## 4.3 Do Not Let the Word "Imaginary" Mislead You
 
-The name *imaginary* can make complex numbers sound less physical than they really are.
+The name **imaginary** can make complex numbers sound less physical than they really are.
 
 For our purposes, a better first intuition is simply this:
 
@@ -108,7 +110,7 @@ That immediately gives us another way to visualize a complex number.
 
 A real number can be placed on a line.
 
-A complex number can be placed on a **plane**.
+A complex number can be placed on a ****plane****.
 
 The horizontal axis represents the real component, while the vertical axis represents the imaginary component.
 
@@ -122,7 +124,7 @@ $$(a,b)$$
 
 ![A complex number represented on the complex plane](../figures/ch04/complex-plane-concept.png)
 
-**Figure 4.1: A complex number represented by its real component, imaginary component, magnitude, and phase.**
+****Figure 4.1: A complex number represented by its real component, imaginary component, magnitude, and phase.****
 
 Instead of drawing only a point, we can draw a vector from the origin to that point.
 
@@ -154,7 +156,7 @@ Using the Pythagorean theorem,
 
 $$|z|=\sqrt{a^2+b^2}$$
 
-This is the **magnitude** of the complex number.
+This is the ****magnitude**** of the complex number.
 
 For example, if
 
@@ -192,7 +194,7 @@ $$z=|z|\angle\theta$$
 
 This is an important idea:
 
-> **Real and imaginary components tell us the coordinates of a complex number. Magnitude and phase tell us its length and direction.**
+> ****Real and imaginary components tell us the coordinates of a complex number. Magnitude and phase tell us its length and direction.****
 
 Nothing about the complex number has changed. We have simply changed the way we describe it.
 
@@ -226,7 +228,7 @@ Now we meet one of the most important equations in signal processing:
 
 $$e^{j\theta}=\cos\theta+j\sin\theta$$
 
-This is **Euler's formula**.
+This is ****Euler's formula****.
 
 Therefore,
 
@@ -298,7 +300,7 @@ $$e^{j\theta}$$
 
 as a complicated mathematical expression, we can think of it as:
 
-> **a vector rotating around the complex plane.**
+> ****a vector rotating around the complex plane.****
 
 Now let's actually build one.
 
@@ -311,12 +313,18 @@ Until now, most of our GNU Radio flowgraphs have used real-valued signals.
 This chapter introduces several blocks that allow us to work with complex data.
 
 | GNU Radio block | What it does |
+
 |---|---|
-| **Signal Source** | Generates the real-valued sine and cosine signals |
-| **Float to Complex** | Combines two float streams into one complex stream |
-| **Complex to Real** | Extracts the real component |
-| **Complex to Imag** | Extracts the imaginary component |
-| **QT GUI Time Sink** | Displays signals against time |
+
+| ****Signal Source**** | Generates the real-valued sine and cosine signals |
+
+| ****Float to Complex**** | Combines two float streams into one complex stream |
+
+| ****Complex to Real**** | Extracts the real component |
+
+| ****Complex to Imag**** | Extracts the imaginary component |
+
+| ****QT GUI Time Sink**** | Displays signals against time |
 
 We will introduce more tools only when we need them.
 
@@ -326,7 +334,7 @@ Look carefully at the ports in the flowgraph.
 
 GNU Radio uses different port colours to help distinguish different data types.
 
-This matters because a **float stream** and a **complex stream** are not the same thing.
+This matters because a ****float stream**** and a ****complex stream**** are not the same thing.
 
 For example, `Float to Complex` accepts two float streams:
 
@@ -355,22 +363,26 @@ Create two Signal Sources.
 For the first source use:
 
 - Waveform: Cosine
+
 - Frequency: 1 kHz
+
 - Amplitude: 1
 
 For the second source use:
 
 - Waveform: Sine
+
 - Frequency: 1 kHz
+
 - Amplitude: 1
 
 Use a sample rate of:
 
 $$f_s=32\text{ kS/s}$$
 
-Connect the cosine to the **real** input of `Float to Complex`.
+Connect the cosine to the ****real**** input of `Float to Complex`.
 
-Connect the sine to the **imaginary** input.
+Connect the sine to the ****imaginary**** input.
 
 The resulting signal is
 
@@ -379,27 +391,28 @@ $$z(t)=\cos(2\pi ft)+j\sin(2\pi ft)$$
 Then connect the complex output to:
 
 - `Complex to Real`
+
 - `Complex to Imag`
 
 and display both outputs using a QT GUI Time Sink.
 
 ![GNU Radio flowgraph for building and separating a complex signal](../figures/ch04/complex-components-flowgraph.png)
 
-**Figure 4.2: Building a complex signal from two float streams and separating it back into its real and imaginary components.**
+****Figure 4.2: Building a complex signal from two float streams and separating it back into its real and imaginary components.****
 
 Run the flowgraph.
 
 ![Real and imaginary components of the complex signal](../figures/ch04/complex-components-time.png)
 
-**Figure 4.3: Real and imaginary components recovered from the complex signal.**
+****Figure 4.3: Real and imaginary components recovered from the complex signal.****
 
 The blue waveform is the real component:
 
-$$\mathrm{Re}\{z(t)\}=\cos(2\pi ft)$$
+$$\mathrm{Re}\\{z(t)\\}=\cos(2\pi ft)$$
 
 while the red waveform is the imaginary component:
 
-$$\mathrm{Im}\{z(t)\}=\sin(2\pi ft)$$
+$$\mathrm{Im}\\{z(t)\\}=\sin(2\pi ft)$$
 
 Notice that combining the two signals did not destroy either of them.
 
@@ -421,15 +434,15 @@ Instead of building another flowgraph, let's extend the one we already have.
 
 Add one new block:
 
-**QT GUI Constellation Sink**
+****QT GUI Constellation Sink****
 
 Connect it directly to the complex output of `Float to Complex`.
 
 ![Flowgraph with the Constellation Sink added](../figures/ch04/complex-plane-flowgraph.png)
 
-**Figure 4.4: Extending the previous flowgraph with a QT GUI Constellation Sink.**
+****Figure 4.4: Extending the previous flowgraph with a QT GUI Constellation Sink.****
 
-This is exactly how we will continue using GNU Radio throughout the book: **start simple, understand the result, and then add one new idea at a time.**
+This is exactly how we will continue using GNU Radio throughout the book: ****start simple, understand the result, and then add one new idea at a time.****
 
 ---
 
@@ -443,19 +456,19 @@ $$z=a+jb$$
 
 the horizontal coordinate comes from \(a\), while the vertical coordinate comes from \(b\).
 
-GNU Radio labels these axes **In-phase** and **Quadrature**.
+GNU Radio labels these axes ****In-phase**** and ****Quadrature****.
 
 You may already be wondering why.
 
 For now, think of them simply as the real and imaginary axes.
 
-We will return to the names **In-phase** and **Quadrature** in the next chapter.
+We will return to the names ****In-phase**** and ****Quadrature**** in the next chapter.
 
 Run the flowgraph.
 
 ![Real and imaginary waveforms together with their complex-plane representation](../figures/ch04/complex-plane.png)
 
-**Figure 4.5: The real and imaginary components in time and the corresponding samples on the complex plane.**
+****Figure 4.5: The real and imaginary components in time and the corresponding samples on the complex plane.****
 
 Something interesting appears.
 
@@ -477,11 +490,11 @@ $$a^2+b^2=\cos^2\theta+\sin^2\theta=1$$
 
 So every point is exactly one unit away from the origin.
 
-That is why GNU Radio shows a **unit circle**.
+That is why GNU Radio shows a ****unit circle****.
 
 The two sinusoidal waveforms and the circle are not separate signals.
 
-They are different ways of looking at the **same complex signal**.
+They are different ways of looking at the ****same complex signal****.
 
 ---
 
@@ -492,6 +505,7 @@ We can now extend the same flowgraph again.
 This time add:
 
 - `Complex to Mag`
+
 - `Complex to Arg`
 
 Connect both directly to the output of `Float to Complex`.
@@ -500,7 +514,7 @@ Display their outputs using another QT GUI Time Sink.
 
 ![Flowgraph extended to calculate magnitude and phase](../figures/ch04/complex-magnitude-phase-flowgraph.png)
 
-**Figure 4.6: The complex-signal flowgraph extended with magnitude and phase measurements.**
+****Figure 4.6: The complex-signal flowgraph extended with magnitude and phase measurements.****
 
 ---
 
@@ -522,13 +536,13 @@ $$|z|=\sqrt{a^2+b^2}$$
 
 $$\theta=\mathrm{atan2}(b,a)$$
 
-Its output is expressed in **radians**.
+Its output is expressed in ****radians****.
 
 Now run the flowgraph.
 
 ![Magnitude, phase, real and imaginary components, and constellation](../figures/ch04/complex-magnitude-phase.png)
 
-**Figure 4.7: Three different views of the same complex signal: magnitude and phase, real and imaginary components, and the complex plane.**
+****Figure 4.7: Three different views of the same complex signal: magnitude and phase, real and imaginary components, and the complex plane.****
 
 This figure brings almost everything we have learned together.
 
@@ -540,11 +554,11 @@ Look first at the middle plot.
 
 We still have:
 
-$$\mathrm{Re}\{z(t)\}=\cos(2\pi ft)$$
+$$\mathrm{Re}\\{z(t)\\}=\cos(2\pi ft)$$
 
 and
 
-$$\mathrm{Im}\{z(t)\}=\sin(2\pi ft)$$
+$$\mathrm{Im}\\{z(t)\\}=\sin(2\pi ft)$$
 
 Now look at the constellation.
 
@@ -564,7 +578,7 @@ Meanwhile, the phase continuously changes.
 
 These are not three different signals.
 
-> **They are three different views of the same complex signal.**
+> ****They are three different views of the same complex signal.****
 
 We can describe the signal using real and imaginary components:
 
@@ -602,7 +616,7 @@ $$-\pi \leq \theta \leq \pi$$
 
 So once the angle passes the positive boundary, its displayed representation wraps around to the negative boundary.
 
-This is called **phase wrapping**.
+This is called ****phase wrapping****.
 
 For our 1 kHz signal,
 
@@ -621,8 +635,11 @@ The time-domain waveform, the phase plot, and the rotating-vector interpretation
 So far everything has been carefully arranged:
 
 - cosine amplitude = 1
+
 - sine amplitude = 1
+
 - same frequency
+
 - correct relationship between the components
 
 That produced a beautiful unit circle.
@@ -655,7 +672,7 @@ Run the flowgraph again.
 
 ![Complex signal with a reduced imaginary-component amplitude](../figures/ch04/complex-ellipse.png)
 
-**Figure 4.8: Reducing the imaginary component from 1 to 0.5 changes the unit circle into an ellipse.**
+****Figure 4.8: Reducing the imaginary component from 1 to 0.5 changes the unit circle into an ellipse.****
 
 The middle plot immediately shows what changed.
 
@@ -669,7 +686,7 @@ $$-0.5\text{ and }+0.5$$
 
 Now look at the constellation.
 
-The circle has become an **ellipse**.
+The circle has become an ****ellipse****.
 
 We have
 
@@ -697,7 +714,7 @@ Depending on the angle, the magnitude varies between approximately 0.5 and 1.
 
 So we have discovered something important:
 
-> The circle was not produced simply because the signal was complex. It appeared because the real and imaginary components had the particular amplitudes and relationship required for constant magnitude.
+> The circle was not produced simply because the signal was complex. It appeared because the real and imaginary components had equal amplitudes and the quadrature relationship required for constant magnitude.
 
 ---
 
@@ -717,7 +734,7 @@ Run the flowgraph.
 
 ![Complex signal with zero imaginary component](../figures/ch04/complex-real-only.png)
 
-**Figure 4.9: Removing the imaginary component collapses the complex-plane trajectory onto the real axis.**
+****Figure 4.9: Removing the imaginary component collapses the complex-plane trajectory onto the real axis.****
 
 The imaginary waveform has disappeared.
 
@@ -755,7 +772,7 @@ That is why the magnitude looks like a rectified cosine.
 
 Notice something important:
 
-> **Magnitude is never negative.**
+> ****Magnitude is never negative.****
 
 The original real waveform can have negative values.
 
@@ -843,7 +860,7 @@ Run the flowgraph again.
 
 ![Complex signal after reversing the imaginary component](../figures/ch04/complex-negative-rotation.png)
 
-**Figure 4.10: Reversing the imaginary component leaves the magnitude and circular trajectory unchanged, but reverses the direction of phase evolution.**
+****Figure 4.10: Reversing the imaginary component leaves the magnitude and circular trajectory unchanged, but reverses the direction of phase evolution.****
 
 The magnitude is still
 
@@ -931,7 +948,7 @@ The two signals therefore rotate around the complex plane in opposite directions
 
 This gives us a useful interpretation:
 
-> **The magnitude of the frequency tells us how fast the complex vector rotates. The sign tells us the direction of rotation.**
+> ****The magnitude of the frequency tells us how fast the complex vector rotates. The sign tells us the direction of rotation.****
 
 For example,
 
@@ -949,7 +966,7 @@ both have a frequency magnitude of 1 kHz.
 
 They rotate at the same rate, but in opposite directions.
 
-So negative frequency does **not** mean that a signal somehow performs a negative number of oscillations per second.
+So negative frequency does ****not**** mean that a signal somehow performs a negative number of oscillations per second.
 
 For a complex signal, it represents the opposite direction of phase rotation.
 
@@ -959,27 +976,29 @@ Now let's see whether we can observe the same thing in the frequency domain.
 
 ### Seeing It in GNU Radio
 
-We already used the **QT GUI Frequency Sink** in Chapter 3, so there is no need to introduce the block again.
+We already used the ****QT GUI Frequency Sink**** in Chapter 3, so there is no need to introduce the block again.
 
-This time, however, we are going to feed it a **complex signal** instead of using it only to examine the real signals from the previous chapter.
+This time, however, we are going to feed it a ****complex signal**** instead of using it only to examine the real signals from the previous chapter.
 
 Add a QT GUI Frequency Sink directly to the output of `Float to Complex`.
 
 Use:
 
 ```text
-FFT Size:         1024
+FFT Size:         1024
+
 Center Frequency: 0
-Bandwidth:        samp_rate
+
+Bandwidth:        samp_rate
 ```
 
 For this experiment, we do not need the Constellation Sink. We have already used it to understand the complex plane.
 
-Our focus now is on the relationship between **phase direction and frequency sign**.
+Our focus now is on the relationship between ****phase direction and frequency sign****.
 
 ![GNU Radio flowgraph for observing positive and negative complex frequencies](../figures/ch04/positive-negative-frequency-flowgraph.png)
 
-**Figure 4.11: GNU Radio flowgraph used to observe positive and negative complex frequencies.**
+****Figure 4.11: GNU Radio flowgraph used to observe positive and negative complex frequencies.****
 
 We will run this flowgraph twice.
 
@@ -993,9 +1012,12 @@ First, use:
 
 ```text
 Cosine amplitude: 1
-Sine amplitude:   1
-Frequency:        1 kHz
-Sample rate:      32 kS/s
+
+Sine amplitude:   1
+
+Frequency:        1 kHz
+
+Sample rate:      32 kS/s
 ```
 
 The resulting complex signal is
@@ -1020,7 +1042,7 @@ Run the flowgraph.
 
 ![Positive complex frequency in GNU Radio](../figures/ch04/complex-positive-frequency.png)
 
-**Figure 4.12: A positive 1 kHz complex frequency. The phase increases with time and the Frequency Sink shows a peak at +1 kHz.**
+****Figure 4.12: A positive 1 kHz complex frequency. The phase increases with time and the Frequency Sink shows a peak at +1 kHz.****
 
 Look at the displays carefully.
 
@@ -1057,9 +1079,7 @@ $$
 So we have
 
 $$
-e^{j2\pi(1000)t}
-\quad\longrightarrow\quad
-+1\text{ kHz}
+e^{j2\pi(1000)t} \quad\longrightarrow\quad +1\text{ kHz}
 $$
 
 ---
@@ -1104,7 +1124,7 @@ Run the flowgraph again.
 
 ![Negative complex frequency in GNU Radio](../figures/ch04/complex-negative-frequency.png)
 
-**Figure 4.13: A negative 1 kHz complex frequency. The phase decreases with time and the Frequency Sink shows a peak at -1 kHz.**
+****Figure 4.13: A negative 1 kHz complex frequency. The phase decreases with time and the Frequency Sink shows a peak at -1 kHz.****
 
 The magnitude is still
 
@@ -1135,20 +1155,26 @@ $$
 So the same idea is visible in two different ways:
 
 | Complex signal | Phase evolution | Frequency Sink |
+
 |---|---|---|
+
 | $e^{j2\pi ft}$ | Increasing | $+f$ |
+
 | $e^{-j2\pi ft}$ | Decreasing | $-f$ |
 
 For our experiment:
 
 | Complex signal | Observed frequency |
+
 |---|---:|
+
 | $e^{j2\pi(1000)t}$ | +1 kHz |
+
 | $e^{-j2\pi(1000)t}$ | -1 kHz |
 
 Now negative frequency should feel much less mysterious.
 
-> **Positive and negative complex frequencies represent opposite directions of phase rotation.**
+> ****Positive and negative complex frequencies represent opposite directions of phase rotation.****
 
 The magnitude of the frequency tells us the rotation rate.
 
@@ -1195,29 +1221,21 @@ $$
 Therefore,
 
 $$
-\cos\theta=
-\frac{1}{2}e^{j\theta}
-+
-\frac{1}{2}e^{-j\theta}
+\cos\theta= \frac{1}{2}e^{j\theta} \+ \frac{1}{2}e^{-j\theta}
 $$
 
 Now replace θ with $2\pi ft$:
 
 $$
-\boxed{
-\cos(2\pi ft)
-=
-\frac{1}{2}e^{j2\pi ft}
-+
-\frac{1}{2}e^{-j2\pi ft}
-}
+\boxed{ \cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft} }
 $$
 
 This equation explains the two peaks.
 
-A real cosine can be represented as the combination of two complex rotations:
+A real cosine can be represented mathematically as the combination of two complex rotations:
 
 - one at +f
+
 - one at -f
 
 For example, a real 1 kHz cosine contains spectral components at
@@ -1251,10 +1269,7 @@ $$
 and can be written as
 
 $$
-x(t)=
-\frac{1}{2}e^{j2\pi ft}
-+
-\frac{1}{2}e^{-j2\pi ft}
+x(t)= \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft}
 $$
 
 So its spectrum contains both
@@ -1300,20 +1315,24 @@ so it contains only the negative-frequency component.
 We can summarize what we have discovered:
 
 | Signal | Frequency components |
+
 |---|---|
+
 | $\cos(2\pi ft)$ | $-f$ and $+f$ |
+
 | $\cos(2\pi ft)+j\sin(2\pi ft)$ | $+f$ |
+
 | $\cos(2\pi ft)-j\sin(2\pi ft)$ | $-f$ |
 
 This reveals an important difference between real and complex signals:
 
-> **A complex signal can distinguish positive-frequency rotation from negative-frequency rotation.**
+> ****A complex signal can distinguish positive-frequency rotation from negative-frequency rotation.****
 
 A real cosine contains both rotations together.
 
 This ability to preserve the distinction between positive and negative frequency is one of the reasons complex signals are so useful in SDR.
 
-And it brings us much closer to understanding why SDR systems use two components called **I** and **Q**.
+And it brings us much closer to understanding why SDR systems use two components called ****I**** and ****Q****.
 
 ---
 
@@ -1330,16 +1349,22 @@ Similarly, a complex stream contains two components, while a float stream contai
 In this chapter, for example:
 
 - `Float to Complex` takes two float streams and produces a complex stream.
+
 - `Complex to Real` takes a complex stream and produces a float stream.
+
 - `Complex to Imag` takes a complex stream and produces a float stream.
+
 - `Complex to Mag` takes a complex stream and produces a float stream.
+
 - `Complex to Arg` takes a complex stream and produces a float stream.
 
 When a connection refuses to work, check:
 
-1. the output data type of the first block,
-2. the input data type expected by the second block,
-3. the port colours.
+1\. the output data type of the first block,
+
+2\. the input data type expected by the second block,
+
+3\. the port colours.
 
 As our GNU Radio experiments become more complicated, this simple habit will save us a lot of confusion.
 
@@ -1351,7 +1376,7 @@ Before moving to the next chapter, experiment with the flowgraph yourself.
 
 But there is one rule:
 
-> **Predict what will happen before pressing Run.**
+> ****Predict what will happen before pressing Run.****
 
 The prediction is often more valuable than the experiment itself.
 
@@ -1386,7 +1411,9 @@ Change both Signal Sources from 1 kHz to 2 kHz.
 Before running the flowgraph, predict:
 
 - Will the radius of the constellation change?
+
 - Will the phase change faster or slower?
+
 - Where should the peak appear in the Frequency Sink?
 
 Then run it and check your prediction.
@@ -1410,6 +1437,7 @@ and
 Before running the flowgraph each time, predict:
 
 - Will the phase increase or decrease?
+
 - Will the Frequency Sink show +f or -f?
 
 See if you can predict the result without looking back at the chapter.
@@ -1485,33 +1513,25 @@ The magnitude remained the same, but the direction of phase evolution reversed.
 The Frequency Sink then showed us what that means:
 
 $$
-e^{j2\pi ft}
-\rightarrow
-+f
+e^{j2\pi ft} \rightarrow +f
 $$
 
 while
 
 $$
-e^{-j2\pi ft}
-\rightarrow
--f
+e^{-j2\pi ft} \rightarrow -f
 $$
 
 This gave us a useful interpretation of positive and negative complex frequency:
 
-> **The magnitude tells us how fast the complex vector rotates, while the sign tells us the direction of rotation.**
+> ****The magnitude tells us how fast the complex vector rotates, while the sign tells us the direction of rotation.****
 
 Finally, we returned to the real cosine from Chapter 3.
 
 We found that
 
 $$
-\cos(2\pi ft)
-=
-\frac{1}{2}e^{j2\pi ft}
-+
-\frac{1}{2}e^{-j2\pi ft}
+\cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft}
 $$
 
 which explains why a real cosine produces two frequency peaks, one at +f and another at -f.
@@ -1524,25 +1544,25 @@ That distinction is extremely important in SDR.
 
 ---
 
-## 4.28 Where We Go Next
+## 4.28 Connecting to the Next Chapter
 
 There is one detail we have deliberately avoided explaining fully.
 
 Look again at the GNU Radio Constellation Sink.
 
-GNU Radio does not label its axes **Real** and **Imaginary**.
+GNU Radio does not label its axes ****Real**** and ****Imaginary****.
 
 Instead, it calls them:
 
-**In-phase**
+****In-phase****
 
 and
 
-**Quadrature**.
+****Quadrature****.
 
 Why?
 
-Why does SDR use the names **I** and **Q**?
+Why does SDR use the names ****I**** and ****Q****?
 
 Why are the two components 90° apart?
 
@@ -1554,4 +1574,4 @@ $$
 x[n]=I[n]+jQ[n]
 $$
 
-In the next chapter, we will find out what **I and Q signals** actually mean, how an SDR produces them, and why they allow us to preserve information that a single real waveform cannot.
+In the next chapter, we will find out what ****I and Q signals**** actually mean, how an SDR produces them, and why they allow us to preserve information that a single real waveform cannot.
