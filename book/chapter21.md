@@ -1246,7 +1246,7 @@ For the final frequency-recovery experiment, we observe the signal directly in t
 
 That is the most natural place to judge whether an FLL is doing its job.
 
-![FLL Band-Edge carrier-frequency-recovery flowgraph](../figures/ch21/ch21-exp11-fll-band-edge-frequency-recovery-flowgraph.png)
+![FLL Band-Edge carrier-frequency-recovery flowgraph](../figures/ch21/ch21-exp11-fll-band-edge-frequency-recovery-flowgrpah.png)
 
 The two Frequency Sink traces are
 
