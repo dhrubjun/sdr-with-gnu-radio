@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: Effect of Carrier Phase Offset
+# Title: Effect of Symbol Timing Offset
 # GNU Radio version: 3.10.12.0
 
 from PyQt5 import Qt
@@ -33,9 +33,9 @@ import threading
 class exp1(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Effect of Carrier Phase Offset", catch_exceptions=True)
+        gr.top_block.__init__(self, "Effect of Symbol Timing Offset", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Effect of Carrier Phase Offset")
+        self.setWindowTitle("Effect of Symbol Timing Offset")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -66,25 +66,24 @@ class exp1(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.symbol_rate = symbol_rate = 1000
+        self.symbol_rate = symbol_rate = 4000
         self.samp_rate = samp_rate = 32000
         self.sps = sps = int(samp_rate / symbol_rate)
         self.span = span = 8
-        self.phase_offset = phase_offset = 0
+        self.timing_offset = timing_offset = 0
         self.ntaps = ntaps = span * sps + 1
-        self.carrier_freq = carrier_freq = 1000
         self.alpha = alpha = 0.35
 
         ##################################################
         # Blocks
         ##################################################
 
-        self._phase_offset_range = qtgui.Range(-180, 180, 5, 0, 200)
-        self._phase_offset_win = qtgui.RangeWidget(self._phase_offset_range, self.set_phase_offset, "Carrier Phase Offset (deg)", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._phase_offset_win)
+        self._timing_offset_range = qtgui.Range(0, sps-1, 1, 0, 200)
+        self._timing_offset_win = qtgui.RangeWidget(self._timing_offset_range, self.set_timing_offset, "Timing Offset (Sample)", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._timing_offset_win)
         self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
             1024, #size
-            'Effect of Carrier Phase Offset', #name
+            'Effect of Symbol Timing Offset', #name
             2, #number of inputs
             None # parent
         )
@@ -97,7 +96,7 @@ class exp1(gr.top_block, Qt.QWidget):
         self.qtgui_const_sink_x_0.enable_axis_labels(True)
 
 
-        labels = ['Reference QPSK', 'Phase-Offset QPSK', '', '', '',
+        labels = ['Fixed Sampling', 'Timing-Recovered QPSK', '', '', '',
             '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
@@ -127,12 +126,24 @@ class exp1(gr.top_block, Qt.QWidget):
         self.interp_fir_filter_xxx_0.declare_sample_delay(0)
         self.fir_filter_xxx_0 = filter.fir_filter_ccf(1, firdes.root_raised_cosine(1, samp_rate, symbol_rate, alpha, ntaps))
         self.fir_filter_xxx_0.declare_sample_delay(0)
+        self.digital_symbol_sync_xx_0 = digital.symbol_sync_cc(
+            digital.TED_GARDNER,
+            sps,
+            0.045,
+            1.0,
+            1.0,
+            1.5,
+            1,
+            digital.constellation_bpsk().base(),
+            digital.IR_MMSE_8TAP,
+            128,
+            [])
         self.digital_chunks_to_symbols_xx_0_0 = digital.chunks_to_symbols_bf([-1,1], 1)
         self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bf([-1,1], 1)
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
-        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(complex(math.cos(phase_offset*math.pi/180), math.sin(phase_offset*math.pi/180)))
         self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_gr_complex*1, sps)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
+        self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, timing_offset)
         self.analog_random_source_x_0_0 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
         self.analog_random_source_x_0 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
 
@@ -142,14 +153,15 @@ class exp1(gr.top_block, Qt.QWidget):
         ##################################################
         self.connect((self.analog_random_source_x_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))
         self.connect((self.analog_random_source_x_0_0, 0), (self.digital_chunks_to_symbols_xx_0_0, 0))
+        self.connect((self.blocks_delay_0, 0), (self.blocks_keep_one_in_n_0, 0))
+        self.connect((self.blocks_delay_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.interp_fir_filter_xxx_0, 0))
-        self.connect((self.blocks_keep_one_in_n_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.blocks_keep_one_in_n_0, 0), (self.qtgui_const_sink_x_0, 0))
-        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.qtgui_const_sink_x_0, 1))
         self.connect((self.blocks_throttle2_0, 0), (self.fir_filter_xxx_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0_0, 0), (self.blocks_float_to_complex_0, 1))
-        self.connect((self.fir_filter_xxx_0, 0), (self.blocks_keep_one_in_n_0, 0))
+        self.connect((self.digital_symbol_sync_xx_0, 0), (self.qtgui_const_sink_x_0, 1))
+        self.connect((self.fir_filter_xxx_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_throttle2_0, 0))
 
 
@@ -187,6 +199,7 @@ class exp1(gr.top_block, Qt.QWidget):
         self.sps = sps
         self.set_ntaps(self.span * self.sps + 1)
         self.blocks_keep_one_in_n_0.set_n(self.sps)
+        self.digital_symbol_sync_xx_0.set_sps(self.sps)
         self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
 
     def get_span(self):
@@ -196,12 +209,12 @@ class exp1(gr.top_block, Qt.QWidget):
         self.span = span
         self.set_ntaps(self.span * self.sps + 1)
 
-    def get_phase_offset(self):
-        return self.phase_offset
+    def get_timing_offset(self):
+        return self.timing_offset
 
-    def set_phase_offset(self, phase_offset):
-        self.phase_offset = phase_offset
-        self.blocks_multiply_const_vxx_0.set_k(complex(math.cos(self.phase_offset*math.pi/180), math.sin(self.phase_offset*math.pi/180)))
+    def set_timing_offset(self, timing_offset):
+        self.timing_offset = timing_offset
+        self.blocks_delay_0.set_dly(int(self.timing_offset))
 
     def get_ntaps(self):
         return self.ntaps
@@ -210,12 +223,6 @@ class exp1(gr.top_block, Qt.QWidget):
         self.ntaps = ntaps
         self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
         self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-
-    def get_carrier_freq(self):
-        return self.carrier_freq
-
-    def set_carrier_freq(self, carrier_freq):
-        self.carrier_freq = carrier_freq
 
     def get_alpha(self):
         return self.alpha
