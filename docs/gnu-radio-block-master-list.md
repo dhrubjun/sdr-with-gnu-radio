@@ -1,6 +1,6 @@
 # GNU Radio Block Master List
 
-**Updated through Chapter 21: PLL and Carrier Synchronization**
+**Updated through Chapter 23: Frame Synchronization and Packet Detection**
 
 ---
 
@@ -10,7 +10,7 @@ GNU Radio contains a very large number of blocks.
 
 Trying to learn all of them at once would not be useful.
 
-This document therefore does **not** attempt to list every block in GNU Radio. It records the blocks, controls, tap generators, objects, and important GNU Radio operations that matter to the learning path of this book.
+This document therefore does **not** attempt to list every block in GNU Radio. It records the blocks, controls, tap generators, objects, synchronization tools, tagging features, and important GNU Radio operations that matter to the learning path of this book.
 
 The list grows with the completed manuscript.
 
@@ -65,10 +65,10 @@ A block is marked **Used** only after it has appeared in a completed experiment.
 | Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **Signal Source** | Essential | ✅ Used | Generates periodic test signals and complex rotating phasors | Early chapters; CFO experiments Chapter 21 |
-| **Noise Source** | Essential | ✅ Used | Generates Gaussian and other noise | Chapter 7; reused Chapters 14, 16–21 |
-| **Constant Source** | Important | ✅ Used | Produces a constant stream | Chapter 13 |
-| **Vector Source** | Important | ✅ Used | Produces a predefined sequence | Chapter 10; controlled digital patterns Chapters 15–20 |
-| **Random Source** | Essential | ✅ Used | Generates random integer data | Chapter 15; reused Chapters 16–21 |
+| **Noise Source** | Essential | ✅ Used | Generates Gaussian and other noise | Chapter 7; reused throughout later receiver chapters |
+| **Constant Source** | Important | ✅ Used | Produces a constant stream | Chapter 13; threshold reference Chapter 23 |
+| **Vector Source** | Important | ✅ Used | Produces a predefined sequence | Chapter 10; controlled digital patterns Chapters 15–23 |
+| **Random Source** | Essential | ✅ Used | Generates random integer data | Chapter 15; reused digital communication chapters |
 | **VCO** | Important | ✅ Used | Frequency-controlled oscillator | Chapter 14 |
 | **VCO (Complex)** | Important | ✅ Used | Complex frequency-controlled oscillator | Chapter 14 |
 | **File Source** | Important | ⏳ Later | Reads stored sample streams | Later |
@@ -77,7 +77,7 @@ A block is marked **Used** only after it has appeared in a completed experiment.
 
 ## 1.1 Controlled Data Before Random Data
 
-Vector Source remains especially useful because a known sequence makes transformations easy to verify.
+Vector Source remains especially useful because a known sequence makes transformations and synchronization easier to verify.
 
 ```text
 Known sequence
@@ -89,7 +89,7 @@ Verify operation
 Random data
 ```
 
-Random Source is introduced after the transformation itself is understood.
+This principle became especially important again in Chapter 23, where a deliberately known access code was required for frame detection.
 
 ---
 
@@ -100,8 +100,8 @@ Random Source is introduced after the transformation itself is understood.
 | **Throttle** | Essential | ✅ Used | Limits processing rate in software-only flowgraphs | Early chapters |
 | **Variable** | Essential | ✅ Used | Stores reusable values and relationships | Early chapters |
 | **Import** | Important | ✅ Used | Makes Python names/functions available to generated code | Chapter 14 |
-| **Head** | Important | ✅ Used | Passes only a selected number of items | Chapters 10–11; finite PLL startup capture Chapter 21 |
-| **Delay** | Important | ✅ Used | Delays a stream by selected samples | Chapter 11; multipath Chapter 19; one-sample CFO estimator delay Chapter 21 |
+| **Head** | Important | ✅ Used | Passes only a selected number of items | Chapters 10–11; finite captures Chapter 21; finite Tag Debug output Chapter 23 |
+| **Delay** | Important | ✅ Used | Delays a stream by selected samples | Chapter 11; multipath Chapter 19; CFO estimation Chapter 21 |
 
 Variables increasingly express physical relationships rather than isolated constants:
 
@@ -110,8 +110,6 @@ samples_per_bit = int(samp_rate / bit_rate)
 sps             = int(samp_rate / symbol_rate)
 ```
 
-This keeps the signal-processing relationship visible inside the flowgraph.
-
 ---
 
 # 3. Mathematical Operations
@@ -119,19 +117,17 @@ This keeps the signal-processing relationship visible inside the flowgraph.
 | Block / Operation | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **Add** | Essential | ✅ Used | Adds streams sample by sample | Early chapters; channel/noise experiments |
-| **Multiply** | Essential | ✅ Used | Multiplies streams sample by sample | Chapters 7–14; phase/CFO impairment Chapters 19–21 |
+| **Multiply** | Essential | ✅ Used | Multiplies streams sample by sample | Early chapters; mixing, modulation, impairment experiments |
 | **Divide** | Important | ✅ Used | Divides one stream by another | Chapter 7 |
-| **Multiply Const** | Essential | ✅ Used | Multiplies every sample by a constant | Chapter 7; phase rotation and scaling Chapters 17–21 |
-| **Add Const** | Important | ✅ Used | Adds a constant to every sample | Chapter 11; reused Chapters 13–16 |
-| **Multiply Conjugate** | Important | ✅ Used | Multiplies one complex stream by the conjugate of the other | Chapter 21 |
+| **Multiply Const** | Essential | ✅ Used | Multiplies every sample by a constant | Chapter 7; scaling and phase experiments |
+| **Add Const** | Important | ✅ Used | Adds a constant to every sample | Chapter 11; reused later |
+| **Multiply Conjugate** | Important | ✅ Used | Multiplies one complex stream by the conjugate of another | Chapter 21 |
 | **Exponentiate Const Int** | Important | ✅ Used | Raises each sample to a fixed integer power | Chapter 21 |
 | **Log10** | Important | ✅ Used | Calculates base-10 logarithm | Chapter 7 |
 | **Abs** | Important | ✅ Used | Calculates absolute value | Chapter 13 |
 | **Subtract** | Important | ⏳ Later | Subtracts streams | Later |
 
 ## 3.1 Multiply Conjugate
-
-Chapter 21 gave Multiply Conjugate a central synchronization role.
 
 If
 
@@ -146,52 +142,13 @@ then
 x y* = AB exp(j(θx - θy))
 ```
 
-so the resulting phase contains a **phase difference**, not a phase sum.
+so the result contains a phase difference.
 
-It was used for:
-
-- known-reference carrier-phase measurement,
-- measuring PLL phase error,
-- adjacent-sample CFO estimation after fourth-power processing.
-
-### Important distinction
-
-```text
-Multiply
-   |
-   v
-phase addition
-```
-
-```text
-Multiply Conjugate
-   |
-   v
-phase difference
-```
-
----
+This was used for phase-error and CFO-related measurements in Chapter 21.
 
 ## 3.2 Exponentiate Const Int
 
-Chapter 21 used **Exponentiate Const Int** with exponent `4` for QPSK.
-
-For QPSK, fourth-power processing removes the fourfold data-dependent phase structure:
-
-```text
-QPSK + carrier error
-        |
-        v
-Fourth power
-        |
-        v
-QPSK data phase collapses
-        |
-        v
-carrier phase/frequency information becomes easier to observe
-```
-
-The same symmetry also produces the familiar QPSK rotational ambiguity.
+Chapter 21 used exponent `4` for QPSK to remove the fourfold data-dependent phase structure before carrier-frequency interpretation.
 
 ---
 
@@ -199,28 +156,34 @@ The same symmetry also produces the familiar QPSK rotational ambiguity.
 
 | Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Float to Complex** | Essential | ✅ Used | Combines I and Q float streams into a complex stream | Early I/Q chapters; central Chapters 17–21 |
-| **Complex to Real** | Essential | ✅ Used | Extracts the real/I component | Early I/Q chapters; PLL carrier comparison Chapter 21 |
+| **Float to Complex** | Essential | ✅ Used | Combines I and Q float streams into a complex stream | Early I/Q chapters; central digital modulation chapters |
+| **Complex to Real** | Essential | ✅ Used | Extracts the real/I component | Early I/Q chapters |
 | **Complex to Imag** | Essential | ✅ Used | Extracts the imaginary/Q component | Early I/Q chapters |
-| **Complex to Mag** | Essential | ✅ Used | Calculates complex magnitude | Early I/Q chapters; reused Chapters 14, 17 |
-| **Complex to Arg** | Essential | ✅ Used | Calculates complex phase | Early I/Q chapters; carrier-phase and CFO estimation Chapter 21 |
+| **Complex to Mag** | Essential | ✅ Used | Calculates complex magnitude | Early I/Q chapters; manual preamble correlation Chapter 23 |
+| **Complex to Arg** | Essential | ✅ Used | Calculates complex phase | Early I/Q chapters; carrier/CFO estimation Chapter 21 |
 | **Complex to Mag²** | Essential | ✅ Used | Calculates squared magnitude | Chapter 6 |
+| **Complex to Float** | Important | ✅ Used | Splits a complex stream into real and imaginary float outputs | Chapter 23 complete QPSK frame detector |
 | **Char to Float** | Important | ✅ Used | Converts signed byte/char samples to float | Chapter 11 |
 | **UChar to Float** | Important | ✅ Used | Converts unsigned byte values to float | Chapter 15 |
-| **Complex to Float** | Important | ⏳ Later | Separates complex stream into float components | Later |
 | **Float to Char** | Important | ⏳ Later | Converts float values to byte/char form | Later |
 
-## 4.1 Float to Complex
+## 4.1 Complex to Float in the Receiver
 
-Chapter 17 gave Float to Complex an especially important communication role.
+Chapter 23 gave **Complex to Float** a practical receiver role:
 
 ```text
-I stream ----\
-              >---- Float to Complex ----> s = I + jQ
-Q stream ----/
+Recovered QPSK symbols
+        |
+        v
+Complex to Float
+      /     \
+     I       Q
+     |       |
+     v       v
+Binary decisions
 ```
 
-The block does not "create QPSK" by itself. It simply combines the I and Q values chosen by the mapping.
+It separated synchronized QPSK symbols into I and Q values before hard bit decisions.
 
 ---
 
@@ -229,12 +192,13 @@ The block does not "create QPSK" by itself. It simply combines the I and Q value
 | Block / Method | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **Stream to Vector** | Essential | ✅ Used | Groups stream items into vectors | Chapter 6 |
-| **Keep 1 in N** | Important | ✅ Used | Keeps one item out of every N | Chapter 9; symbol-rate observation Chapters 18–20 |
-| **Head** | Important | ✅ Used | Limits a stream to a finite number of items | Chapters 10–11; Chapter 21 |
+| **Keep 1 in N** | Important | ✅ Used | Keeps one item out of every N | Chapter 9; symbol-rate observation later |
+| **Head** | Important | ✅ Used | Limits a stream to a finite number of items | Chapters 10–11; Chapters 21 and 23 |
 | **Delay** | Important | ✅ Used | Delays a stream | Chapter 11; Chapters 19 and 21 |
-| **Repeat** | Important | ✅ Used | Repeats each item a selected number of times | Chapter 15; rectangular symbol pulses Chapters 16–18 |
+| **Repeat** | Important | ✅ Used | Repeats each item a selected number of times | Chapter 15; rectangular pulses Chapters 16–18 |
 | **Repack Bits** | Essential | ✅ Used | Regroups meaningful bits into different item widths | Chapter 15; reused Chapter 17 |
-| **Chunks to Symbols** | Essential | ✅ Used | Maps symbol indices to chosen symbol values | Chapter 16; central Chapters 17–21 |
+| **Chunks to Symbols** | Essential | ✅ Used | Maps symbol indices to chosen symbol values | Chapter 16; central Chapters 17–23 |
+| **Interleave** | Important | ✅ Used | Alternates items from multiple streams into one stream | Chapter 23 QPSK I/Q bit serialization |
 | **Vector to Stream** | Essential | ⏳ Later | Converts vectors back into a stream | Later OFDM/vector work |
 | **Map** | Important | ⏳ Later | General integer/value remapping | Later |
 
@@ -251,7 +215,7 @@ Change how bits are grouped
 Chunks to Symbols
     |
     v
-Map an index to a chosen symbol value
+Map an index to a chosen signal value
 ```
 
 ```text
@@ -268,6 +232,13 @@ Keep 1 in N
 Select one sample out of every N
 ```
 
+```text
+Interleave
+    |
+    v
+Reconstruct one serial stream from multiple input streams
+```
+
 ---
 
 # 6. Fourier and Spectrum Analysis
@@ -275,25 +246,10 @@ Select one sample out of every N
 | Block / Method | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
 | **FFT** | Essential | ✅ Used | Computes the DFT efficiently | Chapter 6 |
-| **QT GUI Frequency Sink DFT/FFT view** | Essential | ✅ Used | Displays spectral location and bandwidth | Reused throughout; DFT-based CFO interpretation Chapter 21 |
+| **QT GUI Frequency Sink DFT/FFT view** | Essential | ✅ Used | Displays spectral location and bandwidth | Reused throughout; CFO interpretation Chapter 21 |
 | **IFFT** | Essential | ⏳ Later | Creates time-domain samples from frequency-domain bins | OFDM chapters |
 | **Goertzel** | Important | ⏳ Later | Evaluates selected frequencies efficiently | Later |
 | **Log Power FFT** | Important | ⏳ Later | Produces logarithmic spectral power | Later |
-
-Chapter 21 reused the DFT viewpoint for CFO estimation after fourth-power processing.
-
-```text
-QPSK + CFO
-    |
-    v
-Fourth power
-    |
-    v
-carrier-like tone at approximately 4 × CFO
-    |
-    v
-DFT / Frequency Sink
-```
 
 ---
 
@@ -312,25 +268,20 @@ DFT / Frequency Sink
 
 | Block | Importance | Status | What it does | First introduced / major use |
 |---|---|---|---|---|
-| **Low Pass Filter** | Essential | ✅ Used | Passes lower frequencies | Chapter 7; expanded Chapter 9; smoothing Chapter 18 |
+| **Low Pass Filter** | Essential | ✅ Used | Passes lower frequencies | Chapter 7; expanded Chapter 9 |
 | **High Pass Filter** | Essential | ✅ Used | Passes higher frequencies | Chapter 9 |
-| **Band Pass Filter** | Essential | ✅ Used | Passes a selected band | Chapter 9; reused Chapter 13 |
+| **Band Pass Filter** | Essential | ✅ Used | Passes a selected band | Chapter 9 |
 | **Band Reject Filter** | Essential | ✅ Used | Rejects a selected band | Chapter 9 |
-| **Decimating FIR Filter** | Essential | ✅ Used | FIR filtering with optional decimation | Chapters 9–11; RX RRC Chapter 18; manual equalizer Chapter 20 |
-| **Interpolating FIR Filter** | Essential | ✅ Used | FIR filtering while increasing sample rate | Chapter 18; reused Chapters 19–21 |
+| **Decimating FIR Filter** | Essential | ✅ Used | FIR filtering with optional decimation | Chapters 9–11; RX RRC Chapter 18; equalization Chapter 20; manual correlation Chapter 23 |
+| **Interpolating FIR Filter** | Essential | ✅ Used | FIR filtering while increasing sample rate | Chapter 18; reused Chapters 19–23 |
 | **DC Blocker** | Important | ✅ Used | Removes DC/very-low-frequency offset | Chapter 13 |
 | **Linear Equalizer** | Essential receiver tool | ✅ Used | Adaptive FIR equalization of symbol streams | Chapter 20 |
 | **Frequency Xlating FIR Filter** | Advanced | ⏳ Later | Frequency translation + filtering + decimation | Later receiver work |
 | **FFT Filter** | Important | ⏳ Later | FIR filtering using FFT convolution | Later |
-| **FFT Low Pass Filter** | Important | ⏳ Later | FFT-based low-pass filtering | Later |
 | **IIR Filter** | Important | ⏳ Later | Infinite impulse response filtering | Later |
 | **Single Pole IIR Filter** | Important | ⏳ Later | Simple recursive smoothing/filtering | Later |
-| **Hilbert** | Advanced | ⏳ Later | Analytic-signal/quadrature processing | Discussed Chapter 13, not used as a completed experiment |
-| **Generic Filterbank** | Advanced | ⏳ Later | Applies a bank of filters | Later |
 
 ## 8.1 Interpolating FIR Filter
-
-Chapter 18 introduced the Interpolating FIR Filter for proper pulse shaping.
 
 ```text
 Symbol-rate stream
@@ -346,18 +297,6 @@ Sample-rate waveform
 ```
 
 This is not the same as Repeat, which simply duplicates values.
-
-## 8.2 Decimating FIR Filter with Decimation = 1
-
-With
-
-```text
-Decimation: 1
-```
-
-the block behaves as an FIR filter without changing the stream rate.
-
-This role was used for receive matched filtering and again in Chapter 20 for manually constructed equalization.
 
 ---
 
@@ -378,43 +317,81 @@ This role was used for receive matched filtering and again in Chapter 20 for man
 
 | Block / Operation | Importance | Status | Role | First introduced / major use |
 |---|---|---|---|---|
-| **Decimating FIR Filter** | Essential | ✅ Used | Correlation/matched filtering with chosen taps | Chapter 11 |
+| **Decimating FIR Filter** | Essential | ✅ Used | Correlation/matched filtering with chosen taps | Chapter 11; known-preamble correlator Chapter 23 |
 | **Add Const** | Important | ✅ Used | Moves a threshold relative to zero | Chapter 11 |
-| **Binary Slicer** | Essential | ✅ Used | Converts thresholded samples into binary decisions | Chapter 11 |
+| **Threshold** | Important | ✅ Used | Converts a continuous input into a state using High/Low levels | Chapter 23 preamble detection threshold experiment |
+| **Binary Slicer** | Essential | ✅ Used | Converts samples into binary hard decisions | Chapter 11; QPSK bit recovery Chapter 23 |
 | **Char to Float** | Important | ✅ Used | Converts decisions for display | Chapter 11 |
 | **Moving Average** | Essential | ✅ Used | Accumulation/smoothing where useful | Chapter 11 |
-| **Multiply Conjugate / conjugate-product idea** | Important | ✅ Used | Relative phase measurement | Chapter 21 |
 | **Correlation Estimator** | Essential receiver tool | ✅ Used | Locates a known complex training sequence and produces correlation-related tags | Chapter 20 |
-| **Correlate Access Code** | Important | 🔜 Planned | Detects known bit patterns in streams | Expected Chapter 23 |
+| **Correlate Access Code - Tag** | Essential packet/frame tool | ✅ Used | Searches a bit stream for a known access code and inserts a tag | Chapter 23 |
+| **Tag Debug** | Important | ✅ Used | Displays stream tags, offsets, keys and values | Chapter 23 |
 
-## 10.1 Correlation Estimator
+## 10.1 Manual Preamble Correlation in Chapter 23
 
-Chapter 20 reused the correlation ideas of Chapter 11 for training-assisted equalization.
-
-```text
-Received symbol stream
-        |
-        v
-Correlation Estimator
-        |
-        v
-training-start information / corr_est tag
-        |
-        v
-Linear Equalizer
-```
-
-Important settings in the completed experiment included:
+Chapter 23 deliberately returned to the correlation idea from Chapter 12.
 
 ```text
-Symbols:             training_symbols
-Samples per Symbol:  1
-Tag marking delay:   1
-Threshold:           0.5
-Threshold Method:    Absolute
+Known preamble
+      |
+      v
+FIR correlation
+      |
+      v
+Complex to Mag
+      |
+      v
+Correlation magnitude
+      |
+      v
+Threshold / detection output
 ```
 
-The Correlation Estimator **locates** the known sequence. It does not equalize the channel.
+This made packet detection understandable before introducing a dedicated access-code detector.
+
+## 10.2 Threshold
+
+The **Threshold** block uses:
+
+```text
+Low
+High
+Initial State
+```
+
+and provides hysteresis.
+
+In Chapter 23 it converted correlation magnitude into a detection state while a separate constant reference made the numerical decision level visible.
+
+## 10.3 Correlate Access Code - Tag
+
+Completed Chapter 23 settings included:
+
+```text
+Access Code: 10110010
+Threshold: 0
+Tag Name: frame_start
+```
+
+The block's `Threshold` does **not** mean correlation magnitude.
+
+It means the number of bit mismatches allowed in the access-code comparison.
+
+```text
+Threshold = 0
+      |
+      v
+Exact bit match required
+```
+
+```text
+Threshold = 1
+      |
+      v
+One bit mismatch allowed
+```
+
+Chapter 23 experimentally demonstrated both cases.
 
 ---
 
@@ -422,21 +399,17 @@ The Correlation Estimator **locates** the known sequence. It does not equalize t
 
 | Block | Importance | Status | Main use |
 |---|---|---|---|
-| **QT GUI Time Sink** | Essential | ✅ Used | Time-domain waveform and loop-state inspection |
-| **QT GUI Frequency Sink** | Essential | ✅ Used | Spectrum inspection; FLL before/after comparison Chapter 21 |
-| **QT GUI Constellation Sink** | Essential | ✅ Used | I/Q-plane inspection; central Chapters 17–21 |
-| **QT GUI Number Sink** | Important | ✅ Used | Numerical measurement display; phase and CFO estimates Chapter 21 |
+| **QT GUI Time Sink** | Essential | ✅ Used | Time-domain waveform, correlation and loop-state inspection |
+| **QT GUI Frequency Sink** | Essential | ✅ Used | Spectrum inspection and carrier-frequency studies |
+| **QT GUI Constellation Sink** | Essential | ✅ Used | I/Q-plane inspection; central Chapters 17–23 |
+| **QT GUI Number Sink** | Important | ✅ Used | Numerical measurement display |
 | **QT GUI Vector Sink** | Important | ✅ Used | Vector-valued display |
 | **QT GUI Waterfall Sink** | Important | ✅ Used | Spectrum-versus-time display |
 | **QT GUI Histogram Sink** | Important | ⏳ Later | Sample distribution |
 | **QT GUI Eye Sink** | Important | ⏳ Later / optional | Dedicated eye-diagram display where available |
 | **QT GUI Matrix Sink** | Specialized | ➖ Optional | Matrix-like data |
 
-## 11.1 Eye Diagram Note
-
-Chapter 18 did not mark QT GUI Eye Sink as used.
-
-The completed eye-diagram experiment recorded matched-filter output with a File Sink and used a small external Python plotting script.
+Chapter 23 deliberately stopped showing constellation plots when they no longer answered the experimental question. For preamble-sequence comparison, the correlation plot was the useful visualization.
 
 ---
 
@@ -450,7 +423,10 @@ The completed eye-diagram experiment recorded matched-filter output with a File 
 | **QT GUI Entry** | Important | ⏳ Later | Runtime numerical/text entry |
 | **QT GUI Check Box** | Important | ⏳ Later | Boolean control |
 
-QT GUI Range has been reused for bit rate, modulation parameters, channel impairments, phase offset, CFO, noise amplitude, and loop-related experiments.
+Chapter 23 reused QT GUI Range for:
+
+- noise voltage,
+- correlation detection threshold.
 
 ---
 
@@ -462,10 +438,9 @@ QT GUI Range has been reused for bit rate, modulation parameters, channel impair
 | **Keep 1 in N** | Important | ✅ Used | Direct selection/downsampling without anti-alias filtering |
 | **Repeat** | Important | ✅ Used | Duplicates items; rectangular hold |
 | **Interpolating FIR Filter** | Essential | ✅ Used | Filters while increasing sample rate |
+| **Symbol Sync internal interpolator** | Essential receiver method | ✅ Used | Fractional-sample interpolation inside timing recovery | Chapter 22 |
 | **Rational Resampler** | Essential | ⏳ Later | Rational sample-rate conversion |
-| **Fractional Resampler** | Advanced | ⏳ Later | Non-integer resampling |
-
-Chapter 18 marks the important boundary between **repetition for a rectangular hold** and **proper pulse-shaping interpolation**.
+| **Fractional Resampler** | Advanced | ⏳ Later | General non-integer resampling |
 
 ---
 
@@ -492,23 +467,26 @@ Chapter 18 marks the important boundary between **repetition for a rectangular h
 |---|---|---|---|
 | **Vector Source** | Important | ✅ Used | Controlled bits/symbols |
 | **Random Source** | Essential | ✅ Used | Random binary/symbol data |
-| **UChar to Float** | Important | ✅ Used | Data-type conversion for display |
+| **UChar to Float** | Important | ✅ Used | Data-type conversion |
 | **Repeat** | Important | ✅ Used | Rectangular bit/symbol duration |
 | **Repack Bits** | Essential | ✅ Used | Groups bits into symbol indices |
 | **Chunks to Symbols** | Essential | ✅ Used | Maps indices to PAM/I/Q values |
 | **Float to Complex** | Essential | ✅ Used | Combines I and Q coordinates |
+| **Complex to Float** | Important | ✅ Used | Splits recovered complex symbols into I/Q components |
 | **Binary Slicer** | Essential | ✅ Used | Binary hard decisions |
+| **Interleave** | Important | ✅ Used | Reconstructs serial bit stream from I/Q decisions |
 | **Interpolating FIR Filter** | Essential | ✅ Used | RRC pulse shaping |
 | **RRC taps** | Essential | ✅ Used | Root-raised-cosine pulse design |
 | **Linear Equalizer** | Essential receiver tool | ✅ Used | Adaptive channel equalization |
-| **Adaptive Algorithm (LMS)** | Essential receiver object | ✅ Used | Updates equalizer taps from error information |
+| **Adaptive Algorithm (LMS)** | Essential receiver object | ✅ Used | Updates equalizer taps |
 | **Constellation Rect. Object** | Important receiver object | ✅ Used | Defines valid normalized QPSK decision points |
-| **Correlation Estimator** | Essential receiver tool | ✅ Used | Finds known training sequences and marks them with tags |
+| **Correlation Estimator** | Essential receiver tool | ✅ Used | Finds known training sequences |
+| **Symbol Sync** | Essential receiver tool | ✅ Used | Symbol timing recovery | Chapter 22 |
+| **Correlate Access Code - Tag** | Essential frame tool | ✅ Used | Access-code/frame detection | Chapter 23 |
 | **Constellation Modulator** | Important | ⏳ Later | Ready-made digital modulation |
 | **Constellation Decoder** | Important | ⏳ Later | Ready-made symbol decoding |
 | **Differential Encoder** | Important | ⏳ Later | Differential symbol encoding |
 | **Differential Decoder** | Important | ⏳ Later | Differential symbol decoding |
-| **Correlate Access Code** | Important | 🔜 Planned | Packet/access-code detection |
 | **Additive Scrambler** | Important | ⏳ Later | Scrambles data sequences |
 
 ## 15.1 Digital Communication Progression
@@ -545,10 +523,18 @@ Channel memory -> equalization -> training-assisted adaptation
 
 ```text
 Chapter 21
-Carrier mismatch -> phase/frequency estimation -> PLL/Costas/FLL recovery
+Carrier mismatch -> phase/frequency estimation and recovery
 ```
 
-This progression is more important than memorizing individual block names.
+```text
+Chapter 22
+Sampling-time uncertainty -> timing-error detection -> Symbol Sync
+```
+
+```text
+Chapter 23
+Known preamble/access code -> frame detection -> stream tags
+```
 
 ---
 
@@ -561,79 +547,76 @@ This progression is more important than memorizing individual block names.
 | **FLL Band-Edge** | Essential receiver tool | ✅ Used | Feedback carrier-frequency recovery using pulse-shaped spectral edges | Chapter 21 |
 | **Multiply Conjugate** | Important | ✅ Used | Relative phase / phase-increment measurement | Chapter 21 |
 | **Exponentiate Const Int** | Important | ✅ Used | M-th-power modulation removal for QPSK | Chapter 21 |
-| **PLL Carrier Tracking** | Important | ⏳ Later / explored | Tracks/downconverts a carrier; explored during development but not central to final chapter path |
-| **PLL Frequency Detector** | Advanced | ⏳ Later | Exposes PLL frequency-detection behaviour | Later / advanced synchronization |
-| **Symbol Sync** | Essential | 🔜 Planned | Symbol timing synchronization | Chapter 22 |
-| **Clock Recovery MM** | Important | ⏳ Later | Alternative clock-recovery method | Later |
-| **M-th power methods** | Important concept | ✅ Used | Remove M-PSK data symmetry for phase/frequency estimation | Chapter 21 |
-| **DFT-based CFO interpretation** | Important concept | ✅ Used | Estimates CFO from spectral location after modulation removal | Chapter 21 |
+| **Symbol Sync** | Essential receiver tool | ✅ Used | Automatic symbol timing acquisition and tracking | Chapter 22 |
+| **Gardner TED** | Essential timing concept | ✅ Used | Timing-error detector selected inside Symbol Sync | Chapter 22 |
+| **Early-Late-style detector** | Important concept | ✅ Used conceptually | Builds timing-error intuition before automatic recovery | Chapter 22 |
+| **Mueller and Müller TED** | Important | ➖ Discussed | Alternative timing-error detector discussed but not used in final experiment | Chapter 22 |
+| **Clock Recovery MM** | Important | ⏳ Later | Alternative timing-recovery implementation | Later |
 
-## 16.1 PLL Carrier Regeneration
+## 16.1 Symbol Sync
 
-Chapter 21 used PLL Carrier Regeneration to make feedback lock visible with a clean complex carrier.
+Chapter 22 used GNU Radio's **Symbol Sync** block after developing timing-error intuition manually.
 
-Important ideas included:
-
-- phase detector,
-- loop filter,
-- oscillator/NCO correction,
-- acquisition,
-- lock,
-- tracking,
-- loop bandwidth.
-
-A finite startup segment was captured with `Head` + `File Sink` and plotted externally.
-
-## 16.2 Costas Loop
-
-For QPSK, the completed experiment used:
+Important completed settings included:
 
 ```text
-Order:          4
-Loop Bandwidth: pi/100
-Use SNR:        No
+Timing Error Detector: Gardner
+Samples per Symbol: 8
+Expected TED Gain: 1
+Loop Bandwidth: 0.045
+Damping Factor: 1
+Maximum Deviation: 1.5
+Output Samples/Symbol: 1
+Interpolating Resampler: MMSE, 8 tap FIR
 ```
 
-`Order = 4` identifies the QPSK modulation structure. It does **not** mean a fourth-order PLL.
-
-The Costas Loop restored a stable QPSK constellation but can retain the normal QPSK rotational ambiguity.
-
-## 16.3 FLL Band-Edge
-
-The final frequency-recovery experiment operated on the **oversampled pulse-shaped signal**, before symbol-rate sampling.
-
-Important settings were:
+The key distinction established in Chapter 22 was:
 
 ```text
-Samples per Symbol:     32
-Filter Rolloff Factor:  0.35
-Prototype Filter Size:  45
-Loop Bandwidth:         2*pi/1000
-```
-
-The block successfully drove the tested `+2 kHz` and `-2 kHz` CFOs back close to zero frequency.
-
-The larger `+8 kHz` test demonstrated that acquisition capability is finite and depends on the waveform and loop configuration.
-
-### Important distinction
-
-```text
-FLL
-=
-general frequency-feedback architecture
+Fixed timing offset
+      |
+      v
+Timing acquisition
 ```
 
 ```text
-Band-edge frequency detector
-=
-one method for generating frequency error
+Sampling-clock mismatch
+      |
+      v
+Timing phase keeps drifting
+      |
+      v
+Continuous timing tracking
+```
+
+Symbol Sync corrects **when** the receiver samples. It does not correct carrier phase, multipath distortion, or random noise.
+
+## 16.2 Carrier vs Timing vs Frame Synchronization
+
+By Chapter 23, the receiver synchronization roles are:
+
+```text
+Carrier synchronization
+        |
+        v
+Correct carrier phase/frequency
 ```
 
 ```text
-FLL Band-Edge
-=
-GNU Radio block implementing band-edge-based feedback frequency recovery
+Timing synchronization
+        |
+        v
+Correct symbol sampling instant
 ```
+
+```text
+Frame synchronization
+        |
+        v
+Correct message/frame boundary
+```
+
+These are related receiver stages, but they solve different problems.
 
 ---
 
@@ -643,28 +626,16 @@ GNU Radio block implementing band-edge-based feedback frequency recovery
 |---|---|---|---|
 | **Noise Source + Add** | Essential concept | ✅ Used | Manual AWGN channel in several chapters |
 | **Multiply Const / controlled gain** | Essential concept | ✅ Used | Attenuation experiments Chapter 19 |
-| **Complex phasor multiplication** | Essential concept | ✅ Used | Phase and frequency offset experiments Chapters 19 and 21 |
-| **Delay + Add / manual multipath** | Essential concept | ✅ Used | Fractional/one-symbol echoes Chapter 19 |
-| **Channel Model** | Essential | ✅ Used | Combined controlled channel impairments Chapter 19 |
-| **Channel Model Epsilon parameter** | Important concept | ✅ Used | Sample-rate mismatch Chapter 19 |
+| **Complex phasor multiplication** | Essential concept | ✅ Used | Phase and frequency offset experiments |
+| **Delay + Add / manual multipath** | Essential concept | ✅ Used | Multipath Chapter 19 |
+| **Channel Model** | Essential | ✅ Used | Combined controlled channel impairments Chapter 19; reused Chapters 20–23 |
+| **Channel Model Epsilon parameter** | Important concept | ✅ Used | Sample-rate mismatch Chapters 19 and 22 |
 | **Dynamic Channel Model** | Advanced | ⏳ Later | Time-varying channel simulation |
 | **Frequency Selective Fading Model** | Advanced | ⏳ Later | Later |
-| **Selective Fading Model** | Advanced | ⏳ Later | Later |
 
-## 17.1 Channel Model
+Chapter 22 used `Epsilon` specifically to create sampling-clock mismatch and demonstrate timing tracking.
 
-Chapter 19 moved from manually introduced impairments to GNU Radio's Channel Model.
-
-The chapter used it as a controlled way to combine impairments such as:
-
-- noise voltage,
-- frequency offset,
-- timing/sample-rate mismatch through `epsilon`,
-- multipath taps.
-
-The teaching rule remains:
-
-> **Understand each impairment manually before relying on a combined channel block.**
+Chapter 23 reused Channel Model noise in the complete QPSK frame detector to show missed and false frame detections.
 
 ---
 
@@ -677,67 +648,7 @@ The teaching rule remains:
 | **Adaptive Algorithm (LMS)** | Essential | ✅ Used | LMS coefficient adaptation |
 | **Constellation Rect. Object** | Important | ✅ Used | Defines valid QPSK decision points |
 | **Correlation Estimator** | Essential | ✅ Used | Detects known training sequence |
-| **Stream Tags / correlation tags** | Essential concept | ✅ Used | Marks detected training position for downstream equalization |
-
-## 18.1 Linear Equalizer
-
-Important completed settings included:
-
-```text
-Num. Taps:                 5
-Input Samples per Symbol:  1
-Adaptive Algorithm Object: lms
-Training Sequence:         []
-Adapt After Training:      True
-```
-
-The key distinction is:
-
-> **The Linear Equalizer is the filter. The Adaptive Algorithm object supplies the coefficient-update rule.**
-
-## 18.2 Adaptive Algorithm (LMS)
-
-The LMS step size `mu` controls how strongly each observed error changes the equalizer coefficients.
-
-```text
-mu = 0        -> no adaptation
-small mu      -> cautious, slower adaptation
-larger mu     -> more aggressive, faster adaptation
-```
-
-The final experiments demonstrated the physical meaning of adaptation speed without claiming that arbitrarily large step sizes are safe.
-
-## 18.3 Constellation Rect. Object
-
-Chapter 20 used normalized QPSK decision points near:
-
-```text
-(+/-0.707, +/-0.707)
-```
-
-The object is not merely a plotting configuration. It tells the adaptive receiver which complex symbol decisions are valid.
-
-## 18.4 Correlation Estimator and Tags
-
-The Correlation Estimator locates a known training sequence.
-
-The resulting correlation tag identifies where downstream training-assisted equalization should begin.
-
-This introduced an important distinction:
-
-```text
-Detection
-=
-Was the known sequence found?
-```
-
-```text
-Alignment
-=
-Does the resulting tag line up with the intended training-symbol position?
-```
-
-Detailed tag architecture remains a later topic.
+| **Stream Tags / correlation tags** | Essential concept | ✅ Used | Marks detected sequence location |
 
 ---
 
@@ -745,49 +656,68 @@ Detailed tag architecture remains a later topic.
 
 | Block / Method | Importance | Status | First use / note |
 |---|---|---|---|
-| **File Sink** | Essential | ✅ Used | Chapter 18 eye samples; Chapter 21 PLL phase-error capture |
-| **External Python plotting scripts** | Important workflow | ✅ Used | Eye diagrams Chapter 18; PLL transient plots Chapter 21 |
+| **File Sink** | Essential | ✅ Used | Chapter 18 eye samples; Chapter 21 transient capture |
+| **External Python plotting scripts** | Important workflow | ✅ Used | Eye diagrams Chapter 18; carrier plots Chapter 21 |
 | **File Source** | Essential | ⏳ Later | Reads raw stored samples |
 | **WAV File Source** | Important | ⏳ Later | Audio files |
 | **WAV File Sink** | Important | ⏳ Later | Audio files |
 | **Metadata File Source** | Advanced | ⏳ Later | Later |
 | **Metadata File Sink** | Advanced | ⏳ Later | Later |
 
-## 19.1 File Sink and External Analysis
-
-The File Sink stores the stream without changing it.
-
-```text
-GNU Radio processing
-        |
-        v
-File Sink
-        |
-        v
-raw .dat samples
-        |
-        v
-external Python visualization
-```
-
-In Chapter 21, Python did **not** simulate the PLL. It only plotted phase-error samples produced by GNU Radio.
-
 ---
 
-# 20. Message, Tags and PDU Processing
+# 20. Tags, Tagged Streams and Message Processing
 
-| Block / Feature | Importance | Status |
-|---|---|---|
-| **Stream Tags** | Essential | ✅ Used conceptually | Chapter 20 training/correlation alignment |
+| Block / Feature | Importance | Status | First use / note |
+|---|---|---|---|
+| **Stream Tags** | Essential | ✅ Used | Introduced conceptually Chapter 20; used directly for frame detection Chapter 23 |
+| **Tag Debug** | Important | ✅ Used | Displays `frame_start` tags, offsets and values | Chapter 23 |
+| **Correlate Access Code - Tag** | Essential frame tool | ✅ Used | Creates a tag when a known bit sequence is detected | Chapter 23 |
 | **Tagged Streams** | Essential | ⏳ Later | Full tagged-stream architecture later |
-| **Message Debug** | Important | ⏳ Later |
-| **Tagged Stream to PDU** | Advanced | ⏳ Later |
-| **PDU to Tagged Stream** | Advanced | ⏳ Later |
-| **Socket PDU** | Advanced | ⏳ Later |
+| **Message Debug** | Important | ⏳ Later | Message/PDU inspection |
+| **Tagged Stream to PDU** | Advanced | ⏳ Later | Converts tagged streams into PDUs |
+| **PDU to Tagged Stream** | Advanced | ⏳ Later | Converts PDUs into tagged streams |
+| **Socket PDU** | Advanced | ⏳ Later | Network/PDU interfacing |
 
-Chapter 20 used tags because the Correlation Estimator needed to communicate training-sequence location to downstream processing.
+## 20.1 Stream Tags in Chapter 23
 
-The complete tag/PDU architecture is deliberately postponed.
+Chapter 23 deliberately introduced only the minimum tag concept needed for frame synchronization.
+
+```text
+Recovered bit stream
+        |
+        v
+Known access code detected
+        |
+        v
+frame_start tag
+        |
+        v
+Downstream receiver gets a frame reference
+```
+
+The full GNU Radio tag architecture is still postponed.
+
+## 20.2 Tag Position
+
+With the direct repeated frame
+
+```text
+10110010 01100101
+^^^^^^^^ ^^^^^^^^
+access    payload
+code
+```
+
+the 8-bit access code was detected once every 16 bits, producing tags at:
+
+```text
+8, 24, 40, 56, 72, 88, 104, 120
+```
+
+The tag appeared immediately after the detected access code in this experiment.
+
+In the complete QPSK receiver, upstream filtering and synchronization changed the absolute offset, but the tag spacing remained 16 bits.
 
 ---
 
@@ -799,12 +729,6 @@ The complete tag/PDU architecture is deliberately postponed.
 | **External Python plotting scripts** | Important workflow | ✅ Used | Chapters 18 and 21 |
 | **Hierarchical Block** | Important | ⏳ Later | Later |
 | **PDUs** | Important | ⏳ Later | Later |
-
-An **Embedded Python Block** runs inside the GNU Radio flowgraph.
-
-An **external Python plotting script** reads saved data outside the flowgraph.
-
-These are not the same thing.
 
 ---
 
@@ -827,83 +751,62 @@ The conceptual chapters remain hardware-independent unless an experiment specifi
 
 # 23. Similar-Looking Operations Are Not the Same
 
-Several operations now used in the digital receiver can look superficially similar.
-
-```text
-Repeat
-    |
-    v
-Duplicate values in time
-```
-
-```text
-Interpolating FIR Filter
-    |
-    v
-Increase sample rate while constructing a filtered pulse shape
-```
+Several operations now used in the receiver can look superficially similar.
 
 ```text
 Keep 1 in N
     |
     v
-Select periodic samples
+Select periodic samples blindly
 ```
 
 ```text
-Decimating FIR Filter
+Symbol Sync
     |
     v
-Filter, with optional rate reduction
-```
-
-```text
-Multiply
-    |
-    v
-Multiply complex samples; phases add
-```
-
-```text
-Multiply Conjugate
-    |
-    v
-Compare complex phases; one phase is subtracted
-```
-
-```text
-Linear Equalizer
-    |
-    v
-Apply adaptive receiver filtering
-```
-
-```text
-Adaptive Algorithm (LMS)
-    |
-    v
-Decide how the equalizer coefficients change
+Estimate and track the correct sampling instant
 ```
 
 ```text
 Correlation Estimator
     |
     v
-Find a known training sequence
+Find a known complex training sequence
 ```
 
 ```text
-Costas Loop
+Correlate Access Code - Tag
     |
     v
-Track carrier phase/frequency with modulation-aware feedback
+Find a known binary access code and create a tag
 ```
 
 ```text
-FLL Band-Edge
+Threshold
     |
     v
-Track carrier frequency from pulse-shaped spectral-edge information
+Turn a continuous-valued measurement into a state
+```
+
+```text
+Correlate Access Code - Tag threshold
+    |
+    v
+Allow a selected number of bit mismatches
+```
+
+```text
+Binary Slicer
+    |
+    v
+Make a hard binary decision from a real-valued sample
+```
+
+```text
+Interleave
+    |
+    v
+Serialize multiple streams into one stream
 ```
 
 The correct habit remains:
@@ -916,43 +819,42 @@ Then:
 
 ---
 
-# 24. Important Conceptual Roles Through Chapter 21
+# 24. Important Conceptual Roles Through Chapter 23
 
 | Need | GNU Radio tool / method |
 |---|---|
 | Generate a known sinusoid or rotating phasor | Signal Source |
-| Generate controlled symbols | Vector Source |
+| Generate controlled symbols or frame bits | Vector Source |
 | Generate random digital data | Random Source |
-| Add controlled noise | Noise Source + Add |
+| Add controlled noise | Noise Source + Add / Channel Model |
 | Group bits into symbols | Repack Bits |
 | Map indices to amplitudes/I/Q | Chunks to Symbols |
 | Combine I and Q | Float to Complex |
+| Split recovered complex symbols into I/Q | Complex to Float |
 | Pulse-shape symbols | Interpolating FIR Filter + RRC taps |
 | Matched-filter at receiver | Decimating FIR Filter |
 | Simulate combined channel impairments | Channel Model |
 | Create manual multipath | Delay + scaling + Add |
-| Perform manual equalization | FIR taps in Decimating FIR Filter |
-| Adapt an equalizer | Linear Equalizer + LMS object |
-| Define valid QPSK decisions | Constellation Rect. Object |
+| Perform manual/adaptive equalization | FIR equalizer / Linear Equalizer + LMS |
 | Locate a known training sequence | Correlation Estimator |
-| Measure relative complex phase | Multiply Conjugate + Complex to Arg |
-| Remove QPSK data symmetry | Exponentiate Const Int with exponent 4 |
-| Regenerate/track a clean carrier | PLL Carrier Regeneration |
-| Recover QPSK carrier phase | Costas Loop |
-| Estimate CFO from phase increment | Delay + Multiply Conjugate + Complex to Arg |
-| Interpret CFO spectrally | Fourth power + Frequency Sink/DFT |
-| Recover carrier frequency automatically | FLL Band-Edge |
-| Record transient data | Head + File Sink |
+| Recover carrier phase | Costas Loop |
+| Recover carrier frequency | FLL Band-Edge |
+| Recover symbol timing | Symbol Sync with Gardner TED |
+| Make hard bit decisions | Binary Slicer |
+| Reconstruct serial I/Q bit order | Interleave |
+| Detect a known binary frame marker | Correlate Access Code - Tag |
+| Inspect frame tags | Tag Debug |
+| Convert correlation magnitude into detection state | Threshold |
+| Limit debug/capture length | Head |
 | Inspect time-domain behaviour | QT GUI Time Sink |
 | Inspect spectrum | QT GUI Frequency Sink |
 | Inspect constellation geometry | QT GUI Constellation Sink |
-| Display numerical estimates | QT GUI Number Sink |
 
 ---
 
 # 25. Blocks and Features Used So Far
 
-At the end of Chapter 21, the working GNU Radio toolbox includes:
+At the end of Chapter 23, the working GNU Radio toolbox includes:
 
 | Block / Feature | Status |
 |---|---|
@@ -983,6 +885,7 @@ At the end of Chapter 21, the working GNU Radio toolbox includes:
 | Complex to Mag | ✅ |
 | Complex to Mag² | ✅ |
 | Complex to Arg | ✅ |
+| Complex to Float | ✅ |
 | Char to Float | ✅ |
 | UChar to Float | ✅ |
 | Stream to Vector | ✅ |
@@ -990,6 +893,7 @@ At the end of Chapter 21, the working GNU Radio toolbox includes:
 | Repeat | ✅ |
 | Repack Bits | ✅ |
 | Chunks to Symbols | ✅ |
+| Interleave | ✅ |
 | FFT / DFT analysis | ✅ |
 | Moving Average | ✅ |
 | Low Pass Filter | ✅ |
@@ -1001,6 +905,7 @@ At the end of Chapter 21, the working GNU Radio toolbox includes:
 | DC Blocker | ✅ |
 | Low-pass Filter Taps | ✅ |
 | RRC Filter Taps | ✅ |
+| Threshold | ✅ |
 | Binary Slicer | ✅ |
 | Quadrature Demod | ✅ |
 | Channel Model | ✅ |
@@ -1008,10 +913,14 @@ At the end of Chapter 21, the working GNU Radio toolbox includes:
 | Adaptive Algorithm (LMS) | ✅ |
 | Constellation Rect. Object | ✅ |
 | Correlation Estimator | ✅ |
-| Stream Tags / correlation tags | ✅ conceptually |
 | PLL Carrier Regeneration | ✅ |
 | Costas Loop | ✅ |
 | FLL Band-Edge | ✅ |
+| Symbol Sync | ✅ |
+| Gardner TED | ✅ |
+| Stream Tags | ✅ |
+| Correlate Access Code - Tag | ✅ |
+| Tag Debug | ✅ |
 | Embedded Python Block | ✅ |
 | File Sink | ✅ |
 | QT GUI Time Sink | ✅ |
@@ -1025,7 +934,7 @@ At the end of Chapter 21, the working GNU Radio toolbox includes:
 
 ---
 
-# 26. Chapter-by-Chapter GNU Radio Growth Through Chapter 21
+# 26. Chapter-by-Chapter GNU Radio Growth Through Chapter 23
 
 This table records the practical progression of the completed manuscript.
 
@@ -1050,8 +959,10 @@ This table records the practical progression of the completed manuscript.
 | 17 | Manual BPSK/QPSK/16-QAM construction, Float to Complex, constellation geometry, scaling and rotation |
 | 18 | Rectangular-symbol spectrum, RRC pulse shaping, matched filtering, File Sink and eye-diagram capture |
 | 19 | Channel Model, attenuation, CFO, manual multipath, channel memory, sample-rate mismatch and `epsilon` |
-| 20 | Manual and adaptive equalization, Linear Equalizer, LMS, Constellation Rect. Object, training and Correlation Estimator |
+| 20 | Manual/adaptive equalization, Linear Equalizer, LMS, Constellation Rect. Object, training and Correlation Estimator |
 | 21 | Multiply Conjugate, M-th power processing, PLL carrier regeneration, Costas Loop, CFO estimation and FLL Band-Edge |
+| 22 | Timing-error intuition, Gardner TED, interpolation, Symbol Sync, timing acquisition/tracking and clock-rate mismatch |
+| 23 | Manual preamble correlation, Threshold, access-code detection, Stream Tags, Tag Debug, Interleave and QPSK frame detection |
 
 This table should always follow the **completed manuscript**, not an old chapter plan.
 
@@ -1059,43 +970,112 @@ This table should always follow the **completed manuscript**, not an old chapter
 
 # 27. What Comes Next?
 
-Chapter 21 ends with carrier phase and frequency synchronization understood separately.
+Chapter 23 ends with a receiver that can identify a repeated frame boundary using a known access code.
 
-The next unresolved receiver question is:
+The next unresolved question is:
 
-> **Even if the carrier is correct, how does the receiver know exactly when to sample each symbol?**
+> **How does the receiver know whether the bits inside the detected frame are correct, and can some errors be corrected?**
 
-Chapter 22 moves into **Clock and Symbol Timing Synchronization**.
+Chapter 24 moves into **Error Detection and Forward Error Correction**.
 
-The expected major GNU Radio addition is:
+Likely GNU Radio additions may include suitable FEC encoder/decoder blocks, but the exact FEC block chain should be validated against the supported GNU Radio version before being frozen into the book.
 
-- **Symbol Sync**
-
-The chapter should first make timing error visible before introducing automatic recovery.
-
-A likely progression is:
+The conceptual progression should be:
 
 ```text
-Correct carrier
+Recovered frame
       |
       v
-Wrong sampling instant
+Possible bit errors
       |
       v
-Early / late symbol samples
+Add structured redundancy
       |
       v
-Timing-error information
+Detect / correct errors
       |
       v
-Symbol Sync
-      |
-      v
-Recovered symbol timing
+More reliable communication
 ```
 
-`Clock Recovery MM` may be discussed later where it genuinely adds value rather than being introduced merely because the block exists.
+Do not teach the complete GNU Radio FEC API merely because it exists.
 
 The teaching rule remains:
 
 > **Introduce the operation because the communication problem requires it, not because a GNU Radio block happens to exist.**
+
+---
+
+# 28. Rule for Updating This Document
+
+Whenever a new GNU Radio block becomes part of the book:
+
+1. Introduce it naturally when the signal-processing problem requires it.
+2. Explain it in the chapter's **GNU Radio Toolbox** when a focused explanation is useful.
+3. Use it in a completed experiment.
+4. Add or update it in this Master List.
+5. Mark its status as **Used** only after that experiment works.
+6. Record where it first appeared or first became important.
+7. Reuse it later without repeatedly teaching it from the beginning.
+8. If the actual experiments differ from the original chapter plan, update this Master List to reflect the experiments that were really completed.
+
+---
+
+## Final Note
+
+This remains a **living document**.
+
+At the end of Chapter 23, the practical receiver toolbox now spans:
+
+```text
+Generate
+   |
+   v
+Measure
+   |
+   v
+Transform
+   |
+   v
+Mix
+   |
+   v
+Filter
+   |
+   v
+Modulate / demodulate
+   |
+   v
+Pulse-shape / matched-filter
+   |
+   v
+Model channel impairments
+   |
+   v
+Equalize
+   |
+   v
+Recover carrier
+   |
+   v
+Recover symbol timing
+   |
+   v
+Make bit decisions
+   |
+   v
+Detect frame boundaries
+   |
+   v
+Attach receiver metadata with tags
+```
+
+The purpose of this list is not to memorize GNU Radio's block library.
+
+The goal is to reach the point where the reader can look at a signal-processing requirement and ask:
+
+> **What operation needs to happen to this signal?**
+
+Only then:
+
+> **Which GNU Radio block or object should perform that operation?**
