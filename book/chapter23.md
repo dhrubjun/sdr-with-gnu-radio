@@ -957,23 +957,78 @@ For example:
 ```text
 Transmitted payload: 01100101
 Received payload:    01101101
-                         ^
-                         error
+                        ^
+                        error
 ```
 
-Frame synchronization asks:
+The receiver may have recovered the carrier correctly, found the symbol timing, detected the access code, and identified the frame boundary, yet noise can still cause individual symbol decisions to be wrong.
 
-> Where is the frame?
+This leads to an important distinction:
 
-Error detection asks:
+```text
+Frame synchronization
+        |
+        v
+Where does the frame begin?
 
-> Was the frame received correctly?
+Error detection
+        |
+        v
+Was the recovered frame corrupted?
 
-Error correction asks:
+Error correction
+        |
+        v
+Can some of the corrupted information be recovered?
+```
 
-> Can some errors be repaired?
+Practical communication systems therefore often perform additional processing after the frame has been recovered.
 
-These are different receiver functions.
+One common approach is to include an **error-detection field**, such as a cyclic redundancy check (CRC), in the transmitted frame:
+
+```text
++----------+----------+------------------+------+
+| Preamble |  Header  |     Payload      | CRC  |
++----------+----------+------------------+------+
+```
+
+The CRC is calculated from the transmitted data and sent along with the frame. After reception, the receiver performs the corresponding check. If the received data has been corrupted, the check will usually fail, allowing the receiver to reject the damaged frame rather than silently accepting incorrect information.
+
+Error detection tells the receiver that something went wrong, but it does not necessarily repair the data.
+
+Some communication systems therefore also use **forward error correction (FEC)**. The transmitter deliberately adds structured redundancy to the information before transmission. If the channel corrupts some of the transmitted information, the receiver can use this additional structure to correct certain errors without requiring the entire frame to be transmitted again.
+
+Conceptually:
+
+```text
+Information bits
+       |
+       v
+Add structured redundancy
+       |
+       v
+Transmit through channel
+       |
+       v
+Some bits may be corrupted
+       |
+       v
+Use redundancy at receiver
+       |
+       v
+Attempt to recover information
+```
+
+The additional reliability is not free. Redundant bits consume transmission resources, and stronger error protection generally introduces additional overhead and processing.
+
+Error-control coding is a substantial subject in its own right. Practical systems use techniques ranging from CRCs and relatively simple error-correcting codes to convolutional, Reed-Solomon, LDPC, and Polar codes. Their detailed encoding and decoding algorithms belong to the broader subject of channel coding and are beyond the experimental scope of this book.
+
+For our receiver, the important conclusion is:
+
+> **Successful frame synchronization tells us where the data is, but it does not guarantee that the data is correct.**
+
+A complete practical communication system may therefore continue beyond frame detection with error detection, error correction, protocol processing, and finally delivery of the recovered payload.
+
 
 ---
 
@@ -1102,26 +1157,63 @@ The receiver now knows more than how to recover a waveform or symbol. It has beg
 
 ## 23.17 Connecting to the Next Chapter
 
-Our receiver can now detect a known access code and identify repeated frame boundaries.
+We have now developed a progressively more complete single-carrier digital communication system.
 
-But noise can still corrupt payload bits.
+Starting from QPSK modulation and pulse shaping, we introduced channel impairments, equalization, carrier synchronization, timing synchronization, and finally frame synchronization. The receiver can now recover symbols, reconstruct bits, and identify where meaningful frames begin.
 
-Suppose the transmitter sends:
+But one important problem remains especially interesting.
+
+What happens when the channel contains significant multipath?
+
+We saw earlier that delayed copies of a transmitted signal can overlap with one another and produce inter-symbol interference. Equalization can help compensate for this distortion, but as symbol rates increase and channels become more frequency selective, the receiver problem can become increasingly difficult.
+
+This motivates a different approach.
+
+Instead of transmitting one high-rate stream using a single carrier, what if we divide the information among many slower parallel streams and transmit them simultaneously on different subcarriers?
+
+Conceptually:
 
 ```text
-01100101
+One fast data stream
+        |
+        v
+Difficult frequency-selective channel
+        |
+        v
+Potentially complicated equalization
 ```
 
-and the receiver decides:
+versus:
 
 ```text
-01101101
+Data
+ |
+ v
+Divide into slower parallel streams
+ |
+ +----> Subcarrier 1
+ |
+ +----> Subcarrier 2
+ |
+ +----> Subcarrier 3
+ |
+ +----> ...
+ |
+ +----> Subcarrier N
 ```
 
-How does the receiver know that an error occurred?
+At first, this seems to create another problem. If many subcarriers are placed close together, would they not interfere with one another?
 
-And if it knows an error occurred, can it do anything about it?
+Surprisingly, they can be arranged so that their spectra overlap while the transmitted information can still be separated at the receiver.
 
-These questions lead naturally to **error detection and forward error correction**.
+The key idea is **orthogonality**.
 
-In the next chapter, we will investigate why communication systems deliberately transmit redundant bits, how those bits can reveal transmission errors, and how carefully designed coding can sometimes allow the receiver to correct errors without retransmitting the data.
+This leads us to **Orthogonal Frequency Division Multiplexing**, or **OFDM**, one of the most important multicarrier techniques used in modern digital communication systems.
+
+In the next chapter, we will not begin with the IFFT or a complete OFDM transmitter. We will first ask the more fundamental question:
+
+> **Why would we want to transmit data on many slower subcarriers instead of one fast carrier?**
+
+We will build several subcarriers in GNU Radio, examine them individually and together, study their spectra, and develop an intuitive understanding of what **orthogonal subcarriers** actually mean.
+
+Only after that intuition is clear will we use the IFFT to construct an OFDM waveform efficiently.
