@@ -1,4 +1,4 @@
-# Chapter 24: Why OFDM?
+# Chapter 25: Why OFDM?
 
 In the previous chapters, we progressively built a practical digital receiver. We learned how a wireless channel can distort a signal, how equalization can reduce intersymbol interference, how carrier synchronization corrects frequency and phase errors, how timing synchronization determines the correct symbol-sampling instants, and how frame synchronization identifies where a packet begins.
 
@@ -22,7 +22,7 @@ By the end of the chapter, the motivation for OFDM should feel natural rather th
 
 ---
 
-## 24.1 The Problem with One Very Fast Carrier
+## 25.1 The Problem with One Very Fast Carrier
 
 Suppose a communication system uses a single QPSK carrier.
 
@@ -44,13 +44,13 @@ Consider a fixed echo delay. At a low symbol rate, that delay may occupy only a 
 
 Conceptually,
 
-![A fixed multipath delay occupies a larger fraction of the symbol interval as the symbol rate increases.](../figures/ch24/ch24_symbol_rate_fixed_echo_delay_concept.png)
+![A fixed multipath delay occupies a larger fraction of the symbol interval as the symbol rate increases.](../figures/ch25/ch25_symbol_rate_fixed_echo_delay_concept.png)
 
 This is the first motivation for multicarrier transmission.
 
 ---
 
-## Experiment 24.1: Symbol Rate and Multipath in Single-Carrier Transmission
+## Experiment 25.1: Symbol Rate and Multipath in Single-Carrier Transmission
 
 ### Goal
 
@@ -89,7 +89,7 @@ The important starting parameters are:
 | Echo delay | 8 samples |
 | Echo gain | 0.5 |
 
-![GNU Radio flowgraph for the single-carrier symbol-rate and multipath experiment.](../figures/ch24/ch24_exp01_symbol_rate_multipath_flowgraph.png)
+![GNU Radio flowgraph for the single-carrier symbol-rate and multipath experiment.](../figures/ch25/ch25_exp01_symbol_rate_multipath_flowgraph.png)
 
 The echo is deliberately kept fixed while the symbol rate is changed. This is important. We are not trying to make the channel worse between runs. We are asking how the **same channel delay** affects signals with different symbol durations.
 
@@ -99,7 +99,7 @@ At the lower symbol rate, the received constellation and eye diagram remain comp
 
 The eye begins to close and the constellation becomes increasingly distorted.
 
-![Comparison of the effect of a fixed multipath delay at different single-carrier symbol rates.](../figures/ch24/ch24_exp01_symbol_rate_multipath_comparison.png)
+![Comparison of the effect of a fixed multipath delay at different single-carrier symbol rates.](../figures/ch25/ch25_exp01_symbol_rate_multipath_comparison.png)
 
 The important point is not that a high symbol rate is inherently bad. The important point is the **relationship between the channel delay spread and the symbol duration**.
 
@@ -124,7 +124,7 @@ Instead of forcing one carrier to transmit one very fast stream, perhaps we can 
 
 ---
 
-## 24.2 From One Fast Stream to Several Slower Streams
+## 25.2 From One Fast Stream to Several Slower Streams
 
 Imagine that a high-rate stream is divided into four lower-rate streams.
 
@@ -158,7 +158,7 @@ This is the basic **multicarrier** idea.
 
 ---
 
-## Experiment 24.2: Building a Multicarrier Signal
+## Experiment 25.2: Building a Multicarrier Signal
 
 ### Goal
 
@@ -192,13 +192,13 @@ In our experiment, each branch operates at approximately 1 ksymbol/s, while the 
 
 This gives a spacing of about 4 kHz.
 
-![GNU Radio flowgraph used to construct the four-subcarrier multicarrier signal.](../figures/ch24/ch24_exp02_multicarrier_signal_flowgraph.png)
+![GNU Radio flowgraph used to construct the four-subcarrier multicarrier signal.](../figures/ch25/ch25_exp02_multicarrier_signal_flowgraph.png)
 
 ### Observing the combined spectrum
 
 The QT GUI Frequency Sink shows four distinct pulse-shaped spectral regions.
 
-![Spectrum of the manually constructed four-subcarrier multicarrier signal.](../figures/ch24/ch24_exp02_four_subcarrier_multicarrier_spectrum.png)
+![Spectrum of the manually constructed four-subcarrier multicarrier signal.](../figures/ch25/ch25_exp02_four_subcarrier_multicarrier_spectrum.png)
 
 This demonstrates the multicarrier principle clearly. Instead of transmitting everything through one fast QPSK stream, the information can be distributed among several slower streams occupying different frequency regions.
 
@@ -220,7 +220,7 @@ The answer is **orthogonality**.
 
 ---
 
-## 24.3 What Does Orthogonal Mean?
+## 25.3 What Does Orthogonal Mean?
 
 The word *orthogonal* can sound more complicated than the underlying idea.
 
@@ -254,7 +254,7 @@ That is why a correlation value of zero, rather than one, is the result we seek 
 
 ---
 
-## Experiment 24.3: Demonstrating Subcarrier Orthogonality
+## Experiment 25.3: Demonstrating Subcarrier Orthogonality
 
 ### Goal
 
@@ -304,7 +304,7 @@ Scale: 0.03125
 
 The **Complex to Mag** block converts the resulting complex correlation into a magnitude that can be displayed by a QT GUI Number Sink.
 
-![GNU Radio flowgraph for measuring the correlation between two subcarriers over the useful interval.](../figures/ch24/ch24_exp03_subcarrier_orthogonality_flowgraph.png)
+![GNU Radio flowgraph for measuring the correlation between two subcarriers over the useful interval.](../figures/ch25/ch25_exp03_subcarrier_orthogonality_flowgraph.png)
 
 ### Thinking of the carriers as rotating arrows
 
@@ -424,7 +424,7 @@ correlation = 0
 orthogonal
 ```
 
-![Comparison of non-orthogonal and orthogonal subcarrier spacings.](../figures/ch24/ch24_exp03_subcarrier_orthogonality_comparison.png)
+![Comparison of non-orthogonal and orthogonal subcarrier spacings.](../figures/ch25/ch25_exp03_subcarrier_orthogonality_comparison.png)
 
 The general orthogonality condition is
 
@@ -473,7 +473,7 @@ A zero result means that the two different carriers have zero cross-correlation 
 
 ---
 
-## 24.4 Why Is Orthogonality Useful?
+## 25.4 Why Is Orthogonality Useful?
 
 We have now shown that two different carriers can have zero cross-correlation.
 
@@ -495,11 +495,11 @@ for the cross-correlation between different orthogonal carriers.
 
 This means the receiver can distinguish the desired subcarrier even though another subcarrier is simultaneously present.
 
-Experiment 24.4 demonstrates this using actual QPSK data.
+Experiment 25.4 demonstrates this using actual QPSK data.
 
 ---
 
-## Experiment 24.4: Recovering Data from Orthogonal Subcarriers
+## Experiment 25.4: Recovering Data from Orthogonal Subcarriers
 
 ### Goal
 
@@ -593,7 +593,7 @@ Scale: 1.0/N
 
 and Keep 1 in N reduces the stream to one recovered complex value per 32-sample interval.
 
-![GNU Radio flowgraph for recovering one QPSK subcarrier from the two-subcarrier signal.](../figures/ch24/ch24_exp04_orthogonal_subcarrier_recovery_flowgraph.png)
+![GNU Radio flowgraph for recovering one QPSK subcarrier from the two-subcarrier signal.](../figures/ch25/ch25_exp04_orthogonal_subcarrier_recovery_flowgraph.png)
 
 ### Orthogonal case: $\Delta f=1$ kHz
 
@@ -647,7 +647,7 @@ The spacing is now
 
 $$\Delta f=750\text{ Hz}$$
 
-From Experiment 24.3, we already know that the cross-correlation over $T_u$ is no longer zero. Its magnitude was approximately 0.300377.
+From Experiment 25.3, we already know that the cross-correlation over $T_u$ is no longer zero. Its magnitude was approximately 0.300377.
 
 Therefore, the receiver no longer obtains only $A_1$.
 
@@ -669,7 +669,7 @@ Because $A_2$ is itself changing among QPSK values, the interference shifts the 
 
 That is exactly what the experiment shows.
 
-![Comparison of recovered Subcarrier 1 for orthogonal and non-orthogonal subcarrier spacing.](../figures/ch24/ch24_exp04_orthogonal_vs_nonorthogonal_recovery.png)
+![Comparison of recovered Subcarrier 1 for orthogonal and non-orthogonal subcarrier spacing.](../figures/ch25/ch25_exp04_orthogonal_vs_nonorthogonal_recovery.png)
 
 The orthogonal case produces four clean constellation points.
 
@@ -683,7 +683,7 @@ A non-orthogonal carrier is not necessarily impossible to decode under every pos
 
 ---
 
-## 24.5 The Advantage of Orthogonality
+## 25.5 The Advantage of Orthogonality
 
 We can now answer one of the most important questions in the chapter:
 
@@ -693,7 +693,7 @@ The answer is that **orthogonality allows the subcarriers to be packed closely i
 
 Without this property, a simple multicarrier system might need substantial spacing or guard bands between neighboring carriers. Although this makes the subcarriers easier to separate, the unused frequency regions between them reduce spectral efficiency.
 
-![Widely separated subcarriers leave unused spectrum between neighboring channels.](../figures/ch24/ch24_widely_separated_multicarrier_concept.png)
+![Widely separated subcarriers leave unused spectrum between neighboring channels.](../figures/ch25/ch25_widely_separated_multicarrier_concept.png)
 
 OFDM takes a more efficient approach.
 
@@ -714,11 +714,11 @@ That combination is the central reason OFDM is so useful.
 
 ---
 
-## 24.6 Why OFDM Helps with Multipath
+## 25.6 Why OFDM Helps with Multipath
 
 We should now connect the orthogonality discussion back to the problem that started the chapter.
 
-Experiment 24.1 showed that increasing the symbol rate on a single carrier shortens the symbol duration.
+Experiment 25.1 showed that increasing the symbol rate on a single carrier shortens the symbol duration.
 
 A fixed multipath delay then occupies a larger fraction of each symbol.
 
@@ -785,7 +785,7 @@ OFDM
 
 ---
 
-## 24.7 How Do We Decide the Orthogonal Frequencies?
+## 25.7 How Do We Decide the Orthogonal Frequencies?
 
 In a practical OFDM design, we do not choose subcarrier frequencies by visually inspecting the spectrum.
 
@@ -839,7 +839,7 @@ It is the bridge between the orthogonality we developed manually in this chapter
 
 ## Try It Yourself
 
-Return to Experiment 24.3 and keep
+Return to Experiment 25.3 and keep
 
 ```text
 f1 = 1 kHz
@@ -878,7 +878,7 @@ and understand what it means physically.
 
 ---
 
-## 24.8 From Manual Multicarrier to OFDM
+## 25.8 From Manual Multicarrier to OFDM
 
 Our experiments deliberately used individual Signal Source and Multiply blocks.
 
