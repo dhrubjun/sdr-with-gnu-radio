@@ -1157,63 +1157,65 @@ The receiver now knows more than how to recover a waveform or symbol. It has beg
 
 ## 23.17 Connecting to the Next Chapter
 
-We have now developed a progressively more complete single-carrier digital communication system.
+We have now developed the major building blocks required by a practical single-carrier digital receiver.
 
-Starting from QPSK modulation and pulse shaping, we introduced channel impairments, equalization, carrier synchronization, timing synchronization, and finally frame synchronization. The receiver can now recover symbols, reconstruct bits, and identify where meaningful frames begin.
+Starting from QPSK modulation and pulse shaping, we introduced channel impairments, equalization, carrier synchronization, timing synchronization, and finally frame synchronization. Each stage was developed separately so that we could understand the particular problem it solves.
 
-But one important problem remains especially interesting.
+We can now step back and look at the larger picture.
 
-What happens when the channel contains significant multipath?
+So far, we have deliberately isolated many of these receiver functions while studying them. In a practical receiver, however, they do not operate as independent experiments. They must work together as parts of a complete signal-processing chain.
 
-We saw earlier that delayed copies of a transmitted signal can overlap with one another and produce inter-symbol interference. Equalization can help compensate for this distortion, but as symbol rates increase and channels become more frequency selective, the receiver problem can become increasingly difficult.
-
-This motivates a different approach.
-
-Instead of transmitting one high-rate stream using a single carrier, what if we divide the information among many slower parallel streams and transmit them simultaneously on different subcarriers?
-
-Conceptually:
+Conceptually, the receiver we have been developing has gradually become something like:
 
 ```text
-One fast data stream
-        |
-        v
-Difficult frequency-selective channel
-        |
-        v
-Potentially complicated equalization
+Received IQ
+    |
+    v
+Channel Filtering
+    |
+    v
+AGC
+    |
+    v
+Matched Filter
+    |
+    v
+Carrier Recovery
+    |
+    v
+Timing Recovery
+    |
+    v
+Equalization
+    |
+    v
+Symbol Decisions
+    |
+    v
+Frame Detection
+    |
+    v
+Recovered Bits
 ```
 
-versus:
+The exact arrangement is not always as simple as this diagram suggests. Some receiver operations interact with one another, and the most appropriate ordering can depend on the particular communication system and synchronization strategy.
 
-```text
-Data
- |
- v
-Divide into slower parallel streams
- |
- +----> Subcarrier 1
- |
- +----> Subcarrier 2
- |
- +----> Subcarrier 3
- |
- +----> ...
- |
- +----> Subcarrier N
-```
+This raises an important question:
 
-At first, this seems to create another problem. If many subcarriers are placed close together, would they not interfere with one another?
+> **Can we now combine everything we have learned into one complete single-carrier digital receiver?**
 
-Surprisingly, they can be arranged so that their spectra overlap while the transmitted information can still be separated at the receiver.
+That is the goal of the next chapter.
 
-The key idea is **orthogonality**.
+Rather than introducing another isolated receiver algorithm, we will bring the previous ideas together into a complete software transmitter, channel, and receiver in GNU Radio.
 
-This leads us to **Orthogonal Frequency Division Multiplexing**, or **OFDM**, one of the most important multicarrier techniques used in modern digital communication systems.
+We will begin under controlled conditions and verify that the complete receiver can recover the transmitted information correctly. We will then introduce impairments and examine how the different receiver stages work together.
 
-In the next chapter, we will not begin with the IFFT or a complete OFDM transmitter. We will first ask the more fundamental question:
+More importantly, we will deliberately **break the receiver**.
 
-> **Why would we want to transmit data on many slower subcarriers instead of one fast carrier?**
+By disabling or disturbing individual stages, we will observe what happens when carrier recovery is missing, timing recovery fails, equalization is removed, or frame synchronization is unavailable. This will allow us to connect the visual symptoms at the receiver with the particular signal-processing problem responsible for them.
 
-We will build several subcarriers in GNU Radio, examine them individually and together, study their spectra, and develop an intuitive understanding of what **orthogonal subcarriers** actually mean.
+The objective is not simply to construct a large GNU Radio flowgraph.
 
-Only after that intuition is clear will we use the IFFT to construct an OFDM waveform efficiently.
+The objective is to understand **why every major receiver stage exists and what happens when it does not perform its job**.
+
+Once the complete single-carrier receiver is understood as a system rather than as a collection of separate blocks, we will be ready to move beyond it and ask whether there are fundamentally different ways to transmit information through difficult channels.
