@@ -5,13 +5,12 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: Adaptive LMS Equalization
+# Title: Multipath after equalization
 # Author: Dhrubjun
 # GNU Radio version: 3.10.12.0
 
 from PyQt5 import Qt
 from gnuradio import qtgui
-from PyQt5 import QtCore
 from gnuradio import blocks
 import numpy
 from gnuradio import digital
@@ -25,17 +24,18 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+import math
 import sip
 import threading
 
 
 
-class exp2(gr.top_block, Qt.QWidget):
+class exp3b(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Adaptive LMS Equalization", catch_exceptions=True)
+        gr.top_block.__init__(self, "Multipath after equalization", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Adaptive LMS Equalization")
+        self.setWindowTitle("Multipath after equalization")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -53,7 +53,7 @@ class exp2(gr.top_block, Qt.QWidget):
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
 
-        self.settings = Qt.QSettings("gnuradio/flowgraphs", "exp2")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "exp3b")
 
         try:
             geometry = self.settings.value("geometry")
@@ -66,32 +66,77 @@ class exp2(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.symbol_rate = symbol_rate = 1000
+        self.symbol_rate = symbol_rate = 4000
         self.samp_rate = samp_rate = 32000
         self.sps = sps = int(samp_rate / symbol_rate)
         self.span = span = 8
-        self.qpsk = qpsk = digital.constellation_rect([0.707+0.707j, -0.707+0.707j, -0.707-0.707j, 0.707-0.707j], [0, 1, 2, 3],
+        self.qpsk = qpsk = digital.constellation_rect([1+1j, -1+1j, -1-1j, 1-1j], [0, 1, 2, 3],
         4, 2, 2, 1, 1).base()
         self.ntaps = ntaps = span * sps + 1
+        self.loop_bw = loop_bw = math.pi/100
         self.lms = lms = digital.adaptive_algorithm_lms( qpsk, 0.005).base()
         self.echo_gain = echo_gain = 0.5
-        self.echo_delay = echo_delay = 32
+        self.echo_delay = echo_delay = 8
         self.alpha = alpha = 0.35
 
         ##################################################
         # Blocks
         ##################################################
 
-        self._echo_gain_range = qtgui.Range(0, 1, 0.05, 0.5, 200)
-        self._echo_gain_win = qtgui.RangeWidget(self._echo_gain_range, self.set_echo_gain, "Echo Gain", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._echo_gain_win)
-        self._echo_delay_range = qtgui.Range(0, 32, 1, 32, 200)
-        self._echo_delay_win = qtgui.RangeWidget(self._echo_delay_range, self.set_echo_delay, "Echo Delay (samples)", "counter_slider", float, QtCore.Qt.Horizontal)
-        self.top_layout.addWidget(self._echo_delay_win)
+        self.qtgui_eye_sink_x_0 = qtgui.eye_sink_c(
+            1024, #size
+            samp_rate, #samp_rate
+            1, #number of inputs
+            None
+        )
+        self.qtgui_eye_sink_x_0.set_update_time(0.10)
+        self.qtgui_eye_sink_x_0.set_samp_per_symbol(sps)
+        self.qtgui_eye_sink_x_0.set_y_axis(-1, 1)
+
+        self.qtgui_eye_sink_x_0.set_y_label('Amplitude', "")
+
+        self.qtgui_eye_sink_x_0.enable_tags(True)
+        self.qtgui_eye_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_eye_sink_x_0.enable_autoscale(False)
+        self.qtgui_eye_sink_x_0.enable_grid(False)
+        self.qtgui_eye_sink_x_0.enable_axis_labels(True)
+        self.qtgui_eye_sink_x_0.enable_control_panel(False)
+
+
+        labels = ['I-Channel Eye Diagram', 'Q-Channel Eye Diagram', 'Signal 3', 'Signal 4', 'Signal 5',
+            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'blue', 'blue', 'blue', 'blue',
+            'blue', 'blue', 'blue', 'blue', 'blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                if (i % 2 == 0):
+                    self.qtgui_eye_sink_x_0.set_line_label(i, "Eye [Re{{Data {0}}}]".format(round(i/2)))
+                else:
+                    self.qtgui_eye_sink_x_0.set_line_label(i, "Eye [Im{{Data {0}}}]".format(round((i-1)/2)))
+            else:
+                self.qtgui_eye_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_eye_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_eye_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_eye_sink_x_0.set_line_style(i, styles[i])
+            self.qtgui_eye_sink_x_0.set_line_marker(i, markers[i])
+            self.qtgui_eye_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_eye_sink_x_0_win = sip.wrapinstance(self.qtgui_eye_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_eye_sink_x_0_win)
         self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
             1024, #size
-            'Adaptive LMS Equalization', #name
-            2, #number of inputs
+            'Recovered QPSK Constellation', #name
+            1, #number of inputs
             None # parent
         )
         self.qtgui_const_sink_x_0.set_update_time(0.10)
@@ -103,7 +148,7 @@ class exp2(gr.top_block, Qt.QWidget):
         self.qtgui_const_sink_x_0.enable_axis_labels(True)
 
 
-        labels = ['Before Equalization', 'After LMS Equalization', '', '', '',
+        labels = ['Received Symbols', '', '', '', '',
             '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
@@ -116,7 +161,7 @@ class exp2(gr.top_block, Qt.QWidget):
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0]
 
-        for i in range(2):
+        for i in range(1):
             if len(labels[i]) == 0:
                 self.qtgui_const_sink_x_0.set_line_label(i, "Data {0}".format(i))
             else:
@@ -133,12 +178,24 @@ class exp2(gr.top_block, Qt.QWidget):
         self.interp_fir_filter_xxx_0.declare_sample_delay(0)
         self.fir_filter_xxx_0 = filter.fir_filter_ccf(1, firdes.root_raised_cosine(1, samp_rate, symbol_rate, alpha, ntaps))
         self.fir_filter_xxx_0.declare_sample_delay(0)
+        self.digital_symbol_sync_xx_0 = digital.symbol_sync_cc(
+            digital.TED_GARDNER,
+            sps,
+            0.045,
+            1.0,
+            1.0,
+            1.5,
+            1,
+            digital.constellation_bpsk().base(),
+            digital.IR_MMSE_8TAP,
+            128,
+            [])
         self.digital_linear_equalizer_0 = digital.linear_equalizer(5, 1, lms, True, [ ], 'corr_est')
-        self.digital_chunks_to_symbols_xx_0_0 = digital.chunks_to_symbols_bf([-0.70710678, 0.70710678], 1)
-        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bf([-0.70710678, 0.70710678], 1)
+        self.digital_costas_loop_cc_0 = digital.costas_loop_cc(loop_bw, 4, False)
+        self.digital_chunks_to_symbols_xx_0_0 = digital.chunks_to_symbols_bf([-1,1], 1)
+        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bf([-1,1], 1)
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(echo_gain)
-        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_gr_complex*1, sps)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_delay_0 = blocks.delay(gr.sizeof_gr_complex*1, echo_delay)
         self.blocks_add_xx_0 = blocks.add_vcc(1)
@@ -154,20 +211,21 @@ class exp2(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_add_xx_0, 0), (self.fir_filter_xxx_0, 0))
         self.connect((self.blocks_delay_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.interp_fir_filter_xxx_0, 0))
-        self.connect((self.blocks_keep_one_in_n_0, 0), (self.digital_linear_equalizer_0, 0))
-        self.connect((self.blocks_keep_one_in_n_0, 0), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.blocks_throttle2_0, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.blocks_throttle2_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0_0, 0), (self.blocks_float_to_complex_0, 1))
-        self.connect((self.digital_linear_equalizer_0, 0), (self.qtgui_const_sink_x_0, 1))
-        self.connect((self.fir_filter_xxx_0, 0), (self.blocks_keep_one_in_n_0, 0))
+        self.connect((self.digital_costas_loop_cc_0, 0), (self.digital_linear_equalizer_0, 0))
+        self.connect((self.digital_linear_equalizer_0, 0), (self.qtgui_const_sink_x_0, 0))
+        self.connect((self.digital_symbol_sync_xx_0, 0), (self.digital_costas_loop_cc_0, 0))
+        self.connect((self.fir_filter_xxx_0, 0), (self.digital_symbol_sync_xx_0, 0))
+        self.connect((self.fir_filter_xxx_0, 0), (self.qtgui_eye_sink_x_0, 0))
         self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_throttle2_0, 0))
 
 
     def closeEvent(self, event):
-        self.settings = Qt.QSettings("gnuradio/flowgraphs", "exp2")
+        self.settings = Qt.QSettings("gnuradio/flowgraphs", "exp3b")
         self.settings.setValue("geometry", self.saveGeometry())
         self.stop()
         self.wait()
@@ -192,6 +250,7 @@ class exp2(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
         self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
         self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
+        self.qtgui_eye_sink_x_0.set_samp_rate(self.samp_rate)
 
     def get_sps(self):
         return self.sps
@@ -199,8 +258,9 @@ class exp2(gr.top_block, Qt.QWidget):
     def set_sps(self, sps):
         self.sps = sps
         self.set_ntaps(self.span * self.sps + 1)
-        self.blocks_keep_one_in_n_0.set_n(self.sps)
+        self.digital_symbol_sync_xx_0.set_sps(self.sps)
         self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
+        self.qtgui_eye_sink_x_0.set_samp_per_symbol(self.sps)
 
     def get_span(self):
         return self.span
@@ -222,6 +282,13 @@ class exp2(gr.top_block, Qt.QWidget):
         self.ntaps = ntaps
         self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
         self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
+
+    def get_loop_bw(self):
+        return self.loop_bw
+
+    def set_loop_bw(self, loop_bw):
+        self.loop_bw = loop_bw
+        self.digital_costas_loop_cc_0.set_loop_bandwidth(self.loop_bw)
 
     def get_lms(self):
         return self.lms
@@ -254,7 +321,7 @@ class exp2(gr.top_block, Qt.QWidget):
 
 
 
-def main(top_block_cls=exp2, options=None):
+def main(top_block_cls=exp3b, options=None):
 
     qapp = Qt.QApplication(sys.argv)
 

@@ -5,18 +5,18 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: Ideal End-to-End QPSK Link
+# Title: Symbol Rate and Multipath
 # Author: Dhrubjun
 # GNU Radio version: 3.10.12.0
 
 from PyQt5 import Qt
 from gnuradio import qtgui
+from gnuradio import analog
 from gnuradio import blocks
 import numpy
 from gnuradio import digital
-from gnuradio import filter
-from gnuradio.filter import firdes
 from gnuradio import gr
+from gnuradio.filter import firdes
 from gnuradio.fft import window
 import sys
 import signal
@@ -32,9 +32,9 @@ import threading
 class exp1(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Ideal End-to-End QPSK Link", catch_exceptions=True)
+        gr.top_block.__init__(self, "Symbol Rate and Multipath", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Ideal End-to-End QPSK Link")
+        self.setWindowTitle("Symbol Rate and Multipath")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -65,70 +65,19 @@ class exp1(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.symbol_rate = symbol_rate = 1000
         self.samp_rate = samp_rate = 32000
-        self.sps = sps = int(samp_rate / symbol_rate)
-        self.span = span = 8
-        self.ntaps = ntaps = span * sps + 1
-        self.alpha = alpha = 0.35
+        self.N = N = 32
+        self.f2 = f2 = 1750
+        self.f1 = f1 = 1000
+        self.Tu = Tu = N/samp_rate
 
         ##################################################
         # Blocks
         ##################################################
 
-        self.qtgui_eye_sink_x_0 = qtgui.eye_sink_c(
-            1024, #size
-            samp_rate, #samp_rate
-            1, #number of inputs
-            None
-        )
-        self.qtgui_eye_sink_x_0.set_update_time(0.10)
-        self.qtgui_eye_sink_x_0.set_samp_per_symbol(sps)
-        self.qtgui_eye_sink_x_0.set_y_axis(-1, 1)
-
-        self.qtgui_eye_sink_x_0.set_y_label('Amplitude', "")
-
-        self.qtgui_eye_sink_x_0.enable_tags(True)
-        self.qtgui_eye_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
-        self.qtgui_eye_sink_x_0.enable_autoscale(False)
-        self.qtgui_eye_sink_x_0.enable_grid(False)
-        self.qtgui_eye_sink_x_0.enable_axis_labels(True)
-        self.qtgui_eye_sink_x_0.enable_control_panel(False)
-
-
-        labels = ['I-Channel Eye Diagram', 'Q-Channel Eye Diagram', 'Signal 3', 'Signal 4', 'Signal 5',
-            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
-        widths = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        colors = ['blue', 'blue', 'blue', 'blue', 'blue',
-            'blue', 'blue', 'blue', 'blue', 'blue']
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0]
-        styles = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1]
-
-
-        for i in range(2):
-            if len(labels[i]) == 0:
-                if (i % 2 == 0):
-                    self.qtgui_eye_sink_x_0.set_line_label(i, "Eye [Re{{Data {0}}}]".format(round(i/2)))
-                else:
-                    self.qtgui_eye_sink_x_0.set_line_label(i, "Eye [Im{{Data {0}}}]".format(round((i-1)/2)))
-            else:
-                self.qtgui_eye_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_eye_sink_x_0.set_line_width(i, widths[i])
-            self.qtgui_eye_sink_x_0.set_line_color(i, colors[i])
-            self.qtgui_eye_sink_x_0.set_line_style(i, styles[i])
-            self.qtgui_eye_sink_x_0.set_line_marker(i, markers[i])
-            self.qtgui_eye_sink_x_0.set_line_alpha(i, alphas[i])
-
-        self._qtgui_eye_sink_x_0_win = sip.wrapinstance(self.qtgui_eye_sink_x_0.qwidget(), Qt.QWidget)
-        self.top_layout.addWidget(self._qtgui_eye_sink_x_0_win)
         self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
             1024, #size
-            'Ideal QPSK Constellation', #name
+            "", #name
             1, #number of inputs
             None # parent
         )
@@ -141,9 +90,9 @@ class exp1(gr.top_block, Qt.QWidget):
         self.qtgui_const_sink_x_0.enable_axis_labels(True)
 
 
-        labels = ['Received Symbols', '', '', '', '',
+        labels = ['', '', '', '', '',
             '', '', '', '', '']
-        widths = [1, 1, 1, 1, 1,
+        widths = [2, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
         colors = ["blue", "red", "green", "black", "cyan",
             "magenta", "yellow", "dark red", "dark green", "dark blue"]
@@ -167,15 +116,26 @@ class exp1(gr.top_block, Qt.QWidget):
 
         self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
-        self.interp_fir_filter_xxx_0 = filter.interp_fir_filter_ccf(sps, firdes.root_raised_cosine(sps, samp_rate, symbol_rate, alpha, ntaps))
-        self.interp_fir_filter_xxx_0.declare_sample_delay(0)
-        self.fir_filter_xxx_0 = filter.fir_filter_ccf(1, firdes.root_raised_cosine(1, samp_rate, symbol_rate, alpha, ntaps))
-        self.fir_filter_xxx_0.declare_sample_delay(0)
+        self.digital_chunks_to_symbols_xx_0_1 = digital.chunks_to_symbols_bf([-1,1], 1)
+        self.digital_chunks_to_symbols_xx_0_0_0 = digital.chunks_to_symbols_bf([-1,1], 1)
         self.digital_chunks_to_symbols_xx_0_0 = digital.chunks_to_symbols_bf([-1,1], 1)
         self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bf([-1,1], 1)
+        self.blocks_throttle2_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
-        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_gr_complex*1, sps)
+        self.blocks_repeat_0_0 = blocks.repeat(gr.sizeof_gr_complex*1, N)
+        self.blocks_repeat_0 = blocks.repeat(gr.sizeof_gr_complex*1, N)
+        self.blocks_multiply_xx_0_0 = blocks.multiply_vcc(1)
+        self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
+        self.blocks_multiply_conjugate_cc_0 = blocks.multiply_conjugate_cc(1)
+        self.blocks_moving_average_xx_0 = blocks.moving_average_cc(N, 1/N, 4000, 1)
+        self.blocks_keep_one_in_n_0 = blocks.keep_one_in_n(gr.sizeof_gr_complex*1, N)
+        self.blocks_float_to_complex_0_0 = blocks.float_to_complex(1)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
+        self.blocks_add_xx_0 = blocks.add_vcc(1)
+        self.analog_sig_source_x_0_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, f2, 1, 0, 0)
+        self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, f1, 1, 0, 0)
+        self.analog_random_source_x_0_1 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
+        self.analog_random_source_x_0_0_0 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
         self.analog_random_source_x_0_0 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
         self.analog_random_source_x_0 = blocks.vector_source_b(list(map(int, numpy.random.randint(0, 2, 1000))), True)
 
@@ -185,14 +145,27 @@ class exp1(gr.top_block, Qt.QWidget):
         ##################################################
         self.connect((self.analog_random_source_x_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))
         self.connect((self.analog_random_source_x_0_0, 0), (self.digital_chunks_to_symbols_xx_0_0, 0))
-        self.connect((self.blocks_float_to_complex_0, 0), (self.interp_fir_filter_xxx_0, 0))
+        self.connect((self.analog_random_source_x_0_0_0, 0), (self.digital_chunks_to_symbols_xx_0_0_0, 0))
+        self.connect((self.analog_random_source_x_0_1, 0), (self.digital_chunks_to_symbols_xx_0_1, 0))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_multiply_conjugate_cc_0, 0))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_multiply_xx_0, 0))
+        self.connect((self.analog_sig_source_x_0_0, 0), (self.blocks_multiply_xx_0_0, 0))
+        self.connect((self.blocks_add_xx_0, 0), (self.blocks_multiply_conjugate_cc_0, 1))
+        self.connect((self.blocks_float_to_complex_0, 0), (self.blocks_repeat_0, 0))
+        self.connect((self.blocks_float_to_complex_0_0, 0), (self.blocks_repeat_0_0, 0))
         self.connect((self.blocks_keep_one_in_n_0, 0), (self.qtgui_const_sink_x_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.fir_filter_xxx_0, 0))
+        self.connect((self.blocks_moving_average_xx_0, 0), (self.blocks_keep_one_in_n_0, 0))
+        self.connect((self.blocks_multiply_conjugate_cc_0, 0), (self.blocks_moving_average_xx_0, 0))
+        self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_add_xx_0, 0))
+        self.connect((self.blocks_multiply_xx_0_0, 0), (self.blocks_add_xx_0, 1))
+        self.connect((self.blocks_repeat_0, 0), (self.blocks_throttle2_0, 0))
+        self.connect((self.blocks_repeat_0_0, 0), (self.blocks_throttle2_0_0, 0))
+        self.connect((self.blocks_throttle2_0, 0), (self.blocks_multiply_xx_0, 1))
+        self.connect((self.blocks_throttle2_0_0, 0), (self.blocks_multiply_xx_0_0, 1))
         self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0_0, 0), (self.blocks_float_to_complex_0, 1))
-        self.connect((self.fir_filter_xxx_0, 0), (self.blocks_keep_one_in_n_0, 0))
-        self.connect((self.fir_filter_xxx_0, 0), (self.qtgui_eye_sink_x_0, 0))
-        self.connect((self.interp_fir_filter_xxx_0, 0), (self.blocks_throttle2_0, 0))
+        self.connect((self.digital_chunks_to_symbols_xx_0_0_0, 0), (self.blocks_float_to_complex_0_0, 1))
+        self.connect((self.digital_chunks_to_symbols_xx_0_1, 0), (self.blocks_float_to_complex_0_0, 0))
 
 
     def closeEvent(self, event):
@@ -203,58 +176,47 @@ class exp1(gr.top_block, Qt.QWidget):
 
         event.accept()
 
-    def get_symbol_rate(self):
-        return self.symbol_rate
-
-    def set_symbol_rate(self, symbol_rate):
-        self.symbol_rate = symbol_rate
-        self.set_sps(int(self.samp_rate / self.symbol_rate))
-        self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.set_sps(int(self.samp_rate / self.symbol_rate))
+        self.set_Tu(self.N/self.samp_rate)
+        self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
+        self.analog_sig_source_x_0_0.set_sampling_freq(self.samp_rate)
         self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
-        self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.qtgui_eye_sink_x_0.set_samp_rate(self.samp_rate)
+        self.blocks_throttle2_0_0.set_sample_rate(self.samp_rate)
 
-    def get_sps(self):
-        return self.sps
+    def get_N(self):
+        return self.N
 
-    def set_sps(self, sps):
-        self.sps = sps
-        self.set_ntaps(self.span * self.sps + 1)
-        self.blocks_keep_one_in_n_0.set_n(self.sps)
-        self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.qtgui_eye_sink_x_0.set_samp_per_symbol(self.sps)
+    def set_N(self, N):
+        self.N = N
+        self.set_Tu(self.N/self.samp_rate)
+        self.blocks_keep_one_in_n_0.set_n(self.N)
+        self.blocks_moving_average_xx_0.set_length_and_scale(self.N, 1/self.N)
+        self.blocks_repeat_0.set_interpolation(self.N)
+        self.blocks_repeat_0_0.set_interpolation(self.N)
 
-    def get_span(self):
-        return self.span
+    def get_f2(self):
+        return self.f2
 
-    def set_span(self, span):
-        self.span = span
-        self.set_ntaps(self.span * self.sps + 1)
+    def set_f2(self, f2):
+        self.f2 = f2
+        self.analog_sig_source_x_0_0.set_frequency(self.f2)
 
-    def get_ntaps(self):
-        return self.ntaps
+    def get_f1(self):
+        return self.f1
 
-    def set_ntaps(self, ntaps):
-        self.ntaps = ntaps
-        self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
+    def set_f1(self, f1):
+        self.f1 = f1
+        self.analog_sig_source_x_0.set_frequency(self.f1)
 
-    def get_alpha(self):
-        return self.alpha
+    def get_Tu(self):
+        return self.Tu
 
-    def set_alpha(self, alpha):
-        self.alpha = alpha
-        self.fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
-        self.interp_fir_filter_xxx_0.set_taps(firdes.root_raised_cosine(self.sps, self.samp_rate, self.symbol_rate, self.alpha, self.ntaps))
+    def set_Tu(self, Tu):
+        self.Tu = Tu
 
 
 

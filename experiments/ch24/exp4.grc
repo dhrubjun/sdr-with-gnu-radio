@@ -1,6 +1,6 @@
 options:
   parameters:
-    author: Dhrubjun
+    author: ''
     catch_exceptions: 'True'
     category: '[GRC Hier Blocks]'
     cmake_opt: ''
@@ -22,63 +22,71 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: Recovering Data from Orthogonal Subcarriers
+    title: Complete Single-Carrier Receiver
     window_size: (1000,1000)
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [288, 16.0]
+    coordinate: [264, 32.0]
     rotation: 0
     state: enabled
 
 blocks:
-- name: N
+- name: alpha
   id: variable
   parameters:
     comment: ''
-    value: '32'
+    value: '0.35'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [552, 16.0]
+    coordinate: [952, 40.0]
     rotation: 0
     state: enabled
-- name: Tu
+- name: loop_bw
   id: variable
   parameters:
     comment: ''
-    value: N/samp_rate
+    value: math.pi/100
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [624, 16.0]
+    coordinate: [1040, 40.0]
     rotation: 0
     state: enabled
-- name: f1
+- name: ntaps
   id: variable
   parameters:
     comment: ''
-    value: '1000'
+    value: span * sps + 1
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [936, 24.0]
+    coordinate: [872, 40.0]
     rotation: 0
     state: enabled
-- name: f2
-  id: variable
+- name: qpsk
+  id: variable_constellation_rect
   parameters:
     comment: ''
-    value: '1750'
+    const_points: '[1+1j, -1+1j, -1-1j, 1-1j]'
+    imag_sect: '2'
+    precision: '8'
+    real_sect: '2'
+    rot_sym: '4'
+    soft_dec_lut: None
+    sym_map: '[0, 1, 2, 3]'
+    w_imag_sect: '1'
+    w_real_sect: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1040, 24.0]
+    coordinate: [200, 416.0]
     rotation: 0
     state: enabled
 - name: samp_rate
@@ -90,309 +98,114 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [456, 16.0]
+    coordinate: [424, 40.0]
     rotation: 0
     state: enabled
-- name: analog_random_source_x_0
-  id: analog_random_source_x
+- name: samp_rate_0
+  id: variable
+  parameters:
+    comment: ''
+    value: '32000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [520, 40.0]
+    rotation: 0
+    state: enabled
+- name: span
+  id: variable
+  parameters:
+    comment: ''
+    value: '8'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [800, 40.0]
+    rotation: 0
+    state: enabled
+- name: sps
+  id: variable
+  parameters:
+    comment: ''
+    value: int(samp_rate / symbol_rate)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [616, 40.0]
+    rotation: 0
+    state: enabled
+- name: symbol_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '4000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 40.0]
+    rotation: 0
+    state: enabled
+- name: blocks_repack_bits_bb_0
+  id: blocks_repack_bits_bb
   parameters:
     affinity: ''
     alias: ''
+    align_output: 'False'
     comment: ''
-    max: '2'
+    endianness: gr.GR_LSB_FIRST
+    k: '1'
+    l: '2'
+    len_tag_key: '""'
     maxoutbuf: '0'
-    min: '0'
     minoutbuf: '0'
-    num_samps: '1000'
-    repeat: 'True'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [272, 184.0]
+    rotation: 0
+    state: enabled
+- name: blocks_repack_bits_bb_1
+  id: blocks_repack_bits_bb
+  parameters:
+    affinity: ''
+    alias: ''
+    align_output: 'False'
+    comment: ''
+    endianness: gr.GR_LSB_FIRST
+    k: '2'
+    l: '1'
+    len_tag_key: '""'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1248, 400.0]
+    rotation: 0
+    state: enabled
+- name: blocks_tag_debug_0
+  id: blocks_tag_debug
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Frame Detection Verification
+    display: 'False'
+    filter: frame_start
+    name: Frame Detection Verification
+    num_inputs: '1'
     type: byte
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 112.0]
-    rotation: 0
-    state: enabled
-- name: analog_random_source_x_0_0
-  id: analog_random_source_x
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    max: '2'
-    maxoutbuf: '0'
-    min: '0'
-    minoutbuf: '0'
-    num_samps: '1000'
-    repeat: 'True'
-    type: byte
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 248.0]
-    rotation: 0
-    state: enabled
-- name: analog_random_source_x_0_0_0
-  id: analog_random_source_x
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    max: '2'
-    maxoutbuf: '0'
-    min: '0'
-    minoutbuf: '0'
-    num_samps: '1000'
-    repeat: 'True'
-    type: byte
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 520.0]
-    rotation: 0
-    state: enabled
-- name: analog_random_source_x_0_1
-  id: analog_random_source_x
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    max: '2'
-    maxoutbuf: '0'
-    min: '0'
-    minoutbuf: '0'
-    num_samps: '1000'
-    repeat: 'True'
-    type: byte
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [96, 384.0]
-    rotation: 0
-    state: enabled
-- name: analog_sig_source_x_0
-  id: analog_sig_source_x
-  parameters:
-    affinity: ''
-    alias: ''
-    amp: '1'
-    comment: ''
-    freq: f1
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    offset: '0'
-    phase: '0'
-    samp_rate: samp_rate
-    showports: 'False'
-    type: complex
-    waveform: analog.GR_COS_WAVE
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [776, 88.0]
-    rotation: 0
-    state: enabled
-- name: analog_sig_source_x_0_0
-  id: analog_sig_source_x
-  parameters:
-    affinity: ''
-    alias: ''
-    amp: '1'
-    comment: ''
-    freq: f2
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    offset: '0'
-    phase: '0'
-    samp_rate: samp_rate
-    showports: 'False'
-    type: complex
-    waveform: analog.GR_COS_WAVE
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [768, 352.0]
-    rotation: 0
-    state: enabled
-- name: blocks_add_xx_0
-  id: blocks_add_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_inputs: '2'
-    type: complex
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1072, 328.0]
-    rotation: 0
-    state: enabled
-- name: blocks_float_to_complex_0
-  id: blocks_float_to_complex
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [480, 216.0]
-    rotation: 0
-    state: enabled
-- name: blocks_float_to_complex_0_0
-  id: blocks_float_to_complex
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [488, 488.0]
-    rotation: 0
-    state: enabled
-- name: blocks_keep_one_in_n_0
-  id: blocks_keep_one_in_n
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    n: N
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1272, 440.0]
-    rotation: 0
-    state: enabled
-- name: blocks_moving_average_xx_0
-  id: blocks_moving_average_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    length: N
-    max_iter: '4000'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    scale: 1/N
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1248, 312.0]
-    rotation: 0
-    state: enabled
-- name: blocks_multiply_conjugate_cc_0
-  id: blocks_multiply_conjugate_cc
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1120, 216.0]
-    rotation: 0
-    state: enabled
-- name: blocks_multiply_xx_0
-  id: blocks_multiply_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_inputs: '2'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [968, 208.0]
-    rotation: 0
-    state: enabled
-- name: blocks_multiply_xx_0_0
-  id: blocks_multiply_xx
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_inputs: '2'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [960, 472.0]
-    rotation: 0
-    state: enabled
-- name: blocks_repeat_0
-  id: blocks_repeat
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    interp: N
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [616, 152.0]
-    rotation: 0
-    state: enabled
-- name: blocks_repeat_0_0
-  id: blocks_repeat
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    interp: N
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [616, 424.0]
+    coordinate: [1240, 616.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle2_0
@@ -413,28 +226,48 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [736, 224.0]
+    coordinate: [752, 264.0]
     rotation: 0
     state: enabled
-- name: blocks_throttle2_0_0
-  id: blocks_throttle2
+- name: blocks_vector_source_x_0
+  id: blocks_vector_source_x
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    ignoretag: 'True'
-    limit: auto
-    maximum: '0.1'
     maxoutbuf: '0'
     minoutbuf: '0'
-    samples_per_second: samp_rate
-    type: complex
+    repeat: 'True'
+    tags: '[]'
+    type: byte
+    vector: '[1,1,0,1,0,0,1,1,1,0,0,1,0,1,1,0,0,1,0,1,0,0,1,1,0,1,0,0,0,1,0,0,0,1,0,1,0,0,1,0]'
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [728, 488.0]
+    coordinate: [80, 176.0]
+    rotation: 0
+    state: enabled
+- name: channels_channel_model_0
+  id: channels_channel_model
+  parameters:
+    affinity: ''
+    alias: ''
+    block_tags: 'False'
+    comment: CFO and Sample-Rate Mismatch
+    epsilon: '1'
+    freq_offset: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    noise_voltage: '0'
+    seed: '0'
+    taps: '[1.0 + 0.0j]'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [528, 352.0]
     rotation: 0
     state: enabled
 - name: digital_chunks_to_symbols_xx_0
@@ -448,73 +281,231 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     num_ports: '1'
-    out_type: float
-    symbol_table: '[-1,1]'
+    out_type: complex
+    symbol_table: '[1+1j, -1+1j, -1-1j, 1-1j]'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [336, 144.0]
+    coordinate: [552, 208.0]
     rotation: 0
     state: enabled
-- name: digital_chunks_to_symbols_xx_0_0
-  id: digital_chunks_to_symbols_xx
+- name: digital_constellation_decoder_cb_0
+  id: digital_constellation_decoder_cb
   parameters:
     affinity: ''
     alias: ''
-    comment: ''
-    dimension: '1'
-    in_type: byte
+    comment: QPSK Symbol Decisions
+    constellation: qpsk
     maxoutbuf: '0'
     minoutbuf: '0'
-    num_ports: '1'
-    out_type: float
-    symbol_table: '[-1,1]'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [336, 280.0]
+    coordinate: [1232, 224.0]
     rotation: 0
     state: enabled
-- name: digital_chunks_to_symbols_xx_0_0_0
-  id: digital_chunks_to_symbols_xx
+- name: digital_correlate_access_code_tag_xx_0
+  id: digital_correlate_access_code_tag_xx
+  parameters:
+    access_code: '1101001110010110'
+    affinity: ''
+    alias: ''
+    comment: Frame Detection
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    tagname: frame_start
+    threshold: '0'
+    type: byte
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1232, 488.0]
+    rotation: 0
+    state: enabled
+- name: digital_costas_loop_cc_0
+  id: digital_costas_loop_cc
   parameters:
     affinity: ''
     alias: ''
-    comment: ''
-    dimension: '1'
-    in_type: byte
+    comment: Carrier Recovery
     maxoutbuf: '0'
     minoutbuf: '0'
-    num_ports: '1'
-    out_type: float
-    symbol_table: '[-1,1]'
+    order: '4'
+    use_snr: 'False'
+    w: loop_bw
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [336, 552.0]
+    coordinate: [976, 208.0]
     rotation: 0
     state: enabled
-- name: digital_chunks_to_symbols_xx_0_1
-  id: digital_chunks_to_symbols_xx
+- name: digital_diff_decoder_bb_0
+  id: digital_diff_decoder_bb
   parameters:
     affinity: ''
     alias: ''
+    coding: digital.DIFF_DIFFERENTIAL
     comment: ''
-    dimension: '1'
-    in_type: byte
     maxoutbuf: '0'
     minoutbuf: '0'
-    num_ports: '1'
-    out_type: float
-    symbol_table: '[-1,1]'
+    modulus: '4'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [336, 416.0]
+    coordinate: [1248, 320.0]
+    rotation: 0
+    state: enabled
+- name: digital_diff_encoder_bb_0
+  id: digital_diff_encoder_bb
+  parameters:
+    affinity: ''
+    alias: ''
+    coding: digital.DIFF_DIFFERENTIAL
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    modulus: '4'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [360, 272.0]
+    rotation: 0
+    state: enabled
+- name: digital_symbol_sync_xx_0
+  id: digital_symbol_sync_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Timing Recovery
+    constellation: digital.constellation_bpsk().base()
+    damping: '1.0'
+    loop_bw: '0.045'
+    max_dev: '1.5'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nfilters: '128'
+    osps: '1'
+    pfb_mf_taps: '[]'
+    resamp_type: digital.IR_MMSE_8TAP
+    sps: sps
+    ted_gain: '1.0'
+    ted_type: digital.TED_GARDNER
+    type: cc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [952, 376.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "import numpy as np\nfrom gnuradio import gr\nimport pmt\n\n\nclass\
+      \ blk(gr.sync_block):\n    \"\"\"Recover 24-bit payload after frame_start tag.\"\
+      \"\"\n\n    def __init__(self):\n        gr.sync_block.__init__(\n         \
+      \   self,\n            name=\"Payload Decoder\",\n            in_sig=[np.uint8],\n\
+      \            out_sig=None\n        )\n\n        self.payload_length = 24\n \
+      \       self.collecting = False\n        self.bits = []\n\n        # Print only\
+      \ the first five recovered payloads.\n        self.print_count = 0\n       \
+      \ self.max_prints = 5\n\n    def work(self, input_items, output_items):\n  \
+      \      data = input_items[0]\n\n        # Find frame_start tags in the current\
+      \ input window.\n        tags = self.get_tags_in_window(\n            0,\n \
+      \           0,\n            len(data),\n            pmt.intern(\"frame_start\"\
+      )\n        )\n\n        # Convert absolute tag offsets to positions\n      \
+      \  # inside the current work() buffer.\n        tag_positions = {\n        \
+      \    int(tag.offset - self.nitems_read(0))\n            for tag in tags\n  \
+      \      }\n\n        for i, sample in enumerate(data):\n\n            # A frame_start\
+      \ tag marks the beginning\n            # of a new 24-bit payload.\n        \
+      \    if i in tag_positions:\n                self.collecting = True\n      \
+      \          self.bits = []\n\n            # Collect payload bits.\n         \
+      \   if self.collecting:\n                self.bits.append(int(sample) & 1)\n\
+      \n                # Once 24 payload bits have been collected,\n            \
+      \    # convert them into three ASCII characters.\n                if len(self.bits)\
+      \ == self.payload_length:\n                    payload_bits = self.bits[:]\n\
+      \n                    chars = []\n\n                    for k in range(0, 24,\
+      \ 8):\n                        byte_bits = payload_bits[k:k + 8]\n\n       \
+      \                 bit_string = ''.join(\n                            str(bit)\
+      \ for bit in byte_bits\n                        )\n\n                      \
+      \  value = int(bit_string, 2)\n                        chars.append(chr(value))\n\
+      \n                    message = ''.join(chars)\n\n                    # Print\
+      \ only the first five recovered payloads.\n                    if self.print_count\
+      \ < self.max_prints:\n                        print(\n                     \
+      \       \"Recovered payload bits:\",\n                            ''.join(str(b)\
+      \ for b in payload_bits)\n                        )\n                      \
+      \  print(\n                            \"Recovered payload:\",\n           \
+      \                 message\n                        )\n\n                   \
+      \     self.print_count += 1\n\n                    self.collecting = False\n\
+      \                    self.bits = []\n\n        return len(data)"
+    affinity: ''
+    alias: ''
+    comment: Payload Recovery
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Payload Decoder', 'blk', [], [('0', 'byte', 1)], [], 'Recover 24-bit
+      payload after frame_start tag.', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1032, 656.0]
+    rotation: 0
+    state: enabled
+- name: fir_filter_xxx_0
+  id: fir_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Matched Filtering
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_delay: '0'
+    taps: firdes.root_raised_cosine(1, samp_rate, symbol_rate, alpha, ntaps)
+    type: ccf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [728, 424.0]
+    rotation: 0
+    state: enabled
+- name: import_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import math
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1144, 40.0]
+    rotation: 0
+    state: enabled
+- name: interp_fir_filter_xxx_0
+  id: interp_fir_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Pulse Shaping
+    interp: sps
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_delay: '0'
+    taps: firdes.root_raised_cosine(sps, samp_rate, symbol_rate, alpha, ntaps)
+    type: ccf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [728, 136.0]
     rotation: 0
     state: enabled
 - name: qtgui_const_sink_x_0
@@ -544,10 +535,10 @@ blocks:
     color7: '"yellow"'
     color8: '"dark red"'
     color9: '"dark green"'
-    comment: ''
+    comment: After Timing and Carrier Recovery
     grid: 'True'
     gui_hint: ''
-    label1: Recovered QPSK Symbols
+    label1: Received Symbols
     label10: ''
     label2: ''
     label3: ''
@@ -568,7 +559,7 @@ blocks:
     marker7: '0'
     marker8: '0'
     marker9: '0'
-    name: "Recovered Subcarrier 1 (Orthogonal: \u0394f = 750 Hz)"
+    name: Recovered QPSK Constellation
     nconnections: '1'
     size: '1024'
     style1: '0'
@@ -588,7 +579,7 @@ blocks:
     tr_tag: '""'
     type: complex
     update_time: '0.10'
-    width1: '2'
+    width1: '1'
     width10: '1'
     width2: '1'
     width3: '1'
@@ -606,34 +597,124 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1232, 504.0]
+    coordinate: [1232, 104.0]
     rotation: 0
+    state: enabled
+- name: qtgui_eye_sink_x_0
+  id: qtgui_eye_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: blue
+    color2: blue
+    color3: blue
+    color4: blue
+    color5: blue
+    color6: blue
+    color7: blue
+    color8: blue
+    color9: blue
+    comment: Before Synchronization
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'True'
+    gui_hint: ''
+    label1: I-Channel Eye Diagram
+    label10: Signal 10
+    label2: Q-Channel Eye Diagram
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    nconnections: '1'
+    samp_per_symbol: sps
+    size: '1024'
+    srate: samp_rate
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [720, 544.0]
+    rotation: 180
     state: enabled
 
 connections:
-- [analog_random_source_x_0, '0', digital_chunks_to_symbols_xx_0, '0']
-- [analog_random_source_x_0_0, '0', digital_chunks_to_symbols_xx_0_0, '0']
-- [analog_random_source_x_0_0_0, '0', digital_chunks_to_symbols_xx_0_0_0, '0']
-- [analog_random_source_x_0_1, '0', digital_chunks_to_symbols_xx_0_1, '0']
-- [analog_sig_source_x_0, '0', blocks_multiply_conjugate_cc_0, '0']
-- [analog_sig_source_x_0, '0', blocks_multiply_xx_0, '0']
-- [analog_sig_source_x_0_0, '0', blocks_multiply_xx_0_0, '0']
-- [blocks_add_xx_0, '0', blocks_multiply_conjugate_cc_0, '1']
-- [blocks_float_to_complex_0, '0', blocks_repeat_0, '0']
-- [blocks_float_to_complex_0_0, '0', blocks_repeat_0_0, '0']
-- [blocks_keep_one_in_n_0, '0', qtgui_const_sink_x_0, '0']
-- [blocks_moving_average_xx_0, '0', blocks_keep_one_in_n_0, '0']
-- [blocks_multiply_conjugate_cc_0, '0', blocks_moving_average_xx_0, '0']
-- [blocks_multiply_xx_0, '0', blocks_add_xx_0, '0']
-- [blocks_multiply_xx_0_0, '0', blocks_add_xx_0, '1']
-- [blocks_repeat_0, '0', blocks_throttle2_0, '0']
-- [blocks_repeat_0_0, '0', blocks_throttle2_0_0, '0']
-- [blocks_throttle2_0, '0', blocks_multiply_xx_0, '1']
-- [blocks_throttle2_0_0, '0', blocks_multiply_xx_0_0, '1']
-- [digital_chunks_to_symbols_xx_0, '0', blocks_float_to_complex_0, '0']
-- [digital_chunks_to_symbols_xx_0_0, '0', blocks_float_to_complex_0, '1']
-- [digital_chunks_to_symbols_xx_0_0_0, '0', blocks_float_to_complex_0_0, '1']
-- [digital_chunks_to_symbols_xx_0_1, '0', blocks_float_to_complex_0_0, '0']
+- [blocks_repack_bits_bb_0, '0', digital_diff_encoder_bb_0, '0']
+- [blocks_repack_bits_bb_1, '0', digital_correlate_access_code_tag_xx_0, '0']
+- [blocks_throttle2_0, '0', channels_channel_model_0, '0']
+- [blocks_vector_source_x_0, '0', blocks_repack_bits_bb_0, '0']
+- [channels_channel_model_0, '0', fir_filter_xxx_0, '0']
+- [digital_chunks_to_symbols_xx_0, '0', interp_fir_filter_xxx_0, '0']
+- [digital_constellation_decoder_cb_0, '0', digital_diff_decoder_bb_0, '0']
+- [digital_correlate_access_code_tag_xx_0, '0', blocks_tag_debug_0, '0']
+- [digital_correlate_access_code_tag_xx_0, '0', epy_block_0, '0']
+- [digital_costas_loop_cc_0, '0', digital_constellation_decoder_cb_0, '0']
+- [digital_costas_loop_cc_0, '0', qtgui_const_sink_x_0, '0']
+- [digital_diff_decoder_bb_0, '0', blocks_repack_bits_bb_1, '0']
+- [digital_diff_encoder_bb_0, '0', digital_chunks_to_symbols_xx_0, '0']
+- [digital_symbol_sync_xx_0, '0', digital_costas_loop_cc_0, '0']
+- [fir_filter_xxx_0, '0', digital_symbol_sync_xx_0, '0']
+- [fir_filter_xxx_0, '0', qtgui_eye_sink_x_0, '0']
+- [interp_fir_filter_xxx_0, '0', blocks_throttle2_0, '0']
 
 metadata:
   file_format: 1
