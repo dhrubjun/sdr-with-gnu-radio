@@ -1,0 +1,62 @@
+project:
+  type: book
+
+book:
+  title: "SDR with GNU Radio"
+  chapters:
+    - index.md
+
+    - part: "Part I: Learning to Think in Signals"
+      chapters:
+        - book/01-what-is-software-defined-radio.md
+        - book/chapter02.md
+        - book/chapter03.md
+        - book/chapter04.md
+        - book/chapter05.md
+
+    - part: "Part II: Seeing What Is Inside a Signal"
+      chapters:
+        - book/chapter06.md
+        - book/chapter07.md
+
+    - part: "Part III: Moving and Shaping Signals"
+      chapters:
+        - book/chapter08.md
+        - book/chapter09.md
+        - book/chapter10.md
+        - book/chapter11.md
+
+    - part: "Part IV: Analog Communication"
+      chapters:
+        - book/chapter12.md
+        - book/chapter13.md
+        - book/chapter14.md
+
+    - part: "Part V: From Bits to Waveforms"
+      chapters:
+        - book/chapter15.md
+        - book/chapter16.md
+        - book/chapter17.md
+        - book/chapter18.md
+
+    - part: "Part VI: The Wireless Channel"
+      chapters:
+        - book/chapter19.md
+        - book/chapter20.md
+
+    - part: "Part VII: Teaching the Receiver Where to Look"
+      chapters:
+        - book/chapter21.md
+        - book/chapter22.md
+        - book/chapter23.md
+        - book/chapter24.md
+
+    - part: "Part VIII: OFDM and Multicarrier Communication"
+      chapters:
+        - book/chapter25.md
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: false
