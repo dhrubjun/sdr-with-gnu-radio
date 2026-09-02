@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 10: Impulse Response and Convolution – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter11.html" rel="next">
+<link href="../book/chapter09.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter10.html"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#a-system-input-goes-in-output-comes-out" id="toc-a-system-input-goes-in-output-comes-out" class="nav-link active" data-scroll-target="#a-system-input-goes-in-output-comes-out">10.1 A System: Input Goes In, Output Comes Out</a></li>
+  <li><a href="#what-is-an-impulse" id="toc-what-is-an-impulse" class="nav-link" data-scroll-target="#what-is-an-impulse">10.2 What Is an Impulse?</a></li>
+  <li><a href="#impulse-response" id="toc-impulse-response" class="nav-link" data-scroll-target="#impulse-response">10.3 Impulse Response</a></li>
+  <li><a href="#experiment-1-observing-the-impulse-response-of-an-fir-filter" id="toc-experiment-1-observing-the-impulse-response-of-an-fir-filter" class="nav-link" data-scroll-target="#experiment-1-observing-the-impulse-response-of-an-fir-filter">Experiment 1: Observing the Impulse Response of an FIR Filter</a></li>
+  <li><a href="#gnu-radio-flowgraph" id="toc-gnu-radio-flowgraph" class="nav-link" data-scroll-target="#gnu-radio-flowgraph">10.4 GNU Radio Flowgraph</a></li>
+  <li><a href="#gnu-radio-settings" id="toc-gnu-radio-settings" class="nav-link" data-scroll-target="#gnu-radio-settings">10.5 GNU Radio Settings</a>
+  <ul class="collapse">
+  <li><a href="#variable" id="toc-variable" class="nav-link" data-scroll-target="#variable">Variable</a></li>
+  <li><a href="#vector-source" id="toc-vector-source" class="nav-link" data-scroll-target="#vector-source">Vector Source</a></li>
+  <li><a href="#decimating-fir-filter" id="toc-decimating-fir-filter" class="nav-link" data-scroll-target="#decimating-fir-filter">Decimating FIR Filter</a></li>
+  <li><a href="#qt-gui-time-sink" id="toc-qt-gui-time-sink" class="nav-link" data-scroll-target="#qt-gui-time-sink">QT GUI Time Sink</a></li>
+  </ul></li>
+  <li><a href="#what-do-we-expect" id="toc-what-do-we-expect" class="nav-link" data-scroll-target="#what-do-we-expect">10.6 What Do We Expect?</a></li>
+  <li><a href="#experiment-2-response-to-a-delayed-impulse" id="toc-experiment-2-response-to-a-delayed-impulse" class="nav-link" data-scroll-target="#experiment-2-response-to-a-delayed-impulse">Experiment 2: Response to a Delayed Impulse</a></li>
+  <li><a href="#what-if-the-impulse-arrives-later" id="toc-what-if-the-impulse-arrives-later" class="nav-link" data-scroll-target="#what-if-the-impulse-arrives-later">10.7 What If the Impulse Arrives Later?</a></li>
+  <li><a href="#experiment-3-response-to-a-scaled-impulse" id="toc-experiment-3-response-to-a-scaled-impulse" class="nav-link" data-scroll-target="#experiment-3-response-to-a-scaled-impulse">Experiment 3: Response to a Scaled Impulse</a></li>
+  <li><a href="#what-if-the-impulse-is-larger" id="toc-what-if-the-impulse-is-larger" class="nav-link" data-scroll-target="#what-if-the-impulse-is-larger">10.8 What If the Impulse Is Larger?</a></li>
+  <li><a href="#two-things-we-have-learned-already" id="toc-two-things-we-have-learned-already" class="nav-link" data-scroll-target="#two-things-we-have-learned-already">10.9 Two Things We Have Learned Already</a></li>
+  <li><a href="#experiment-4-response-to-two-impulses" id="toc-experiment-4-response-to-two-impulses" class="nav-link" data-scroll-target="#experiment-4-response-to-two-impulses">Experiment 4: Response to Two Impulses</a></li>
+  <li><a href="#two-separate-impulses" id="toc-two-separate-impulses" class="nav-link" data-scroll-target="#two-separate-impulses">10.10 Two Separate Impulses</a></li>
+  <li><a href="#experiment-5-when-impulse-responses-overlap" id="toc-experiment-5-when-impulse-responses-overlap" class="nav-link" data-scroll-target="#experiment-5-when-impulse-responses-overlap">Experiment 5: When Impulse Responses Overlap</a></li>
+  <li><a href="#move-the-impulses-closer-together" id="toc-move-the-impulses-closer-together" class="nav-link" data-scroll-target="#move-the-impulses-closer-together">10.11 Move the Impulses Closer Together</a></li>
+  <li><a href="#from-impulses-to-an-ordinary-sequence" id="toc-from-impulses-to-an-ordinary-sequence" class="nav-link" data-scroll-target="#from-impulses-to-an-ordinary-sequence">10.12 From Impulses to an Ordinary Sequence</a></li>
+  <li><a href="#experiment-6-convolution-of-two-simple-sequences" id="toc-experiment-6-convolution-of-two-simple-sequences" class="nav-link" data-scroll-target="#experiment-6-convolution-of-two-simple-sequences">Experiment 6: Convolution of Two Simple Sequences</a></li>
+  <li><a href="#the-input-and-the-impulse-response" id="toc-the-input-and-the-impulse-response" class="nav-link" data-scroll-target="#the-input-and-the-impulse-response">10.13 The Input and the Impulse Response</a></li>
+  <li><a href="#start-with-the-first-input-sample" id="toc-start-with-the-first-input-sample" class="nav-link" data-scroll-target="#start-with-the-first-input-sample">10.14 Start With the First Input Sample</a></li>
+  <li><a href="#now-the-second-input-sample" id="toc-now-the-second-input-sample" class="nav-link" data-scroll-target="#now-the-second-input-sample">10.15 Now the Second Input Sample</a></li>
+  <li><a href="#now-the-third-input-sample" id="toc-now-the-third-input-sample" class="nav-link" data-scroll-target="#now-the-third-input-sample">10.16 Now the Third Input Sample</a></li>
+  <li><a href="#put-all-three-contributions-together" id="toc-put-all-three-contributions-together" class="nav-link" data-scroll-target="#put-all-three-contributions-together">10.17 Put All Three Contributions Together</a></li>
+  <li><a href="#what-we-have-just-done-has-a-name" id="toc-what-we-have-just-done-has-a-name" class="nav-link" data-scroll-target="#what-we-have-just-done-has-a-name">10.18 What We Have Just Done Has a Name</a></li>
+  <li><a href="#the-convolution-equation" id="toc-the-convolution-equation" class="nav-link" data-scroll-target="#the-convolution-equation">10.19 The Convolution Equation</a></li>
+  <li><a href="#what-does-n-mean" id="toc-what-does-n-mean" class="nav-link" data-scroll-target="#what-does-n-mean">10.20 What Does <span class="math inline">\(n\)</span> Mean?</a></li>
+  <li><a href="#what-does-k-mean" id="toc-what-does-k-mean" class="nav-link" data-scroll-target="#what-does-k-mean">10.21 What Does <span class="math inline">\(k\)</span> Mean?</a></li>
+  <li><a href="#using-the-equation-on-our-experiment" id="toc-using-the-equation-on-our-experiment" class="nav-link" data-scroll-target="#using-the-equation-on-our-experiment">10.22 Using the Equation on Our Experiment</a>
+  <ul class="collapse">
+  <li><a href="#calculating-y0" id="toc-calculating-y0" class="nav-link" data-scroll-target="#calculating-y0">Calculating <span class="math inline">\(y[0]\)</span></a></li>
+  <li><a href="#calculating-y1" id="toc-calculating-y1" class="nav-link" data-scroll-target="#calculating-y1">Calculating <span class="math inline">\(y[1]\)</span></a></li>
+  <li><a href="#calculating-y2" id="toc-calculating-y2" class="nav-link" data-scroll-target="#calculating-y2">Calculating <span class="math inline">\(y[2]\)</span></a></li>
+  <li><a href="#calculating-y3" id="toc-calculating-y3" class="nav-link" data-scroll-target="#calculating-y3">Calculating <span class="math inline">\(y[3]\)</span></a></li>
+  <li><a href="#calculating-y4" id="toc-calculating-y4" class="nav-link" data-scroll-target="#calculating-y4">Calculating <span class="math inline">\(y[4]\)</span></a></li>
+  </ul></li>
+  <li><a href="#why-does-hn-k-look-backwards" id="toc-why-does-hn-k-look-backwards" class="nav-link" data-scroll-target="#why-does-hn-k-look-backwards">10.23 Why Does <span class="math inline">\(h[n-k]\)</span> Look Backwards?</a></li>
+  <li><a href="#how-long-is-the-convolution-output" id="toc-how-long-is-the-convolution-output" class="nav-link" data-scroll-target="#how-long-is-the-convolution-output">10.24 How Long Is the Convolution Output?</a></li>
+  <li><a href="#fir-filtering-is-convolution" id="toc-fir-filtering-is-convolution" class="nav-link" data-scroll-target="#fir-filtering-is-convolution">10.25 FIR Filtering Is Convolution</a></li>
+  <li><a href="#experiment-7-change-the-impulse-response" id="toc-experiment-7-change-the-impulse-response" class="nav-link" data-scroll-target="#experiment-7-change-the-impulse-response">Experiment 7: Change the Impulse Response</a></li>
+  <li><a href="#change-the-taps-change-the-system" id="toc-change-the-taps-change-the-system" class="nav-link" data-scroll-target="#change-the-taps-change-the-system">10.26 Change the Taps, Change the System</a></li>
+  <li><a href="#experiment-8-effect-of-reversing-the-fir-taps" id="toc-experiment-8-effect-of-reversing-the-fir-taps" class="nav-link" data-scroll-target="#experiment-8-effect-of-reversing-the-fir-taps">Experiment 8: Effect of Reversing the FIR Taps</a></li>
+  <li><a href="#should-we-reverse-the-taps-ourselves" id="toc-should-we-reverse-the-taps-ourselves" class="nav-link" data-scroll-target="#should-we-reverse-the-taps-ourselves">10.27 Should We Reverse the Taps Ourselves?</a></li>
+  <li><a href="#reversing-the-taps-defines-a-different-system" id="toc-reversing-the-taps-defines-a-different-system" class="nav-link" data-scroll-target="#reversing-the-taps-defines-a-different-system">10.28 Reversing the Taps Defines a Different System</a></li>
+  <li><a href="#linearity-and-time-invariance-what-have-we-actually-observed" id="toc-linearity-and-time-invariance-what-have-we-actually-observed" class="nav-link" data-scroll-target="#linearity-and-time-invariance-what-have-we-actually-observed">10.29 Linearity and Time Invariance: What Have We Actually Observed?</a>
+  <ul class="collapse">
+  <li><a href="#time-invariance" id="toc-time-invariance" class="nav-link" data-scroll-target="#time-invariance">Time Invariance</a></li>
+  <li><a href="#linearity" id="toc-linearity" class="nav-link" data-scroll-target="#linearity">Linearity</a></li>
+  </ul></li>
+  <li><a href="#why-the-impulse-response-is-so-useful" id="toc-why-the-impulse-response-is-so-useful" class="nav-link" data-scroll-target="#why-the-impulse-response-is-so-useful">10.30 Why the Impulse Response Is So Useful</a></li>
+  <li><a href="#connecting-back-to-chapter-9" id="toc-connecting-back-to-chapter-9" class="nav-link" data-scroll-target="#connecting-back-to-chapter-9">10.31 Connecting Back to Chapter 9</a>
+  <ul class="collapse">
+  <li><a href="#time-domain-viewpoint" id="toc-time-domain-viewpoint" class="nav-link" data-scroll-target="#time-domain-viewpoint">Time-domain viewpoint</a></li>
+  <li><a href="#frequency-domain-viewpoint" id="toc-frequency-domain-viewpoint" class="nav-link" data-scroll-target="#frequency-domain-viewpoint">Frequency-domain viewpoint</a></li>
+  </ul></li>
+  <li><a href="#a-useful-mental-model-for-convolution" id="toc-a-useful-mental-model-for-convolution" class="nav-link" data-scroll-target="#a-useful-mental-model-for-convolution">10.32 A Useful Mental Model for Convolution</a></li>
+  <li><a href="#gnu-radio-toolbox-summary" id="toc-gnu-radio-toolbox-summary" class="nav-link" data-scroll-target="#gnu-radio-toolbox-summary">10.33 GNU Radio Toolbox Summary</a>
+  <ul class="collapse">
+  <li><a href="#vector-source-1" id="toc-vector-source-1" class="nav-link" data-scroll-target="#vector-source-1">Vector Source</a></li>
+  <li><a href="#decimating-fir-filter-1" id="toc-decimating-fir-filter-1" class="nav-link" data-scroll-target="#decimating-fir-filter-1">Decimating FIR Filter</a></li>
+  <li><a href="#qt-gui-time-sink-1" id="toc-qt-gui-time-sink-1" class="nav-link" data-scroll-target="#qt-gui-time-sink-1">QT GUI Time Sink</a></li>
+  <li><a href="#variable-1" id="toc-variable-1" class="nav-link" data-scroll-target="#variable-1">Variable</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">10.34 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">10.35 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter10.html"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, we used filters to keep some frequencies and suppress others.</p>
+<p>We saw low-pass, high-pass, band-pass and band-reject filters in action. We changed cutoff frequencies, transition widths and filter taps, and we watched the spectrum change.</p>
+<p>But there is still an important question hiding underneath all of that:</p>
+<blockquote class="blockquote">
+<p>****What is a filter actually doing to the individual samples of a signal?****</p>
+</blockquote>
+<p>To answer that, we are going to look at filters from a completely different direction.</p>
+<p>Instead of beginning with frequency response, we will begin with one of the simplest possible discrete-time signals:</p>
+<p>****a single impulse.****</p>
+<p>From there, we will gradually build our way toward convolution.</p>
+<p>We will not start with the convolution equation.</p>
+<p>First, we will make GNU Radio show us what convolution actually means.</p>
+<hr>
+<section id="a-system-input-goes-in-output-comes-out" class="level2">
+<h2 class="anchored" data-anchor-id="a-system-input-goes-in-output-comes-out">10.1 A System: Input Goes In, Output Comes Out</h2>
+<p>Before talking about impulses or convolution, let us use the word ****system**** in a very simple sense.</p>
+<p>A system takes an input and produces an output.</p>
+<pre class="text"><code>x[n] → System → y[n]</code></pre>
+<p>Here:</p>
+<ul>
+<li><p><span class="math inline">\(x[n]\)</span> is the input;</p></li>
+<li><p><span class="math inline">\(y[n]\)</span> is the output.</p></li>
+</ul>
+<p>A filter is one example of a system.</p>
+<p>If we pass a signal through an FIR filter,</p>
+<pre class="text"><code>x[n] → FIR Filter → y[n]</code></pre>
+<p>the filter changes the input according to its coefficients, or ****taps****.</p>
+<p>In Chapter 9, we mainly observed this change in the frequency domain.</p>
+<p>In this chapter, we are going to look at what happens sample by sample.</p>
+<hr>
+</section>
+<section id="what-is-an-impulse" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-an-impulse">10.2 What Is an Impulse?</h2>
+<p>A discrete-time impulse is one of the simplest signals we can create.</p>
+<p>It contains a value of <span class="math inline">\(1\)</span> at one sample and <span class="math inline">\(0\)</span> everywhere else:</p>
+<p>The discrete-time impulse is defined by</p>
+<p><span class="math display">\[
+\delta[n]=1 \quad \text{for } n=0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\delta[n]=0 \quad \text{for } n\neq0
+\]</span></p>
+<p>As a sequence, we can imagine it as</p>
+<p><span class="math display">\[
+[1,\\;0,\\;0,\\;0,\\;0,\ldots]
+\]</span></p>
+<p>At first this may not look particularly useful.</p>
+<p>Why should we care about a signal that is zero almost everywhere?</p>
+<p>Because an impulse gives us a remarkably useful way of testing a system.</p>
+<p>We send one impulse into the system and observe what comes out.</p>
+<p>That output tells us a great deal about the system itself.</p>
+<hr>
+</section>
+<section id="impulse-response" class="level2">
+<h2 class="anchored" data-anchor-id="impulse-response">10.3 Impulse Response</h2>
+<p>Suppose we apply an impulse to a system:</p>
+<p><span class="math display">\[
+\delta[n] \longrightarrow \boxed{\text{System}} \longrightarrow ?
+\]</span></p>
+<p>The output produced by the system is called its ****impulse response****.</p>
+<p>We normally write it as</p>
+<p><span class="math display">\[
+h[n]
+\]</span></p>
+<p>Therefore,</p>
+<pre class="text"><code>δ[n] → h[n]</code></pre>
+<p>This idea is especially useful for FIR filters.</p>
+<p>If an FIR filter has taps</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>then its impulse response is</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>Let us verify that directly in GNU Radio.</p>
+<hr>
+</section>
+<section id="experiment-1-observing-the-impulse-response-of-an-fir-filter" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-observing-the-impulse-response-of-an-fir-filter">Experiment 1: Observing the Impulse Response of an FIR Filter</h2>
+</section>
+<section id="gnu-radio-flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-flowgraph">10.4 GNU Radio Flowgraph</h2>
+<p>For our first experiment, we will create an impulse and pass it through a very small FIR filter.</p>
+<p>We deliberately use only three taps so that every output sample can be understood by inspection.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp1-impulse-response-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing the impulse response of an FIR filter</figcaption>
+</figure>
+</div>
+<p>The basic flow is:</p>
+<pre class="text"><code>Vector Source ───────────────→ QT GUI Time Sink
+
+      │
+
+      └→ Decimating FIR Filter ─→ QT GUI Time Sink</code></pre>
+<p>The direct path lets us see the input impulse.</p>
+<p>The filtered path lets us see the response of the FIR filter.</p>
+<hr>
+</section>
+<section id="gnu-radio-settings" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-settings">10.5 GNU Radio Settings</h2>
+<section id="variable" class="level3">
+<h3 class="anchored" data-anchor-id="variable">Variable</h3>
+<pre class="text"><code>ID: samp_rate
+
+Value: 1k</code></pre>
+</section>
+<section id="vector-source" class="level3">
+<h3 class="anchored" data-anchor-id="vector-source">Vector Source</h3>
+<p>Use a sequence containing one impulse followed by zeros:</p>
+<pre class="text"><code>Vector:
+
+(1, 0, 0, 0, 0, 0, 0, 0,
+
+ 0, 0, 0, 0, 0, 0, 0, 0)
+
+Tags: []
+
+Repeat: Yes
+
+Vector Length: 1</code></pre>
+<p>We use <code>Repeat = Yes</code> only so that the impulse appears repeatedly in the continuously running GNU Radio display.</p>
+<p>Conceptually, the impulse response is the response to ****one impulse****.</p>
+<p>Repeating the sequence is simply a convenient way to visualize the experiment.</p>
+<p>Because our impulse response lasts for only three samples and the impulses are separated by sixteen samples, the individual responses do not overlap.</p>
+</section>
+<section id="decimating-fir-filter" class="level3">
+<h3 class="anchored" data-anchor-id="decimating-fir-filter">Decimating FIR Filter</h3>
+<pre class="text"><code>Type: Float -&gt; Float (Real Taps)
+
+Decimation: 1
+
+Taps: (1, 0.5, 0.25)
+
+Sample Delay: 0</code></pre>
+</section>
+<section id="qt-gui-time-sink" class="level3">
+<h3 class="anchored" data-anchor-id="qt-gui-time-sink">QT GUI Time Sink</h3>
+<p>Use:</p>
+<pre class="text"><code>Number of Points: 32
+
+Sample Rate: samp_rate
+
+Autoscale: Yes</code></pre>
+<p>The sample rate is</p>
+<p><span class="math display">\[
+f_s=1000\text{ samples/s}
+\]</span></p>
+<p>so the sample interval is</p>
+<p><span class="math display">\[
+T_s=\frac{1}{f_s}
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+T_s=\frac{1}{1000}=1\text{ ms}
+\]</span></p>
+<p>This makes the spacing between individual samples easy to interpret.</p>
+<p>Using visible point markers in the Time Sink is also helpful because we are dealing with discrete-time samples rather than a truly continuous waveform.</p>
+<hr>
+<blockquote class="blockquote">
+<p>****GNU Radio Toolbox: Vector Source****</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>The ****Vector Source**** lets us enter a predefined sequence of sample values directly.</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>This makes it particularly useful when we want to study DSP operations using small sequences such as</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>$$</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>[1,\;0,\;0,\;0]</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>$$</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>rather than continuously generated sine waves.</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>Important settings include:</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Output Type</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Vector</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Tags</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Repeat</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Vector Length</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>In this experiment, <code>Repeat = Yes</code> causes the vector to start again after its final sample.</p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<p>****GNU Radio Toolbox: Decimating FIR Filter****</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>The ****Decimating FIR Filter**** performs FIR filtering and can optionally reduce the sample rate.</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>Important parameters include:</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Type</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Decimation</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Taps</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+<ul>
+<li>Sample Delay</li>
+</ul>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>In this experiment,</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>```text</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>Decimation = 1</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>```</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>so no sample-rate reduction takes place.</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>The important parameter is</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>```text</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>Taps = (1, 0.5, 0.25)</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>```</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p>These taps define the impulse response of the FIR filter.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="what-do-we-expect" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-expect">10.6 What Do We Expect?</h2>
+<p>The input is an impulse:</p>
+<p><span class="math display">\[
+x[n]=\delta[n]
+\]</span></p>
+<p>The filter taps are</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>Therefore, if the taps really are the impulse response, an input impulse should produce</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>at the output.</p>
+<p>Let us see what GNU Radio gives us.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp1-impulse-response.png" class="img-fluid figure-img"></p>
+<figcaption>Impulse response of the FIR filter</figcaption>
+</figure>
+</div>
+<p>That is exactly what happens.</p>
+<p>The blue trace contains the input impulse.</p>
+<p>The red trace contains three non-zero samples:</p>
+<p><span class="math display">\[
+1,\quad0.5,\quad0.25
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ h[n]=[1,\\;0.5,\\;0.25] }
+\]</span></p>
+<p>and we have experimentally confirmed something very important:</p>
+<p><span class="math display">\[
+\boxed{ \text{FIR filter taps}=\text{impulse response} }
+\]</span></p>
+<p>This fact will become increasingly useful as the chapter continues.</p>
+<hr>
+</section>
+<section id="experiment-2-response-to-a-delayed-impulse" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-response-to-a-delayed-impulse">Experiment 2: Response to a Delayed Impulse</h2>
+</section>
+<section id="what-if-the-impulse-arrives-later" class="level2">
+<h2 class="anchored" data-anchor-id="what-if-the-impulse-arrives-later">10.7 What If the Impulse Arrives Later?</h2>
+<p>Now let us change only one thing.</p>
+<p>Instead of placing the impulse at the beginning of the vector, move it four samples to the right.</p>
+<p>Change the Vector Source from</p>
+<pre class="text"><code>(1, 0, 0, 0, 0, 0, ...)</code></pre>
+<p>to</p>
+<pre class="text"><code>(0, 0, 0, 0, 1, 0, ...)</code></pre>
+<p>Everything else remains unchanged.</p>
+<p>There is no need to rebuild the flowgraph.</p>
+<p>Our input is now a delayed impulse:</p>
+<p><span class="math display">\[
+x[n]=\delta[n-4]
+\]</span></p>
+<p>What should happen to the output?</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp2-delayed-impulse.png" class="img-fluid figure-img"></p>
+<figcaption>Response to a delayed impulse</figcaption>
+</figure>
+</div>
+<p>The impulse response has moved to the right by exactly the same amount.</p>
+<p>Originally,</p>
+<p><span class="math display">\[
+\delta[n] \longrightarrow h[n]
+\]</span></p>
+<p>After delaying the input,</p>
+<p><span class="math display">\[
+\delta[n-4] \longrightarrow h[n-4]
+\]</span></p>
+<p>The shape</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>has not changed.</p>
+<p>Only its position has changed.</p>
+<p>This is the intuition behind ****time invariance****:</p>
+<blockquote class="blockquote">
+<p>If we delay the input to a time-invariant system, its output is delayed by the same amount.</p>
+</blockquote>
+<p>The system does not suddenly behave differently just because the signal arrived later.</p>
+<hr>
+</section>
+<section id="experiment-3-response-to-a-scaled-impulse" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-response-to-a-scaled-impulse">Experiment 3: Response to a Scaled Impulse</h2>
+</section>
+<section id="what-if-the-impulse-is-larger" class="level2">
+<h2 class="anchored" data-anchor-id="what-if-the-impulse-is-larger">10.8 What If the Impulse Is Larger?</h2>
+<p>Now keep the impulse at the same delayed position, but change its amplitude from <span class="math inline">\(1\)</span> to <span class="math inline">\(2\)</span>.</p>
+<p>Change</p>
+<pre class="text"><code>(0, 0, 0, 0, 1, 0, ...)</code></pre>
+<p>to</p>
+<pre class="text"><code>(0, 0, 0, 0, 2, 0, ...)</code></pre>
+<p>The input is now</p>
+<p><span class="math display">\[
+x[n]=2\delta[n-4]
+\]</span></p>
+<p>What should the filter do?</p>
+<p>Previously,</p>
+<p><span class="math display">\[
+\delta[n-4] \longrightarrow h[n-4]
+\]</span></p>
+<p>If we double the input, we expect the output to double:</p>
+<p><span class="math display">\[
+2\delta[n-4] \longrightarrow 2h[n-4]
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>we predict</p>
+<p><span class="math display">\[
+2h[n]=[2,\\;1,\\;0.5]
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp3-scaled-impulse.png" class="img-fluid figure-img"></p>
+<figcaption>Response to a scaled impulse</figcaption>
+</figure>
+</div>
+<p>GNU Radio gives exactly that result.</p>
+<p>The output samples are now</p>
+<p><span class="math display">\[
+2,\quad1,\quad0.5
+\]</span></p>
+<p>The complete response has simply been scaled by the same factor as the input.</p>
+<p>This is one part of the idea behind ****linearity****.</p>
+<hr>
+</section>
+<section id="two-things-we-have-learned-already" class="level2">
+<h2 class="anchored" data-anchor-id="two-things-we-have-learned-already">10.9 Two Things We Have Learned Already</h2>
+<p>At this point, we know two important things.</p>
+<p>A delayed impulse creates a delayed copy of the impulse response:</p>
+<p><span class="math display">\[
+\delta[n-k] \longrightarrow h[n-k]
+\]</span></p>
+<p>A scaled impulse creates a scaled copy:</p>
+<p><span class="math display">\[
+A\delta[n-k] \longrightarrow Ah[n-k]
+\]</span></p>
+<p>What happens if the input contains ****more than one impulse****?</p>
+<p>That question takes us much closer to convolution.</p>
+<hr>
+</section>
+<section id="experiment-4-response-to-two-impulses" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-response-to-two-impulses">Experiment 4: Response to Two Impulses</h2>
+</section>
+<section id="two-separate-impulses" class="level2">
+<h2 class="anchored" data-anchor-id="two-separate-impulses">10.10 Two Separate Impulses</h2>
+<p>Use the same flowgraph.</p>
+<p>This time set the Vector Source to contain two non-zero samples:</p>
+<pre class="text"><code>(1, 0, 0, 0, 0.5, 0, 0, 0,
+
+ 0, 0, 0, 0, 0, 0, 0, 0)</code></pre>
+<p>The input can be written as</p>
+<p><span class="math display">\[
+x[n] = \delta[n] \+ 0.5\delta[n-4]
+\]</span></p>
+<p>The first impulse has amplitude <span class="math inline">\(1\)</span>.</p>
+<p>It produces</p>
+<p><span class="math display">\[
+h[n] = [1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>The second impulse has amplitude <span class="math inline">\(0.5\)</span>, so it produces</p>
+<p><span class="math display">\[
+0.5h[n] = [0.5,\\;0.25,\\;0.125]
+\]</span></p>
+<p>But the second impulse occurs four samples later.</p>
+<p>Therefore its response also starts four samples later.</p>
+<p>We expect</p>
+<p><span class="math display">\[
+y[n] = h[n] \+ 0.5h[n-4]
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp4-two-impulses.png" class="img-fluid figure-img"></p>
+<figcaption>Response to two impulses</figcaption>
+</figure>
+</div>
+<p>For one period, the samples can be written as:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |</div>
+<p>|—:|—:|—:|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block"><span class="math inline">\(x[n]\)</span> | 1 | 0 | 0 | 0 | 0.5 | 0 | 0 | 0 |</div>
+<div class="line-block"><span class="math inline">\(y[n]\)</span> | 1 | 0.5 | 0.25 | 0 | 0.5 | 0.25 | 0.125 | 0 |</div>
+<p>Something important has happened.</p>
+<p>Each non-zero input sample has produced ****its own copy of the impulse response****.</p>
+<p>The amplitude of the input sample controls the size of the copy.</p>
+<p>The position of the input sample controls where that copy begins.</p>
+<p>This observation is going to become the central idea of convolution.</p>
+<hr>
+</section>
+<section id="experiment-5-when-impulse-responses-overlap" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-when-impulse-responses-overlap">Experiment 5: When Impulse Responses Overlap</h2>
+</section>
+<section id="move-the-impulses-closer-together" class="level2">
+<h2 class="anchored" data-anchor-id="move-the-impulses-closer-together">10.11 Move the Impulses Closer Together</h2>
+<p>In the previous experiment, the two impulses were separated far enough that their responses did not overlap.</p>
+<p>Let us deliberately change that.</p>
+<p>Change the Vector Source to</p>
+<pre class="text"><code>(1, 0, 0.5, 0, 0, 0, 0, 0,
+
+ 0, 0, 0, 0, 0, 0, 0, 0)</code></pre>
+<p>Now,</p>
+<p><span class="math display">\[
+x[n] = \delta[n] \+ 0.5\delta[n-2]
+\]</span></p>
+<p>The first impulse produces</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>The second produces</p>
+<p><span class="math display">\[
+[0.5,\\;0.25,\\;0.125]
+\]</span></p>
+<p>starting at <span class="math inline">\(n=2\)</span>.</p>
+<p>Let us place the two contributions underneath each other:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(\delta[n]\)</span> | 1 | 0.5 | 0.25 | 0 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(0.5\delta[n-2]\)</span> | 0 | 0 | 0.5 | 0.25 | 0.125 |</div>
+<div class="line-block">****Total <span class="math inline">\(y[n]\)</span>**** | ****1**** | ****0.5**** | ****0.75**** | ****0.25**** | ****0.125**** |</div>
+<p>At <span class="math inline">\(n=2\)</span>, both responses contribute.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y[2] = 0.25+0.5
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\boxed{ y[2]=0.75 }
+\]</span></p>
+<p>The complete expected output is</p>
+<p><span class="math display">\[
+y[n] = [1,\\;0.5,\\;0.75,\\;0.25,\\;0.125]
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp5-overlapping-impulse-responses.png" class="img-fluid figure-img"></p>
+<figcaption>Overlapping impulse responses</figcaption>
+</figure>
+</div>
+<p>Look carefully at the red sample with amplitude <span class="math inline">\(0.75\)</span>.</p>
+<p>That value did not appear in either individual response.</p>
+<p>It appeared because two contributions arrived at the same output location:</p>
+<p><span class="math display">\[
+0.25+0.5=0.75
+\]</span></p>
+<p>We have now discovered another important rule:</p>
+<blockquote class="blockquote">
+<p>****When shifted impulse responses overlap, their contributions add.****</p>
+</blockquote>
+<p>At this point, we already have almost everything we need to understand convolution.</p>
+<p>We just have not called it convolution yet.</p>
+<hr>
+</section>
+<section id="from-impulses-to-an-ordinary-sequence" class="level2">
+<h2 class="anchored" data-anchor-id="from-impulses-to-an-ordinary-sequence">10.12 From Impulses to an Ordinary Sequence</h2>
+<p>So far, our input signals have been deliberately constructed from obvious impulses.</p>
+<p>But consider a more ordinary finite sequence:</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>At first, this may seem different.</p>
+<p>It is not.</p>
+<p>We can think of the first sample as an impulse of amplitude <span class="math inline">\(1\)</span> at <span class="math inline">\(n=0\)</span>.</p>
+<p>The second sample is an impulse of amplitude <span class="math inline">\(2\)</span> at <span class="math inline">\(n=1\)</span>.</p>
+<p>The third sample is an impulse of amplitude <span class="math inline">\(1\)</span> at <span class="math inline">\(n=2\)</span>.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+x[n] = \delta[n] \+ 2\delta[n-1] \+ \delta[n-2]
+\]</span></p>
+<p>This is the key idea:</p>
+<blockquote class="blockquote">
+<p>****Any discrete-time sequence can be thought of as a collection of shifted and scaled impulses.****</p>
+</blockquote>
+<p>Now our previous experiments become much more powerful.</p>
+<p>We already know what the system does to each one of those impulses.</p>
+<hr>
+</section>
+<section id="experiment-6-convolution-of-two-simple-sequences" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-6-convolution-of-two-simple-sequences">Experiment 6: Convolution of Two Simple Sequences</h2>
+</section>
+<section id="the-input-and-the-impulse-response" class="level2">
+<h2 class="anchored" data-anchor-id="the-input-and-the-impulse-response">10.13 The Input and the Impulse Response</h2>
+<p>Keep the same FIR filter:</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>Change the Vector Source to</p>
+<pre class="text"><code>(1, 2, 1, 0, 0, 0, 0, 0,
+
+ 0, 0, 0, 0, 0, 0, 0, 0)</code></pre>
+<p>The non-zero part of the input is</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>Before looking at GNU Radio, let us work out what should happen.</p>
+<p>This calculation is worth doing slowly.</p>
+<hr>
+</section>
+<section id="start-with-the-first-input-sample" class="level2">
+<h2 class="anchored" data-anchor-id="start-with-the-first-input-sample">10.14 Start With the First Input Sample</h2>
+<p>The first input sample is</p>
+<p><span class="math display">\[
+x[0]=1
+\]</span></p>
+<p>It creates one copy of the impulse response:</p>
+<p><span class="math display">\[
+1\times h[n]
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>the contribution is</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>and it begins at <span class="math inline">\(n=0\)</span>.</p>
+<p>So its contribution is:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[0]=1\)</span> | 1 | 0.5 | 0.25 | 0 | 0 |</div>
+<hr>
+</section>
+<section id="now-the-second-input-sample" class="level2">
+<h2 class="anchored" data-anchor-id="now-the-second-input-sample">10.15 Now the Second Input Sample</h2>
+<p>The second input sample is</p>
+<p><span class="math display">\[
+x[1]=2
+\]</span></p>
+<p>It creates a copy of the impulse response scaled by <span class="math inline">\(2\)</span>:</p>
+<p><span class="math display">\[
+2h[n]
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+2[1,\\;0.5,\\;0.25] = [2,\\;1,\\;0.5]
+\]</span></p>
+<p>But this input sample occurs at <span class="math inline">\(n=1\)</span>.</p>
+<p>Therefore its response begins one sample later:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[1]=2\)</span> | 0 | 2 | 1 | 0.5 | 0 |</div>
+<hr>
+</section>
+<section id="now-the-third-input-sample" class="level2">
+<h2 class="anchored" data-anchor-id="now-the-third-input-sample">10.16 Now the Third Input Sample</h2>
+<p>The third input sample is</p>
+<p><span class="math display">\[
+x[2]=1
+\]</span></p>
+<p>It produces</p>
+<p><span class="math display">\[
+1h[n] = [1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>But because the sample occurs at <span class="math inline">\(n=2\)</span>, this copy starts at <span class="math inline">\(n=2\)</span>:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[2]=1\)</span> | 0 | 0 | 1 | 0.5 | 0.25 |</div>
+<hr>
+</section>
+<section id="put-all-three-contributions-together" class="level2">
+<h2 class="anchored" data-anchor-id="put-all-three-contributions-together">10.17 Put All Three Contributions Together</h2>
+<p>Now place all three contributions underneath one another:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[0]=1\)</span> | 1 | 0.5 | 0.25 | 0 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[1]=2\)</span> | 0 | 2 | 1 | 0.5 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[2]=1\)</span> | 0 | 0 | 1 | 0.5 | 0.25 |</div>
+<div class="line-block">****Total <span class="math inline">\(y[n]\)</span>**** | ****1**** | ****2.5**** | ****2.25**** | ****1**** | ****0.25**** |</div>
+<p>Now the calculation becomes very easy.</p>
+<p>At <span class="math inline">\(n=0\)</span>,</p>
+<p><span class="math display">\[
+y[0]=1
+\]</span></p>
+<p>At <span class="math inline">\(n=1\)</span>,</p>
+<p><span class="math display">\[
+y[1] = 0.5+2
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+y[1]=2.5
+\]</span></p>
+<p>At <span class="math inline">\(n=2\)</span>,</p>
+<p><span class="math display">\[
+y[2] = 0.25+1+1
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+y[2]=2.25
+\]</span></p>
+<p>At <span class="math inline">\(n=3\)</span>,</p>
+<p><span class="math display">\[
+y[3] = 0.5+0.5
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+y[3]=1
+\]</span></p>
+<p>At <span class="math inline">\(n=4\)</span>,</p>
+<p><span class="math display">\[
+y[4]=0.25
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ y[n] = [1,\\;2.5,\\;2.25,\\;1,\\;0.25] }
+\]</span></p>
+<p>Now let us compare that prediction with GNU Radio.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp6-convolution-simple-sequences.png" class="img-fluid figure-img"></p>
+<figcaption>Convolution of two simple sequences</figcaption>
+</figure>
+</div>
+<p>The red output is</p>
+<p><span class="math display">\[
+1,\quad2.5,\quad2.25,\quad1,\quad0.25
+\]</span></p>
+<p>GNU Radio has produced exactly the sequence we calculated by hand.</p>
+<hr>
+</section>
+<section id="what-we-have-just-done-has-a-name" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-have-just-done-has-a-name">10.18 What We Have Just Done Has a Name</h2>
+<p>Up to this point, we have deliberately avoided beginning with a formula.</p>
+<p>Instead, we discovered a process.</p>
+<p>For every input sample:</p>
+<p>1. take the system’s impulse response;</p>
+<p>2. scale it by the value of that input sample;</p>
+<p>3. shift it to the position of that input sample;</p>
+<p>4. add it to all the other contributions.</p>
+<p>That process is called ****convolution****.</p>
+<p>We write</p>
+<p><span class="math display">\[
+\boxed{ y[n] = x[n]*h[n] }
+\]</span></p>
+<p>where the symbol <span class="math inline">\(*\)</span> represents convolution.</p>
+<p>Now that we know what the operation actually means, we are ready to write its full mathematical form.</p>
+<hr>
+</section>
+<section id="the-convolution-equation" class="level2">
+<h2 class="anchored" data-anchor-id="the-convolution-equation">10.19 The Convolution Equation</h2>
+<p>For a discrete-time system,</p>
+<p><span class="math display">\[
+\boxed{ y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k] }
+\]</span></p>
+<p>This equation can look intimidating when it is encountered for the first time.</p>
+<p>But it is describing exactly the process we just performed by hand.</p>
+<p>Let us unpack it.</p>
+<hr>
+</section>
+<section id="what-does-n-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-n-mean">10.20 What Does <span class="math inline">\(n\)</span> Mean?</h2>
+<p>The variable <span class="math inline">\(n\)</span> tells us ****which output sample we are calculating****.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+y[0]
+\]</span></p>
+<p>means we are calculating the output at <span class="math inline">\(n=0\)</span>.</p>
+<p>Similarly,</p>
+<p><span class="math display">\[
+y[3]
+\]</span></p>
+<p>means we are calculating the output at <span class="math inline">\(n=3\)</span>.</p>
+<p>So <span class="math inline">\(n\)</span> identifies our current position in the output sequence.</p>
+<hr>
+</section>
+<section id="what-does-k-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-k-mean">10.21 What Does <span class="math inline">\(k\)</span> Mean?</h2>
+<p>The variable <span class="math inline">\(k\)</span> is used to walk through the input samples.</p>
+<p>For</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[
+x[0]=1
+\]</span></p>
+<p><span class="math display">\[
+x[1]=2
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+x[2]=1
+\]</span></p>
+<p>As <span class="math inline">\(k\)</span> takes the values</p>
+<p><span class="math display">\[
+0,\\;1,\\;2
+\]</span></p>
+<p>the summation visits each of those input samples.</p>
+<p>A useful way to remember the difference is:</p>
+<blockquote class="blockquote">
+<p><span class="math inline">\(n\)</span> asks, ****“Which output sample am I calculating?”****</p>
+</blockquote>
+<blockquote class="blockquote">
+
+</blockquote>
+<blockquote class="blockquote">
+<p><span class="math inline">\(k\)</span> asks, ****“Which input sample is contributing to it?”****</p>
+</blockquote>
+<hr>
+</section>
+<section id="using-the-equation-on-our-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="using-the-equation-on-our-experiment">10.22 Using the Equation on Our Experiment</h2>
+<p>Our sequences are</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>Let us calculate the same output again, this time using the formal convolution equation.</p>
+<hr>
+<section id="calculating-y0" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-y0">Calculating <span class="math inline">\(y[0]\)</span></h3>
+<p>Set</p>
+<p><span class="math display">\[
+n=0
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+y[0] = \sum_k x[k]h[0-k]
+\]</span></p>
+<p>For our finite input,</p>
+<p><span class="math display">\[
+y[0] = x[0]h[0] \+ x[1]h[-1] \+ x[2]h[-2]
+\]</span></p>
+<p>Our impulse response is zero outside its defined samples, so</p>
+<p><span class="math display">\[
+h[-1]=0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+h[-2]=0
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y[0] = (1)(1) \+ (2)(0) \+ (1)(0)
+\]</span></p>
+<p>Thus,</p>
+<p><span class="math display">\[
+\boxed{ y[0]=1 }
+\]</span></p>
+<hr>
+</section>
+<section id="calculating-y1" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-y1">Calculating <span class="math inline">\(y[1]\)</span></h3>
+<p>Now,</p>
+<p><span class="math display">\[
+n=1
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y[1] = x[0]h[1] \+ x[1]h[0] \+ x[2]h[-1]
+\]</span></p>
+<p>Substituting the values,</p>
+<p><span class="math display">\[
+y[1] = (1)(0.5) \+ (2)(1) \+ (1)(0)
+\]</span></p>
+<p>Hence,</p>
+<p><span class="math display">\[
+\boxed{ y[1]=2.5 }
+\]</span></p>
+<hr>
+</section>
+<section id="calculating-y2" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-y2">Calculating <span class="math inline">\(y[2]\)</span></h3>
+<p>Now set</p>
+<p><span class="math display">\[
+n=2
+\]</span></p>
+<p>Then,</p>
+<p><span class="math display">\[
+y[2] = x[0]h[2] \+ x[1]h[1] \+ x[2]h[0]
+\]</span></p>
+<p>Substituting,</p>
+<p><span class="math display">\[
+y[2] = (1)(0.25) \+ (2)(0.5) \+ (1)(1)
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y[2] = 0.25+1+1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\boxed{ y[2]=2.25 }
+\]</span></p>
+<p>This is the location where all three shifted responses overlap.</p>
+<hr>
+</section>
+<section id="calculating-y3" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-y3">Calculating <span class="math inline">\(y[3]\)</span></h3>
+<p>For</p>
+<p><span class="math display">\[
+n=3
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+y[3] = x[0]h[3] \+ x[1]h[2] \+ x[2]h[1]
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+h[3]=0
+\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[
+y[3] = (1)(0) \+ (2)(0.25) \+ (1)(0.5)
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ y[3]=1 }
+\]</span></p>
+<hr>
+</section>
+<section id="calculating-y4" class="level3">
+<h3 class="anchored" data-anchor-id="calculating-y4">Calculating <span class="math inline">\(y[4]\)</span></h3>
+<p>Finally,</p>
+<p><span class="math display">\[
+y[4] = x[0]h[4] \+ x[1]h[3] \+ x[2]h[2]
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+h[4]=0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+h[3]=0
+\]</span></p>
+<p>we get</p>
+<p><span class="math display">\[
+y[4] = (1)(0) \+ (2)(0) \+ (1)(0.25)
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ y[4]=0.25 }
+\]</span></p>
+<p>Putting everything together,</p>
+<p><span class="math display">\[
+\boxed{ y[n] = [1,\\;2.5,\\;2.25,\\;1,\\;0.25] }
+\]</span></p>
+<p>which is exactly the same result we obtained visually and experimentally.</p>
+<p>The convolution equation has not introduced a new operation.</p>
+<p>It has simply given us a compact mathematical way to describe the operation we already understood.</p>
+<hr>
+</section>
+</section>
+<section id="why-does-hn-k-look-backwards" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-hn-k-look-backwards">10.23 Why Does <span class="math inline">\(h[n-k]\)</span> Look Backwards?</h2>
+<p>There is one part of the convolution equation that often causes confusion:</p>
+<p><span class="math display">\[
+h[n-k]
+\]</span></p>
+<p>Why not simply write <span class="math inline">\(h[k]\)</span>?</p>
+<p>Let us examine what happens while calculating one output sample.</p>
+<p>Suppose we are calculating</p>
+<p><span class="math display">\[
+y[2]
+\]</span></p>
+<p>The equation contains</p>
+<p><span class="math display">\[
+h[2-k]
+\]</span></p>
+<p>As <span class="math inline">\(k\)</span> moves through the input:</p>
+<p>for <span class="math inline">\(k=0\)</span>,</p>
+<p><span class="math display">\[
+h[2-0]=h[2]
+\]</span></p>
+<p>for <span class="math inline">\(k=1\)</span>,</p>
+<p><span class="math display">\[
+h[2-1]=h[1]
+\]</span></p>
+<p>and for <span class="math inline">\(k=2\)</span>,</p>
+<p><span class="math display">\[
+h[2-2]=h[0]
+\]</span></p>
+<p>So we encounter</p>
+<p><span class="math display">\[
+h[2],\quad h[1],\quad h[0]
+\]</span></p>
+<p>Notice the order.</p>
+<p>It appears reversed as <span class="math inline">\(k\)</span> increases.</p>
+<p>This is where the familiar ****flip-and-slide**** interpretation of convolution comes from.</p>
+<p>However, for understanding what an FIR filter is doing, the viewpoint we developed earlier is often more intuitive:</p>
+<blockquote class="blockquote">
+<p>Every input sample creates a shifted and scaled copy of the impulse response, and all of those copies are added together.</p>
+</blockquote>
+<p>Both descriptions represent the same mathematics.</p>
+<hr>
+</section>
+<section id="how-long-is-the-convolution-output" class="level2">
+<h2 class="anchored" data-anchor-id="how-long-is-the-convolution-output">10.24 How Long Is the Convolution Output?</h2>
+<p>Our input contained three non-zero samples:</p>
+<p><span class="math display">\[
+L_x=3
+\]</span></p>
+<p>Our impulse response also contained three samples:</p>
+<p><span class="math display">\[
+L_h=3
+\]</span></p>
+<p>The convolution result contained five samples:</p>
+<p><span class="math display">\[
+[1,\\;2.5,\\;2.25,\\;1,\\;0.25]
+\]</span></p>
+<p>For two finite sequences of lengths <span class="math inline">\(L_x\)</span> and <span class="math inline">\(L_h\)</span>, the full convolution has length</p>
+<p><span class="math display">\[
+\boxed{ L_y=L_x+L_h-1 }
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+L_y = 3+3-1
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\boxed{ L_y=5 }
+\]</span></p>
+<p>That is exactly what we observed.</p>
+<hr>
+</section>
+<section id="fir-filtering-is-convolution" class="level2">
+<h2 class="anchored" data-anchor-id="fir-filtering-is-convolution">10.25 FIR Filtering Is Convolution</h2>
+<p>We can now understand what our FIR block has been doing throughout the chapter.</p>
+<p>Suppose an FIR filter has <span class="math inline">\(M\)</span> taps:</p>
+<p><span class="math display">\[
+h[0],h[1],h[2],\ldots,h[M-1]
+\]</span></p>
+<p>For each output sample, the FIR filter calculates a weighted combination of present and previous input samples.</p>
+<p>One common FIR form is</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=0}^{M-1} h[k]x[n-k]
+\]</span></p>
+<p>This is the finite FIR form of the same convolution operation.</p>
+<p>So when GNU Radio receives a stream of samples, the FIR filter is continuously combining samples according to its tap values.</p>
+<p>The taps are not just arbitrary configuration numbers.</p>
+<p>They describe how the system responds to an impulse.</p>
+<p><span class="math display">\[
+\boxed{ \text{FIR taps}=h[n] }
+\]</span></p>
+<p>and filtering is the convolution</p>
+<p><span class="math display">\[
+\boxed{ y[n]=x[n]*h[n] }
+\]</span></p>
+<hr>
+</section>
+<section id="experiment-7-change-the-impulse-response" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-7-change-the-impulse-response">Experiment 7: Change the Impulse Response</h2>
+</section>
+<section id="change-the-taps-change-the-system" class="level2">
+<h2 class="anchored" data-anchor-id="change-the-taps-change-the-system">10.26 Change the Taps, Change the System</h2>
+<p>Until now, we kept</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>for most of our experiments.</p>
+<p>Let us now keep the input unchanged and change the system.</p>
+<p>Use</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>Change the FIR taps to</p>
+<pre class="text"><code>(1, -1)</code></pre>
+<p>The new impulse response is therefore</p>
+<p><span class="math display">\[
+h[n]=[1,\\;-1]
+\]</span></p>
+<p>Before running the flowgraph, we can predict the result using the same method.</p>
+<p>The first input sample produces</p>
+<p><span class="math display">\[
+[1,\\;-1]
+\]</span></p>
+<p>The second input sample has amplitude <span class="math inline">\(2\)</span>, so it produces</p>
+<p><span class="math display">\[
+[2,\\;-2]
+\]</span></p>
+<p>one sample later.</p>
+<p>The third produces</p>
+<p><span class="math display">\[
+[1,\\;-1]
+\]</span></p>
+<p>starting two samples later.</p>
+<p>Aligning the contributions gives:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 |</div>
+<p>|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[0]=1\)</span> | 1 | -1 | 0 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[1]=2\)</span> | 0 | 2 | -2 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[2]=1\)</span> | 0 | 0 | 1 | -1 |</div>
+<div class="line-block">****Total <span class="math inline">\(y[n]\)</span>**** | ****1**** | ****1**** | ****-1**** | ****-1**** |</div>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ y[n]=[1,\\;1,\\;-1,\\;-1] }
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp7-change-impulse-response.png" class="img-fluid figure-img"></p>
+<figcaption>Changing the impulse response</figcaption>
+</figure>
+</div>
+<p>GNU Radio produces exactly that sequence.</p>
+<p>Notice what changed.</p>
+<p>The input remained</p>
+<p><span class="math display">\[
+[1,\\;2,\\;1]
+\]</span></p>
+<p>Only the taps changed.</p>
+<p>Yet the output changed completely.</p>
+<p>That is because changing the taps means changing</p>
+<p><span class="math display">\[
+h[n]
+\]</span></p>
+<p>In other words, we changed the system itself.</p>
+<hr>
+</section>
+<section id="experiment-8-effect-of-reversing-the-fir-taps" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-8-effect-of-reversing-the-fir-taps">Experiment 8: Effect of Reversing the FIR Taps</h2>
+</section>
+<section id="should-we-reverse-the-taps-ourselves" class="level2">
+<h2 class="anchored" data-anchor-id="should-we-reverse-the-taps-ourselves">10.27 Should We Reverse the Taps Ourselves?</h2>
+<p>There is one possible source of confusion worth testing directly.</p>
+<p>We have seen that the convolution equation contains</p>
+<p><span class="math display">\[
+h[n-k]
+\]</span></p>
+<p>and that this leads to the usual flip-and-slide interpretation.</p>
+<p>Does that mean we should reverse the taps ourselves before giving them to GNU Radio?</p>
+<p>Let us find out.</p>
+<p>Return to the original taps:</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>With</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>we already know the output is</p>
+<p><span class="math display">\[
+[1,\\;2.5,\\;2.25,\\;1,\\;0.25]
+\]</span></p>
+<p>Now manually reverse the taps:</p>
+<pre class="text"><code>(0.25, 0.5, 1)</code></pre>
+<p>The new impulse response is</p>
+<p><span class="math display">\[
+h_r[n]=[0.25,\\;0.5,\\;1]
+\]</span></p>
+<p>Let us predict the result.</p>
+<p>From <span class="math inline">\(x[0]=1\)</span>, we get</p>
+<p><span class="math display">\[
+[0.25,\\;0.5,\\;1]
+\]</span></p>
+<p>From <span class="math inline">\(x[1]=2\)</span>, we get</p>
+<p><span class="math display">\[
+[0.5,\\;1,\\;2]
+\]</span></p>
+<p>starting one sample later.</p>
+<p>From <span class="math inline">\(x[2]=1\)</span>, we get</p>
+<p><span class="math display">\[
+[0.25,\\;0.5,\\;1]
+\]</span></p>
+<p>starting two samples later.</p>
+<p>Aligning the contributions gives:</p>
+<div class="line-block"><span class="math inline">\(n\)</span> | 0 | 1 | 2 | 3 | 4 |</div>
+<p>|—:|—:|—:|—:|—:|—:|</p>
+<div class="line-block">Contribution from <span class="math inline">\(x[0]=1\)</span> | 0.25 | 0.5 | 1 | 0 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[1]=2\)</span> | 0 | 0.5 | 1 | 2 | 0 |</div>
+<div class="line-block">Contribution from <span class="math inline">\(x[2]=1\)</span> | 0 | 0 | 0.25 | 0.5 | 1 |</div>
+<div class="line-block">****Total <span class="math inline">\(y[n]\)</span>**** | ****0.25**** | ****1**** | ****2.25**** | ****2.5**** | ****1**** |</div>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{ y[n] = [0.25,\\;1,\\;2.25,\\;2.5,\\;1] }
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch10/ch10-exp8-reversed-fir-taps.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of reversing the FIR taps</figcaption>
+</figure>
+</div>
+<p>Again, GNU Radio agrees with our prediction.</p>
+<hr>
+</section>
+<section id="reversing-the-taps-defines-a-different-system" class="level2">
+<h2 class="anchored" data-anchor-id="reversing-the-taps-defines-a-different-system">10.28 Reversing the Taps Defines a Different System</h2>
+<p>The original impulse response was</p>
+<p><span class="math display">\[
+h[n]=[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>The reversed sequence is</p>
+<p><span class="math display">\[
+h_r[n]=[0.25,\\;0.5,\\;1]
+\]</span></p>
+<p>These are not two different ways of entering the same filter.</p>
+<p>They describe ****two different systems****.</p>
+<p>If the intended impulse response is</p>
+<p><span class="math display">\[
+[1,\\;0.5,\\;0.25]
+\]</span></p>
+<p>then those are the taps we should enter into GNU Radio.</p>
+<p>We should ****not manually reverse them**** just because convolution is sometimes explained using the phrase “flip and slide.”</p>
+<p>GNU Radio’s FIR filter already performs the required convolution indexing internally.</p>
+<p>Manually reversing the taps changes the impulse response itself.</p>
+<p>That is why the output changes.</p>
+<hr>
+</section>
+<section id="linearity-and-time-invariance-what-have-we-actually-observed" class="level2">
+<h2 class="anchored" data-anchor-id="linearity-and-time-invariance-what-have-we-actually-observed">10.29 Linearity and Time Invariance: What Have We Actually Observed?</h2>
+<p>We can now return to two terms that have quietly appeared throughout our experiments.</p>
+<section id="time-invariance" class="level3">
+<h3 class="anchored" data-anchor-id="time-invariance">Time Invariance</h3>
+<p>Experiment 2 showed that</p>
+<p><span class="math display">\[
+\delta[n] \longrightarrow h[n]
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\delta[n-4] \longrightarrow h[n-4]
+\]</span></p>
+<p>Delaying the input delayed the output by the same amount.</p>
+<p>That is time invariance.</p>
+</section>
+<section id="linearity" class="level3">
+<h3 class="anchored" data-anchor-id="linearity">Linearity</h3>
+<p>Experiment 3 showed that scaling the input scaled the output.</p>
+<p>If</p>
+<p><span class="math display">\[
+\delta[n] \longrightarrow h[n]
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+2\delta[n] \longrightarrow 2h[n]
+\]</span></p>
+<p>Experiments 4 and 5 also showed that when several input components were present, their output contributions could be added.</p>
+<p>These are the ideas behind linearity.</p>
+<p>A system that is both linear and time invariant is called an ****LTI system****.</p>
+<p>This is why impulse response is so powerful.</p>
+<p>For an LTI system, once we know</p>
+<p><span class="math display">\[
+h[n]
+\]</span></p>
+<p>we can determine the response to an arbitrary input by convolution.</p>
+<hr>
+</section>
+</section>
+<section id="why-the-impulse-response-is-so-useful" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-impulse-response-is-so-useful">10.30 Why the Impulse Response Is So Useful</h2>
+<p>We can now answer the main question of this chapter:</p>
+<blockquote class="blockquote">
+<p>****If we know how a system responds to one impulse, can we predict how it responds to any signal?****</p>
+</blockquote>
+<p>For an LTI system, yes.</p>
+<p>The reason is that we can represent a discrete-time signal as a collection of shifted and scaled impulses.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+x[n]=[1,\\;2,\\;1]
+\]</span></p>
+<p>can be written as</p>
+<p><span class="math display">\[
+x[n] = \delta[n] \+ 2\delta[n-1] \+ \delta[n-2]
+\]</span></p>
+<p>If we know how the system responds to</p>
+<p><span class="math display">\[
+\delta[n]
+\]</span></p>
+<p>then time invariance tells us how it responds to shifted impulses.</p>
+<p>Linearity tells us how it responds to scaled impulses and sums of impulses.</p>
+<p>Put those ideas together, and we can construct the response to the entire signal.</p>
+<p>That construction is convolution.</p>
+<hr>
+</section>
+<section id="connecting-back-to-chapter-9" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-back-to-chapter-9">10.31 Connecting Back to Chapter 9</h2>
+<p>We can now revisit the filters from Chapter 9 with a better understanding of what was happening underneath.</p>
+<p>In Chapter 9, our main question was:</p>
+<blockquote class="blockquote">
+<p>Which frequencies does this filter keep, and which does it reject?</p>
+</blockquote>
+<p>We used low-pass, high-pass, band-pass and band-reject filters and mainly observed their spectra.</p>
+<p>That was the ****frequency-domain view**** of filtering.</p>
+<p>In this chapter, we asked a different question:</p>
+<blockquote class="blockquote">
+<p>How does an FIR filter actually calculate its output samples?</p>
+</blockquote>
+<p>Now we know the answer.</p>
+<p>The FIR taps form the impulse response:</p>
+<p><span class="math display">\[
+h[n] = [\text{tap}_0,\text{tap}_1,\ldots,\text{tap}_{M-1}]
+\]</span></p>
+<p>The incoming signal is convolved with that impulse response:</p>
+<p><span class="math display">\[
+\boxed{ y[n]=x[n]*h[n] }
+\]</span></p>
+<p>The filters in Chapter 9 often had many more taps than the simple three-tap examples used here.</p>
+<p>But the underlying operation was the same.</p>
+<p>The three-tap filters in this chapter were deliberately small so that we could see and calculate every contribution ourselves.</p>
+<p>So Chapters 9 and 10 have shown us the same FIR filter from two different viewpoints.</p>
+<section id="time-domain-viewpoint" class="level3">
+<h3 class="anchored" data-anchor-id="time-domain-viewpoint">Time-domain viewpoint</h3>
+<p><span class="math display">\[
+x[n] \longrightarrow h[n] \longrightarrow y[n]
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+\boxed{ y[n]=x[n]*h[n] }
+\]</span></p>
+</section>
+<section id="frequency-domain-viewpoint" class="level3">
+<h3 class="anchored" data-anchor-id="frequency-domain-viewpoint">Frequency-domain viewpoint</h3>
+<p>The corresponding frequency-domain relationship is</p>
+<p><span class="math display">\[
+\boxed{ Y(f)=X(f)H(f) }
+\]</span></p>
+<p>In the time domain, filtering appears as convolution.</p>
+<p>In the frequency domain, the same operation appears as multiplication.</p>
+<p>This connection will become increasingly important as we continue with DSP and SDR.</p>
+<hr>
+</section>
+</section>
+<section id="a-useful-mental-model-for-convolution" class="level2">
+<h2 class="anchored" data-anchor-id="a-useful-mental-model-for-convolution">10.32 A Useful Mental Model for Convolution</h2>
+<p>If the convolution equation ever feels abstract,</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k]
+\]</span></p>
+<p>return to the experiments in this chapter.</p>
+<p>Do not begin by thinking about the summation sign.</p>
+<p>Instead, imagine the input as individual samples.</p>
+<p>For every input sample:</p>
+<blockquote class="blockquote">
+<p>****Take a copy of the impulse response.****</p>
+</blockquote>
+<p>Then:</p>
+<blockquote class="blockquote">
+<p>****Scale it by the value of that input sample.****</p>
+</blockquote>
+<p>Then:</p>
+<blockquote class="blockquote">
+<p>****Shift it to the position of that sample.****</p>
+</blockquote>
+<p>Finally:</p>
+<blockquote class="blockquote">
+<p>****Add all the overlapping copies.****</p>
+</blockquote>
+<p>That is convolution.</p>
+<p>The equation is simply the compact mathematical description of that process.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-summary" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-summary">10.33 GNU Radio Toolbox Summary</h2>
+<p>This chapter introduced or expanded a small number of GNU Radio tools.</p>
+<section id="vector-source-1" class="level3">
+<h3 class="anchored" data-anchor-id="vector-source-1">Vector Source</h3>
+<p>Useful for creating short, known sequences.</p>
+<p>Important settings:</p>
+<pre class="text"><code>Output Type
+
+Vector
+
+Tags
+
+Repeat
+
+Vector Length</code></pre>
+<p>It is particularly useful when working with:</p>
+<ul>
+<li><p>impulses;</p></li>
+<li><p>finite sequences;</p></li>
+<li><p>known sample patterns;</p></li>
+<li><p>hand-verifiable DSP examples.</p></li>
+</ul>
+</section>
+<section id="decimating-fir-filter-1" class="level3">
+<h3 class="anchored" data-anchor-id="decimating-fir-filter-1">Decimating FIR Filter</h3>
+<p>Used here as an ordinary FIR filter by setting:</p>
+<pre class="text"><code>Decimation = 1</code></pre>
+<p>Important settings:</p>
+<pre class="text"><code>Type
+
+Decimation
+
+Taps
+
+Sample Delay</code></pre>
+<p>The taps are the impulse response of the FIR filter.</p>
+</section>
+<section id="qt-gui-time-sink-1" class="level3">
+<h3 class="anchored" data-anchor-id="qt-gui-time-sink-1">QT GUI Time Sink</h3>
+<p>Used to compare:</p>
+<ul>
+<li><p>the input sequence;</p></li>
+<li><p>the FIR output.</p></li>
+</ul>
+<p>For these experiments, visible sample markers are especially useful because the signals are discrete-time sequences.</p>
+</section>
+<section id="variable-1" class="level3">
+<h3 class="anchored" data-anchor-id="variable-1">Variable</h3>
+<p>Used to define values such as:</p>
+<pre class="text"><code>samp_rate = 1k</code></pre>
+<p>so that the same setting can be shared across the flowgraph.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">10.34 What We Learned</h2>
+<p>We began this chapter with one impulse.</p>
+<p>From that simple experiment, we gradually discovered how FIR filtering works.</p>
+<p>An impulse applied to an FIR filter reveals its taps:</p>
+<p><span class="math display">\[
+\delta[n] \longrightarrow h[n]
+\]</span></p>
+<p>A delayed impulse produces a delayed response:</p>
+<p><span class="math display">\[
+\delta[n-k] \longrightarrow h[n-k]
+\]</span></p>
+<p>A scaled impulse produces a scaled response:</p>
+<p><span class="math display">\[
+A\delta[n-k] \longrightarrow Ah[n-k]
+\]</span></p>
+<p>Multiple input samples create multiple shifted and scaled copies of the impulse response.</p>
+<p>When those copies overlap, their contributions add.</p>
+<p>That leads naturally to convolution:</p>
+<p><span class="math display">\[
+\boxed{ y[n] = x[n]*h[n] }
+\]</span></p>
+<p>or, formally,</p>
+<p><span class="math display">\[
+\boxed{ y[n] = \sum_{k=-\infty}^{\infty} x[k]h[n-k] }
+\]</span></p>
+<p>Most importantly, we now understand what this equation means rather than treating it as a formula to memorize.</p>
+<p>For an FIR filter,</p>
+<p><span class="math display">\[
+\boxed{ \text{taps}=\text{impulse response} }
+\]</span></p>
+<p>Changing the taps changes the system.</p>
+<p>And the output of that FIR system is produced by convolution.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">10.35 Connecting to the Next Chapter</h2>
+<p>There is one broader lesson from this chapter worth keeping.</p>
+<p>A complicated signal does not always need to be understood as one complicated object.</p>
+<p>We can break it into simpler pieces, understand what the system does to each piece, and then combine the results.</p>
+<p>For convolution, those simple pieces were shifted and scaled impulses.</p>
+<p>That same way of thinking will help us with the next problem.</p>
+<p>Suppose a receiver already knows what a particular signal should look like.</p>
+<p>The signal arrives buried in noise, shifted in time, or mixed with other signals.</p>
+<p>How can the receiver find it?</p>
+<p>That leads to our next chapter.</p>
+<hr>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter09.html" class="pagination-link" aria-label="Chapter 9: Filters and Channel Selection">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter11.html" class="pagination-link" aria-label="Chapter 11: Correlation, Matched Filtering and Signal Detection">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

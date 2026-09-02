@@ -1,0 +1,2319 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 21: PLL and Carrier Synchronization – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter22.html" rel="next">
+<link href="../book/chapter20.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter21.html"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#part-i-carrier-phase-synchronization" id="toc-part-i-carrier-phase-synchronization" class="nav-link" data-scroll-target="#part-i-carrier-phase-synchronization">Part I: Carrier Phase Synchronization</a>
+  <ul class="collapse">
+  <li><a href="#a-fixed-carrier-phase-error" id="toc-a-fixed-carrier-phase-error" class="nav-link" data-scroll-target="#a-fixed-carrier-phase-error">21.1 A Fixed Carrier Phase Error</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.1-observing-carrier-phase-offset" id="toc-experiment-21.1-observing-carrier-phase-offset" class="nav-link" data-scroll-target="#experiment-21.1-observing-carrier-phase-offset">Experiment 21.1: Observing Carrier Phase Offset</a>
+  <ul class="collapse">
+  <li><a href="#a-numerical-example" id="toc-a-numerical-example" class="nav-link" data-scroll-target="#a-numerical-example">A numerical example</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  <li><a href="#measuring-relative-phase" id="toc-measuring-relative-phase" class="nav-link" data-scroll-target="#measuring-relative-phase">21.2 Measuring Relative Phase</a>
+  <ul class="collapse">
+  <li><a href="#why-multiply-by-the-conjugate" id="toc-why-multiply-by-the-conjugate" class="nav-link" data-scroll-target="#why-multiply-by-the-conjugate">Why multiply by the conjugate?</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#experiment-21.2-conjugate-product-phase-estimation" id="toc-experiment-21.2-conjugate-product-phase-estimation" class="nav-link" data-scroll-target="#experiment-21.2-conjugate-product-phase-estimation">Experiment 21.2: Conjugate-Product Phase Estimation</a>
+  <ul class="collapse">
+  <li><a href="#the-limitation" id="toc-the-limitation" class="nav-link" data-scroll-target="#the-limitation">The limitation</a></li>
+  <li><a href="#using-qpsk-symmetry-instead-of-a-known-symbol" id="toc-using-qpsk-symmetry-instead-of-a-known-symbol" class="nav-link" data-scroll-target="#using-qpsk-symmetry-instead-of-a-known-symbol">21.3 Using QPSK Symmetry Instead of a Known Symbol</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.3-m-th-power-phase-recovery" id="toc-experiment-21.3-m-th-power-phase-recovery" class="nav-link" data-scroll-target="#experiment-21.3-m-th-power-phase-recovery">Experiment 21.3: M-th Power Phase Recovery</a>
+  <ul class="collapse">
+  <li><a href="#the-price-of-removing-the-data" id="toc-the-price-of-removing-the-data" class="nav-link" data-scroll-target="#the-price-of-removing-the-data">The price of removing the data</a></li>
+  <li><a href="#why-a-one-time-estimate-is-not-always-enough" id="toc-why-a-one-time-estimate-is-not-always-enough" class="nav-link" data-scroll-target="#why-a-one-time-estimate-is-not-always-enough">21.4 Why a One-Time Estimate Is Not Always Enough</a></li>
+  <li><a href="#pll-intuition-measure-correct-repeat" id="toc-pll-intuition-measure-correct-repeat" class="nav-link" data-scroll-target="#pll-intuition-measure-correct-repeat">21.5 PLL Intuition: Measure, Correct, Repeat</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.4-pll-acquisition-and-lock" id="toc-experiment-21.4-pll-acquisition-and-lock" class="nav-link" data-scroll-target="#experiment-21.4-pll-acquisition-and-lock">Experiment 21.4: PLL Acquisition and Lock</a>
+  <ul class="collapse">
+  <li><a href="#observing-the-locked-carrier" id="toc-observing-the-locked-carrier" class="nav-link" data-scroll-target="#observing-the-locked-carrier">Observing the locked carrier</a></li>
+  <li><a href="#capturing-acquisition" id="toc-capturing-acquisition" class="nav-link" data-scroll-target="#capturing-acquisition">Capturing acquisition</a></li>
+  <li><a href="#about-the-python-plot" id="toc-about-the-python-plot" class="nav-link" data-scroll-target="#about-the-python-plot">About the Python plot</a></li>
+  <li><a href="#loop-bandwidth-how-aggressively-should-the-pll-react" id="toc-loop-bandwidth-how-aggressively-should-the-pll-react" class="nav-link" data-scroll-target="#loop-bandwidth-how-aggressively-should-the-pll-react">21.6 Loop Bandwidth: How Aggressively Should the PLL React?</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.5-effect-of-pll-loop-bandwidth" id="toc-experiment-21.5-effect-of-pll-loop-bandwidth" class="nav-link" data-scroll-target="#experiment-21.5-effect-of-pll-loop-bandwidth">Experiment 21.5: Effect of PLL Loop Bandwidth</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself-1" id="toc-try-it-yourself-1" class="nav-link" data-scroll-target="#try-it-yourself-1">Try It Yourself</a></li>
+  <li><a href="#why-an-ordinary-pll-is-not-enough-for-random-qpsk" id="toc-why-an-ordinary-pll-is-not-enough-for-random-qpsk" class="nav-link" data-scroll-target="#why-an-ordinary-pll-is-not-enough-for-random-qpsk">21.7 Why an Ordinary PLL Is Not Enough for Random QPSK</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.6-applying-an-ordinary-pll-to-qpsk" id="toc-experiment-21.6-applying-an-ordinary-pll-to-qpsk" class="nav-link" data-scroll-target="#experiment-21.6-applying-an-ordinary-pll-to-qpsk">Experiment 21.6: Applying an Ordinary PLL to QPSK</a>
+  <ul class="collapse">
+  <li><a href="#the-costas-loop-a-modulation-aware-carrier-loop" id="toc-the-costas-loop-a-modulation-aware-carrier-loop" class="nav-link" data-scroll-target="#the-costas-loop-a-modulation-aware-carrier-loop">21.8 The Costas Loop: A Modulation-Aware Carrier Loop</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.7-qpsk-carrier-recovery-with-a-costas-loop" id="toc-experiment-21.7-qpsk-carrier-recovery-with-a-costas-loop" class="nav-link" data-scroll-target="#experiment-21.7-qpsk-carrier-recovery-with-a-costas-loop">Experiment 21.7: QPSK Carrier Recovery with a Costas Loop</a>
+  <ul class="collapse">
+  <li><a href="#a-correct-looking-constellation-can-still-be-ambiguous" id="toc-a-correct-looking-constellation-can-still-be-ambiguous" class="nav-link" data-scroll-target="#a-correct-looking-constellation-can-still-be-ambiguous">A correct-looking constellation can still be ambiguous</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.8-costas-loop-in-noise" id="toc-experiment-21.8-costas-loop-in-noise" class="nav-link" data-scroll-target="#experiment-21.8-costas-loop-in-noise">Experiment 21.8: Costas Loop in Noise</a></li>
+  <li><a href="#part-ii-carrier-frequency-synchronization" id="toc-part-ii-carrier-frequency-synchronization" class="nav-link" data-scroll-target="#part-ii-carrier-frequency-synchronization">Part II: Carrier Frequency Synchronization</a>
+  <ul class="collapse">
+  <li><a href="#phase-offset-and-frequency-offset-are-not-the-same-problem" id="toc-phase-offset-and-frequency-offset-are-not-the-same-problem" class="nav-link" data-scroll-target="#phase-offset-and-frequency-offset-are-not-the-same-problem">21.9 Phase Offset and Frequency Offset Are Not the Same Problem</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.9-observing-carrier-frequency-offset" id="toc-experiment-21.9-observing-carrier-frequency-offset" class="nav-link" data-scroll-target="#experiment-21.9-observing-carrier-frequency-offset">Experiment 21.9: Observing Carrier Frequency Offset</a>
+  <ul class="collapse">
+  <li><a href="#frequency-is-phase-change-per-unit-time" id="toc-frequency-is-phase-change-per-unit-time" class="nav-link" data-scroll-target="#frequency-is-phase-change-per-unit-time">21.10 Frequency Is Phase Change per Unit Time</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.10-m-th-power-cfo-estimation-in-time-and-frequency" id="toc-experiment-21.10-m-th-power-cfo-estimation-in-time-and-frequency" class="nav-link" data-scroll-target="#experiment-21.10-m-th-power-cfo-estimation-in-time-and-frequency">Experiment 21.10: M-th Power CFO Estimation in Time and Frequency</a>
+  <ul class="collapse">
+  <li><a href="#time-domain-phase-increment-estimator" id="toc-time-domain-phase-increment-estimator" class="nav-link" data-scroll-target="#time-domain-phase-increment-estimator">Time-domain phase-increment estimator</a></li>
+  <li><a href="#the-dft-view" id="toc-the-dft-view" class="nav-link" data-scroll-target="#the-dft-view">The DFT view</a></li>
+  <li><a href="#why-does-the-green-qpsk-spectrum-look-broad" id="toc-why-does-the-green-qpsk-spectrum-look-broad" class="nav-link" data-scroll-target="#why-does-the-green-qpsk-spectrum-look-broad">Why does the green QPSK spectrum look broad?</a></li>
+  <li><a href="#two-estimators-one-physical-quantity" id="toc-two-estimators-one-physical-quantity" class="nav-link" data-scroll-target="#two-estimators-one-physical-quantity">Two estimators, one physical quantity</a></li>
+  <li><a href="#estimation-versus-tracking" id="toc-estimation-versus-tracking" class="nav-link" data-scroll-target="#estimation-versus-tracking">21.11 Estimation Versus Tracking</a></li>
+  <li><a href="#band-edge-frequency-detection" id="toc-band-edge-frequency-detection" class="nav-link" data-scroll-target="#band-edge-frequency-detection">21.12 Band-Edge Frequency Detection</a></li>
+  </ul></li>
+  <li><a href="#experiment-21.11-carrier-frequency-recovery-with-fll-band-edge" id="toc-experiment-21.11-carrier-frequency-recovery-with-fll-band-edge" class="nav-link" data-scroll-target="#experiment-21.11-carrier-frequency-recovery-with-fll-band-edge">Experiment 21.11: Carrier Frequency Recovery with FLL Band-Edge</a>
+  <ul class="collapse">
+  <li><a href="#why-must-sps-and-roll-off-match-the-waveform" id="toc-why-must-sps-and-roll-off-match-the-waveform" class="nav-link" data-scroll-target="#why-must-sps-and-roll-off-match-the-waveform">Why must SPS and roll-off match the waveform?</a></li>
+  <li><a href="#positive-and-negative-cfo" id="toc-positive-and-negative-cfo" class="nav-link" data-scroll-target="#positive-and-negative-cfo">Positive and negative CFO</a></li>
+  <li><a href="#acquisition-is-not-unlimited" id="toc-acquisition-is-not-unlimited" class="nav-link" data-scroll-target="#acquisition-is-not-unlimited">21.13 Acquisition Is Not Unlimited</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself-2" id="toc-try-it-yourself-2" class="nav-link" data-scroll-target="#try-it-yourself-2">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#putting-carrier-synchronization-together" id="toc-putting-carrier-synchronization-together" class="nav-link" data-scroll-target="#putting-carrier-synchronization-together">21.14 Putting Carrier Synchronization Together</a></li>
+  <li><a href="#practical-sdr-interpretation" id="toc-practical-sdr-interpretation" class="nav-link" data-scroll-target="#practical-sdr-interpretation">21.15 Practical SDR Interpretation</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">21.16 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">21.17 Connecting to the Next Chapter</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter21.html"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>If the transmitter and receiver do not share exactly the same carrier reference, how can the receiver recover the correct carrier phase and frequency?</strong></p>
+<p>In the previous chapters, we progressively made the communication link more realistic.</p>
+<p>We pulse-shaped QPSK, passed it through a non-ideal channel, observed attenuation, noise, carrier-frequency offset, multipath, sample-rate mismatch, and intersymbol interference, and then introduced equalization to compensate for structured channel distortion.</p>
+<p>Equalization solves an important receiver problem, but it does not solve every receiver problem.</p>
+<p>A receiver may still have the wrong carrier phase. Its oscillator may run at a slightly different frequency from the transmitter. Even after those errors are corrected, the receiver may still be sampling the waveform at the wrong instant.</p>
+<p>These are different synchronization problems.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Receiver problem</th>
+<th>Physical effect</th>
+<th>Main correction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Carrier phase offset</td>
+<td>Constellation has a fixed rotation</td>
+<td>Phase estimation, PLL, Costas Loop</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency offset</td>
+<td>Phase keeps changing with time</td>
+<td>CFO estimation, FLL</td>
+</tr>
+<tr class="odd">
+<td>Symbol timing offset</td>
+<td>Receiver samples at the wrong instant</td>
+<td>Timing recovery in the next chapter</td>
+</tr>
+</tbody>
+</table>
+<p>This chapter concentrates on the first two: <strong>carrier phase synchronization</strong> and <strong>carrier frequency synchronization</strong>.</p>
+<p>We will again follow the same rule that has guided the receiver chapters so far:</p>
+<blockquote class="blockquote">
+<p><strong>First observe the impairment. Then understand what it means. Only then introduce the receiver correction.</strong></p>
+</blockquote>
+<p>We will begin with a fixed phase error, discover how a conjugate product measures relative phase, use QPSK symmetry to remove unknown data, and then introduce feedback through the PLL and Costas Loop. After that, we will return to carrier-frequency offset, estimate it in both time and frequency, and finally recover it automatically with GNU Radio’s FLL Band-Edge block.</p>
+<hr>
+</section>
+<section id="part-i-carrier-phase-synchronization" class="level1">
+<h1>Part I: Carrier Phase Synchronization</h1>
+<section id="a-fixed-carrier-phase-error" class="level2">
+<h2 class="anchored" data-anchor-id="a-fixed-carrier-phase-error">21.1 A Fixed Carrier Phase Error</h2>
+<p>Suppose the transmitter and receiver oscillators have the same frequency, but they do not begin with the same phase.</p>
+<p>At complex baseband, a fixed carrier phase error rotates every received symbol by the same angle.</p>
+<p>If the transmitted symbol is <span class="math inline">\(s\)</span> and the carrier phase error is <span class="math inline">\(\phi\)</span>, then the received symbol is</p>
+<p><span class="math display">\[
+r=s e^{j\phi}
+\]</span></p>
+<p>The important word here is <strong>fixed</strong>.</p>
+<p>A 30° carrier phase offset does not make the constellation continuously spin. It rotates the complete constellation by 30° and leaves it there.</p>
+<p>For QPSK, this means the four constellation points remain four constellation points. Their geometry is preserved, but their orientation is wrong.</p>
+<p>That sounds simple, but it creates a serious receiver problem. The receiver’s decision regions were designed for the expected constellation orientation. If the constellation rotates far enough, the received symbols can cross those decision boundaries.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.1-observing-carrier-phase-offset" class="level1">
+<h1>Experiment 21.1: Observing Carrier Phase Offset</h1>
+<p>We begin with a controlled QPSK signal and deliberately rotate it by a known phase.</p>
+<p>The experiment is intentionally simple. We are not trying to correct anything yet.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp1-carrier-phase-offset-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Carrier phase offset flowgraph</figcaption>
+</figure>
+</div>
+<p>We vary the carrier phase offset while leaving the QPSK symbols themselves unchanged.</p>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp1-carrier-phase-offset-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of carrier phase offset on QPSK</figcaption>
+</figure>
+</div>
+<p>At 0°, the constellation appears at its normal positions around <span class="math inline">\((\pm1,\pm1)\)</span>. As the phase offset increases, the complete constellation rotates around the origin.</p>
+<section id="a-numerical-example" class="level3">
+<h3 class="anchored" data-anchor-id="a-numerical-example">A numerical example</h3>
+<p>Take the QPSK symbol</p>
+<p><span class="math display">\[
+s=1+j
+\]</span></p>
+<p>Its magnitude is <span class="math inline">\(\sqrt{2}\)</span> and its phase is 45°, so we can write</p>
+<p><span class="math display">\[
+s=\sqrt{2}e^{j45^\circ}
+\]</span></p>
+<p>Now apply a 30° carrier phase offset.</p>
+<p>The new phase becomes</p>
+<p><span class="math display">\[
+45^\circ+30^\circ=75^\circ
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+r=\sqrt{2}e^{j75^\circ}
+\]</span></p>
+<p>Its new I and Q coordinates are approximately</p>
+<p><span class="math display">\[
+I=\sqrt{2}\cos75^\circ\approx0.366
+\]</span></p>
+<p><span class="math display">\[
+Q=\sqrt{2}\sin75^\circ\approx1.366
+\]</span></p>
+<p>So the point <span class="math inline">\((1,1)\)</span> moves to approximately <span class="math inline">\((0.366,1.366)\)</span>.</p>
+<p>Nothing happened to the information symbol itself. The receiver’s carrier reference was simply rotated.</p>
+<p>This distinction will become important later when we compare a <strong>phase offset</strong> with a <strong>frequency offset</strong>.</p>
+</section>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<p>Before changing the flowgraph, predict what a 90° carrier phase offset should do to the point <span class="math inline">\((1,1)\)</span>. Then set the phase offset to 90° and compare the prediction with the Constellation Sink.</p>
+<hr>
+</section>
+<section id="measuring-relative-phase" class="level2">
+<h2 class="anchored" data-anchor-id="measuring-relative-phase">21.2 Measuring Relative Phase</h2>
+<p>We can see that the constellation is rotated, but a receiver needs more than a picture.</p>
+<p>It needs some way to measure the phase difference.</p>
+<p>Suppose, for the moment, that the receiver knows what symbol was transmitted. If the transmitted reference is <span class="math inline">\(s\)</span> and the received symbol is</p>
+<p><span class="math display">\[
+r=s e^{j\phi},
+\]</span></p>
+<p>we would like an operation that removes the known symbol phase and leaves only <span class="math inline">\(\phi\)</span>.</p>
+<p>This is exactly what a <strong>conjugate product</strong> can do.</p>
+<p>Multiply the received symbol by the complex conjugate of the known reference:</p>
+<p><span class="math display">\[
+rs^*=s e^{j\phi}s^*=|s|^2e^{j\phi}
+\]</span></p>
+<p>The phase of <span class="math inline">\(s\)</span> disappears.</p>
+<p>What remains is a positive magnitude term, <span class="math inline">\(|s|^2\)</span>, and the relative phase <span class="math inline">\(\phi\)</span>.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\angle(rs^*)=\phi
+\]</span></p>
+<p>This is one of the most useful small operations in complex signal processing.</p>
+<section id="why-multiply-by-the-conjugate" class="level3">
+<h3 class="anchored" data-anchor-id="why-multiply-by-the-conjugate">Why multiply by the conjugate?</h3>
+<p>For two complex numbers <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>, ordinary multiplication adds their phases:</p>
+<p><span class="math display">\[
+\angle(ab)=\angle a+\angle b
+\]</span></p>
+<p>But conjugating <span class="math inline">\(b\)</span> reverses its phase. Therefore,</p>
+<p><span class="math display">\[
+\angle(ab^*)=\angle a-\angle b
+\]</span></p>
+<p>So the conjugate product naturally measures a <strong>phase difference</strong>.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="experiment-21.2-conjugate-product-phase-estimation" class="level1">
+<h1>Experiment 21.2: Conjugate-Product Phase Estimation</h1>
+<p>We now use GNU Radio to compare a phase-rotated QPSK symbol with its known reference.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp2-conjugate-product-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Conjugate-product phase-estimation flowgraph</figcaption>
+</figure>
+</div>
+<p>The important processing chain is conceptually</p>
+<pre class="text"><code>Known reference s ───────────────┐
+                                 ↓
+Received r = s·exp(jφ) ─→ Multiply Conjugate
+                                 ↓
+                           Complex to Arg
+                                 ↓
+                         Phase estimate</code></pre>
+<p>For our QPSK constellation, the symbols have coordinates <span class="math inline">\((\pm1,\pm1)\)</span>, so</p>
+<p><span class="math display">\[
+|s|^2=1^2+1^2=2
+\]</span></p>
+<p>At a 30° phase offset, the conjugate product should therefore be</p>
+<p><span class="math display">\[
+rs^*=2e^{j30^\circ}
+\]</span></p>
+<p>Its coordinates should be</p>
+<p><span class="math display">\[
+I=2\cos30^\circ\approx1.732
+\]</span></p>
+<p><span class="math display">\[
+Q=2\sin30^\circ=1
+\]</span></p>
+<p>The experiment produces the expected point and phase estimate.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp2-conjugate-product-phase-estimation.png" class="img-fluid figure-img"></p>
+<figcaption>Conjugate-product phase-estimation result</figcaption>
+</figure>
+</div>
+<p>The important lesson is not merely that the Number Sink displays the correct angle.</p>
+<p>It is that a complex multiplication has converted a geometric phase difference into something the receiver can measure directly.</p>
+<section id="the-limitation" class="level3">
+<h3 class="anchored" data-anchor-id="the-limitation">The limitation</h3>
+<p>There is an obvious problem.</p>
+<p>This experiment assumes that the receiver knows the transmitted reference symbol <span class="math inline">\(s\)</span>.</p>
+<p>That can happen during a known training sequence or preamble, but ordinary payload symbols are not known in advance. If the receiver already knew them, there would be little reason to demodulate them.</p>
+<p>So the next question is:</p>
+<blockquote class="blockquote">
+<p><strong>Can we remove the unknown QPSK data phase without knowing which QPSK symbol was transmitted?</strong></p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-multiply-conjugate" class="anchored">GNU Radio Toolbox: Multiply Conjugate</h3>
+<p><strong>Multiply Conjugate</strong> multiplies one complex input by the complex conjugate of the other.</p>
+<p>Its most important phase property is</p>
+<p><span class="math display">\[
+\angle(ab^*)=\angle a-\angle b
+\]</span></p>
+<p>This makes it useful whenever the receiver wants a relative phase rather than the sum of two phases.</p>
+<p>We will reuse the same idea later to measure the phase advance between adjacent samples and turn that phase advance into a carrier-frequency estimate.</p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-complex-to-arg" class="anchored">GNU Radio Toolbox: Complex to Arg</h3>
+<p><strong>Complex to Arg</strong> converts each complex sample into its phase angle.</p>
+<p>If</p>
+<p><span class="math display">\[
+z=I+jQ,
+\]</span></p>
+<p>the block produces the principal phase of <span class="math inline">\(z\)</span>, normally in the interval from <span class="math inline">\(-\pi\)</span> to <span class="math inline">\(+\pi\)</span>.</p>
+<p>That principal-value wrapping becomes important in the next experiment.</p>
+</blockquote>
+<hr>
+</section>
+<section id="using-qpsk-symmetry-instead-of-a-known-symbol" class="level2">
+<h2 class="anchored" data-anchor-id="using-qpsk-symmetry-instead-of-a-known-symbol">21.3 Using QPSK Symmetry Instead of a Known Symbol</h2>
+<p>QPSK has four possible symbol phases separated by 90°.</p>
+<p>For the constellation used in this book, the phases are</p>
+<p><span class="math display">\[
+45^\circ,\;135^\circ,\;225^\circ,\;315^\circ
+\]</span></p>
+<p>Now imagine multiplying every phase by four.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">QPSK phase</th>
+<th style="text-align: right;">After multiplying by 4</th>
+<th style="text-align: right;">Equivalent phase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">45°</td>
+<td style="text-align: right;">180°</td>
+<td style="text-align: right;">180°</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">135°</td>
+<td style="text-align: right;">540°</td>
+<td style="text-align: right;">180°</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">225°</td>
+<td style="text-align: right;">900°</td>
+<td style="text-align: right;">180°</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">315°</td>
+<td style="text-align: right;">1260°</td>
+<td style="text-align: right;">180°</td>
+</tr>
+</tbody>
+</table>
+<p>All four possible data phases collapse to the same direction.</p>
+<p>In complex notation, raising the QPSK symbol to the fourth power performs exactly that phase multiplication.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+(1+j)^4=-4
+\]</span></p>
+<p>The same result occurs for all four QPSK symbols in our mapping.</p>
+<p>This gives us a powerful idea:</p>
+<blockquote class="blockquote">
+<p><strong>The fourth power can remove the unknown QPSK data phase because QPSK has fourfold rotational symmetry.</strong></p>
+</blockquote>
+<p>If the received symbol contains an additional carrier phase error <span class="math inline">\(\phi\)</span>,</p>
+<p><span class="math display">\[
+r=s e^{j\phi},
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+r^4=s^4e^{j4\phi}=-4e^{j4\phi}
+\]</span></p>
+<p>The data dependence has disappeared. The carrier phase remains, multiplied by four.</p>
+<p>There is also a useful magnitude observation. Since</p>
+<p><span class="math display">\[
+|s|=\sqrt{2},
+\]</span></p>
+<p>we get</p>
+<p><span class="math display">\[
+|s^4|=(\sqrt{2})^4=4
+\]</span></p>
+<p>That is why the fourth-power result appears at radius 4 rather than radius <span class="math inline">\(\sqrt{2}\)</span>.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.3-m-th-power-phase-recovery" class="level1">
+<h1>Experiment 21.3: M-th Power Phase Recovery</h1>
+<p>For QPSK, <span class="math inline">\(M=4\)</span>, so we raise the received signal to the fourth power.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp3-mth-power-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>M-th power phase-recovery flowgraph</figcaption>
+</figure>
+</div>
+<p>The fourth-power QPSK symbols naturally collapse toward <span class="math inline">\(-4\)</span>, which has a phase of 180°. We remove that known orientation before extracting the phase, then divide the remaining phase by four.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>QPSK with carrier phase offset
+            ↓
+        Fourth power
+            ↓
+  QPSK data phase disappears
+            ↓
+       Multiply by -1
+            ↓
+       Complex to Arg
+            ↓
+        Divide by 4
+            ↓
+  Estimated carrier phase</code></pre>
+<p>The phase estimate can be written as</p>
+<p><span class="math display">\[
+\hat{\phi}=\frac{1}{4}\angle(-r^4)
+\]</span></p>
+<p>The order of operations matters. We rotate the complex phasor first and then ask for its principal phase. Subtracting 180° after a wrapped phase measurement is not always equivalent because <code>Complex to Arg</code> has already forced the angle into its principal interval.</p>
+<p>The experimental comparison is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp3-mth-power-phase-recovery.png" class="img-fluid figure-img"></p>
+<figcaption>M-th power QPSK phase-recovery result</figcaption>
+</figure>
+</div>
+<p>The method works well while the multiplied phase remains inside the unambiguous principal-angle region.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Applied carrier phase</th>
+<th style="text-align: right;">M-th power result</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0°</td>
+<td style="text-align: right;">≈ 0°</td>
+<td>Correct</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">40°</td>
+<td style="text-align: right;">≈ 40°</td>
+<td>Correct</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">45°</td>
+<td style="text-align: right;">Boundary</td>
+<td>Ambiguous boundary</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">50°</td>
+<td style="text-align: right;">≈ -40°</td>
+<td>Wrapped equivalent</td>
+</tr>
+</tbody>
+</table>
+<p>The 50° case is especially useful.</p>
+<p>Multiplying by four gives</p>
+<p><span class="math display">\[
+4(50^\circ)=200^\circ
+\]</span></p>
+<p>But a principal phase representation wraps 200° to -160°:</p>
+<p><span class="math display">\[
+200^\circ\equiv-160^\circ
+\]</span></p>
+<p>Dividing by four gives</p>
+<p><span class="math display">\[
+-160^\circ/4=-40^\circ
+\]</span></p>
+<p>That is exactly what the experiment shows.</p>
+<section id="the-price-of-removing-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="the-price-of-removing-the-data">The price of removing the data</h3>
+<p>The M-th power method solved one problem and revealed another.</p>
+<p>QPSK repeats after a 90° rotation. Therefore the carrier phase can only be recovered modulo 90° by this symmetry-based operation.</p>
+<p>The same fourfold symmetry that removes the QPSK data also creates the ambiguity.</p>
+<p>This is not a GNU Radio limitation. It comes from the modulation itself.</p>
+<p>Practical systems may resolve such ambiguity using known preambles, pilots, differential encoding, or other higher-level information.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-exponentiate-const-int" class="anchored">GNU Radio Toolbox: Exponentiate Const Int</h3>
+<p><strong>Exponentiate Const Int</strong> raises each input sample to a fixed integer power.</p>
+<p>In this chapter we use an exponent of <code>4</code> because QPSK has fourfold rotational symmetry.</p>
+<p>The block is not a general-purpose magic carrier-recovery block. Its usefulness here comes directly from the structure of QPSK.</p>
+</blockquote>
+<hr>
+</section>
+<section id="why-a-one-time-estimate-is-not-always-enough" class="level2">
+<h2 class="anchored" data-anchor-id="why-a-one-time-estimate-is-not-always-enough">21.4 Why a One-Time Estimate Is Not Always Enough</h2>
+<p>The previous experiments were feedforward measurements.</p>
+<p>We observed a signal, calculated an estimate, and obtained a phase value.</p>
+<p>But a real receiver oscillator does not necessarily remain perfectly fixed. Temperature, oscillator instability, motion, Doppler, and residual frequency mismatch can make the phase error change with time.</p>
+<p>A receiver therefore often needs a mechanism that repeatedly asks:</p>
+<pre class="text"><code>Am I ahead or behind in phase?
+            ↓
+How should I correct my local oscillator?
+            ↓
+Measure again
+            ↓
+Correct again
+            ↓
+Repeat continuously</code></pre>
+<p>That is the basic idea behind a <strong>phase-locked loop</strong>, or PLL.</p>
+<hr>
+</section>
+<section id="pll-intuition-measure-correct-repeat" class="level2">
+<h2 class="anchored" data-anchor-id="pll-intuition-measure-correct-repeat">21.5 PLL Intuition: Measure, Correct, Repeat</h2>
+<p>A PLL is a feedback system.</p>
+<p>At a conceptual level, it contains three ideas:</p>
+<pre class="text"><code>Received carrier
+      ↓
+Phase detector
+      ↓
+Phase error
+      ↓
+Loop filter
+      ↓
+Local oscillator / NCO
+      └──────────────↺</code></pre>
+<p>The phase detector asks whether the local reference is ahead or behind the received carrier. The loop filter controls how strongly the receiver reacts. The local oscillator or numerically controlled oscillator changes its phase or frequency in response.</p>
+<p>This repeated correction creates several useful terms.</p>
+<p><strong>Acquisition</strong> is the process of moving from an initially incorrect state toward lock.</p>
+<p><strong>Lock</strong> means the loop has converged closely enough that the local reference follows the received carrier.</p>
+<p><strong>Tracking</strong> is what happens after lock: the loop follows smaller ongoing changes rather than starting from a large initial error.</p>
+<p>We will first study the PLL with a clean complex carrier rather than QPSK. That removes the modulation from the problem and lets us see the feedback behavior itself.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.4-pll-acquisition-and-lock" class="level1">
+<h1>Experiment 21.4: PLL Acquisition and Lock</h1>
+<p>For the controlled carrier experiment, we use</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32000</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency</td>
+<td style="text-align: right;"><code>1000</code> Hz</td>
+</tr>
+<tr class="odd">
+<td>Initial carrier phase offset</td>
+<td style="text-align: right;"><code>60°</code></td>
+</tr>
+<tr class="even">
+<td>Minimum PLL frequency</td>
+<td style="text-align: right;"><code>800</code> Hz equivalent</td>
+</tr>
+<tr class="odd">
+<td>Maximum PLL frequency</td>
+<td style="text-align: right;"><code>1200</code> Hz equivalent</td>
+</tr>
+</tbody>
+</table>
+<p>The choice of a 1 kHz carrier at 32 ksample/s is convenient because one carrier cycle occupies</p>
+<p><span class="math display">\[
+32000/1000=32
+\]</span></p>
+<p>samples.</p>
+<p>Therefore the carrier phase advances by</p>
+<p><span class="math display">\[
+360^\circ/32=11.25^\circ
+\]</span></p>
+<p>per sample.</p>
+<p>In normalized angular frequency,</p>
+<p><span class="math display">\[
+\omega_0=2\pi\frac{1000}{32000}\approx0.19635\text{ rad/sample}
+\]</span></p>
+<p>The PLL frequency limits were chosen to place the actual 1 kHz carrier comfortably inside the allowed range:</p>
+<p><span class="math display">\[
+\omega_{\min}=2\pi\frac{800}{32000}\approx0.15708\text{ rad/sample}
+\]</span></p>
+<p><span class="math display">\[
+\omega_{\max}=2\pi\frac{1200}{32000}\approx0.23562\text{ rad/sample}
+\]</span></p>
+<p>These are experimental choices, not universal PLL settings.</p>
+<section id="observing-the-locked-carrier" class="level3">
+<h3 class="anchored" data-anchor-id="observing-the-locked-carrier">Observing the locked carrier</h3>
+<p>For the locked-state display we use GNU Radio’s <strong>PLL Carrier Regeneration</strong> block because we want to observe the regenerated local carrier itself.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp4-pll-lock-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>PLL carrier-lock flowgraph</figcaption>
+</figure>
+</div>
+<p>After acquisition, the regenerated carrier follows the input carrier closely.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp4-pll-carrier-lock.png" class="img-fluid figure-img"></p>
+<figcaption>PLL carrier lock</figcaption>
+</figure>
+</div>
+<p>The steady-state picture is useful, but it hides the most interesting part of a feedback loop: how it got there.</p>
+</section>
+<section id="capturing-acquisition" class="level3">
+<h3 class="anchored" data-anchor-id="capturing-acquisition">Capturing acquisition</h3>
+<p>To observe startup, we use a second version of the flowgraph and measure the relative phase between the received carrier and the regenerated PLL carrier with the same conjugate-product idea introduced earlier.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp4-pll-acquisition-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>PLL acquisition flowgraph</figcaption>
+</figure>
+</div>
+<p>The phase-error measurement is</p>
+<p><span class="math display">\[
+e_\phi[n]=\angle\{x[n]y_{\text{PLL}}^*[n]\}
+\]</span></p>
+<p>The processing chain is</p>
+<pre class="text"><code>Received carrier ───────────────┐
+                                ↓
+PLL regenerated carrier ─→ Multiply Conjugate
+                                ↓
+                          Complex to Arg
+                                ↓
+                              Head
+                                ↓
+                           File Sink</code></pre>
+<p>We capture 2000 samples.</p>
+<p>At 32 ksample/s, that corresponds to</p>
+<p><span class="math display">\[
+2000/32000=0.0625\text{ s}=62.5\text{ ms}
+\]</span></p>
+<p>The measured acquisition transient is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp4-pll-acquisition-phase-error.png" class="img-fluid figure-img"></p>
+<figcaption>Measured PLL acquisition phase error</figcaption>
+</figure>
+</div>
+<p>The first phase-error sample is close to the imposed 60° offset, but the error does not simply fall smoothly from 60° to zero.</p>
+<p>It initially grows, reaches roughly 168°, reverses direction, crosses toward zero, overshoots slightly, and then settles. By the end of the captured record, the phase error is approximately 0.024°.</p>
+<p>This is a valuable observation.</p>
+<blockquote class="blockquote">
+<p><strong>PLL acquisition is a dynamic feedback process, not a simple monotonic subtraction of the initial phase error.</strong></p>
+</blockquote>
+<p>The loop contains memory and feedback. Depending on its parameters and initial condition, it can overshoot and oscillate before settling.</p>
+</section>
+<section id="about-the-python-plot" class="level3">
+<h3 class="anchored" data-anchor-id="about-the-python-plot">About the Python plot</h3>
+<p>GNU Radio performs the PLL processing and generates the phase-error samples. A small Python script only reads the recorded <code>float32</code> data, converts radians to degrees, constructs the time axis, and plots the measured transient.</p>
+<p>It does not simulate the PLL and does not smooth or alter the measured data.</p>
+<p>The plotting script and captured data are provided in the Chapter 21 experiments folder.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-pll-carrier-regeneration" class="anchored">GNU Radio Toolbox: PLL Carrier Regeneration</h3>
+<p><strong>PLL Carrier Regeneration</strong> is useful when we want the loop to generate a carrier reference that follows an incoming carrier.</p>
+<p>Important parameters include the loop bandwidth and the allowed minimum and maximum angular frequencies.</p>
+<p>The frequency limits should contain the carrier the loop is expected to acquire. They are not arbitrary normalized numbers and should be related to the actual sample rate and carrier frequency.</p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-head-and-file-sink-for-measured-transients" class="anchored">GNU Radio Toolbox: Head and File Sink for Measured Transients</h3>
+<p><strong>Head</strong> limits a continuous GNU Radio stream to a chosen number of items. <strong>File Sink</strong> records those items for later analysis.</p>
+<p>In this experiment, GNU Radio generates the PLL phase-error stream, <code>Head</code> keeps a controlled acquisition interval, and <code>File Sink</code> records it.</p>
+<p>This is useful when a short transient is easier to study from a fixed data record than from a continuously refreshing GUI.</p>
+</blockquote>
+<hr>
+</section>
+<section id="loop-bandwidth-how-aggressively-should-the-pll-react" class="level2">
+<h2 class="anchored" data-anchor-id="loop-bandwidth-how-aggressively-should-the-pll-react">21.6 Loop Bandwidth: How Aggressively Should the PLL React?</h2>
+<p>Once we saw the acquisition transient, a natural question appeared:</p>
+<blockquote class="blockquote">
+<p><strong>What controls how quickly the PLL reacts?</strong></p>
+</blockquote>
+<p>One of the most important parameters is <strong>loop bandwidth</strong>.</p>
+<p>The intuitive meaning is more important than the exact control-system derivation at this stage.</p>
+<p>A wider loop bandwidth lets the PLL react more aggressively to phase and frequency error. That usually helps it acquire and track faster.</p>
+<p>A narrower loop bandwidth makes the loop more cautious. Acquisition becomes slower, but the loop also reacts less strongly to rapid fluctuations and noise.</p>
+<p>So loop bandwidth creates a trade-off:</p>
+<pre class="text"><code>Narrow loop bandwidth
+→ slower response
+→ less reaction to rapid fluctuations
+
+Wide loop bandwidth
+→ faster response
+→ more reaction to noise and fluctuations</code></pre>
+<hr>
+</section>
+</section>
+<section id="experiment-21.5-effect-of-pll-loop-bandwidth" class="level1">
+<h1>Experiment 21.5: Effect of PLL Loop Bandwidth</h1>
+<p>We reuse the acquisition flowgraph from Experiment 21.4. Nothing else is changed except the loop bandwidth.</p>
+<p>The three values are</p>
+<p><span class="math display">\[
+B_{\text{narrow}}=\pi/3000
+\]</span></p>
+<p><span class="math display">\[
+B_{\text{baseline}}=\pi/1000
+\]</span></p>
+<p><span class="math display">\[
+B_{\text{wide}}=\pi/300
+\]</span></p>
+<p>For this comparison, <code>Head</code> records 6000 samples. At 32 ksample/s,</p>
+<p><span class="math display">\[
+6000/32000=0.1875\text{ s}=187.5\text{ ms}
+\]</span></p>
+<p>The measured responses are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp5-pll-loop-bandwidth-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of PLL loop bandwidth on acquisition</figcaption>
+</figure>
+</div>
+<p>The difference is substantial.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Loop bandwidth</th>
+<th>Observed behavior</th>
+<th>Approximate measured settling</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\pi/3000\)</span></td>
+<td>Very slow acquisition</td>
+<td>Did not settle during the 187.5 ms record</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\pi/1000\)</span></td>
+<td>Moderate acquisition</td>
+<td>Within about ±1° after 38.9 ms</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\pi/300\)</span></td>
+<td>Fast acquisition</td>
+<td>Within about ±1° after 17.8 ms</td>
+</tr>
+</tbody>
+</table>
+<p>For the baseline case, the error remained within about ±5° after 31.6 ms and within about ±1° after 38.9 ms.</p>
+<p>For the wide-loop case, the corresponding times were about 8.8 ms and 17.8 ms.</p>
+<p>The narrow-loop curve also reaches the ±180° principal-phase boundary. The apparent jump is phase wrapping, not a physical discontinuity in the oscillator.</p>
+<p>This experiment gives loop bandwidth a physical meaning:</p>
+<blockquote class="blockquote">
+<p><strong>Loop bandwidth controls how aggressively the feedback loop responds to error.</strong></p>
+</blockquote>
+<p>The wider setting acquired much faster in this clean experiment. Later, when noise is present, the same aggressive response can also make the loop more sensitive to noisy phase measurements.</p>
+<p>As in Experiment 21.4, the plotting script and the measured <code>.dat</code> files are available in the Chapter 21 experiments folder.</p>
+<section id="try-it-yourself-1" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-1">Try It Yourself</h3>
+<p>Before changing the flowgraph, predict what should happen if the loop bandwidth is made even narrower than <span class="math inline">\(\pi/3000\)</span>. Will the final locked phase necessarily be wrong, or will acquisition simply take longer than the observation window?</p>
+<hr>
+</section>
+<section id="why-an-ordinary-pll-is-not-enough-for-random-qpsk" class="level2">
+<h2 class="anchored" data-anchor-id="why-an-ordinary-pll-is-not-enough-for-random-qpsk">21.7 Why an Ordinary PLL Is Not Enough for Random QPSK</h2>
+<p>The clean-carrier PLL taught us feedback, acquisition, lock, and loop bandwidth.</p>
+<p>Now we return to QPSK.</p>
+<p>A simple carrier PLL expects its phase detector to see a phase error associated with the carrier. Random QPSK creates a new difficulty because the signal phase also changes when the data symbol changes.</p>
+<p>The observed phase can be thought of as</p>
+<p><span class="math display">\[
+\theta_{\text{observed}}=\theta_{\text{data}}+\theta_{\text{carrier}}
+\]</span></p>
+<p>For a clean unmodulated carrier, <span class="math inline">\(\theta_{\text{data}}\)</span> is absent.</p>
+<p>For random QPSK, it jumps among the legitimate QPSK symbol phases.</p>
+<p>A simple carrier phase detector can therefore mistake modulation-dependent phase changes for carrier error.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.6-applying-an-ordinary-pll-to-qpsk" class="level1">
+<h1>Experiment 21.6: Applying an Ordinary PLL to QPSK</h1>
+<p>We feed random QPSK directly into the ordinary PLL carrier-regeneration approach.</p>
+<p>The result is shown for two imposed phase offsets.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp6-ordinary-pll-qpsk-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Ordinary PLL applied to QPSK</figcaption>
+</figure>
+</div>
+<p>Changing the carrier phase rotates the QPSK constellation as expected, but the ordinary PLL output does not become a clean QPSK carrier reference. It forms a similar arc-like response even as the imposed phase offset changes.</p>
+<p>That is not a reason to keep tuning the phase-offset control.</p>
+<p>It is the lesson of the experiment.</p>
+<blockquote class="blockquote">
+<p><strong>A simple carrier PLL is not directly suited to random suppressed-carrier QPSK because the phase detector must somehow separate carrier error from legitimate data phase changes.</strong></p>
+</blockquote>
+<p>This does not mean that PLL ideas are useless for QPSK. It means that the phase detector must understand the modulation structure.</p>
+<p>That leads to the <strong>Costas Loop</strong>.</p>
+<hr>
+<section id="the-costas-loop-a-modulation-aware-carrier-loop" class="level2">
+<h2 class="anchored" data-anchor-id="the-costas-loop-a-modulation-aware-carrier-loop">21.8 The Costas Loop: A Modulation-Aware Carrier Loop</h2>
+<p>A Costas Loop is still a feedback carrier-recovery loop, but its error detector is designed for modulated signals such as PSK.</p>
+<p>For our QPSK experiment, the important settings are</p>
+<pre class="text"><code>Order:          4
+Loop Bandwidth: pi/100
+Use SNR:        No</code></pre>
+<p><code>Order = 4</code> tells the block that the signal has QPSK-like fourfold phase structure. It does <strong>not</strong> mean that we are building a fourth-order PLL.</p>
+<p><code>Loop Bandwidth = pi/100</code> controls the feedback response in the same broad sense we explored with the ordinary PLL.</p>
+<p><code>Use SNR = No</code> is appropriate for our first controlled experiment because we initially want to understand carrier recovery without adding noise.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-costas-loop" class="anchored">GNU Radio Toolbox: Costas Loop</h3>
+<p><strong>Costas Loop</strong> is a feedback carrier-recovery block designed for suitable phase-modulated signals.</p>
+<p>Unlike the simple clean-carrier PLL experiment, its phase-error detector accounts for the symmetry of the modulation.</p>
+<p>Important settings include the modulation order and loop bandwidth. The loop can also expose diagnostic outputs such as frequency, phase, and error, but those outputs are most informative when the transient behavior is captured deliberately. A steady-state display after lock may appear nearly flat because the loop has already done its work.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="experiment-21.7-qpsk-carrier-recovery-with-a-costas-loop" class="level1">
+<h1>Experiment 21.7: QPSK Carrier Recovery with a Costas Loop</h1>
+<p>We now apply a controlled phase rotation to QPSK and place a Costas Loop in the receiver.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp7-costas-loop-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK carrier recovery with Costas Loop flowgraph</figcaption>
+</figure>
+</div>
+<p>At a 30° phase offset, the original QPSK point <span class="math inline">\((1,1)\)</span> has a phase of 45°. After the carrier rotation,</p>
+<p><span class="math display">\[
+45^\circ+30^\circ=75^\circ
+\]</span></p>
+<p>so the expected coordinates are approximately</p>
+<p><span class="math display">\[
+(\sqrt{2}\cos75^\circ,\sqrt{2}\sin75^\circ)\approx(0.366,1.366)
+\]</span></p>
+<p>That is what we see before recovery.</p>
+<p>After the Costas Loop, the constellation returns close to the normal QPSK geometry around <span class="math inline">\((\pm1,\pm1)\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp7-costas-loop-recovery-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Costas Loop QPSK recovery comparison</figcaption>
+</figure>
+</div>
+<p>We also tested a much larger phase rotation such as 120°. The recovered constellation again looks geometrically correct.</p>
+<p>That result needs an important qualification.</p>
+<section id="a-correct-looking-constellation-can-still-be-ambiguous" class="level3">
+<h3 class="anchored" data-anchor-id="a-correct-looking-constellation-can-still-be-ambiguous">A correct-looking constellation can still be ambiguous</h3>
+<p>QPSK is unchanged geometrically by rotations of 90°.</p>
+<p>Therefore a Costas Loop can recover a stable QPSK constellation while still leaving an integer multiple of 90° ambiguity:</p>
+<p><span class="math display">\[
+\phi_{\text{ambiguity}}=k\frac{\pi}{2},\qquad k=0,1,2,3
+\]</span></p>
+<p>The constellation may look perfect, but the original symbol-to-bit labels can still be rotated.</p>
+<p>This is the same underlying symmetry we met in the M-th power experiment.</p>
+<p>So there are two different questions:</p>
+<ol type="1">
+<li>Has the receiver recovered a stable QPSK geometry?</li>
+<li>Has it also recovered the original absolute symbol labeling?</li>
+</ol>
+<p>Those are not always the same thing.</p>
+<p>Practical systems use known information, differential encoding, pilots, or framing structure to resolve the remaining ambiguity when necessary.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.8-costas-loop-in-noise" class="level1">
+<h1>Experiment 21.8: Costas Loop in Noise</h1>
+<p>So far, the Costas Loop has seen a clean phase-rotated QPSK signal.</p>
+<p>Now we keep the 30° carrier phase offset and add noise.</p>
+<p>We compare two noise amplitudes:</p>
+<p><span class="math display">\[
+A_n=0.1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+A_n=0.5
+\]</span></p>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp8-costas-loop-noise-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Costas Loop recovery with two noise levels</figcaption>
+</figure>
+</div>
+<p>At noise amplitude 0.1, the recovered constellation still forms relatively compact clusters around the expected QPSK points.</p>
+<p>At noise amplitude 0.5, the clusters become much broader.</p>
+<p>It is tempting to call all of that spreading <strong>phase jitter</strong>, but that would be too simple.</p>
+<p>Noise affects the display in at least two ways.</p>
+<p>First, additive complex noise directly perturbs the I and Q samples, spreading the constellation even if the carrier estimate were perfect.</p>
+<p>Second, noisy samples also perturb the Costas Loop’s phase-error detector, which can create additional tracking variation.</p>
+<p>So a noisy recovered constellation contains both <strong>sample noise</strong> and <strong>carrier-tracking effects</strong>.</p>
+<p>This distinction matters in practical receivers because not every cloud around a constellation point should be blamed on the synchronization loop.</p>
+<hr>
+</section>
+<section id="part-ii-carrier-frequency-synchronization" class="level1">
+<h1>Part II: Carrier Frequency Synchronization</h1>
+<section id="phase-offset-and-frequency-offset-are-not-the-same-problem" class="level2">
+<h2 class="anchored" data-anchor-id="phase-offset-and-frequency-offset-are-not-the-same-problem">21.9 Phase Offset and Frequency Offset Are Not the Same Problem</h2>
+<p>We are now ready to return to the carrier-frequency offset first observed in the wireless-channel chapter.</p>
+<p>A fixed carrier phase offset is</p>
+<p><span class="math display">\[
+\phi(t)=\phi_0
+\]</span></p>
+<p>A carrier-frequency offset makes the phase change continuously:</p>
+<p><span class="math display">\[
+\phi(t)=2\pi\Delta f t+\phi_0
+\]</span></p>
+<p>where <span class="math inline">\(\Delta f\)</span> is the difference between the transmitter and receiver carrier frequencies.</p>
+<p>This distinction is fundamental.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Carrier phase offset</th>
+<th>Carrier frequency offset</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Phase error</td>
+<td>Constant</td>
+<td>Changes continuously with time</td>
+</tr>
+<tr class="even">
+<td>Constellation</td>
+<td>Fixed rotation</td>
+<td>Continuous rotation</td>
+</tr>
+<tr class="odd">
+<td>Static constellation display</td>
+<td>Rotated clusters</td>
+<td>Arcs or ring</td>
+</tr>
+<tr class="even">
+<td>Receiver task</td>
+<td>Correct phase</td>
+<td>Estimate and correct frequency mismatch</td>
+</tr>
+</tbody>
+</table>
+<p>A frequency error therefore becomes a <strong>phase slope</strong>.</p>
+<p>Even a small frequency mismatch eventually accumulates a large phase error if we wait long enough.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.9-observing-carrier-frequency-offset" class="level1">
+<h1>Experiment 21.9: Observing Carrier Frequency Offset</h1>
+<p>We return to the pulse-shaped QPSK signal and apply a controlled carrier-frequency offset before the receiver processing.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp9-carrier-frequency-offset-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Carrier-frequency-offset flowgraph</figcaption>
+</figure>
+</div>
+<p>At zero frequency offset, the QPSK clusters remain stationary.</p>
+<p>At 5 Hz, the constellation continuously rotates.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp9-carrier-frequency-offset-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Carrier-frequency-offset comparison</figcaption>
+</figure>
+</div>
+<p>For</p>
+<p><span class="math display">\[
+\Delta f=5\text{ Hz},
+\]</span></p>
+<p>one complete phase revolution takes</p>
+<p><span class="math display">\[
+T_{\text{rotation}}=\frac{1}{5}=0.2\text{ s}
+\]</span></p>
+<p>The Constellation Sink retains samples from different times. Those samples therefore contain different accumulated carrier phases. When many rotations are displayed together, the four moving QPSK points fill a ring.</p>
+<p>This gives us a useful visual distinction:</p>
+<pre class="text"><code>Fixed phase offset
+→ four clusters rotated by a fixed angle
+
+Carrier frequency offset
+→ phase keeps accumulating
+→ constellation keeps rotating
+→ many displayed samples form a ring</code></pre>
+<p>A static ring, however, does not tell us the direction of rotation. A clockwise and counterclockwise trajectory can produce essentially the same ring when many samples are overlaid.</p>
+<p>To determine the sign of the CFO, we need a measurement that retains the direction of phase change.</p>
+<hr>
+<section id="frequency-is-phase-change-per-unit-time" class="level2">
+<h2 class="anchored" data-anchor-id="frequency-is-phase-change-per-unit-time">21.10 Frequency Is Phase Change per Unit Time</h2>
+<p>The previous experiment suggests the next idea naturally.</p>
+<p>If frequency offset makes phase change continuously, perhaps we can estimate frequency by measuring <strong>how much the phase changes between two known times</strong>.</p>
+<p>For a complex sinusoid,</p>
+<p><span class="math display">\[
+x[n]=Ae^{j(2\pi\Delta f n/f_s+\phi_0)}
+\]</span></p>
+<p>one sample later the phase has advanced by</p>
+<p><span class="math display">\[
+\Delta\phi=2\pi\frac{\Delta f}{f_s}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{2\pi}\Delta\phi
+\]</span></p>
+<p>This is the discrete-time version of a familiar physical idea:</p>
+<blockquote class="blockquote">
+<p><strong>Frequency tells us how quickly phase changes.</strong></p>
+</blockquote>
+<p>But raw QPSK has another source of phase change: the data symbols themselves.</p>
+<p>Fortunately, we already know how to remove the four QPSK data phases.</p>
+<p>We can reuse the fourth-power operation.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-21.10-m-th-power-cfo-estimation-in-time-and-frequency" class="level1">
+<h1>Experiment 21.10: M-th Power CFO Estimation in Time and Frequency</h1>
+<p>This experiment combines two different views of the same carrier-frequency offset.</p>
+<p>We first raise the CFO-impaired QPSK signal to the fourth power. The QPSK data phase collapses, while the carrier phase is multiplied by four.</p>
+<p>The same fourth-power signal is then examined in two ways:</p>
+<pre class="text"><code>                         Fourth-power signal
+                                |
+               +----------------+----------------+
+               |                                 |
+               v                                 v
+        Adjacent samples                        DFT
+               |                                 |
+               v                                 v
+      Phase increment Δφ                  Spectral location
+               |                                 |
+               v                                 v
+     Time-domain CFO estimate          Frequency-domain CFO view</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp10-mth-power-cfo-time-frequency-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>M-th power CFO estimation in time and frequency flowgraph</figcaption>
+</figure>
+</div>
+<section id="time-domain-phase-increment-estimator" class="level3">
+<h3 class="anchored" data-anchor-id="time-domain-phase-increment-estimator">Time-domain phase-increment estimator</h3>
+<p>Let the fourth-power output be <span class="math inline">\(y[n]\)</span>.</p>
+<p>We compare adjacent samples with a conjugate product:</p>
+<p><span class="math display">\[
+z[n]=y[n]y^*[n-1]
+\]</span></p>
+<p>Because the QPSK data phase has been removed, the remaining phase advance is caused by the carrier-frequency offset.</p>
+<p>The fourth power multiplies the carrier phase by four, so the adjacent-sample phase increment becomes</p>
+<p><span class="math display">\[
+\angle z[n]=\frac{8\pi\Delta f}{f_s}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\hat{\Delta f}=\angle z[n]\frac{f_s}{8\pi}
+\]</span></p>
+<p>The GNU Radio chain is</p>
+<pre class="text"><code>Fourth-power output
+        |
+        +---------------------&gt; Multiply Conjugate
+        |                              ^
+        +-&gt; Delay: 1 sample -----------+
+                                       |
+                                       v
+                                Complex to Arg
+                                       |
+                                       v
+                          Multiply Const: fs/(8*pi)
+                                       |
+                                       v
+                              Estimated CFO (Hz)</code></pre>
+<p>The one-sample delay has a clear physical meaning. We are asking how much phase advanced during exactly one sample interval, <span class="math inline">\(1/f_s\)</span>.</p>
+<p>With <span class="math inline">\(f_s=32000\)</span> samples/s and an applied CFO of +100 Hz, the experiment reports approximately</p>
+<p><span class="math display">\[
+\hat{\Delta f}=99.999794\text{ Hz}
+\]</span></p>
+<p>For -100 Hz, it reports approximately</p>
+<p><span class="math display">\[
+\hat{\Delta f}=-100.000084\text{ Hz}
+\]</span></p>
+<p>The sign therefore tells us the direction of phase rotation, something the static constellation ring could not reveal.</p>
+</section>
+<section id="the-dft-view" class="level3">
+<h3 class="anchored" data-anchor-id="the-dft-view">The DFT view</h3>
+<p>The same fourth-power signal can also be understood in frequency.</p>
+<p>If the original CFO is <span class="math inline">\(\Delta f\)</span>, the fourth-power operation multiplies that frequency by four:</p>
+<p><span class="math display">\[
+f_{\text{peak}}=4\Delta f
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\hat{\Delta f}=\frac{f_{\text{peak}}}{4}
+\]</span></p>
+<p>For an applied CFO of +100 Hz, we expect the relevant carrier-like component near</p>
+<p><span class="math display">\[
+4(100)=400\text{ Hz}
+\]</span></p>
+<p>For -100 Hz, it should move to approximately -400 Hz.</p>
+<p>The Frequency Sink uses an FFT size of 4096. At 32 ksample/s, the nominal bin spacing is</p>
+<p><span class="math display">\[
+\Delta f_{\text{bin}}=\frac{32000}{4096}=7.8125\text{ Hz}
+\]</span></p>
+<p>The combined result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp10-mth-power-cfo-time-frequency-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>M-th power CFO estimation for positive and negative offsets</figcaption>
+</figure>
+</div>
+</section>
+<section id="why-does-the-green-qpsk-spectrum-look-broad" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-the-green-qpsk-spectrum-look-broad">Why does the green QPSK spectrum look broad?</h3>
+<p>The green trace is the <strong>CFO-impaired QPSK spectrum before the fourth-power operation</strong>.</p>
+<p>The random QPSK data is still present. The signal is not a single sinusoid, so its energy is spread over frequency. CFO shifts that modulated spectrum, but it does not magically create one isolated carrier line.</p>
+<p>The fourth-power operation removes the QPSK data phase. That exposes a carrier-like frequency component whose displacement follows <span class="math inline">\(4\Delta f\)</span>.</p>
+<p>This is why the DFT becomes much easier to interpret after modulation removal.</p>
+<p>The fourth-power spectrum can contain other components as well. We should not assume that every visible red peak is the CFO. The relevant carrier-like feature is the one whose displacement follows the expected <span class="math inline">\(4\Delta f\)</span> relationship.</p>
+</section>
+<section id="two-estimators-one-physical-quantity" class="level3">
+<h3 class="anchored" data-anchor-id="two-estimators-one-physical-quantity">Two estimators, one physical quantity</h3>
+<p>This experiment connects time and frequency beautifully.</p>
+<p>The time-domain method says:</p>
+<blockquote class="blockquote">
+<p>Measure the phase advance between adjacent samples.</p>
+</blockquote>
+<p>The frequency-domain method says:</p>
+<blockquote class="blockquote">
+<p>Find where the carrier-like component appears in the DFT.</p>
+</blockquote>
+<p>Both are measuring the same underlying CFO.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-delay-revisited" class="anchored">GNU Radio Toolbox: Delay Revisited</h3>
+<p>We first used <strong>Delay</strong> to shift signals in earlier correlation and channel experiments.</p>
+<p>Here a one-sample delay has a different role. It creates a previous-sample reference so that the conjugate product can measure the phase increment from <span class="math inline">\(n-1\)</span> to <span class="math inline">\(n\)</span>.</p>
+<p>The block is simple, but the interpretation is important: a known time separation turns phase difference into frequency information.</p>
+</blockquote>
+<hr>
+</section>
+<section id="estimation-versus-tracking" class="level2">
+<h2 class="anchored" data-anchor-id="estimation-versus-tracking">21.11 Estimation Versus Tracking</h2>
+<p>Experiment 21.10 gave us a CFO estimate.</p>
+<p>That is useful, but a receiver may need to follow frequency changes continuously. Oscillator drift or Doppler can change during reception.</p>
+<p>This brings us to another feedback loop: the <strong>frequency-locked loop</strong>, or FLL.</p>
+<p>At a conceptual level,</p>
+<pre class="text"><code>Frequency-error detector
+        ↓
+Loop filter
+        ↓
+NCO / frequency correction
+        └──────────────↺</code></pre>
+<p>This looks similar to the PLL because both are feedback systems.</p>
+<p>The difference is the error being driven toward zero.</p>
+<p>A PLL is fundamentally concerned with <strong>phase error</strong>.</p>
+<p>An FLL is fundamentally concerned with <strong>frequency error</strong>.</p>
+<p>There are different ways to construct a frequency-error detector. In our GNU Radio experiment, we use a <strong>band-edge</strong> detector.</p>
+<p>So the terms should not be confused:</p>
+<pre class="text"><code>FLL
+= general feedback architecture for frequency tracking
+
+Band-edge detector
+= one way to generate a frequency-error signal
+
+FLL Band-Edge
+= GNU Radio block combining these ideas</code></pre>
+<hr>
+</section>
+<section id="band-edge-frequency-detection" class="level2">
+<h2 class="anchored" data-anchor-id="band-edge-frequency-detection">21.12 Band-Edge Frequency Detection</h2>
+<p>Our pulse-shaped QPSK signal has structured spectral edges determined partly by the RRC roll-off factor.</p>
+<p>Imagine measuring energy around the lower and upper edges of that spectrum.</p>
+<p>When the signal is correctly centered, those measurements should be approximately balanced:</p>
+<p><span class="math display">\[
+E_{\text{lower}}\approx E_{\text{upper}}
+\]</span></p>
+<p>If the spectrum shifts because of CFO, the balance changes:</p>
+<p><span class="math display">\[
+E_{\text{lower}}\neq E_{\text{upper}}
+\]</span></p>
+<p>The direction and magnitude of that imbalance provide a frequency-error signal for the feedback loop.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>Correctly centered spectrum
+lower-edge energy ≈ upper-edge energy
+             ↓
+       frequency error ≈ 0
+
+Shifted spectrum
+lower-edge energy ≠ upper-edge energy
+             ↓
+       frequency-error signal
+             ↓
+          feedback correction</code></pre>
+<p>This is why the FLL Band-Edge block needs to know properties of the pulse-shaped waveform itself.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-fll-band-edge" class="anchored">GNU Radio Toolbox: FLL Band-Edge</h3>
+<p><strong>FLL Band-Edge</strong> performs feedback carrier-frequency recovery using information near the spectral edges of a pulse-shaped signal.</p>
+<p>Its important parameters describe both the waveform and the loop:</p>
+<ul>
+<li>samples per symbol,</li>
+<li>filter roll-off factor,</li>
+<li>prototype filter size,</li>
+<li>loop bandwidth.</li>
+</ul>
+<p>The first two are not arbitrary tuning values. They must describe the signal entering the block. The loop bandwidth controls how aggressively the frequency-tracking feedback responds.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="experiment-21.11-carrier-frequency-recovery-with-fll-band-edge" class="level1">
+<h1>Experiment 21.11: Carrier Frequency Recovery with FLL Band-Edge</h1>
+<p>For the final frequency-recovery experiment, we observe the signal directly in the frequency domain.</p>
+<p>That is the most natural place to judge whether an FLL is doing its job.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp11-fll-band-edge-frequency-recovery-flowgrpah.png" class="img-fluid figure-img"></p>
+<figcaption>FLL Band-Edge carrier-frequency-recovery flowgraph</figcaption>
+</figure>
+</div>
+<p>The two Frequency Sink traces are</p>
+<pre class="text"><code>Before FLL
+After FLL</code></pre>
+<p>The important FLL settings are</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Samples per Symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+<td>Matches the actual oversampling of the pulse-shaped waveform</td>
+</tr>
+<tr class="even">
+<td>Filter Rolloff Factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+<td>Matches the RRC excess bandwidth used by the signal</td>
+</tr>
+<tr class="odd">
+<td>Prototype Filter Size</td>
+<td style="text-align: right;"><code>45</code></td>
+<td>Sets the internal band-edge filter length/resolution</td>
+</tr>
+<tr class="even">
+<td>Loop Bandwidth</td>
+<td style="text-align: right;"><code>2*pi/1000</code></td>
+<td>Controls the feedback responsiveness</td>
+</tr>
+</tbody>
+</table>
+<p>The loop bandwidth is therefore</p>
+<p><span class="math display">\[
+2\pi/1000\approx0.006283
+\]</span></p>
+<section id="why-must-sps-and-roll-off-match-the-waveform" class="level3">
+<h3 class="anchored" data-anchor-id="why-must-sps-and-roll-off-match-the-waveform">Why must SPS and roll-off match the waveform?</h3>
+<p>The FLL is trying to measure the signal’s band edges.</p>
+<p>If we tell it the wrong samples-per-symbol value, it has the wrong relationship between sample rate, symbol rate, and spectral structure.</p>
+<p>If we tell it the wrong roll-off factor, it has the wrong description of the excess-bandwidth region it is using for the error measurement.</p>
+<p>These parameters therefore describe the signal rather than merely controlling the GUI or loop speed.</p>
+</section>
+<section id="positive-and-negative-cfo" class="level3">
+<h3 class="anchored" data-anchor-id="positive-and-negative-cfo">Positive and negative CFO</h3>
+<p>We test both signs with</p>
+<p><span class="math display">\[
+\Delta f=+2\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\Delta f=-2\text{ kHz}
+\]</span></p>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-exp11-fll-band-edge-frequency-recovery-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>FLL Band-Edge recovery for positive and negative CFO</figcaption>
+</figure>
+</div>
+<p>For +2 kHz CFO, the spectrum before the FLL is shifted to approximately +2 kHz. The FLL output moves back close to 0 Hz.</p>
+<p>For -2 kHz CFO, the spectrum shifts in the opposite direction, and the FLL again moves it back close to 0 Hz.</p>
+<p>The loop therefore responds to both the magnitude and sign of the frequency error.</p>
+<p>The before- and after-FLL spectral shapes are not perfectly identical. That is not the main criterion here. The FLL contains internal filtering as part of its band-edge processing.</p>
+<p>The important observation is that the <strong>center-frequency error is driven back toward zero</strong>.</p>
+<hr>
+</section>
+<section id="acquisition-is-not-unlimited" class="level2">
+<h2 class="anchored" data-anchor-id="acquisition-is-not-unlimited">21.13 Acquisition Is Not Unlimited</h2>
+<p>A synchronization loop cannot necessarily acquire an arbitrarily large initial error.</p>
+<p>To see this, we kept the same Experiment 21.11 waveform and FLL settings and increased only the initial carrier-frequency offset.</p>
+<p>At ±2 kHz, the loop successfully brought the spectrum close to zero.</p>
+<p>At larger offsets such as +4 kHz, +6 kHz, and +8 kHz, the loop still responded in the correct direction but did not completely remove the CFO.</p>
+<p>The selected +8 kHz result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch21/ch21-fll-band-edge-acquisition-limit.png" class="img-fluid figure-img"></p>
+<figcaption>FLL Band-Edge response outside the useful acquisition region</figcaption>
+</figure>
+</div>
+<p>This figure should not be interpreted as saying that every FLL Band-Edge has a universal 2 kHz capture range.</p>
+<p>The acquisition behavior depends on the waveform and the complete loop configuration, including sample rate, symbol rate, roll-off, internal filtering, loop parameters, and the size of the initial error.</p>
+<p>The correct conclusion from our experiment is narrower and more useful:</p>
+<blockquote class="blockquote">
+<p><strong>With this particular signal and FLL configuration, ±2 kHz offsets were successfully recovered. At substantially larger initial offsets, the loop responded in the correct direction but did not fully remove the CFO.</strong></p>
+</blockquote>
+<p>This gives us a practical distinction between <strong>acquisition</strong> and <strong>tracking</strong>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Acquisition</td>
+<td>Bringing a receiver from a substantially incorrect initial carrier state toward lock</td>
+</tr>
+<tr class="even">
+<td>Tracking</td>
+<td>Following smaller changes after the receiver is already near or in lock</td>
+</tr>
+</tbody>
+</table>
+<p>A real receiver may therefore use more than one synchronization stage.</p>
+<p>For example,</p>
+<pre class="text"><code>Large initial carrier uncertainty
+        ↓
+Coarse frequency estimation / acquisition
+        ↓
+Frequency tracking
+        ↓
+Fine carrier-phase tracking
+        ↓
+Carrier synchronized</code></pre>
+<p>The exact architecture depends on the communication system. The important lesson is that <strong>estimation, acquisition, and tracking are related but not identical tasks</strong>.</p>
+<section id="try-it-yourself-2" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-2">Try It Yourself</h3>
+<p>Reuse Experiment 21.11 and change only the initial CFO. Before running the flowgraph, predict whether the FLL will fully acquire at +4 kHz, +6 kHz, or +8 kHz. Keep the FLL settings unchanged so that the effect of the initial frequency error is isolated.</p>
+<hr>
+</section>
+</section>
+<section id="putting-carrier-synchronization-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-carrier-synchronization-together">21.14 Putting Carrier Synchronization Together</h2>
+<p>We began this chapter with a simple rotated constellation.</p>
+<p>That led to a sequence of increasingly realistic receiver questions.</p>
+<p>First, if the transmitted reference is known, a conjugate product can measure relative phase directly.</p>
+<p>Then QPSK symmetry allowed us to remove unknown data with the fourth-power method, but that symmetry also introduced a 90° ambiguity.</p>
+<p>A PLL showed us how feedback turns phase measurement into continuous tracking. Loop bandwidth then showed how strongly the loop responds.</p>
+<p>Random QPSK revealed why a simple carrier PLL needs a modulation-aware phase detector, which led naturally to the Costas Loop.</p>
+<p>When we moved from phase offset to frequency offset, the central idea changed from <strong>phase itself</strong> to <strong>phase change with time</strong>. The same fourth-power operation then supported two CFO views: adjacent-sample phase increment in time and spectral displacement in the DFT.</p>
+<p>Finally, the FLL Band-Edge converted frequency-error measurements into continuous feedback correction.</p>
+<p>The main methods can be summarized as follows.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Feedforward or feedback</th>
+<th>Main purpose</th>
+<th>Important limitation or condition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Conjugate product</td>
+<td>Feedforward measurement</td>
+<td>Relative phase with a known reference</td>
+<td>Requires a suitable reference</td>
+</tr>
+<tr class="even">
+<td>M-th power phase estimator</td>
+<td>Feedforward</td>
+<td>Remove QPSK data phase and estimate carrier phase</td>
+<td>QPSK 90° ambiguity</td>
+</tr>
+<tr class="odd">
+<td>PLL</td>
+<td>Feedback</td>
+<td>Acquire and track a clean carrier reference</td>
+<td>Simple phase detector is not directly modulation-aware</td>
+</tr>
+<tr class="even">
+<td>Costas Loop</td>
+<td>Feedback</td>
+<td>Carrier recovery for QPSK</td>
+<td>Can retain rotational ambiguity</td>
+</tr>
+<tr class="odd">
+<td>M-th power phase-increment CFO estimator</td>
+<td>Feedforward</td>
+<td>Estimate signed CFO from phase change</td>
+<td>Depends on modulation-removal assumptions and unambiguous phase increment</td>
+</tr>
+<tr class="even">
+<td>DFT view after M-th power</td>
+<td>Feedforward</td>
+<td>Observe CFO as a spectral displacement</td>
+<td>Frequency resolution depends on the observation/FFT</td>
+</tr>
+<tr class="odd">
+<td>FLL Band-Edge</td>
+<td>Feedback</td>
+<td>Continuous carrier-frequency recovery</td>
+<td>Acquisition capability is finite and configuration-dependent</td>
+</tr>
+</tbody>
+</table>
+<p>One way to visualize the complete carrier-synchronization problem is</p>
+<pre class="text"><code>Received complex signal
+        |
+        +--&gt; Large frequency uncertainty?
+        |          |
+        |          v
+        |    Coarse CFO estimation
+        |          |
+        |          v
+        |    Frequency acquisition / FLL
+        |          |
+        +----------+
+                   |
+                   v
+          Residual carrier phase
+                   |
+                   v
+           PLL / Costas Loop
+                   |
+                   v
+          Carrier synchronized</code></pre>
+<p>This diagram is intentionally general. Not every radio uses exactly this sequence, and some algorithms combine roles that we separated for teaching.</p>
+<p>But the separation helps us understand what each stage is trying to correct.</p>
+<hr>
+</section>
+<section id="practical-sdr-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="practical-sdr-interpretation">21.15 Practical SDR Interpretation</h2>
+<p>Carrier synchronization is not an abstract problem created by GNU Radio.</p>
+<p>Two independent oscillators are never perfectly identical.</p>
+<p>A transmitter may generate a nominal carrier at one frequency while the receiver’s local oscillator differs slightly because of component tolerance, temperature, aging, or clock-reference error. Relative motion can add Doppler. Even after coarse tuning, a residual phase and frequency mismatch can remain in complex baseband.</p>
+<p>The receiver therefore does not merely need to know <strong>which channel</strong> to tune to.</p>
+<p>It also needs a sufficiently accurate internal reference for interpreting the phase trajectory of the received symbols.</p>
+<p>That is why carrier synchronization appears in so many coherent communication receivers.</p>
+<p>The constellation is especially useful because it turns these oscillator errors into visible geometry:</p>
+<pre class="text"><code>Fixed carrier phase error
+→ fixed constellation rotation
+
+Carrier frequency error
+→ continuous constellation rotation
+
+Noise
+→ constellation spreading
+
+Successful carrier recovery
+→ stable constellation geometry</code></pre>
+<p>But the chapter also showed why we should not rely on the constellation alone.</p>
+<p>A static ring cannot reveal CFO direction. A correct-looking QPSK constellation may still have a 90° labeling ambiguity. A noisy cloud contains both additive sample noise and possible tracking variation.</p>
+<p>A good receiver designer therefore combines visual intuition with quantitative measurements.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">21.16 What We Learned</h2>
+<p>By developing the synchronization problem experimentally, we discovered several important ideas.</p>
+<ul>
+<li>A fixed carrier phase offset rotates the complete constellation by a fixed angle.</li>
+<li>A carrier-frequency offset is different: it causes phase to accumulate continuously with time.</li>
+<li>Multiplying by a complex conjugate turns phase addition into phase subtraction and is therefore a natural way to measure relative phase.</li>
+<li>With a known reference <span class="math inline">\(s\)</span>, the phase of <span class="math inline">\(rs^*\)</span> reveals the carrier phase difference.</li>
+<li>Raising QPSK to the fourth power removes the four possible QPSK data phases because of the modulation’s fourfold rotational symmetry.</li>
+<li>The same fourth-power symmetry creates a 90° phase ambiguity.</li>
+<li>Principal-angle wrapping explains why a true phase such as +50° can appear as the equivalent estimate -40° after fourth-power recovery.</li>
+<li>A PLL is a feedback system that repeatedly measures error and corrects a local reference.</li>
+<li>PLL acquisition can overshoot and oscillate before reaching lock; it does not have to converge monotonically.</li>
+<li>Loop bandwidth controls how aggressively a PLL responds. Wider bandwidth gave faster acquisition in our clean experiment, while narrower bandwidth responded much more slowly.</li>
+<li>A simple clean-carrier PLL is not directly appropriate for random suppressed-carrier QPSK because the data itself changes the observed phase.</li>
+<li>A Costas Loop uses modulation-aware phase detection and can recover stable QPSK carrier phase.</li>
+<li>A stable-looking QPSK constellation can still retain a 90° rotational ambiguity in its symbol labeling.</li>
+<li>In noise, constellation spreading comes from both direct additive I/Q noise and possible loop-tracking variation.</li>
+<li>Frequency can be estimated from phase advance over a known time interval.</li>
+<li>After fourth-power QPSK processing, an adjacent-sample conjugate product gives a signed CFO estimate through <span class="math inline">\(f_s/(8\pi)\)</span> scaling.</li>
+<li>The same CFO can be viewed in frequency: the fourth-power carrier-like component appears at approximately four times the original CFO.</li>
+<li>Raw random QPSK does not generally produce one simple carrier line in the spectrum; removing the data modulation makes the carrier-frequency information easier to observe.</li>
+<li>An FLL is a feedback architecture for frequency tracking, while band-edge detection is one possible way to generate its frequency-error signal.</li>
+<li>GNU Radio’s FLL Band-Edge successfully recovered the ±2 kHz offsets used in our experiment.</li>
+<li>Acquisition capability is finite and depends on the signal and loop configuration. A larger initial CFO can produce only partial correction.</li>
+<li>Acquisition, lock, and tracking describe different stages of synchronization and should not be treated as interchangeable terms.</li>
+</ul>
+<p>Most importantly, carrier synchronization is not one single correction.</p>
+<p>It is a family of related receiver tasks built around one central idea:</p>
+<blockquote class="blockquote">
+<p><strong>Measure how the received carrier differs from the receiver’s reference, then use that information to bring the two into alignment.</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">21.17 Connecting to the Next Chapter</h2>
+<p>We have now corrected two major reference errors.</p>
+<p>The receiver can estimate and track carrier frequency, and it can recover carrier phase for QPSK.</p>
+<p>But one synchronization problem is still unresolved.</p>
+<p>Our digital waveform contains several samples per symbol.</p>
+<p>Even with perfect carrier phase and frequency, the receiver still has to answer:</p>
+<blockquote class="blockquote">
+<p><strong>Which sample corresponds to the best instant for making each symbol decision?</strong></p>
+</blockquote>
+<p>If it samples too early or too late, the decision point can move away from the center of the eye. With clock mismatch, that sampling instant can also drift continuously through the symbol period.</p>
+<p>That is not a carrier problem.</p>
+<p>It is a <strong>timing synchronization</strong> problem.</p>
+<p>In the next chapter, we will move from recovering the carrier reference to recovering the receiver’s symbol clock.</p>
+<p>We will ask how a receiver can determine the correct sampling instant automatically, how timing error appears in an oversampled waveform, and how GNU Radio can track that timing as the signal changes.</p>
+<p>That leads to <strong>Chapter 22: Clock and Symbol Timing Synchronization</strong>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter20.html" class="pagination-link" aria-label="Chapter 20: Channel Equalization">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 20: Channel Equalization</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter22.html" class="pagination-link" aria-label="Chapter 22: Symbol Timing Synchronization">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

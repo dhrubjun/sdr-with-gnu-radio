@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 6: From Time Domain to Frequency Domain – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter07.html" rel="next">
+<link href="../book/chapter05.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter06.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/chapter06.html"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#one-signal-two-ways-of-looking-at-it" id="toc-one-signal-two-ways-of-looking-at-it" class="nav-link" data-scroll-target="#one-signal-two-ways-of-looking-at-it">6.1 One Signal, Two Ways of Looking at It</a></li>
+  <li><a href="#experiment-1-a-complicated-waveform-made-from-three-simple-tones" id="toc-experiment-1-a-complicated-waveform-made-from-three-simple-tones" class="nav-link" data-scroll-target="#experiment-1-a-complicated-waveform-made-from-three-simple-tones">6.2 Experiment 1: A Complicated Waveform Made from Three Simple Tones</a>
+  <ul class="collapse">
+  <li><a href="#before-running-the-flowgraph" id="toc-before-running-the-flowgraph" class="nav-link" data-scroll-target="#before-running-the-flowgraph">Before Running the Flowgraph</a></li>
+  <li><a href="#gnu-radio-flowgraph" id="toc-gnu-radio-flowgraph" class="nav-link" data-scroll-target="#gnu-radio-flowgraph">GNU Radio Flowgraph</a></li>
+  <li><a href="#what-do-we-see" id="toc-what-do-we-see" class="nav-link" data-scroll-target="#what-do-we-see">What Do We See?</a></li>
+  </ul></li>
+  <li><a href="#what-is-the-fourier-transform-really-doing" id="toc-what-is-the-fourier-transform-really-doing" class="nav-link" data-scroll-target="#what-is-the-fourier-transform-really-doing">6.3 What Is the Fourier Transform Really Doing?</a></li>
+  <li><a href="#from-the-fourier-transform-to-the-dft" id="toc-from-the-fourier-transform-to-the-dft" class="nav-link" data-scroll-target="#from-the-fourier-transform-to-the-dft">6.4 From the Fourier Transform to the DFT</a>
+  <ul class="collapse">
+  <li><a href="#what-does-n-mean" id="toc-what-does-n-mean" class="nav-link" data-scroll-target="#what-does-n-mean">What Does <span class="math inline">\(n\)</span> Mean?</a></li>
+  <li><a href="#what-does-n-mean-1" id="toc-what-does-n-mean-1" class="nav-link" data-scroll-target="#what-does-n-mean-1">What Does <span class="math inline">\(N\)</span> Mean?</a></li>
+  <li><a href="#what-does-k-mean" id="toc-what-does-k-mean" class="nav-link" data-scroll-target="#what-does-k-mean">What Does <span class="math inline">\(k\)</span> Mean?</a></li>
+  <li><a href="#what-is-the-complex-exponential-doing" id="toc-what-is-the-complex-exponential-doing" class="nav-link" data-scroll-target="#what-is-the-complex-exponential-doing">What Is the Complex Exponential Doing?</a></li>
+  <li><a href="#a-small-practical-warning" id="toc-a-small-practical-warning" class="nav-link" data-scroll-target="#a-small-practical-warning">A Small Practical Warning</a></li>
+  </ul></li>
+  <li><a href="#dft-and-fft-what-is-the-difference" id="toc-dft-and-fft-what-is-the-difference" class="nav-link" data-scroll-target="#dft-and-fft-what-is-the-difference">6.5 DFT and FFT: What Is the Difference?</a></li>
+  <li><a href="#why-can-the-fft-be-faster" id="toc-why-can-the-fft-be-faster" class="nav-link" data-scroll-target="#why-can-the-fft-be-faster">6.6 Why Can the FFT Be Faster?</a></li>
+  <li><a href="#radix-2-fft" id="toc-radix-2-fft" class="nav-link" data-scroll-target="#radix-2-fft">6.7 Radix-2 FFT</a></li>
+  <li><a href="#decimation-in-time-dit" id="toc-decimation-in-time-dit" class="nav-link" data-scroll-target="#decimation-in-time-dit">6.8 Decimation in Time (DIT)</a></li>
+  <li><a href="#twiddle-factors-complex-rotations-inside-the-fft" id="toc-twiddle-factors-complex-rotations-inside-the-fft" class="nav-link" data-scroll-target="#twiddle-factors-complex-rotations-inside-the-fft">6.9 Twiddle Factors: Complex Rotations Inside the FFT</a></li>
+  <li><a href="#the-fft-butterfly" id="toc-the-fft-butterfly" class="nav-link" data-scroll-target="#the-fft-butterfly">6.10 The FFT Butterfly</a>
+  <ul class="collapse">
+  <li><a href="#a-small-numerical-example" id="toc-a-small-numerical-example" class="nav-link" data-scroll-target="#a-small-numerical-example">A Small Numerical Example</a></li>
+  </ul></li>
+  <li><a href="#building-an-8-point-radix-2-dit-fft" id="toc-building-an-8-point-radix-2-dit-fft" class="nav-link" data-scroll-target="#building-an-8-point-radix-2-dit-fft">6.11 Building an 8-Point Radix-2 DIT FFT</a>
+  <ul class="collapse">
+  <li><a href="#why-does-bit-reversal-appear" id="toc-why-does-bit-reversal-appear" class="nav-link" data-scroll-target="#why-does-bit-reversal-appear">Why Does Bit Reversal Appear?</a></li>
+  <li><a href="#following-the-three-stages" id="toc-following-the-three-stages" class="nav-link" data-scroll-target="#following-the-three-stages">Following the Three Stages</a></li>
+  <li><a href="#do-we-need-to-build-this-in-gnu-radio" id="toc-do-we-need-to-build-this-in-gnu-radio" class="nav-link" data-scroll-target="#do-we-need-to-build-this-in-gnu-radio">Do We Need to Build This in GNU Radio?</a></li>
+  </ul></li>
+  <li><a href="#dit-and-dif" id="toc-dit-and-dif" class="nav-link" data-scroll-target="#dit-and-dif">6.12 DIT and DIF</a></li>
+  <li><a href="#fft-bins-where-does-the-fft-look" id="toc-fft-bins-where-does-the-fft-look" class="nav-link" data-scroll-target="#fft-bins-where-does-the-fft-look">6.13 FFT Bins: Where Does the FFT Look?</a></li>
+  <li><a href="#experiment-2-using-the-fft-block-directly-in-gnu-radio" id="toc-experiment-2-using-the-fft-block-directly-in-gnu-radio" class="nav-link" data-scroll-target="#experiment-2-using-the-fft-block-directly-in-gnu-radio">6.14 Experiment 2: Using the FFT Block Directly in GNU Radio</a>
+  <ul class="collapse">
+  <li><a href="#building-the-fft-chain" id="toc-building-the-fft-chain" class="nav-link" data-scroll-target="#building-the-fft-chain">Building the FFT Chain</a></li>
+  <li><a href="#why-do-we-need-stream-to-vector" id="toc-why-do-we-need-stream-to-vector" class="nav-link" data-scroll-target="#why-do-we-need-stream-to-vector">Why Do We Need Stream to Vector?</a></li>
+  <li><a href="#the-fft-block" id="toc-the-fft-block" class="nav-link" data-scroll-target="#the-fft-block">The FFT Block</a></li>
+  <li><a href="#why-do-we-use-complex-to-mag²" id="toc-why-do-we-use-complex-to-mag²" class="nav-link" data-scroll-target="#why-do-we-use-complex-to-mag²">Why Do We Use Complex to Mag²?</a></li>
+  <li><a href="#part-a-fft-of-a-real-1-khz-cosine" id="toc-part-a-fft-of-a-real-1-khz-cosine" class="nav-link" data-scroll-target="#part-a-fft-of-a-real-1-khz-cosine">Part A: FFT of a Real 1 kHz Cosine</a></li>
+  <li><a href="#part-b-fft-of-a-complex-1-khz-tone" id="toc-part-b-fft-of-a-complex-1-khz-tone" class="nav-link" data-scroll-target="#part-b-fft-of-a-complex-1-khz-tone">Part B: FFT of a Complex 1 kHz Tone</a></li>
+  <li><a href="#what-did-we-actually-build" id="toc-what-did-we-actually-build" class="nav-link" data-scroll-target="#what-did-we-actually-build">What Did We Actually Build?</a></li>
+  <li><a href="#one-more-connection-to-the-fft-theory" id="toc-one-more-connection-to-the-fft-theory" class="nav-link" data-scroll-target="#one-more-connection-to-the-fft-theory">One More Connection to the FFT Theory</a></li>
+  </ul></li>
+  <li><a href="#bin-spacing-is-not-exactly-the-same-as-spectral-resolution" id="toc-bin-spacing-is-not-exactly-the-same-as-spectral-resolution" class="nav-link" data-scroll-target="#bin-spacing-is-not-exactly-the-same-as-spectral-resolution">6.15 Bin Spacing Is Not Exactly the Same as Spectral Resolution</a></li>
+  <li><a href="#experiment-3-what-happens-when-we-change-fft-size" id="toc-experiment-3-what-happens-when-we-change-fft-size" class="nav-link" data-scroll-target="#experiment-3-what-happens-when-we-change-fft-size">6.16 Experiment 3: What Happens When We Change FFT Size?</a>
+  <ul class="collapse">
+  <li><a href="#before-running-it" id="toc-before-running-it" class="nav-link" data-scroll-target="#before-running-it">Before Running It</a></li>
+  <li><a href="#fft-size-32" id="toc-fft-size-32" class="nav-link" data-scroll-target="#fft-size-32">FFT Size = 32</a></li>
+  <li><a href="#fft-size-256" id="toc-fft-size-256" class="nav-link" data-scroll-target="#fft-size-256">FFT Size = 256</a></li>
+  <li><a href="#fft-size-2048" id="toc-fft-size-2048" class="nav-link" data-scroll-target="#fft-size-2048">FFT Size = 2048</a></li>
+  <li><a href="#but-where-did-the-extra-frequency-detail-come-from" id="toc-but-where-did-the-extra-frequency-detail-come-from" class="nav-link" data-scroll-target="#but-where-did-the-extra-frequency-detail-come-from">But Where Did the Extra Frequency Detail Come From?</a></li>
+  </ul></li>
+  <li><a href="#a-short-note-about-zero-padding" id="toc-a-short-note-about-zero-padding" class="nav-link" data-scroll-target="#a-short-note-about-zero-padding">6.17 A Short Note About Zero-Padding</a></li>
+  <li><a href="#understanding-the-frequency-axis" id="toc-understanding-the-frequency-axis" class="nav-link" data-scroll-target="#understanding-the-frequency-axis">6.18 Understanding the Frequency Axis</a>
+  <ul class="collapse">
+  <li><a href="#center-frequency" id="toc-center-frequency" class="nav-link" data-scroll-target="#center-frequency">Center Frequency</a></li>
+  <li><a href="#bandwidth-setting-in-the-frequency-sink" id="toc-bandwidth-setting-in-the-frequency-sink" class="nav-link" data-scroll-target="#bandwidth-setting-in-the-frequency-sink">Bandwidth Setting in the Frequency Sink</a></li>
+  </ul></li>
+  <li><a href="#why-does-gnu-radio-use-db" id="toc-why-does-gnu-radio-use-db" class="nav-link" data-scroll-target="#why-does-gnu-radio-use-db">6.19 Why Does GNU Radio Use dB?</a>
+  <ul class="collapse">
+  <li><a href="#db-is-not-automatically-dbm" id="toc-db-is-not-automatically-dbm" class="nav-link" data-scroll-target="#db-is-not-automatically-dbm">dB Is Not Automatically dBm</a></li>
+  </ul></li>
+  <li><a href="#experiment-4-why-does-a-pure-tone-sometimes-spread-across-the-spectrum" id="toc-experiment-4-why-does-a-pure-tone-sometimes-spread-across-the-spectrum" class="nav-link" data-scroll-target="#experiment-4-why-does-a-pure-tone-sometimes-spread-across-the-spectrum">6.20 Experiment 4: Why Does a Pure Tone Sometimes Spread Across the Spectrum?</a>
+  <ul class="collapse">
+  <li><a href="#first-what-does-bin-centred-mean" id="toc-first-what-does-bin-centred-mean" class="nav-link" data-scroll-target="#first-what-does-bin-centred-mean">First, What Does Bin-Centred Mean?</a></li>
+  <li><a href="#bin-centred-case" id="toc-bin-centred-case" class="nav-link" data-scroll-target="#bin-centred-case">Bin-Centred Case</a></li>
+  <li><a href="#move-the-tone-away-from-the-bin" id="toc-move-the-tone-away-from-the-bin" class="nav-link" data-scroll-target="#move-the-tone-away-from-the-bin">Move the Tone Away from the Bin</a></li>
+  </ul></li>
+  <li><a href="#where-does-spectral-leakage-actually-come-from" id="toc-where-does-spectral-leakage-actually-come-from" class="nav-link" data-scroll-target="#where-does-spectral-leakage-actually-come-from">6.21 Where Does Spectral Leakage Actually Come From?</a></li>
+  <li><a href="#main-lobe-and-sidelobes" id="toc-main-lobe-and-sidelobes" class="nav-link" data-scroll-target="#main-lobe-and-sidelobes">6.22 Main Lobe and Sidelobes</a></li>
+  <li><a href="#window-functions" id="toc-window-functions" class="nav-link" data-scroll-target="#window-functions">6.23 Window Functions</a></li>
+  <li><a href="#experiment-5-comparing-fft-windows" id="toc-experiment-5-comparing-fft-windows" class="nav-link" data-scroll-target="#experiment-5-comparing-fft-windows">6.24 Experiment 5: Comparing FFT Windows</a>
+  <ul class="collapse">
+  <li><a href="#before-switching-windows" id="toc-before-switching-windows" class="nav-link" data-scroll-target="#before-switching-windows">Before Switching Windows</a></li>
+  <li><a href="#rectangular-window" id="toc-rectangular-window" class="nav-link" data-scroll-target="#rectangular-window">Rectangular Window</a></li>
+  <li><a href="#hann-window" id="toc-hann-window" class="nav-link" data-scroll-target="#hann-window">Hann Window</a></li>
+  <li><a href="#hamming-window" id="toc-hamming-window" class="nav-link" data-scroll-target="#hamming-window">Hamming Window</a></li>
+  <li><a href="#blackman-harris-window" id="toc-blackman-harris-window" class="nav-link" data-scroll-target="#blackman-harris-window">Blackman-Harris Window</a></li>
+  <li><a href="#kaiser-window" id="toc-kaiser-window" class="nav-link" data-scroll-target="#kaiser-window">Kaiser Window</a></li>
+  <li><a href="#flat-top-window" id="toc-flat-top-window" class="nav-link" data-scroll-target="#flat-top-window">Flat-Top Window</a></li>
+  <li><a href="#what-did-this-experiment-teach-us" id="toc-what-did-this-experiment-teach-us" class="nav-link" data-scroll-target="#what-did-this-experiment-teach-us">What Did This Experiment Teach Us?</a></li>
+  </ul></li>
+  <li><a href="#fft-size-leakage-and-windowing-are-related-but-different" id="toc-fft-size-leakage-and-windowing-are-related-but-different" class="nav-link" data-scroll-target="#fft-size-leakage-and-windowing-are-related-but-different">6.25 FFT Size, Leakage, and Windowing Are Related but Different</a>
+  <ul class="collapse">
+  <li><a href="#fft-bin-spacing" id="toc-fft-bin-spacing" class="nav-link" data-scroll-target="#fft-bin-spacing">FFT Bin Spacing</a></li>
+  <li><a href="#observation-time" id="toc-observation-time" class="nav-link" data-scroll-target="#observation-time">Observation Time</a></li>
+  <li><a href="#window-shape" id="toc-window-shape" class="nav-link" data-scroll-target="#window-shape">Window Shape</a></li>
+  </ul></li>
+  <li><a href="#what-does-fft-averaging-do" id="toc-what-does-fft-averaging-do" class="nav-link" data-scroll-target="#what-does-fft-averaging-do">6.26 What Does FFT Averaging Do?</a></li>
+  <li><a href="#the-frequency-sink-shows-only-the-present" id="toc-the-frequency-sink-shows-only-the-present" class="nav-link" data-scroll-target="#the-frequency-sink-shows-only-the-present">6.27 The Frequency Sink Shows Only the Present</a></li>
+  <li><a href="#experiment-6-watching-frequency-change-over-time" id="toc-experiment-6-watching-frequency-change-over-time" class="nav-link" data-scroll-target="#experiment-6-watching-frequency-change-over-time">6.28 Experiment 6: Watching Frequency Change Over Time</a>
+  <ul class="collapse">
+  <li><a href="#reading-common-waterfall-patterns" id="toc-reading-common-waterfall-patterns" class="nav-link" data-scroll-target="#reading-common-waterfall-patterns">Reading Common Waterfall Patterns</a></li>
+  </ul></li>
+  <li><a href="#what-the-qt-gui-frequency-sink-controls-actually-mean" id="toc-what-the-qt-gui-frequency-sink-controls-actually-mean" class="nav-link" data-scroll-target="#what-the-qt-gui-frequency-sink-controls-actually-mean">6.29 What the QT GUI Frequency Sink Controls Actually Mean</a>
+  <ul class="collapse">
+  <li><a href="#fft-size" id="toc-fft-size" class="nav-link" data-scroll-target="#fft-size">FFT Size</a></li>
+  <li><a href="#center-frequency-1" id="toc-center-frequency-1" class="nav-link" data-scroll-target="#center-frequency-1">Center Frequency</a></li>
+  <li><a href="#bandwidth" id="toc-bandwidth" class="nav-link" data-scroll-target="#bandwidth">Bandwidth</a></li>
+  <li><a href="#window-type" id="toc-window-type" class="nav-link" data-scroll-target="#window-type">Window Type</a></li>
+  <li><a href="#averaging" id="toc-averaging" class="nav-link" data-scroll-target="#averaging">Averaging</a></li>
+  <li><a href="#db-scale" id="toc-db-scale" class="nav-link" data-scroll-target="#db-scale">dB Scale</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">6.30 What We Learned</a>
+  <ul class="collapse">
+  <li><a href="#representation" id="toc-representation" class="nav-link" data-scroll-target="#representation">Representation</a></li>
+  <li><a href="#computation" id="toc-computation" class="nav-link" data-scroll-target="#computation">Computation</a></li>
+  <li><a href="#spectral-measurement" id="toc-spectral-measurement" class="nav-link" data-scroll-target="#spectral-measurement">Spectral Measurement</a></li>
+  <li><a href="#visualization" id="toc-visualization" class="nav-link" data-scroll-target="#visualization">Visualization</a></li>
+  </ul></li>
+  <li><a href="#now-break-the-flowgraph" id="toc-now-break-the-flowgraph" class="nav-link" data-scroll-target="#now-break-the-flowgraph">6.31 Now Break the Flowgraph</a>
+  <ul class="collapse">
+  <li><a href="#reduce-the-fft-size" id="toc-reduce-the-fft-size" class="nav-link" data-scroll-target="#reduce-the-fft-size">1. Reduce the FFT Size</a></li>
+  <li><a href="#move-a-tone-between-fft-bins" id="toc-move-a-tone-between-fft-bins" class="nav-link" data-scroll-target="#move-a-tone-between-fft-bins">2. Move a Tone Between FFT Bins</a></li>
+  <li><a href="#change-the-window" id="toc-change-the-window" class="nav-link" data-scroll-target="#change-the-window">3. Change the Window</a></li>
+  <li><a href="#change-the-sample-rate" id="toc-change-the-sample-rate" class="nav-link" data-scroll-target="#change-the-sample-rate">4. Change the Sample Rate</a></li>
+  <li><a href="#increase-averaging" id="toc-increase-averaging" class="nav-link" data-scroll-target="#increase-averaging">5. Increase Averaging</a></li>
+  <li><a href="#compare-a-real-and-complex-tone" id="toc-compare-a-real-and-complex-tone" class="nav-link" data-scroll-target="#compare-a-real-and-complex-tone">6. Compare a Real and Complex Tone</a></li>
+  <li><a href="#move-the-tone-while-watching-the-waterfall" id="toc-move-the-tone-while-watching-the-waterfall" class="nav-link" data-scroll-target="#move-the-tone-while-watching-the-waterfall">7. Move the Tone While Watching the Waterfall</a></li>
+  </ul></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">6.32 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter06.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/chapter06.html"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p>How can several frequencies exist inside one waveform?</p>
+<hr>
+</section>
+<section id="one-signal-two-ways-of-looking-at-it" class="level2">
+<h2 class="anchored" data-anchor-id="one-signal-two-ways-of-looking-at-it">6.1 One Signal, Two Ways of Looking at It</h2>
+<p>So far, most of the signals we have studied have been viewed in the ****time domain****.</p>
+<p>A time-domain plot answers a simple question:</p>
+<blockquote class="blockquote">
+<p>****How does the signal amplitude change with time?****</p>
+</blockquote>
+<p>That view is extremely useful. It lets us see oscillations, pulses, delays, clipping, transients, and many other behaviours.</p>
+<p>But it is not always the easiest way to understand what a signal contains.</p>
+<p>Imagine that we add three ordinary cosine waves together:</p>
+<ul>
+<li><p>1 kHz</p></li>
+<li><p>3 kHz</p></li>
+<li><p>6 kHz</p></li>
+</ul>
+<p>Each individual signal is simple. But after adding them, the resulting waveform can look surprisingly complicated.</p>
+<p>Now ask a different question:</p>
+<blockquote class="blockquote">
+<p>****Instead of looking at how the waveform changes with time, can we ask which frequencies are present inside it?****</p>
+</blockquote>
+<p>That takes us to the ****frequency domain****.</p>
+<p>The two views answer different questions:</p>
+<div class="line-block">View | Main question |</div>
+<p>|—|—|</p>
+<div class="line-block">Time domain | How does the signal change with time? |</div>
+<div class="line-block">Frequency domain | What frequency components are present? |</div>
+<p>They are not two different signals.</p>
+<p>They are two different ways of describing the ****same signal****.</p>
+<p>This chapter is about learning how to move between those two viewpoints and, more importantly, how to interpret what GNU Radio shows us when we use a spectrum display.</p>
+<hr>
+</section>
+<section id="experiment-1-a-complicated-waveform-made-from-three-simple-tones" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-a-complicated-waveform-made-from-three-simple-tones">6.2 Experiment 1: A Complicated Waveform Made from Three Simple Tones</h2>
+<p>Let us begin with three cosine waves:</p>
+<p><span class="math display">\[
+x_1(t)=\cos(2\pi 1000t)
+\]</span></p>
+<p><span class="math display">\[
+x_2(t)=\cos(2\pi 3000t)
+\]</span></p>
+<p><span class="math display">\[
+x_3(t)=\cos(2\pi 6000t)
+\]</span></p>
+<p>We add them:</p>
+<p><span class="math display">\[
+x(t)=x_1(t)+x_2(t)+x_3(t)
+\]</span></p>
+<p>Nothing unusual has happened. We have simply added three sinusoids.</p>
+<section id="before-running-the-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="before-running-the-flowgraph">Before Running the Flowgraph</h3>
+<p>What do we expect?</p>
+<p>In the time domain, the three signals will interfere with one another and produce a waveform that no longer looks like a simple sine wave.</p>
+<p>In the frequency domain, however, we should be able to identify the frequencies that we deliberately placed inside the signal.</p>
+</section>
+<section id="gnu-radio-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-flowgraph">GNU Radio Flowgraph</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-three-tone-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for generating and observing three tones</figcaption>
+</figure>
+</div>
+<p>The combined signal is connected to:</p>
+<ul>
+<li><p>a ****QT GUI Time Sink****</p></li>
+<li><p>a ****QT GUI Frequency Sink****</p></li>
+</ul>
+<p>The Time Sink and Frequency Sink therefore observe exactly the same signal.</p>
+</section>
+<section id="what-do-we-see" class="level3">
+<h3 class="anchored" data-anchor-id="what-do-we-see">What Do We See?</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-three-tone-time-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>The combined three-tone signal in the time and frequency domains</figcaption>
+</figure>
+</div>
+<p>The time-domain waveform looks much more complicated than any of the three original cosine waves.</p>
+<p>But the frequency-domain plot immediately reveals the spectral components.</p>
+<p>There is one detail that is important here.</p>
+<p>We generated ****real-valued cosine waves****. A real cosine can be written as</p>
+<p><span class="math display">\[
+\cos(2\pi f_0t) = \frac{1}{2}e^{j2\pi f_0t} \+ \frac{1}{2}e^{-j2\pi f_0t}.
+\]</span></p>
+<p>Therefore, in a centered spectrum, each real cosine appears as a pair of components:</p>
+<p><span class="math display">\[
++f_0 \qquad\text{and}\qquad -f_0.
+\]</span></p>
+<p>So our three real tones appear at</p>
+<p><span class="math display">\[
+\pm1\text{ kHz},\qquad \pm3\text{ kHz},\qquad \pm6\text{ kHz}.
+\]</span></p>
+<p>We already encountered the reason for this when discussing I/Q signals and complex rotation. We will not repeat that entire discussion here.</p>
+<p>For now, simply remember:</p>
+<blockquote class="blockquote">
+<p>****A centered FFT of a real-valued signal normally has a symmetric spectrum.****</p>
+</blockquote>
+<p>The important observation from this first experiment is:</p>
+<blockquote class="blockquote">
+<p>****A waveform that looks complicated in time can have a very simple frequency-domain description.****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="what-is-the-fourier-transform-really-doing" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-fourier-transform-really-doing">6.3 What Is the Fourier Transform Really Doing?</h2>
+<p>We now know why the frequency-domain view is useful.</p>
+<p>But how do we obtain it?</p>
+<p>The mathematical connection between the time and frequency domains comes from ****Fourier analysis****.</p>
+<p>The basic idea is easier to understand if we forget the equation for a moment.</p>
+<p>Suppose somebody gives us an unknown signal and asks:</p>
+<blockquote class="blockquote">
+<p>Does this signal contain 1 kHz?</p>
+</blockquote>
+<p>We could compare the signal against a 1 kHz reference.</p>
+<p>Then we could ask:</p>
+<blockquote class="blockquote">
+<p>Does it contain 2 kHz?</p>
+</blockquote>
+<p>Compare it against a 2 kHz reference.</p>
+<p>Then 3 kHz.</p>
+<p>Then 4 kHz.</p>
+<p>And so on.</p>
+<p>Conceptually, Fourier analysis does something similar. It asks how strongly the signal matches sinusoidal components at different frequencies.</p>
+<p>If a particular frequency is strongly present, the comparison produces a strong result.</p>
+<p>If that frequency is absent, the contributions tend to cancel.</p>
+<p>This is the intuition behind the Fourier transform.</p>
+<p>For a continuous-time signal,</p>
+<p><span class="math display">\[
+X(f)=\int_{-\infty}^{\infty}x(t)e^{-j2\pi ft}\\,dt.
+\]</span></p>
+<p>The inverse Fourier transform is</p>
+<p><span class="math display">\[
+x(t)=\int_{-\infty}^{\infty}X(f)e^{j2\pi ft}\\,df.
+\]</span></p>
+<p>We do not need to derive these integrals here.</p>
+<p>The important idea is:</p>
+<p><span class="math display">\[
+\boxed{ \text{Time-domain description} \longleftrightarrow \text{Frequency-domain description} }
+\]</span></p>
+<p>The Fourier transform does not create frequencies that were not already part of the signal. It gives us a different representation of the same signal.</p>
+<hr>
+</section>
+<section id="from-the-fourier-transform-to-the-dft" class="level2">
+<h2 class="anchored" data-anchor-id="from-the-fourier-transform-to-the-dft">6.4 From the Fourier Transform to the DFT</h2>
+<p>A real SDR does not normally process an infinitely long continuous waveform.</p>
+<p>It works with ****samples****.</p>
+<p>Suppose we take a block containing <span class="math inline">\(N\)</span> samples:</p>
+<p><span class="math display">\[
+x[0],x[1],x[2],\ldots,x[N-1].
+\]</span></p>
+<p>We now need a version of Fourier analysis that works with a finite set of discrete samples.</p>
+<p>That is the ****Discrete Fourier Transform****, or DFT.</p>
+<p>The DFT is</p>
+<p><span class="math display">\[
+X[k] = \sum_{n=0}^{N-1} x[n]e^{-j2\pi kn/N}, \qquad k=0,1,\ldots,N-1.
+\]</span></p>
+<p>At first sight, this equation contains a lot of symbols. Let us unpack them.</p>
+<section id="what-does-n-mean" class="level3">
+<h3 class="anchored" data-anchor-id="what-does-n-mean">What Does <span class="math inline">\(n\)</span> Mean?</h3>
+<p><span class="math inline">\(n\)</span> is the ****sample index****.</p>
+<p>As <span class="math inline">\(n\)</span> runs from</p>
+<p><span class="math display">\[
+0\quad\text{to}\quad N-1,
+\]</span></p>
+<p>the DFT moves through all samples in the block.</p>
+</section>
+<section id="what-does-n-mean-1" class="level3">
+<h3 class="anchored" data-anchor-id="what-does-n-mean-1">What Does <span class="math inline">\(N\)</span> Mean?</h3>
+<p><span class="math inline">\(N\)</span> is the number of samples used in the DFT.</p>
+<p>If we calculate a 1024-point DFT, then</p>
+<p><span class="math display">\[
+N=1024.
+\]</span></p>
+</section>
+<section id="what-does-k-mean" class="level3">
+<h3 class="anchored" data-anchor-id="what-does-k-mean">What Does <span class="math inline">\(k\)</span> Mean?</h3>
+<p><span class="math inline">\(k\)</span> is the ****frequency-bin index****.</p>
+<p>Each value of <span class="math inline">\(k\)</span> corresponds to one discrete frequency tested by the DFT.</p>
+<p>We will soon see exactly where those frequencies lie.</p>
+</section>
+<section id="what-is-the-complex-exponential-doing" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-the-complex-exponential-doing">What Is the Complex Exponential Doing?</h3>
+<p>The term</p>
+<p><span class="math display">\[
+e^{-j2\pi kn/N}
+\]</span></p>
+<p>acts like a complex sinusoidal reference associated with bin <span class="math inline">\(k\)</span>.</p>
+<p>The DFT effectively compares the input samples with that reference.</p>
+<p>A useful mental picture is this:</p>
+<ul>
+<li><p>if the input contains a component matching that bin frequency, the contributions tend to reinforce;</p></li>
+<li><p>if the frequency does not match, the contributions tend to rotate around the complex plane and cancel more strongly.</p></li>
+</ul>
+<p>The summation</p>
+<p><span class="math display">\[
+\sum_{n=0}^{N-1}
+\]</span></p>
+<p>accumulates that comparison across the entire block.</p>
+<p>So <span class="math inline">\(X[k]\)</span> can be thought of as answering:</p>
+<blockquote class="blockquote">
+<p>****How strongly does this finite block of samples correlate with the complex sinusoid represented by bin <span class="math inline">\(k\)</span>?****</p>
+</blockquote>
+<p>The result is generally complex.</p>
+<p>Its magnitude,</p>
+<p><span class="math display">\[
+|X[k]|,
+\]</span></p>
+<p>indicates the strength of that correlation, while its angle,</p>
+<p><span class="math display">\[
+\angle X[k],
+\]</span></p>
+<p>contains phase information.</p>
+</section>
+<section id="a-small-practical-warning" class="level3">
+<h3 class="anchored" data-anchor-id="a-small-practical-warning">A Small Practical Warning</h3>
+<p>The raw value of <span class="math inline">\(|X[k]|\)</span> is not automatically equal to the physical amplitude of a sinusoid.</p>
+<p>The displayed magnitude can depend on:</p>
+<ul>
+<li><p>FFT length;</p></li>
+<li><p>normalization;</p></li>
+<li><p>window choice;</p></li>
+<li><p>whether the spectrum is one-sided or two-sided;</p></li>
+<li><p>whether the display represents amplitude, power, or another spectral quantity.</p></li>
+</ul>
+<p>For now, we mainly use the GNU Radio Frequency Sink to understand ****where spectral components are located and how their relative behaviour changes****.</p>
+<p>We should not treat its vertical scale as a calibrated RF power measurement unless the measurement chain has actually been calibrated.</p>
+<hr>
+</section>
+</section>
+<section id="dft-and-fft-what-is-the-difference" class="level2">
+<h2 class="anchored" data-anchor-id="dft-and-fft-what-is-the-difference">6.5 DFT and FFT: What Is the Difference?</h2>
+<p>This is a common source of confusion.</p>
+<p>The ****DFT**** and ****FFT**** are not two competing transforms.</p>
+<p>The DFT is the mathematical operation.</p>
+<p>The FFT, or ****Fast Fourier Transform****, is a family of efficient algorithms used to calculate the DFT.</p>
+<p>A useful way to remember it is:</p>
+<p><span class="math display">\[
+\boxed{\text{DFT = what we want to calculate}}
+\]</span></p>
+<p><span class="math display">\[
+\boxed{\text{FFT = an efficient way to calculate it}}
+\]</span></p>
+<p>If we directly evaluate the DFT equation for every output bin, the amount of computation grows approximately as</p>
+<p><span class="math display">\[
+O(N^2).
+\]</span></p>
+<p>Common FFT algorithms reduce this to roughly</p>
+<p><span class="math display">\[
+O(N\log_2N).
+\]</span></p>
+<p>For a small transform, this difference may not feel important.</p>
+<p>But an SDR may repeatedly calculate FFTs containing hundreds, thousands, or more samples while data arrives continuously.</p>
+<p>Then the computational saving becomes extremely important.</p>
+<p>This leads to the next question:</p>
+<blockquote class="blockquote">
+<p>****How can the FFT calculate the same DFT with much less work?****</p>
+</blockquote>
+<hr>
+</section>
+<section id="why-can-the-fft-be-faster" class="level2">
+<h2 class="anchored" data-anchor-id="why-can-the-fft-be-faster">6.6 Why Can the FFT Be Faster?</h2>
+<p>Look again at the DFT:</p>
+<p><span class="math display">\[
+X[k] = \sum_{n=0}^{N-1} x[n]e^{-j2\pi kn/N}.
+\]</span></p>
+<p>The complex exponential terms do not behave randomly.</p>
+<p>They repeat.</p>
+<p>They have symmetry.</p>
+<p>Many calculations that appear separately in the direct DFT are closely related.</p>
+<p>The FFT exploits those relationships instead of calculating everything independently.</p>
+<p>The basic strategy is:</p>
+<p>1. break one large DFT into smaller DFTs;</p>
+<p>2. reuse calculations;</p>
+<p>3. combine the smaller results efficiently.</p>
+<p>One common way to do this is the ****radix-2 FFT****.</p>
+<hr>
+</section>
+<section id="radix-2-fft" class="level2">
+<h2 class="anchored" data-anchor-id="radix-2-fft">6.7 Radix-2 FFT</h2>
+<p>A radix-2 FFT is especially convenient when</p>
+<p><span class="math display">\[
+N=2^m.
+\]</span></p>
+<p>Examples include:</p>
+<p><span class="math display">\[
+8=2^3,
+\]</span></p>
+<p><span class="math display">\[
+32=2^5,
+\]</span></p>
+<p><span class="math display">\[
+1024=2^{10},
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+2048=2^{11}.
+\]</span></p>
+<p>The word ****radix-2**** tells us that the algorithm repeatedly breaks the calculation into groups based on two.</p>
+<p>For an 8-point transform, the idea is roughly</p>
+<p><span class="math display">\[
+8 \rightarrow 4+4 \rightarrow 2+2+2+2.
+\]</span></p>
+<p>The original large problem becomes several smaller problems.</p>
+<p>One common way of organizing this decomposition is called ****Decimation in Time****, or DIT.</p>
+<hr>
+</section>
+<section id="decimation-in-time-dit" class="level2">
+<h2 class="anchored" data-anchor-id="decimation-in-time-dit">6.8 Decimation in Time (DIT)</h2>
+<p>In radix-2 DIT, we first separate the input samples according to whether their indices are even or odd.</p>
+<p>The even-indexed samples are</p>
+<p><span class="math display">\[
+x[0],x[2],x[4],\ldots
+\]</span></p>
+<p>and the odd-indexed samples are</p>
+<p><span class="math display">\[
+x[1],x[3],x[5],\ldots
+\]</span></p>
+<p>Define</p>
+<p><span class="math display">\[
+W_N=e^{-j2\pi/N}.
+\]</span></p>
+<p>Then the DFT can be reorganized into</p>
+<p><span class="math display">\[
+X[k]=E[k]+W_N^kO[k]
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+X[k+N/2]=E[k]-W_N^kO[k].
+\]</span></p>
+<p>Here:</p>
+<ul>
+<li><p><span class="math inline">\(E[k]\)</span> is the <span class="math inline">\(N/2\)</span>-point DFT of the even-indexed samples;</p></li>
+<li><p><span class="math inline">\(O[k]\)</span> is the <span class="math inline">\(N/2\)</span>-point DFT of the odd-indexed samples.</p></li>
+</ul>
+<p>This is the key step.</p>
+<p>Instead of calculating one large <span class="math inline">\(N\)</span>-point DFT directly, we calculate two smaller <span class="math inline">\(N/2\)</span>-point DFTs and combine them.</p>
+<p>Then each of those smaller DFTs can be split again.</p>
+<p>And again.</p>
+<p>That repeated decomposition is where much of the computational saving comes from.</p>
+<blockquote class="blockquote">
+<p>****The FFT becomes fast because it reuses structure that the direct DFT calculation would repeatedly calculate from scratch.****</p>
+</blockquote>
+<hr>
+</section>
+<section id="twiddle-factors-complex-rotations-inside-the-fft" class="level2">
+<h2 class="anchored" data-anchor-id="twiddle-factors-complex-rotations-inside-the-fft">6.9 Twiddle Factors: Complex Rotations Inside the FFT</h2>
+<p>The term</p>
+<p><span class="math display">\[
+W_N^k=e^{-j2\pi k/N}
+\]</span></p>
+<p>is called a ****twiddle factor****.</p>
+<p>The name sounds more mysterious than the mathematics.</p>
+<p>Using Euler’s relation,</p>
+<p><span class="math display">\[
+e^{j\theta}=\cos\theta+j\sin\theta,
+\]</span></p>
+<p>we can write</p>
+<p><span class="math display">\[
+W_N^k = \cos\left(\frac{2\pi k}{N}\right) - j\sin\left(\frac{2\pi k}{N}\right).
+\]</span></p>
+<p>So a twiddle factor is simply a known complex rotation.</p>
+<p>That should sound familiar.</p>
+<p>When we studied I/Q signals, a complex exponential represented rotation in the complex plane. The FFT uses the same mathematical idea.</p>
+<p>The twiddle factor rotates one intermediate result by the amount required before it is combined with another result.</p>
+<hr>
+</section>
+<section id="the-fft-butterfly" class="level2">
+<h2 class="anchored" data-anchor-id="the-fft-butterfly">6.10 The FFT Butterfly</h2>
+<p>The basic repeated operation in a radix-2 FFT is called a ****butterfly****.</p>
+<p>Suppose its inputs are <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>.</p>
+<p>First, the lower input is multiplied by the appropriate twiddle factor:</p>
+<p><span class="math display">\[
+T=BW_N^k.
+\]</span></p>
+<p>Then the butterfly produces</p>
+<p><span class="math display">\[
+Y_{\text{upper}}=A+T
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+Y_{\text{lower}}=A-T.
+\]</span></p>
+<p>Equivalently,</p>
+<p><span class="math display">\[
+Y_{\text{upper}}=A+BW_N^k
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+Y_{\text{lower}}=A-BW_N^k.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-butterfly.png" class="img-fluid figure-img"></p>
+<figcaption>Basic radix-2 FFT butterfly operation</figcaption>
+</figure>
+</div>
+<p>The butterfly is therefore not a mysterious DSP object.</p>
+<p>It does three basic things:</p>
+<p>1. rotate one input using a twiddle factor;</p>
+<p>2. add the rotated value to the other input;</p>
+<p>3. subtract the rotated value from the other input.</p>
+<section id="a-small-numerical-example" class="level3">
+<h3 class="anchored" data-anchor-id="a-small-numerical-example">A Small Numerical Example</h3>
+<p>Let</p>
+<p><span class="math display">\[
+A=3+j,
+\]</span></p>
+<p><span class="math display">\[
+B=1-j,
+\]</span></p>
+<p>and let the required twiddle factor be</p>
+<p><span class="math display">\[
+W_N^k=-j.
+\]</span></p>
+<p>First calculate the rotated lower input:</p>
+<p><span class="math display">\[
+T=BW_N^k.
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+T=(1-j)(-j).
+\]</span></p>
+<p>Expanding,</p>
+<p><span class="math display">\[
+T=-1-j.
+\]</span></p>
+<p>Now calculate the upper output:</p>
+<p><span class="math display">\[
+Y_{\text{upper}} = A+T
+\]</span></p>
+<p><span class="math display">\[
+=(3+j)+(-1-j)
+\]</span></p>
+<p><span class="math display">\[
+=2.
+\]</span></p>
+<p>The lower output is</p>
+<p><span class="math display">\[
+Y_{\text{lower}} = A-T
+\]</span></p>
+<p><span class="math display">\[
+=(3+j)-(-1-j)
+\]</span></p>
+<p><span class="math display">\[
+=4+2j.
+\]</span></p>
+<p>That is one butterfly.</p>
+<p>A complete radix-2 FFT simply organizes many such butterfly operations into stages.</p>
+<blockquote class="blockquote">
+<p>****The FFT is the DFT reorganized into a structured network of reusable calculations.****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="building-an-8-point-radix-2-dit-fft" class="level2">
+<h2 class="anchored" data-anchor-id="building-an-8-point-radix-2-dit-fft">6.11 Building an 8-Point Radix-2 DIT FFT</h2>
+<p>An 8-point FFT is small enough for us to see the complete structure.</p>
+<p>Because</p>
+<p><span class="math display">\[
+8=2^3,
+\]</span></p>
+<p>a radix-2 FFT requires</p>
+<p><span class="math display">\[
+\log_2 8=3
+\]</span></p>
+<p>stages.</p>
+<p>In general,</p>
+<p><span class="math display">\[
+\boxed{\text{Number of radix-2 stages}=\log_2N}.
+\]</span></p>
+<p>So:</p>
+<ul>
+<li><p>a 32-point radix-2 FFT has 5 stages;</p></li>
+<li><p>a 1024-point radix-2 FFT has 10 stages;</p></li>
+<li><p>a 2048-point radix-2 FFT has 11 stages.</p></li>
+</ul>
+<section id="why-does-bit-reversal-appear" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-bit-reversal-appear">Why Does Bit Reversal Appear?</h3>
+<p>A common iterative radix-2 DIT implementation arranges the input samples in ****bit-reversed order****.</p>
+<p>This is not a property of the DFT itself.</p>
+<p>It appears because of the way this particular FFT implementation organizes the repeated even/odd decomposition and butterfly stages.</p>
+<p>For an 8-point FFT, the indices require three binary bits:</p>
+<div class="line-block">Normal index | Binary | Bits reversed | New index |</div>
+<p>|—:|:—:|:—:|—:|</p>
+<div class="line-block">0 | 000 | 000 | 0 |</div>
+<div class="line-block">1 | 001 | 100 | 4 |</div>
+<div class="line-block">2 | 010 | 010 | 2 |</div>
+<div class="line-block">3 | 011 | 110 | 6 |</div>
+<div class="line-block">4 | 100 | 001 | 1 |</div>
+<div class="line-block">5 | 101 | 101 | 5 |</div>
+<div class="line-block">6 | 110 | 011 | 3 |</div>
+<div class="line-block">7 | 111 | 111 | 7 |</div>
+<p>So the bit-reversed order becomes</p>
+<p><span class="math display">\[
+0,4,2,6,1,5,3,7.
+\]</span></p>
+<p>The input sequence is therefore arranged as</p>
+<p><span class="math display">\[
+x[0],x[4],x[2],x[6],x[1],x[5],x[3],x[7].
+\]</span></p>
+<p>In the iterative radix-2 DIT arrangement shown here, this ordering allows the butterfly stages to proceed conveniently while producing the final FFT outputs in natural order.</p>
+<p>Library FFT implementations often hide this reordering internally, so a user calling an FFT function does not normally need to perform bit reversal manually.</p>
+</section>
+<section id="following-the-three-stages" class="level3">
+<h3 class="anchored" data-anchor-id="following-the-three-stages">Following the Three Stages</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-8point-dit-fft.png" class="img-fluid figure-img"></p>
+<figcaption>Eight-point radix-2 decimation-in-time FFT</figcaption>
+</figure>
+</div>
+<p>Let us read the figure from left to right.</p>
+<section id="stage-1" class="level4">
+<h4 class="anchored" data-anchor-id="stage-1">Stage 1</h4>
+<p>The adjacent bit-reversed inputs are combined in four butterflies.</p>
+<p>The butterfly distance is 1.</p>
+<p>At this stage,</p>
+<p><span class="math display">\[
+W_2^0=1.
+\]</span></p>
+<p>So the first stage is mainly a set of additions and subtractions.</p>
+</section>
+<section id="stage-2" class="level4">
+<h4 class="anchored" data-anchor-id="stage-2">Stage 2</h4>
+<p>The intermediate values are now combined in groups corresponding to 4-point transforms.</p>
+<p>The butterfly distance becomes 2.</p>
+<p>The required twiddle factors are based on</p>
+<p><span class="math display">\[
+W_4^0 \qquad\text{and}\qquad W_4^1.
+\]</span></p>
+</section>
+<section id="stage-3" class="level4">
+<h4 class="anchored" data-anchor-id="stage-3">Stage 3</h4>
+<p>Finally, the two 4-point results are combined to form the complete 8-point transform.</p>
+<p>The butterfly distance is 4.</p>
+<p>The four butterflies use</p>
+<p><span class="math display">\[
+W_8^0,\quad W_8^1,\quad W_8^2,\quad W_8^3.
+\]</span></p>
+<p>The outputs are</p>
+<p><span class="math display">\[
+X[0],X[1],X[2],\ldots,X[7].
+\]</span></p>
+<p>For an 8-point radix-2 FFT, each of the three stages contains four butterflies.</p>
+<p>Therefore, the complete transform contains</p>
+<p><span class="math display">\[
+\frac{N}{2}\log_2N = 4\times3 = 12
+\]</span></p>
+<p>butterflies.</p>
+</section>
+</section>
+<section id="do-we-need-to-build-this-in-gnu-radio" class="level3">
+<h3 class="anchored" data-anchor-id="do-we-need-to-build-this-in-gnu-radio">Do We Need to Build This in GNU Radio?</h3>
+<p>No.</p>
+<p>The purpose of this section is to look briefly ****under the hood**** of an FFT.</p>
+<p>We are not going to construct the individual butterfly stages manually in GNU Radio. GNU Radio’s FFT-based blocks already perform these calculations internally using efficient numerical libraries.</p>
+<p>What matters to us as GNU Radio users is understanding what the FFT parameters mean and how they affect the spectrum we observe.</p>
+<p>That takes us back from the internal FFT algorithm to something we can directly experiment with:</p>
+<blockquote class="blockquote">
+<p>****What does an FFT block actually produce in GNU Radio?****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="dit-and-dif" class="level2">
+<h2 class="anchored" data-anchor-id="dit-and-dif">6.12 DIT and DIF</h2>
+<p>DIT is not the only way to organize a radix-2 FFT.</p>
+<p>Another common form is ****Decimation in Frequency****, or DIF.</p>
+<p>Both calculate the same DFT. They simply organize the intermediate calculations differently.</p>
+<p>For this chapter, we use DIT only to understand the basic structure of an FFT.</p>
+<p>We do not need a separate DIF derivation.</p>
+<hr>
+</section>
+<section id="fft-bins-where-does-the-fft-look" class="level2">
+<h2 class="anchored" data-anchor-id="fft-bins-where-does-the-fft-look">6.13 FFT Bins: Where Does the FFT Look?</h2>
+<p>An <span class="math inline">\(N\)</span>-point DFT produces <span class="math inline">\(N\)</span> discrete frequency samples.</p>
+<p>These locations are commonly called ****FFT bins****.</p>
+<p>If the sample rate is <span class="math inline">\(f_s\)</span> and the FFT size is <span class="math inline">\(N\)</span>, the spacing between adjacent bins is</p>
+<p><span class="math display">\[
+\boxed{ \Delta f=\frac{f_s}{N} }
+\]</span></p>
+<p>where <span class="math inline">\(\Delta f\)</span> is the ****FFT bin spacing****.</p>
+<p>Suppose</p>
+<p><span class="math display">\[
+f_s=32\\,000\text{ samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+N=1024.
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\Delta f = \frac{32000}{1024} = 31.25\text{ Hz}.
+\]</span></p>
+<p>So the FFT evaluates the spectrum at frequency locations separated by 31.25 Hz.</p>
+<p>This gives us an important intuition.</p>
+<p>Imagine placing equally spaced markers along the frequency axis.</p>
+<p>With a small FFT, the markers are relatively far apart.</p>
+<p>With a larger FFT, the markers are closer together.</p>
+<p>For a fixed sample rate:</p>
+<p><span class="math display">\[
+N\uparrow \quad\Rightarrow\quad \Delta f\downarrow.
+\]</span></p>
+<p>So increasing FFT size gives us a ****denser sampling of the frequency axis****.</p>
+<p>But we need to be careful with the word <strong>resolution</strong>.</p>
+<hr>
+</section>
+<section id="experiment-2-using-the-fft-block-directly-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-using-the-fft-block-directly-in-gnu-radio">6.14 Experiment 2: Using the FFT Block Directly in GNU Radio</h2>
+<p>Until now, we have mainly used the ****QT GUI Frequency Sink**** to look at spectra.</p>
+<p>That is convenient because the Frequency Sink performs the spectral processing needed to draw the spectrum internally.</p>
+<p>But after discussing the DFT, FFT, FFT bins, twiddle factors, and butterflies, it is worth opening that black box once.</p>
+<p>Instead of asking GNU Radio to calculate and display the spectrum in one convenient block, we will build the main FFT-processing stages ourselves.</p>
+<section id="building-the-fft-chain" class="level3">
+<h3 class="anchored" data-anchor-id="building-the-fft-chain">Building the FFT Chain</h3>
+<p>The processing chain is:</p>
+<pre class="text"><code>
+Signal Source
+
+     ↓
+
+Throttle
+
+     ↓
+
+Stream to Vector
+
+     ↓
+
+FFT
+
+     ↓
+
+Complex to Mag²
+
+     ↓
+
+QT GUI Vector Sink
+</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for explicit FFT processing</figcaption>
+</figure>
+</div>
+<p>This flowgraph introduces several important blocks that were hidden when we used the QT GUI Frequency Sink:</p>
+<ul>
+<li><p>****Stream to Vector****</p></li>
+<li><p>****FFT****</p></li>
+<li><p>****Complex to Mag²****</p></li>
+<li><p>****QT GUI Vector Sink****</p></li>
+</ul>
+</section>
+<section id="why-do-we-need-stream-to-vector" class="level3">
+<h3 class="anchored" data-anchor-id="why-do-we-need-stream-to-vector">Why Do We Need Stream to Vector?</h3>
+<p>The Signal Source produces a continuous stream of samples:</p>
+<pre class="text"><code>
+x[0], x[1], x[2], x[3], ...
+</code></pre>
+<p>But an <span class="math inline">\(N\)</span>-point FFT operates on blocks containing <span class="math inline">\(N\)</span> samples.</p>
+<p>For</p>
+<p><span class="math display">\[
+N=1024,
+\]</span></p>
+<p>the FFT needs</p>
+<p><span class="math display">\[
+x[0],x[1],\ldots,x[1023]
+\]</span></p>
+<p>as one block.</p>
+<p>The ****Stream to Vector**** block collects 1024 consecutive samples and groups them into one vector:</p>
+<p><span class="math display">\[
+\underbrace{ [x[0],x[1],\ldots,x[1023]] }_{1024\text{ samples}}.
+\]</span></p>
+<p>That vector is then passed to the FFT block.</p>
+<p>This is an important practical connection between the mathematics and GNU Radio:</p>
+<blockquote class="blockquote">
+<p>****The FFT does not operate on an infinitely long stream at once. It repeatedly processes finite blocks of samples.****</p>
+</blockquote>
+</section>
+<section id="the-fft-block" class="level3">
+<h3 class="anchored" data-anchor-id="the-fft-block">The FFT Block</h3>
+<p>For this experiment, we use:</p>
+<ul>
+<li><p>sample rate: 32 kS/s;</p></li>
+<li><p>FFT size: 1024;</p></li>
+<li><p>forward FFT;</p></li>
+<li><p>rectangular window;</p></li>
+<li><p>a centered frequency display from approximately -16 kHz to +16 kHz.</p></li>
+</ul>
+<p>Since</p>
+<p><span class="math display">\[
+f_s=32000\text{ samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+N=1024,
+\]</span></p>
+<p>the FFT bin spacing is</p>
+<p><span class="math display">\[
+\Delta f = \frac{f_s}{N} = \frac{32000}{1024} = 31.25\text{ Hz}.
+\]</span></p>
+<p>For a centered spectrum, the displayed frequency span is approximately</p>
+<p><span class="math display">\[
+-\frac{f_s}{2} \quad\text{to}\quad +\frac{f_s}{2},
+\]</span></p>
+<p>which becomes</p>
+<p><span class="math display">\[
+-16\text{ kHz} \quad\text{to}\quad +16\text{ kHz}
+\]</span></p>
+<p>for our 32 kS/s sample rate.</p>
+</section>
+<section id="why-do-we-use-complex-to-mag²" class="level3">
+<h3 class="anchored" data-anchor-id="why-do-we-use-complex-to-mag²">Why Do We Use Complex to Mag²?</h3>
+<p>The FFT output is complex:</p>
+<p><span class="math display">\[
+X[k].
+\]</span></p>
+<p>Each FFT bin therefore contains magnitude and phase information.</p>
+<p>For this experiment, we are interested in the strength of each frequency component rather than its phase.</p>
+<p>The ****Complex to Mag²**** block calculates</p>
+<p><span class="math display">\[
+|X[k]|^2.
+\]</span></p>
+<p>So the chain</p>
+<pre class="text"><code>
+FFT → Complex to Mag²
+</code></pre>
+<p>converts the complex FFT output into a magnitude-squared quantity.</p>
+<p>The ****QT GUI Vector Sink**** then plots those values against the frequency-bin positions.</p>
+<p>One important warning:</p>
+<blockquote class="blockquote">
+<p>****The vertical axis in this experiment is raw magnitude-squared. It should not be interpreted as calibrated power in watts or dBm, and it should not be compared directly with the dB scale of the QT GUI Frequency Sink.****</p>
+</blockquote>
+<p>The purpose of this experiment is to understand the FFT-processing chain and the locations of spectral components.</p>
+</section>
+<section id="part-a-fft-of-a-real-1-khz-cosine" class="level3">
+<h3 class="anchored" data-anchor-id="part-a-fft-of-a-real-1-khz-cosine">Part A: FFT of a Real 1 kHz Cosine</h3>
+<p>First, set the Signal Source to generate a ****real cosine****:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi 1000t).
+\]</span></p>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-real-cosine.png" class="img-fluid figure-img"></p>
+<figcaption>Explicit FFT of a 1 kHz real cosine showing components at positive and negative frequencies</figcaption>
+</figure>
+</div>
+<p>Two spectral components appear:</p>
+<p><span class="math display">\[
+-1\text{ kHz} \qquad\text{and}\qquad +1\text{ kHz}.
+\]</span></p>
+<p>This is exactly what we should expect because</p>
+<p><span class="math display">\[
+\cos(2\pi f_0t) = \frac{1}{2}e^{j2\pi f_0t} \+ \frac{1}{2}e^{-j2\pi f_0t}.
+\]</span></p>
+<p>A real cosine therefore contains two complex rotating components:</p>
+<p><span class="math display">\[
++f_0 \qquad\text{and}\qquad -f_0.
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+f_0=1\text{ kHz},
+\]</span></p>
+<p>the FFT shows peaks at</p>
+<p><span class="math display">\[
+-1\text{ kHz} \qquad\text{and}\qquad +1\text{ kHz}.
+\]</span></p>
+<p>This is not something created by the QT GUI Frequency Sink. We are now observing the same behaviour using the FFT block directly.</p>
+</section>
+<section id="part-b-fft-of-a-complex-1-khz-tone" class="level3">
+<h3 class="anchored" data-anchor-id="part-b-fft-of-a-complex-1-khz-tone">Part B: FFT of a Complex 1 kHz Tone</h3>
+<p>Now change the Signal Source so that it produces a ****complex tone****.</p>
+<p>The signal is</p>
+<p><span class="math display">\[
+x(t)=e^{j2\pi f_0t}.
+\]</span></p>
+<p>Using Euler’s relation,</p>
+<p><span class="math display">\[
+e^{j2\pi f_0t} = \cos(2\pi f_0t) \+ j\sin(2\pi f_0t).
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+f_0=1\text{ kHz},
+\]</span></p>
+<p>this complex signal represents one rotating phasor at positive 1 kHz.</p>
+<p>The FFT now looks very different:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-complex-tone.png" class="img-fluid figure-img"></p>
+<figcaption>Explicit FFT of a 1 kHz complex tone showing a single positive-frequency component</figcaption>
+</figure>
+</div>
+<p>Instead of two peaks, we obtain only one:</p>
+<p><span class="math display">\[
++1\text{ kHz}.
+\]</span></p>
+<p>The two experiments can therefore be summarized as:</p>
+<div class="line-block">Input signal | FFT result |</div>
+<p>|—|—|</p>
+<div class="line-block">Real 1 kHz cosine | Peaks at <span class="math inline">\(-1\)</span> kHz and <span class="math inline">\(+1\)</span> kHz |</div>
+<div class="line-block">Complex 1 kHz tone | Peak only at <span class="math inline">\(+1\)</span> kHz |</div>
+<p>This is one of the most important differences between real and complex signal representations in SDR.</p>
+<p>A real cosine contains both positive- and negative-frequency complex components.</p>
+<p>A complex exponential can represent only one of those rotations.</p>
+<p>We already explored the physical meaning of this behaviour when studying I/Q signals. Here, the FFT gives us another way to observe it directly.</p>
+</section>
+<section id="what-did-we-actually-build" class="level3">
+<h3 class="anchored" data-anchor-id="what-did-we-actually-build">What Did We Actually Build?</h3>
+<p>This experiment is useful because it exposes operations that the Frequency Sink normally hides from us.</p>
+<p>The processing chain was:</p>
+<p><span class="math display">\[
+\boxed{ \text{Sample stream} \rightarrow \text{Vector of }N\text{ samples} \rightarrow \text{FFT} \rightarrow |X[k]|^2 \rightarrow \text{Display} }
+\]</span></p>
+<p>Each block now has a clear purpose:</p>
+<div class="line-block">GNU Radio block | What it does |</div>
+<p>|—|—|</p>
+<div class="line-block">Signal Source | Generates the test signal |</div>
+<div class="line-block">Throttle | Controls the rate of a software-only flowgraph |</div>
+<div class="line-block">Stream to Vector | Groups the continuous stream into <span class="math inline">\(N\)</span>-sample blocks |</div>
+<div class="line-block">FFT | Calculates the DFT efficiently |</div>
+<div class="line-block">Complex to Mag² | Calculates <span class="math inline">\(\lvert X[k] \rvert^2\)</span> |</div>
+<div class="line-block">QT GUI Vector Sink | Displays the FFT-bin values |</div>
+<p>This also explains why the ****QT GUI Frequency Sink**** is so convenient.</p>
+<p>Conceptually, it performs much of this spectral-analysis work for us internally.</p>
+<p>So there are two useful ways to work in GNU Radio:</p>
+<blockquote class="blockquote">
+<p>****Use the Frequency Sink when you simply want to observe a spectrum.****</p>
+</blockquote>
+<p>and</p>
+<blockquote class="blockquote">
+<p>****Use the FFT block directly when you want access to FFT data for further processing.****</p>
+</blockquote>
+<p>That distinction becomes increasingly important in SDR systems. An FFT may not always be the final display. Its output can instead be passed to detection algorithms, channelizers, estimators, classifiers, or other DSP operations.</p>
+</section>
+<section id="one-more-connection-to-the-fft-theory" class="level3">
+<h3 class="anchored" data-anchor-id="one-more-connection-to-the-fft-theory">One More Connection to the FFT Theory</h3>
+<p>Earlier, we looked inside a radix-2 FFT and saw DIT decomposition, twiddle factors, butterflies, and bit reversal.</p>
+<p>We did ****not**** manually construct those operations in this GNU Radio experiment.</p>
+<p>The single ****FFT block**** performs the transform for us.</p>
+<p>So we can now connect the three levels:</p>
+<pre class="text"><code>DFT equation
+     ↓
+Efficient FFT algorithm
+     ↓
+GNU Radio FFT block</code></pre>
+<p>The DFT tells us ****what is being calculated****.</p>
+<p>The FFT algorithm tells us ****how it can be calculated efficiently****.</p>
+<p>The GNU Radio FFT block gives us a ****practical implementation we can use inside a flowgraph****.</p>
+<p>That completes the connection between the mathematics and what we are actually doing in GNU Radio.</p>
+<hr>
+</section>
+</section>
+<section id="bin-spacing-is-not-exactly-the-same-as-spectral-resolution" class="level2">
+<h2 class="anchored" data-anchor-id="bin-spacing-is-not-exactly-the-same-as-spectral-resolution">6.15 Bin Spacing Is Not Exactly the Same as Spectral Resolution</h2>
+<p>It is tempting to say:</p>
+<blockquote class="blockquote">
+<p>Smaller bin spacing means better frequency resolution.</p>
+</blockquote>
+<p>That is useful as a first intuition, but it is incomplete.</p>
+<p>Three different ideas are involved:</p>
+<div class="line-block">Property | Mainly affected by | What it tells us |</div>
+<p>|—|—|—|</p>
+<div class="line-block">Bin spacing | <span class="math inline">\(f_s/N\)</span> | Distance between FFT frequency samples |</div>
+<div class="line-block">Main-lobe width | Observation length and window | How broad one spectral tone appears |</div>
+<div class="line-block">Sidelobe level | Window | How strongly a tone spreads away from its main peak |</div>
+<p>Two tones do not automatically become distinguishable just because their separation is slightly larger than one FFT bin.</p>
+<p>Their spectral main lobes can still overlap.</p>
+<p>So throughout this chapter, we will use ****bin spacing**** when we specifically mean</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N},
+\]</span></p>
+<p>and use ****spectral resolution**** more carefully when discussing whether two nearby components can actually be distinguished.</p>
+<hr>
+</section>
+<section id="experiment-3-what-happens-when-we-change-fft-size" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-what-happens-when-we-change-fft-size">6.16 Experiment 3: What Happens When We Change FFT Size?</h2>
+<p>We now return to GNU Radio.</p>
+<p>We generated two cosine tones:</p>
+<ul>
+<li><p>1.0 kHz</p></li>
+<li><p>1.1 kHz</p></li>
+</ul>
+<p>Their frequency separation is</p>
+<p><span class="math display">\[
+1100-1000=100\text{ Hz}.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for investigating FFT frequency resolution</figcaption>
+</figure>
+</div>
+<section id="before-running-it" class="level3">
+<h3 class="anchored" data-anchor-id="before-running-it">Before Running It</h3>
+<p>Our sample rate is</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}.
+\]</span></p>
+<p>Before looking at the screenshots, calculate the bin spacing for each FFT size.</p>
+</section>
+<section id="fft-size-32" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-32">FFT Size = 32</h3>
+<p>For</p>
+<p><span class="math display">\[
+N=32,
+\]</span></p>
+<p>the bin spacing is</p>
+<p><span class="math display">\[
+\Delta f = \frac{32000}{32} = 1000\text{ Hz}.
+\]</span></p>
+<p>Our tones are only 100 Hz apart, while the FFT frequency samples are 1000 Hz apart.</p>
+<p>So we should not expect the display to represent the two tones as two clean, narrowly separated peaks.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-32.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 32, the two closely spaced tones cannot be clearly separated</figcaption>
+</figure>
+</div>
+<p>That is exactly what we observe.</p>
+</section>
+<section id="fft-size-256" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-256">FFT Size = 256</h3>
+<p>Now let</p>
+<p><span class="math display">\[
+N=256.
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\Delta f = \frac{32000}{256} = 125\text{ Hz}.
+\]</span></p>
+<p>The FFT now samples the frequency axis much more finely.</p>
+<p>The two components begin to become distinguishable, although their spectral shapes can still overlap.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-256.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 256, the two nearby tones begin to separate</figcaption>
+</figure>
+</div>
+</section>
+<section id="fft-size-2048" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-2048">FFT Size = 2048</h3>
+<p>Finally,</p>
+<p><span class="math display">\[
+N=2048.
+\]</span></p>
+<p>Now,</p>
+<p><span class="math display">\[
+\Delta f = \frac{32000}{2048} = 15.625\text{ Hz}.
+\]</span></p>
+<p>The 100 Hz separation between our tones now spans several FFT-bin intervals.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-2048.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 2048, the 1.0 kHz and 1.1 kHz tones are much more clearly separated</figcaption>
+</figure>
+</div>
+<p>The two components are much easier to distinguish.</p>
+</section>
+<section id="but-where-did-the-extra-frequency-detail-come-from" class="level3">
+<h3 class="anchored" data-anchor-id="but-where-did-the-extra-frequency-detail-come-from">But Where Did the Extra Frequency Detail Come From?</h3>
+<p>An <span class="math inline">\(N\)</span>-point FFT uses <span class="math inline">\(N\)</span> samples.</p>
+<p>The observation time is therefore</p>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}.
+\]</span></p>
+<p>For our experiment:</p>
+<div class="line-block">FFT size | Bin spacing | Observation time |</div>
+<p>|—:|—:|—:|</p>
+<div class="line-block">32 | 1000 Hz | 1 ms |</div>
+<div class="line-block">256 | 125 Hz | 8 ms |</div>
+<div class="line-block">2048 | 15.625 Hz | 64 ms |</div>
+<p>So the larger FFT is not obtaining extra detail for free.</p>
+<p>It is examining a longer block of the signal.</p>
+<p>This reveals a fundamental time-frequency trade-off:</p>
+<blockquote class="blockquote">
+<p>****To obtain finer frequency information from actual samples, we generally need to observe the signal for longer.****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="a-short-note-about-zero-padding" class="level2">
+<h2 class="anchored" data-anchor-id="a-short-note-about-zero-padding">6.17 A Short Note About Zero-Padding</h2>
+<p>There is a common FFT misunderstanding worth clearing up here.</p>
+<p>Suppose we collect only <span class="math inline">\(N\)</span> actual samples but append zeros and calculate a larger FFT.</p>
+<p>For example, we might collect 256 samples and zero-pad them before calculating a 2048-point FFT.</p>
+<p>The displayed frequency grid becomes denser.</p>
+<p>The spectral curve may look smoother.</p>
+<p>But we did ****not**** observe the signal for the same duration as 2048 actual samples.</p>
+<p>Therefore, zero-padding does not create new information about the signal.</p>
+<p>A useful rule is:</p>
+<p><span class="math display">\[
+\boxed{ \text{Zero-padding gives a denser frequency grid, not new spectral information.} }
+\]</span></p>
+<p>It can help us visualize or interpolate the spectral shape, but it does not magically narrow the window’s main lobe or provide the same fundamental resolving ability as a longer observation.</p>
+<hr>
+</section>
+<section id="understanding-the-frequency-axis" class="level2">
+<h2 class="anchored" data-anchor-id="understanding-the-frequency-axis">6.18 Understanding the Frequency Axis</h2>
+<p>For a sampled complex baseband signal with sample rate <span class="math inline">\(f_s\)</span>, a centered spectrum commonly spans</p>
+<p><span class="math display">\[
+-\frac{f_s}{2} \quad\text{to}\quad +\frac{f_s}{2}.
+\]</span></p>
+<p>With</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s},
+\]</span></p>
+<p>that becomes</p>
+<p><span class="math display">\[
+-16\text{ kHz} \quad\text{to}\quad +16\text{ kHz}.
+\]</span></p>
+<p>This is the available sampled Nyquist span.</p>
+<p>It is not necessarily the same thing as the ****occupied bandwidth**** of the signal.</p>
+<p>A narrowband signal may occupy only a small part of that available span.</p>
+<section id="center-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="center-frequency">Center Frequency</h3>
+<p>For our baseband simulations, the center frequency is usually set to 0 Hz.</p>
+<p>With actual SDR hardware, however, the receiver may be tuned to an RF frequency such as 100 MHz.</p>
+<p>Then the FFT bins represent frequency offsets around that tuned center.</p>
+</section>
+<section id="bandwidth-setting-in-the-frequency-sink" class="level3">
+<h3 class="anchored" data-anchor-id="bandwidth-setting-in-the-frequency-sink">Bandwidth Setting in the Frequency Sink</h3>
+<p>The Frequency Sink’s bandwidth parameter tells GNU Radio how to map the FFT bins onto the frequency axis.</p>
+<p>For our full complex-baseband display, we normally set it consistently with the incoming sample rate.</p>
+<p>So with a 32 kS/s stream centered at 0 Hz, the displayed span is typically approximately</p>
+<p><span class="math display">\[
+-16\text{ kHz}\quad\text{to}\quad+16\text{ kHz}.
+\]</span></p>
+<p>Again, this is the ****sampled frequency span****, not necessarily the bandwidth actually occupied by the signal.</p>
+<hr>
+</section>
+</section>
+<section id="why-does-gnu-radio-use-db" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-gnu-radio-use-db">6.19 Why Does GNU Radio Use dB?</h2>
+<p>Look at almost any spectrum analyzer and you will see a logarithmic vertical scale.</p>
+<p>GNU Radio does the same.</p>
+<p>Why?</p>
+<p>Because spectral components can differ enormously in magnitude.</p>
+<p>A logarithmic scale allows strong and weak components to remain visible on the same graph.</p>
+<p>For an amplitude ratio,</p>
+<p><span class="math display">\[
+A_{\text{dB}} = 20\log_{10} \left( \frac{A}{A_{\text{ref}}} \right).
+\]</span></p>
+<p>For a power ratio,</p>
+<p><span class="math display">\[
+P_{\text{dB}} = 10\log_{10} \left( \frac{P}{P_{\text{ref}}} \right).
+\]</span></p>
+<p>These are consistent because power is proportional to amplitude squared.</p>
+<p>A few useful reference points are:</p>
+<ul>
+<li><p><span class="math inline">\(0\text{ dB}\)</span>: equal to the reference;</p></li>
+<li><p>approximately <span class="math inline">\(-6\text{ dB}\)</span>: half the amplitude;</p></li>
+<li><p>approximately <span class="math inline">\(-3\text{ dB}\)</span>: half the power.</p></li>
+</ul>
+<section id="db-is-not-automatically-dbm" class="level3">
+<h3 class="anchored" data-anchor-id="db-is-not-automatically-dbm">dB Is Not Automatically dBm</h3>
+<p>This distinction is very important in SDR.</p>
+<p>A spectrum display showing something at <span class="math inline">\(-30\text{ dB}\)</span> does ****not**** automatically mean the received power is <span class="math inline">\(-30\text{ dBm}\)</span>.</p>
+<p>dB describes a ratio relative to some reference.</p>
+<p>dBm is an absolute power unit referenced to 1 mW.</p>
+<p>Unless the SDR hardware, gains, FFT scaling, windowing, and display have been properly calibrated, we should not interpret a GUI spectral level as an absolute RF power measurement.</p>
+<p>For the experiments in this chapter, we mainly care about:</p>
+<ul>
+<li><p>peak locations;</p></li>
+<li><p>relative levels;</p></li>
+<li><p>spectral shape;</p></li>
+<li><p>how the spectrum changes when we change parameters.</p></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="experiment-4-why-does-a-pure-tone-sometimes-spread-across-the-spectrum" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-why-does-a-pure-tone-sometimes-spread-across-the-spectrum">6.20 Experiment 4: Why Does a Pure Tone Sometimes Spread Across the Spectrum?</h2>
+<p>We might expect a pure sinusoid to produce one perfectly sharp FFT line.</p>
+<p>Sometimes it comes close.</p>
+<p>Sometimes its energy spreads across many neighbouring bins.</p>
+<p>Why?</p>
+<p>This is ****spectral leakage****.</p>
+<section id="first-what-does-bin-centred-mean" class="level3">
+<h3 class="anchored" data-anchor-id="first-what-does-bin-centred-mean">First, What Does Bin-Centred Mean?</h3>
+<p>A tone lies exactly on an FFT bin when</p>
+<p><span class="math display">\[
+f_{\text{tone}} = k\frac{f_s}{N}
+\]</span></p>
+<p>for some integer <span class="math inline">\(k\)</span>.</p>
+<p>Since</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N},
+\]</span></p>
+<p>we can also write</p>
+<p><span class="math display">\[
+f_{\text{tone}}=k\Delta f.
+\]</span></p>
+<p>So whether a 1 kHz or 1.1 kHz tone is bin-centred depends on the particular values of <span class="math inline">\(f_s\)</span> and <span class="math inline">\(N\)</span>.</p>
+<p>The frequency alone is not enough to decide.</p>
+</section>
+<section id="bin-centred-case" class="level3">
+<h3 class="anchored" data-anchor-id="bin-centred-case">Bin-Centred Case</h3>
+<p>For the selected sample rate and FFT size, we first choose a frequency that satisfies</p>
+<p><span class="math display">\[
+f_{\text{tone}}=k\Delta f.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-bin-centered-tone.png" class="img-fluid figure-img"></p>
+<figcaption>Spectrum of a bin-centred tone</figcaption>
+</figure>
+</div>
+<p>The energy is concentrated much more strongly around the corresponding FFT-bin location.</p>
+</section>
+<section id="move-the-tone-away-from-the-bin" class="level3">
+<h3 class="anchored" data-anchor-id="move-the-tone-away-from-the-bin">Move the Tone Away from the Bin</h3>
+<p>Next, we choose a tone that does not fall exactly on a bin frequency.</p>
+<p>In our saved experiment, the 1.1 kHz tone is the off-bin example for the chosen FFT configuration.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-spectral-leakage-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph used to investigate spectral leakage</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-spectral-leakage-1100hz.png" class="img-fluid figure-img"></p>
+<figcaption>An off-bin 1.1 kHz tone spreads energy into neighbouring FFT bins</figcaption>
+</figure>
+</div>
+<p>The tone has not physically turned into many new sinusoidal signals.</p>
+<p>The spreading comes from the way we are observing it.</p>
+<hr>
+</section>
+</section>
+<section id="where-does-spectral-leakage-actually-come-from" class="level2">
+<h2 class="anchored" data-anchor-id="where-does-spectral-leakage-actually-come-from">6.21 Where Does Spectral Leakage Actually Come From?</h2>
+<p>This idea is easier to understand if we remember one fact:</p>
+<blockquote class="blockquote">
+<p>****The FFT does not see an infinitely long sine wave. It sees only a finite block of samples.****</p>
+</blockquote>
+<p>Imagine a continuous sine wave.</p>
+<p>Now cut out a short section.</p>
+<p>That finite section is all the FFT receives.</p>
+<p>One useful way to think about the DFT is that this finite block is treated as one period of a repeating sequence.</p>
+<p>Imagine placing copies of the block one after another:</p>
+<pre class="text"><code>
+FFT block | FFT block | FFT block | FFT block | ...
+</code></pre>
+<p>If the end of one block joins smoothly to the beginning of the next, the repeated waveform can remain smooth.</p>
+<p>But if the beginning and end do not line up, repeating the block creates a sudden jump at every boundary.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>
+smooth signal ... | jump | ... | jump | ...
+</code></pre>
+<p>Those abrupt boundaries cannot be represented by the original single sinusoid alone.</p>
+<p>As a result, energy appears across additional FFT bins.</p>
+<p>That is the intuitive origin of spectral leakage.</p>
+<blockquote class="blockquote">
+<p>****Spectral leakage is a consequence of observing only a finite section of the signal.****</p>
+</blockquote>
+<p>There is also a more formal way to describe this.</p>
+<p>Selecting a finite block is equivalent to multiplying the signal by a window in the time domain.</p>
+<p>Multiplication in time corresponds to convolution in frequency.</p>
+<p>Therefore, the ideal spectrum of the signal becomes shaped by the spectrum of the window.</p>
+<p>We do not need to derive that convolution here, but it explains why different window functions produce different spectral shapes.</p>
+<hr>
+</section>
+<section id="main-lobe-and-sidelobes" class="level2">
+<h2 class="anchored" data-anchor-id="main-lobe-and-sidelobes">6.22 Main Lobe and Sidelobes</h2>
+<p>When we examine the spectrum of a finite-length signal, a frequency component does not always appear as an infinitely thin line. Instead, its energy can spread into a characteristic shape consisting of a ****main lobe**** and ****sidelobes****.</p>
+<p>The ****main lobe**** is the dominant part of this shape, centred around the frequency of the signal. Its width matters because it affects our ability to distinguish two frequencies that are close together. A narrower main lobe generally makes it easier to separate nearby frequency components.</p>
+<p>The ****sidelobes**** are the smaller spectral components that appear on either side of the main lobe. They are important because energy from a strong signal can spread into neighbouring frequencies and potentially hide a weaker signal.</p>
+<p>This gives us an important trade-off:</p>
+<ul>
+<li><p>a ****narrow main lobe**** helps us distinguish closely spaced frequencies;</p></li>
+<li><p>****low sidelobes**** reduce spectral leakage into neighbouring frequencies.</p></li>
+</ul>
+<p>Different window functions handle this trade-off differently. Some give us narrower main lobes, while others suppress the sidelobes more strongly.</p>
+<p>We will see this difference directly in the next GNU Radio experiment.</p>
+<hr>
+</section>
+<section id="window-functions" class="level2">
+<h2 class="anchored" data-anchor-id="window-functions">6.23 Window Functions</h2>
+<p>Suppose the original samples are <span class="math inline">\(x[n]\)</span>.</p>
+<p>Before calculating the FFT, we multiply them by a window <span class="math inline">\(w[n]\)</span>:</p>
+<p><span class="math display">\[
+x_w[n]=x[n]w[n].
+\]</span></p>
+<p>The window changes how strongly samples near the edges of the FFT block contribute to the calculation.</p>
+<p>Many windows reduce the contribution of samples near the boundaries, making the finite observation less abrupt.</p>
+<p>But every window has its own frequency-domain shape.</p>
+<p>That produces a trade-off between:</p>
+<ul>
+<li><p>main-lobe width;</p></li>
+<li><p>sidelobe level;</p></li>
+<li><p>leakage suppression;</p></li>
+<li><p>ability to separate nearby tones;</p></li>
+<li><p>amplitude accuracy.</p></li>
+</ul>
+<p>There is no universally best window.</p>
+<p>The correct choice depends on what we are trying to measure.</p>
+<hr>
+</section>
+<section id="experiment-5-comparing-fft-windows" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-comparing-fft-windows">6.24 Experiment 5: Comparing FFT Windows</h2>
+<p>In this experiment, we keep the signal and FFT settings unchanged and change only the window used by the QT GUI Frequency Sink.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-window-comparison-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for comparing FFT window functions</figcaption>
+</figure>
+</div>
+<p>We compare:</p>
+<p>1. Rectangular</p>
+<p>2. Hann</p>
+<p>3. Hamming</p>
+<p>4. Blackman-Harris</p>
+<p>5. Kaiser</p>
+<p>6. Flat-top</p>
+<section id="before-switching-windows" class="level3">
+<h3 class="anchored" data-anchor-id="before-switching-windows">Before Switching Windows</h3>
+<p>Ask yourself:</p>
+<blockquote class="blockquote">
+<p>If the signal itself is unchanged, should the location of the actual tone move?</p>
+</blockquote>
+<p>No.</p>
+<p>The tone frequency is still the same.</p>
+<p>What should change is the ****shape of its spectral representation****.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-window-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of six FFT window functions</figcaption>
+</figure>
+</div>
+</section>
+<section id="rectangular-window" class="level3">
+<h3 class="anchored" data-anchor-id="rectangular-window">Rectangular Window</h3>
+<p>The rectangular window gives equal weight to every sample in the FFT block.</p>
+<p>It has a relatively narrow main lobe but comparatively high sidelobes.</p>
+<p>That can be useful when separating nearby components, but an off-bin tone can produce significant visible leakage.</p>
+</section>
+<section id="hann-window" class="level3">
+<h3 class="anchored" data-anchor-id="hann-window">Hann Window</h3>
+<p>The Hann window smoothly tapers toward zero near both ends of the block.</p>
+<p>Its sidelobes are substantially reduced compared with the rectangular window, but its main lobe is wider.</p>
+<p>It is a very common general-purpose choice.</p>
+</section>
+<section id="hamming-window" class="level3">
+<h3 class="anchored" data-anchor-id="hamming-window">Hamming Window</h3>
+<p>The Hamming window is similar in spirit to the Hann window but uses different coefficients.</p>
+<p>It provides a different compromise between main-lobe width and sidelobe behaviour.</p>
+</section>
+<section id="blackman-harris-window" class="level3">
+<h3 class="anchored" data-anchor-id="blackman-harris-window">Blackman-Harris Window</h3>
+<p>The Blackman-Harris window strongly suppresses sidelobes.</p>
+<p>That can be valuable when a weak spectral component lies close to a much stronger one.</p>
+<p>The cost is a wider main lobe.</p>
+</section>
+<section id="kaiser-window" class="level3">
+<h3 class="anchored" data-anchor-id="kaiser-window">Kaiser Window</h3>
+<p>The Kaiser window is adjustable.</p>
+<p>It uses a parameter commonly called</p>
+<p><span class="math display">\[
+\beta.
+\]</span></p>
+<p>Increasing <span class="math inline">\(\beta\)</span> generally reduces sidelobes but widens the main lobe.</p>
+<p>So the Kaiser window allows us to tune the trade-off rather than selecting one fixed compromise.</p>
+</section>
+<section id="flat-top-window" class="level3">
+<h3 class="anchored" data-anchor-id="flat-top-window">Flat-Top Window</h3>
+<p>The flat-top window is designed mainly for good amplitude accuracy near a spectral peak.</p>
+<p>Its main lobe is broad and relatively flat near the top.</p>
+<p>That can be useful for amplitude measurement, but it is usually not the best choice when the main goal is separating very closely spaced tones.</p>
+</section>
+<section id="what-did-this-experiment-teach-us" class="level3">
+<h3 class="anchored" data-anchor-id="what-did-this-experiment-teach-us">What Did This Experiment Teach Us?</h3>
+<p>The signal did not change.</p>
+<p>The FFT size did not change.</p>
+<p>Only the window changed.</p>
+<p>Yet the spectral shape changed significantly.</p>
+<p>That gives us an important lesson:</p>
+<blockquote class="blockquote">
+<p>****The spectrum we see is influenced not only by the signal, but also by how we choose to analyse the finite block of samples.****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="fft-size-leakage-and-windowing-are-related-but-different" class="level2">
+<h2 class="anchored" data-anchor-id="fft-size-leakage-and-windowing-are-related-but-different">6.25 FFT Size, Leakage, and Windowing Are Related but Different</h2>
+<p>At this point, three ideas can easily become mixed together.</p>
+<p>Let us separate them.</p>
+<section id="fft-bin-spacing" class="level3">
+<h3 class="anchored" data-anchor-id="fft-bin-spacing">FFT Bin Spacing</h3>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}.
+\]</span></p>
+<p>This tells us the spacing between the discrete FFT frequency samples.</p>
+</section>
+<section id="observation-time" class="level3">
+<h3 class="anchored" data-anchor-id="observation-time">Observation Time</h3>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}.
+\]</span></p>
+<p>This tells us how long a block of <span class="math inline">\(N\)</span> actual samples represents.</p>
+</section>
+<section id="window-shape" class="level3">
+<h3 class="anchored" data-anchor-id="window-shape">Window Shape</h3>
+<p>The window determines the main-lobe and sidelobe characteristics of each spectral component.</p>
+<p>So:</p>
+<p><span class="math display">\[
+\boxed{\text{FFT size affects bin spacing and observation time}}
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\boxed{\text{window choice affects spectral spreading and peak shape}}.
+\]</span></p>
+<p>Both influence how well we can distinguish nearby signals.</p>
+<p>That is why practical spectral resolution cannot be described by bin spacing alone.</p>
+<hr>
+</section>
+</section>
+<section id="what-does-fft-averaging-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-fft-averaging-do">6.26 What Does FFT Averaging Do?</h2>
+<p>So far, our signals have been clean and stable.</p>
+<p>Real signals are often noisy.</p>
+<p>If we calculate one FFT block, then another, then another, the displayed spectrum may fluctuate.</p>
+<p>FFT averaging combines information from successive spectral estimates so that random variations become smoother.</p>
+<p>This can make persistent components easier to see.</p>
+<p>But there is a trade-off.</p>
+<p>More averaging means a smoother display, but it also means the display responds more slowly when the signal changes.</p>
+<p>So:</p>
+<p><span class="math display">\[
+\boxed{ \text{More averaging} \longleftrightarrow \text{Smoother but slower display} }
+\]</span></p>
+<p>For clean generated tones, averaging is not especially important.</p>
+<p>It becomes much more useful when we begin working with noise and real received signals.</p>
+<hr>
+</section>
+<section id="the-frequency-sink-shows-only-the-present" class="level2">
+<h2 class="anchored" data-anchor-id="the-frequency-sink-shows-only-the-present">6.27 The Frequency Sink Shows Only the Present</h2>
+<p>A Frequency Sink is extremely useful.</p>
+<p>But it has one limitation.</p>
+<p>Suppose a tone begins at 1 kHz.</p>
+<p>A few seconds later, we move it to 3 kHz.</p>
+<p>Then we move it to 9 kHz.</p>
+<p>The Frequency Sink clearly shows the tone at its current location.</p>
+<p>But once the tone moves, the old frequency disappears.</p>
+<p>The spectrum does not preserve the history.</p>
+<p>For many SDR signals, that history matters.</p>
+<p>A transmission may appear only briefly.</p>
+<p>A carrier may drift.</p>
+<p>A radar or communication signal may sweep in frequency.</p>
+<p>An interferer may appear and disappear.</p>
+<p>A transmitter may hop between channels.</p>
+<p>To see how the spectrum changes with time, we need another display.</p>
+<p>That is the ****Waterfall Sink****.</p>
+<hr>
+</section>
+<section id="experiment-6-watching-frequency-change-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-6-watching-frequency-change-over-time">6.28 Experiment 6: Watching Frequency Change Over Time</h2>
+<p>We created a cosine source whose frequency could be changed while the flowgraph was running using a QT GUI Range.</p>
+<p>The signal was connected to:</p>
+<ul>
+<li><p>a QT GUI Frequency Sink;</p></li>
+<li><p>a QT GUI Waterfall Sink.</p></li>
+</ul>
+<p>Because this flowgraph generated samples entirely in software and did not contain hardware to control the sample rate, we used a ****Throttle**** block.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-frequency-evolution-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing frequency evolution over time</figcaption>
+</figure>
+</div>
+<p>We then changed the tone frequency while the flowgraph was running.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-frequency-evolution-waterfall.png" class="img-fluid figure-img"></p>
+<figcaption>Frequency evolution shown using the Waterfall and Frequency Sinks</figcaption>
+</figure>
+</div>
+<p>The Frequency Sink shows the ****current spectrum****.</p>
+<p>The Waterfall Sink preserves previous spectral estimates.</p>
+<p>A useful way to think about the waterfall is:</p>
+<blockquote class="blockquote">
+<p>****Each row is essentially another spectrum, and successive spectra are stacked over time.****</p>
+</blockquote>
+<p>Depending on the display orientation and settings:</p>
+<ul>
+<li><p>one direction represents frequency;</p></li>
+<li><p>the other represents time;</p></li>
+<li><p>colour represents spectral magnitude.</p></li>
+</ul>
+<section id="reading-common-waterfall-patterns" class="level3">
+<h3 class="anchored" data-anchor-id="reading-common-waterfall-patterns">Reading Common Waterfall Patterns</h3>
+<p>A constant-frequency signal produces a trace that stays at the same frequency.</p>
+<p>A drifting signal produces a trace that gradually moves.</p>
+<p>A chirp produces a sloped trace.</p>
+<p>A short transmission produces a short-duration segment.</p>
+<p>A persistent wideband source appears as a broader region rather than a narrow line.</p>
+<p>The exact colour depends on the selected colour map and dynamic range.</p>
+<p>The waterfall therefore gives us something the ordinary Frequency Sink cannot:</p>
+<blockquote class="blockquote">
+<p>****spectral memory.****</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="what-the-qt-gui-frequency-sink-controls-actually-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-qt-gui-frequency-sink-controls-actually-mean">6.29 What the QT GUI Frequency Sink Controls Actually Mean</h2>
+<p>After these experiments, the settings in the QT GUI Frequency Sink should feel much less arbitrary.</p>
+<section id="fft-size" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size">FFT Size</h3>
+<p>Controls how many samples are used in each FFT calculation.</p>
+<p>For actual sample blocks,</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}.
+\]</span></p>
+<p>A larger FFT gives finer bin spacing but represents a longer observation interval.</p>
+</section>
+<section id="center-frequency-1" class="level3">
+<h3 class="anchored" data-anchor-id="center-frequency-1">Center Frequency</h3>
+<p>Defines the frequency shown at the center of the display.</p>
+<p>For our simulated baseband experiments, this is usually 0 Hz.</p>
+<p>With SDR hardware, it can represent the tuned RF center frequency.</p>
+</section>
+<section id="bandwidth" class="level3">
+<h3 class="anchored" data-anchor-id="bandwidth">Bandwidth</h3>
+<p>Tells GNU Radio how the FFT bins should be mapped onto the frequency axis.</p>
+<p>For a full complex-baseband display, it is normally set consistently with the stream’s sample rate.</p>
+</section>
+<section id="window-type" class="level3">
+<h3 class="anchored" data-anchor-id="window-type">Window Type</h3>
+<p>Controls how the finite block is weighted before the FFT.</p>
+<p>Different windows trade main-lobe width against sidelobe behaviour and amplitude characteristics.</p>
+</section>
+<section id="averaging" class="level3">
+<h3 class="anchored" data-anchor-id="averaging">Averaging</h3>
+<p>Smooths changes between successive spectral estimates.</p>
+<p>More averaging produces a steadier display but slower response.</p>
+</section>
+<section id="db-scale" class="level3">
+<h3 class="anchored" data-anchor-id="db-scale">dB Scale</h3>
+<p>Allows a large range of spectral magnitudes to be shown on one plot.</p>
+<p>But the displayed dB value should not automatically be interpreted as calibrated dBm.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">6.30 What We Learned</h2>
+<p>We began this chapter with a simple question:</p>
+<blockquote class="blockquote">
+<p>****How can several frequencies exist inside one waveform?****</p>
+</blockquote>
+<p>We can now answer it from several different levels.</p>
+<section id="representation" class="level3">
+<h3 class="anchored" data-anchor-id="representation">Representation</h3>
+<ul>
+<li><p>The time domain and frequency domain are two descriptions of the same signal.</p></li>
+<li><p>A complicated time-domain waveform can be made from only a few simple sinusoidal components.</p></li>
+<li><p>Fourier analysis provides the mathematical connection between the two domains.</p></li>
+<li><p>Real-valued signals have symmetric positive- and negative-frequency components in a centered spectrum.</p></li>
+<li><p>A complex tone can occupy only one side of the centered spectrum.</p></li>
+</ul>
+</section>
+<section id="computation" class="level3">
+<h3 class="anchored" data-anchor-id="computation">Computation</h3>
+<ul>
+<li><p>The DFT analyses a finite block of samples at discrete frequency locations.</p></li>
+<li><p><span class="math inline">\(X[k]\)</span> measures how strongly the sample block correlates with the complex sinusoid associated with bin <span class="math inline">\(k\)</span>.</p></li>
+<li><p>The FFT is an efficient family of algorithms for calculating the DFT.</p></li>
+<li><p>Radix-2 FFTs repeatedly break a large DFT into smaller calculations.</p></li>
+<li><p>DIT is one common organization of that decomposition.</p></li>
+<li><p>Twiddle factors are complex rotations.</p></li>
+<li><p>Butterflies combine intermediate FFT values using additions, subtractions, and twiddle-factor multiplication.</p></li>
+<li><p>Bit reversal appears in some iterative radix-2 DIT implementations; it is not a property of the DFT itself.</p></li>
+<li><p>In GNU Radio, an explicit FFT chain can be built using ****Stream to Vector → FFT → Complex to Mag² → QT GUI Vector Sink****.</p></li>
+</ul>
+</section>
+<section id="spectral-measurement" class="level3">
+<h3 class="anchored" data-anchor-id="spectral-measurement">Spectral Measurement</h3>
+<ul>
+<li>FFT bin spacing is</li>
+</ul>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}.
+\]</span></p>
+<ul>
+<li>The observation time of <span class="math inline">\(N\)</span> actual samples is</li>
+</ul>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}.
+\]</span></p>
+<ul>
+<li><p>Bin spacing and practical spectral resolution are related, but they are not identical.</p></li>
+<li><p>Zero-padding gives a denser frequency grid but does not create new information.</p></li>
+<li><p>Finite observation causes spectral leakage.</p></li>
+<li><p>A tone is exactly bin-centred only when</p></li>
+</ul>
+<p><span class="math display">\[
+f_{\text{tone}}=k\frac{f_s}{N}.
+\]</span></p>
+<ul>
+<li><p>Windows change the main-lobe and sidelobe behaviour of the spectral estimate.</p></li>
+<li><p>No single window is best for every measurement.</p></li>
+<li><p>FFT averaging smooths spectral fluctuations at the cost of slower response.</p></li>
+<li><p>dB and dBm are not the same thing.</p></li>
+</ul>
+</section>
+<section id="visualization" class="level3">
+<h3 class="anchored" data-anchor-id="visualization">Visualization</h3>
+<ul>
+<li><p>The QT GUI Frequency Sink is convenient when we simply want to observe a spectrum.</p></li>
+<li><p>The FFT block gives us direct access to FFT data for further processing.</p></li>
+<li><p>The Frequency Sink shows the current spectral estimate.</p></li>
+<li><p>The Waterfall Sink shows how the spectrum evolves over time.</p></li>
+</ul>
+<p>Most importantly, the spectrum should no longer feel like a graph that GNU Radio somehow produces for us.</p>
+<p>We now have a much clearer idea of:</p>
+<ul>
+<li><p>where the frequency bins come from;</p></li>
+<li><p>what the DFT is measuring;</p></li>
+<li><p>why the FFT is computationally efficient;</p></li>
+<li><p>what the FFT block actually produces;</p></li>
+<li><p>why real and complex signals can have different spectral symmetry;</p></li>
+<li><p>why FFT size matters;</p></li>
+<li><p>why spectral leakage appears;</p></li>
+<li><p>why windows change the spectrum;</p></li>
+<li><p>and what the GNU Radio spectrum controls are actually doing.</p></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="now-break-the-flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="now-break-the-flowgraph">6.31 Now Break the Flowgraph</h2>
+<p>The best way to check whether these ideas make sense is to deliberately change things.</p>
+<section id="reduce-the-fft-size" class="level3">
+<h3 class="anchored" data-anchor-id="reduce-the-fft-size">1. Reduce the FFT Size</h3>
+<p>Use the two closely spaced tones.</p>
+<p>Reduce <span class="math inline">\(N\)</span>.</p>
+<p>Before running the flowgraph, calculate</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}.
+\]</span></p>
+<p>Predict what will happen.</p>
+<p>Then compare your prediction with the Frequency Sink.</p>
+</section>
+<section id="move-a-tone-between-fft-bins" class="level3">
+<h3 class="anchored" data-anchor-id="move-a-tone-between-fft-bins">2. Move a Tone Between FFT Bins</h3>
+<p>Calculate the bin spacing.</p>
+<p>Choose one frequency satisfying</p>
+<p><span class="math display">\[
+f=k\Delta f
+\]</span></p>
+<p>and another frequency that does not.</p>
+<p>Compare the two spectra.</p>
+</section>
+<section id="change-the-window" class="level3">
+<h3 class="anchored" data-anchor-id="change-the-window">3. Change the Window</h3>
+<p>Keep the signal unchanged.</p>
+<p>Switch between:</p>
+<ul>
+<li><p>Rectangular</p></li>
+<li><p>Hann</p></li>
+<li><p>Hamming</p></li>
+<li><p>Blackman-Harris</p></li>
+<li><p>Kaiser</p></li>
+<li><p>Flat-top</p></li>
+</ul>
+<p>Watch the main lobe and sidelobes.</p>
+<p>Ask yourself:</p>
+<blockquote class="blockquote">
+<p>Which window makes the peak narrowest?</p>
+</blockquote>
+<p>and</p>
+<blockquote class="blockquote">
+<p>Which window suppresses the distant leakage most strongly?</p>
+</blockquote>
+</section>
+<section id="change-the-sample-rate" class="level3">
+<h3 class="anchored" data-anchor-id="change-the-sample-rate">4. Change the Sample Rate</h3>
+<p>Keep the FFT size fixed and increase <span class="math inline">\(f_s\)</span>.</p>
+<p>What happens to</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}?
+\]</span></p>
+<p>Predict before running.</p>
+</section>
+<section id="increase-averaging" class="level3">
+<h3 class="anchored" data-anchor-id="increase-averaging">5. Increase Averaging</h3>
+<p>Observe how the spectrum becomes smoother.</p>
+<p>Then change the signal quickly.</p>
+<p>Does the display react immediately?</p>
+</section>
+<section id="compare-a-real-and-complex-tone" class="level3">
+<h3 class="anchored" data-anchor-id="compare-a-real-and-complex-tone">6. Compare a Real and Complex Tone</h3>
+<p>Return to the explicit FFT flowgraph.</p>
+<p>Generate a real 1 kHz cosine and observe the two spectral components.</p>
+<p>Then change the source to a complex 1 kHz tone.</p>
+<p>What happens to the negative-frequency component?</p>
+</section>
+<section id="move-the-tone-while-watching-the-waterfall" class="level3">
+<h3 class="anchored" data-anchor-id="move-the-tone-while-watching-the-waterfall">7. Move the Tone While Watching the Waterfall</h3>
+<p>Hold the tone at one frequency.</p>
+<p>Move it.</p>
+<p>Hold it again.</p>
+<p>Move it once more.</p>
+<p>Compare what the Frequency Sink remembers with what the Waterfall Sink remembers.</p>
+<p>Breaking a flowgraph in controlled ways is often one of the fastest ways to understand what its parameters really mean.</p>
+<hr>
+</section>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">6.32 Connecting to the Next Chapter</h2>
+<p>Until now, our signals have been almost unrealistically clean.</p>
+<p>Real receivers do not normally show perfect tones floating on an otherwise empty spectrum.</p>
+<p>There is always something else present:</p>
+<p>****noise****.</p>
+<p>Noise raises the spectral background.</p>
+<p>It disturbs time-domain waveforms.</p>
+<p>It makes weak signals harder to see.</p>
+<p>It spreads constellation points.</p>
+<p>Eventually, a signal can become so weak relative to the noise that reliable detection becomes difficult.</p>
+<p>That leads to our next question:</p>
+<blockquote class="blockquote">
+<p>****How weak can a signal become before it disappears into the noise?****</p>
+</blockquote>
+<p>In the next chapter, we move from ideal signals toward real-world SDR behaviour by studying:</p>
+<ul>
+<li><p>noise;</p></li>
+<li><p>noise floor;</p></li>
+<li><p>signal-to-noise ratio;</p></li>
+<li><p>and how noise appears in both the time and frequency domains.</p></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter05.html" class="pagination-link" aria-label="Chapter 5: I and Q Signals">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 5: I and Q Signals</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter07.html" class="pagination-link" aria-label="Chapter 7: Noise, Noise Floor, and SNR">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 4: Complex Numbers for SDR – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter05.html" rel="next">
+<link href="../book/chapter03.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter04.html"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#why-are-we-talking-about-complex-numbers" id="toc-why-are-we-talking-about-complex-numbers" class="nav-link active" data-scroll-target="#why-are-we-talking-about-complex-numbers">4.1 Why Are We Talking About Complex Numbers?</a></li>
+  <li><a href="#from-real-numbers-to-complex-numbers" id="toc-from-real-numbers-to-complex-numbers" class="nav-link" data-scroll-target="#from-real-numbers-to-complex-numbers">4.2 From Real Numbers to Complex Numbers</a></li>
+  <li><a href="#do-not-let-the-word-imaginary-mislead-you" id="toc-do-not-let-the-word-imaginary-mislead-you" class="nav-link" data-scroll-target="#do-not-let-the-word-imaginary-mislead-you">4.3 Do Not Let the Word “Imaginary” Mislead You</a></li>
+  <li><a href="#the-complex-plane" id="toc-the-complex-plane" class="nav-link" data-scroll-target="#the-complex-plane">4.4 The Complex Plane</a></li>
+  <li><a href="#magnitude" id="toc-magnitude" class="nav-link" data-scroll-target="#magnitude">4.5 Magnitude</a></li>
+  <li><a href="#phase" id="toc-phase" class="nav-link" data-scroll-target="#phase">4.6 Phase</a>
+  <ul class="collapse">
+  <li><a href="#component-form" id="toc-component-form" class="nav-link" data-scroll-target="#component-form">Component form</a></li>
+  <li><a href="#magnitude-phase-form" id="toc-magnitude-phase-form" class="nav-link" data-scroll-target="#magnitude-phase-form">Magnitude-phase form</a></li>
+  </ul></li>
+  <li><a href="#from-geometry-to-eulers-formula" id="toc-from-geometry-to-eulers-formula" class="nav-link" data-scroll-target="#from-geometry-to-eulers-formula">4.7 From Geometry to Euler’s Formula</a></li>
+  <li><a href="#a-complex-exponential-is-a-rotating-vector" id="toc-a-complex-exponential-is-a-rotating-vector" class="nav-link" data-scroll-target="#a-complex-exponential-is-a-rotating-vector">4.8 A Complex Exponential Is a Rotating Vector</a></li>
+  <li><a href="#gnu-radio-toolbox-working-with-complex-signals" id="toc-gnu-radio-toolbox-working-with-complex-signals" class="nav-link" data-scroll-target="#gnu-radio-toolbox-working-with-complex-signals">4.9 GNU Radio Toolbox: Working with Complex Signals</a>
+  <ul class="collapse">
+  <li><a href="#watch-the-port-colours" id="toc-watch-the-port-colours" class="nav-link" data-scroll-target="#watch-the-port-colours">Watch the Port Colours</a></li>
+  </ul></li>
+  <li><a href="#experiment-1-building-a-complex-signal" id="toc-experiment-1-building-a-complex-signal" class="nav-link" data-scroll-target="#experiment-1-building-a-complex-signal">4.10 Experiment 1: Building a Complex Signal</a></li>
+  <li><a href="#experiment-2-what-does-the-complex-signal-look-like" id="toc-experiment-2-what-does-the-complex-signal-look-like" class="nav-link" data-scroll-target="#experiment-2-what-does-the-complex-signal-look-like">4.11 Experiment 2: What Does the Complex Signal Look Like?</a></li>
+  <li><a href="#gnu-radio-toolbox-qt-gui-constellation-sink" id="toc-gnu-radio-toolbox-qt-gui-constellation-sink" class="nav-link" data-scroll-target="#gnu-radio-toolbox-qt-gui-constellation-sink">4.12 GNU Radio Toolbox: QT GUI Constellation Sink</a></li>
+  <li><a href="#experiment-3-magnitude-and-phase" id="toc-experiment-3-magnitude-and-phase" class="nav-link" data-scroll-target="#experiment-3-magnitude-and-phase">4.13 Experiment 3: Magnitude and Phase</a></li>
+  <li><a href="#gnu-radio-toolbox-complex-to-mag-and-complex-to-arg" id="toc-gnu-radio-toolbox-complex-to-mag-and-complex-to-arg" class="nav-link" data-scroll-target="#gnu-radio-toolbox-complex-to-mag-and-complex-to-arg">4.14 GNU Radio Toolbox: Complex to Mag and Complex to Arg</a>
+  <ul class="collapse">
+  <li><a href="#complex-to-mag" id="toc-complex-to-mag" class="nav-link" data-scroll-target="#complex-to-mag">Complex to Mag</a></li>
+  <li><a href="#complex-to-arg" id="toc-complex-to-arg" class="nav-link" data-scroll-target="#complex-to-arg">Complex to Arg</a></li>
+  </ul></li>
+  <li><a href="#one-signal-three-views" id="toc-one-signal-three-views" class="nav-link" data-scroll-target="#one-signal-three-views">4.15 One Signal, Three Views</a></li>
+  <li><a href="#why-does-the-phase-look-like-a-sawtooth" id="toc-why-does-the-phase-look-like-a-sawtooth" class="nav-link" data-scroll-target="#why-does-the-phase-look-like-a-sawtooth">4.16 Why Does the Phase Look Like a Sawtooth?</a></li>
+  <li><a href="#now-lets-break-the-flowgraph" id="toc-now-lets-break-the-flowgraph" class="nav-link" data-scroll-target="#now-lets-break-the-flowgraph">4.17 Now Let’s Break the Flowgraph</a></li>
+  <li><a href="#break-it-1-make-the-imaginary-component-smaller" id="toc-break-it-1-make-the-imaginary-component-smaller" class="nav-link" data-scroll-target="#break-it-1-make-the-imaginary-component-smaller">4.18 Break It 1: Make the Imaginary Component Smaller</a></li>
+  <li><a href="#break-it-2-remove-the-imaginary-component" id="toc-break-it-2-remove-the-imaginary-component" class="nav-link" data-scroll-target="#break-it-2-remove-the-imaginary-component">4.19 Break It 2: Remove the Imaginary Component</a></li>
+  <li><a href="#what-happened-to-the-magnitude" id="toc-what-happened-to-the-magnitude" class="nav-link" data-scroll-target="#what-happened-to-the-magnitude">4.20 What Happened to the Magnitude?</a></li>
+  <li><a href="#why-is-the-phase-now-either-0-or-π" id="toc-why-is-the-phase-now-either-0-or-π" class="nav-link" data-scroll-target="#why-is-the-phase-now-either-0-or-π">4.21 Why Is the Phase Now Either 0 or π?</a></li>
+  <li><a href="#break-it-3-reverse-the-imaginary-component" id="toc-break-it-3-reverse-the-imaginary-component" class="nav-link" data-scroll-target="#break-it-3-reverse-the-imaginary-component">4.22 Break It 3: Reverse the Imaginary Component</a></li>
+  <li><a href="#positive-and-negative-frequency" id="toc-positive-and-negative-frequency" class="nav-link" data-scroll-target="#positive-and-negative-frequency">4.23 Positive and Negative Frequency</a>
+  <ul class="collapse">
+  <li><a href="#seeing-it-in-gnu-radio" id="toc-seeing-it-in-gnu-radio" class="nav-link" data-scroll-target="#seeing-it-in-gnu-radio">Seeing It in GNU Radio</a></li>
+  <li><a href="#case-1-positive-frequency" id="toc-case-1-positive-frequency" class="nav-link" data-scroll-target="#case-1-positive-frequency">Case 1: Positive Frequency</a></li>
+  <li><a href="#case-2-negative-frequency" id="toc-case-2-negative-frequency" class="nav-link" data-scroll-target="#case-2-negative-frequency">Case 2: Negative Frequency</a></li>
+  </ul></li>
+  <li><a href="#why-did-a-real-cosine-have-two-frequency-peaks" id="toc-why-did-a-real-cosine-have-two-frequency-peaks" class="nav-link" data-scroll-target="#why-did-a-real-cosine-have-two-frequency-peaks">4.24 Why Did a Real Cosine Have Two Frequency Peaks?</a>
+  <ul class="collapse">
+  <li><a href="#real-versus-complex-sinusoids" id="toc-real-versus-complex-sinusoids" class="nav-link" data-scroll-target="#real-versus-complex-sinusoids">Real Versus Complex Sinusoids</a></li>
+  </ul></li>
+  <li><a href="#a-useful-gnu-radio-habit-watch-your-data-types" id="toc-a-useful-gnu-radio-habit-watch-your-data-types" class="nav-link" data-scroll-target="#a-useful-gnu-radio-habit-watch-your-data-types">4.25 A Useful GNU Radio Habit: Watch Your Data Types</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">4.26 Try It Yourself</a>
+  <ul class="collapse">
+  <li><a href="#try-1-increase-the-imaginary-amplitude" id="toc-try-1-increase-the-imaginary-amplitude" class="nav-link" data-scroll-target="#try-1-increase-the-imaginary-amplitude">Try 1: Increase the Imaginary Amplitude</a></li>
+  <li><a href="#try-2-swap-the-inputs" id="toc-try-2-swap-the-inputs" class="nav-link" data-scroll-target="#try-2-swap-the-inputs">Try 2: Swap the Inputs</a></li>
+  <li><a href="#try-3-change-the-frequency" id="toc-try-3-change-the-frequency" class="nav-link" data-scroll-target="#try-3-change-the-frequency">Try 3: Change the Frequency</a></li>
+  <li><a href="#try-4-switch-between-positive-and-negative-frequency" id="toc-try-4-switch-between-positive-and-negative-frequency" class="nav-link" data-scroll-target="#try-4-switch-between-positive-and-negative-frequency">Try 4: Switch Between Positive and Negative Frequency</a></li>
+  <li><a href="#try-5-use-different-frequencies" id="toc-try-5-use-different-frequencies" class="nav-link" data-scroll-target="#try-5-use-different-frequencies">Try 5: Use Different Frequencies</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">4.27 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">4.28 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter04.html"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="why-are-we-talking-about-complex-numbers" class="level2">
+<h2 class="anchored" data-anchor-id="why-are-we-talking-about-complex-numbers">4.1 Why Are We Talking About Complex Numbers?</h2>
+<p>At the end of the previous chapter, something interesting appeared in the Frequency Sink.</p>
+<p>When we generated a real cosine signal, GNU Radio showed two frequency components: one at a positive frequency and another at the corresponding negative frequency.</p>
+<p>That left us with several questions.</p>
+<p>What is a negative frequency?</p>
+<p>Why would frequency need a sign?</p>
+<p>And why do SDR systems so often work with ****complex-valued samples**** instead of ordinary real numbers?</p>
+<p>Before we can answer those questions properly, we need to understand complex numbers.</p>
+<p>If you have seen complex numbers before, you may remember expressions such as</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>and perhaps equations involving magnitude and phase.</p>
+<p>But our goal here is not to study complex numbers as an abstract mathematical topic.</p>
+<p>Instead, we are going to ****build one in GNU Radio, take it apart, look at it from several different directions, and even deliberately break it****.</p>
+<p>By the end of the chapter, expressions such as</p>
+<p><span class="math display">\[e^{j\theta}\]</span></p>
+<p>should no longer look mysterious. They will represent something we can actually visualize.</p>
+<hr>
+</section>
+<section id="from-real-numbers-to-complex-numbers" class="level2">
+<h2 class="anchored" data-anchor-id="from-real-numbers-to-complex-numbers">4.2 From Real Numbers to Complex Numbers</h2>
+<p>So far, almost every signal we have generated has been real-valued.</p>
+<p>For example, a cosine signal can be written as</p>
+<p><span class="math display">\[x(t)=\cos(2\pi ft)\]</span></p>
+<p>At any particular instant, the signal has one numerical value.</p>
+<p>It might be</p>
+<p><span class="math display">\[0.7\]</span></p>
+<p>or</p>
+<p><span class="math display">\[-0.3\]</span></p>
+<p>or</p>
+<p><span class="math display">\[1\]</span></p>
+<p>A real number therefore needs only one number to describe it.</p>
+<p>We can imagine placing it somewhere along a number line.</p>
+<p>Complex numbers extend this idea.</p>
+<p>Instead of using one number, we use ****two related numbers together****:</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>Here:</p>
+<ul>
+<li><p>(a) is the ****real component****</p></li>
+<li><p>(b) is the ****imaginary component****</p></li>
+<li><p>(j) is defined by</p></li>
+</ul>
+<p><span class="math display">\[j^2=-1\]</span></p>
+<p>You may have seen the symbol (i) used instead of (j) in mathematics.</p>
+<p>In electrical and communications engineering, (j) is normally used because (i) is commonly used to represent electrical current.</p>
+<hr>
+</section>
+<section id="do-not-let-the-word-imaginary-mislead-you" class="level2">
+<h2 class="anchored" data-anchor-id="do-not-let-the-word-imaginary-mislead-you">4.3 Do Not Let the Word “Imaginary” Mislead You</h2>
+<p>The name <strong>imaginary</strong> can make complex numbers sound less physical than they really are.</p>
+<p>For our purposes, a better first intuition is simply this:</p>
+<blockquote class="blockquote">
+<p>A complex number gives us a convenient way to keep two related quantities together.</p>
+</blockquote>
+<p>Consider</p>
+<p><span class="math display">\[z=3+j4\]</span></p>
+<p>Instead of thinking of this as some strange imaginary object, think of it as containing two coordinates:</p>
+<p><span class="math display">\[ (3,4) \]</span></p>
+<p>The first tells us how far to move horizontally.</p>
+<p>The second tells us how far to move vertically.</p>
+<p>That immediately gives us another way to visualize a complex number.</p>
+<hr>
+</section>
+<section id="the-complex-plane" class="level2">
+<h2 class="anchored" data-anchor-id="the-complex-plane">4.4 The Complex Plane</h2>
+<p>A real number can be placed on a line.</p>
+<p>A complex number can be placed on a ****plane****.</p>
+<p>The horizontal axis represents the real component, while the vertical axis represents the imaginary component.</p>
+<p>For</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>we therefore place the point at</p>
+<p><span class="math display">\[(a,b)\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-plane-concept.png" class="img-fluid figure-img"></p>
+<figcaption>A complex number represented on the complex plane</figcaption>
+</figure>
+</div>
+<p>****Figure 4.1: A complex number represented by its real component, imaginary component, magnitude, and phase.****</p>
+<p>Instead of drawing only a point, we can draw a vector from the origin to that point.</p>
+<p>Now something useful happens.</p>
+<p>The same complex number can be described in two different ways.</p>
+<p>We can describe it using:</p>
+<ul>
+<li>its horizontal and vertical components,</li>
+</ul>
+<p>or using:</p>
+<ul>
+<li>the length and direction of the vector.</li>
+</ul>
+<p>Those two descriptions will become extremely important in SDR.</p>
+<hr>
+</section>
+<section id="magnitude" class="level2">
+<h2 class="anchored" data-anchor-id="magnitude">4.5 Magnitude</h2>
+<p>Suppose</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>From the complex-plane diagram, the real component (a), imaginary component (b), and the vector itself form a right triangle.</p>
+<p>Using the Pythagorean theorem,</p>
+<p><span class="math display">\[|z|=\sqrt{a^2+b^2}\]</span></p>
+<p>This is the ****magnitude**** of the complex number.</p>
+<p>For example, if</p>
+<p><span class="math display">\[z=3+j4\]</span></p>
+<p>then</p>
+<p><span class="math display">\[|z|=\sqrt{3^2+4^2}=5\]</span></p>
+<p>Geometrically, magnitude tells us how far the point is from the origin.</p>
+<hr>
+</section>
+<section id="phase" class="level2">
+<h2 class="anchored" data-anchor-id="phase">4.6 Phase</h2>
+<p>The vector also has a direction.</p>
+<p>We describe that direction using an angle θ, measured from the positive real axis.</p>
+<p>The phase is</p>
+<p><span class="math display">\[\theta=\mathrm{atan2}(b,a)\]</span></p>
+<p>The <code>atan2</code> form is useful because it considers the signs of both components and therefore identifies the correct quadrant.</p>
+<p>So we now have two ways to describe exactly the same complex number.</p>
+<section id="component-form" class="level3">
+<h3 class="anchored" data-anchor-id="component-form">Component form</h3>
+<p><span class="math display">\[z=a+jb\]</span></p>
+</section>
+<section id="magnitude-phase-form" class="level3">
+<h3 class="anchored" data-anchor-id="magnitude-phase-form">Magnitude-phase form</h3>
+<p><span class="math display">\[z=|z|\angle\theta\]</span></p>
+<p>This is an important idea:</p>
+<blockquote class="blockquote">
+<p>****Real and imaginary components tell us the coordinates of a complex number. Magnitude and phase tell us its length and direction.****</p>
+</blockquote>
+<p>Nothing about the complex number has changed. We have simply changed the way we describe it.</p>
+<hr>
+</section>
+</section>
+<section id="from-geometry-to-eulers-formula" class="level2">
+<h2 class="anchored" data-anchor-id="from-geometry-to-eulers-formula">4.7 From Geometry to Euler’s Formula</h2>
+<p>Look again at the complex-plane triangle.</p>
+<p>From basic trigonometry,</p>
+<p><span class="math display">\[a=|z|\cos\theta\]</span></p>
+<p>and</p>
+<p><span class="math display">\[b=|z|\sin\theta\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>we can substitute these expressions:</p>
+<p><span class="math display">\[z=|z|\cos\theta+j|z|\sin\theta\]</span></p>
+<p>Factor out the magnitude:</p>
+<p><span class="math display">\[z=|z|(\cos\theta+j\sin\theta)\]</span></p>
+<p>Now we meet one of the most important equations in signal processing:</p>
+<p><span class="math display">\[e^{j\theta}=\cos\theta+j\sin\theta\]</span></p>
+<p>This is ****Euler’s formula****.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[z=|z|e^{j\theta}\]</span></p>
+<p>If the magnitude is 1, the expression becomes especially simple:</p>
+<p><span class="math display">\[z=e^{j\theta}\]</span></p>
+<p>We do not need to prove Euler’s formula here.</p>
+<p>What matters for SDR is understanding what it represents.</p>
+<hr>
+</section>
+<section id="a-complex-exponential-is-a-rotating-vector" class="level2">
+<h2 class="anchored" data-anchor-id="a-complex-exponential-is-a-rotating-vector">4.8 A Complex Exponential Is a Rotating Vector</h2>
+<p>Consider</p>
+<p><span class="math display">\[z=e^{j\theta}\]</span></p>
+<p>Using Euler’s formula,</p>
+<p><span class="math display">\[z=\cos\theta+j\sin\theta\]</span></p>
+<p>Now imagine increasing θ.</p>
+<p>At</p>
+<p><span class="math display">\[\theta=0\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[z=1+j0\]</span></p>
+<p>The point is at</p>
+<p><span class="math display">\[(1,0)\]</span></p>
+<p>At</p>
+<p><span class="math display">\[\theta=\frac{\pi}{2}\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[z=0+j1\]</span></p>
+<p>At</p>
+<p><span class="math display">\[\theta=\pi\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[z=-1+j0\]</span></p>
+<p>And at</p>
+<p><span class="math display">\[\theta=\frac{3\pi}{2}\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[z=0-j1\]</span></p>
+<p>As the angle continues changing, the point moves around the unit circle.</p>
+<p>So instead of thinking of</p>
+<p><span class="math display">\[e^{j\theta}\]</span></p>
+<p>as a complicated mathematical expression, we can think of it as:</p>
+<blockquote class="blockquote">
+<p>****a vector rotating around the complex plane.****</p>
+</blockquote>
+<p>Now let’s actually build one.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-working-with-complex-signals" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-working-with-complex-signals">4.9 GNU Radio Toolbox: Working with Complex Signals</h2>
+<p>Until now, most of our GNU Radio flowgraphs have used real-valued signals.</p>
+<p>This chapter introduces several blocks that allow us to work with complex data.</p>
+<div class="line-block">GNU Radio block | What it does |</div>
+<p>|—|—|</p>
+<div class="line-block">****Signal Source**** | Generates the real-valued sine and cosine signals |</div>
+<div class="line-block">****Float to Complex**** | Combines two float streams into one complex stream |</div>
+<div class="line-block">****Complex to Real**** | Extracts the real component |</div>
+<div class="line-block">****Complex to Imag**** | Extracts the imaginary component |</div>
+<div class="line-block">****QT GUI Time Sink**** | Displays signals against time |</div>
+<p>We will introduce more tools only when we need them.</p>
+<section id="watch-the-port-colours" class="level3">
+<h3 class="anchored" data-anchor-id="watch-the-port-colours">Watch the Port Colours</h3>
+<p>Look carefully at the ports in the flowgraph.</p>
+<p>GNU Radio uses different port colours to help distinguish different data types.</p>
+<p>This matters because a ****float stream**** and a ****complex stream**** are not the same thing.</p>
+<p>For example, <code>Float to Complex</code> accepts two float streams:</p>
+<p><span class="math display">\[a[n]\]</span></p>
+<p>and</p>
+<p><span class="math display">\[b[n]\]</span></p>
+<p>and creates</p>
+<p><span class="math display">\[z[n]=a[n]+jb[n]\]</span></p>
+<p>Its output is therefore a complex stream.</p>
+<p>As our flowgraphs become larger, paying attention to data types becomes increasingly important.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-1-building-a-complex-signal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-building-a-complex-signal">4.10 Experiment 1: Building a Complex Signal</h2>
+<p>Let’s build our first complex signal.</p>
+<p>Create two Signal Sources.</p>
+<p>For the first source use:</p>
+<ul>
+<li><p>Waveform: Cosine</p></li>
+<li><p>Frequency: 1 kHz</p></li>
+<li><p>Amplitude: 1</p></li>
+</ul>
+<p>For the second source use:</p>
+<ul>
+<li><p>Waveform: Sine</p></li>
+<li><p>Frequency: 1 kHz</p></li>
+<li><p>Amplitude: 1</p></li>
+</ul>
+<p>Use a sample rate of:</p>
+<p><span class="math display">\[f_s=32\text{ kS/s}\]</span></p>
+<p>Connect the cosine to the ****real**** input of <code>Float to Complex</code>.</p>
+<p>Connect the sine to the ****imaginary**** input.</p>
+<p>The resulting signal is</p>
+<p><span class="math display">\[z(t)=\cos(2\pi ft)+j\sin(2\pi ft)\]</span></p>
+<p>Then connect the complex output to:</p>
+<ul>
+<li><p><code>Complex to Real</code></p></li>
+<li><p><code>Complex to Imag</code></p></li>
+</ul>
+<p>and display both outputs using a QT GUI Time Sink.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-components-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for building and separating a complex signal</figcaption>
+</figure>
+</div>
+<p>****Figure 4.2: Building a complex signal from two float streams and separating it back into its real and imaginary components.****</p>
+<p>Run the flowgraph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-components-time.png" class="img-fluid figure-img"></p>
+<figcaption>Real and imaginary components of the complex signal</figcaption>
+</figure>
+</div>
+<p>****Figure 4.3: Real and imaginary components recovered from the complex signal.****</p>
+<p>The blue waveform is the real component:</p>
+<p><span class="math display">\[\mathrm{Re}\\{z(t)\\}=\cos(2\pi ft)\]</span></p>
+<p>while the red waveform is the imaginary component:</p>
+<p><span class="math display">\[\mathrm{Im}\\{z(t)\\}=\sin(2\pi ft)\]</span></p>
+<p>Notice that combining the two signals did not destroy either of them.</p>
+<p>Both pieces of information are contained inside one complex stream.</p>
+<p>That is the first important idea of this chapter.</p>
+<hr>
+</section>
+<section id="experiment-2-what-does-the-complex-signal-look-like" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-what-does-the-complex-signal-look-like">4.11 Experiment 2: What Does the Complex Signal Look Like?</h2>
+<p>We have created</p>
+<p><span class="math display">\[z(t)=\cos(2\pi ft)+j\sin(2\pi ft)\]</span></p>
+<p>But what does that signal look like on the complex plane?</p>
+<p>Instead of building another flowgraph, let’s extend the one we already have.</p>
+<p>Add one new block:</p>
+<p>****QT GUI Constellation Sink****</p>
+<p>Connect it directly to the complex output of <code>Float to Complex</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-plane-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph with the Constellation Sink added</figcaption>
+</figure>
+</div>
+<p>****Figure 4.4: Extending the previous flowgraph with a QT GUI Constellation Sink.****</p>
+<p>This is exactly how we will continue using GNU Radio throughout the book: ****start simple, understand the result, and then add one new idea at a time.****</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-qt-gui-constellation-sink" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-qt-gui-constellation-sink">4.12 GNU Radio Toolbox: QT GUI Constellation Sink</h2>
+<p>The QT GUI Constellation Sink displays complex samples on a two-dimensional plane.</p>
+<p>For a complex sample</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p>the horizontal coordinate comes from (a), while the vertical coordinate comes from (b).</p>
+<p>GNU Radio labels these axes ****In-phase**** and ****Quadrature****.</p>
+<p>You may already be wondering why.</p>
+<p>For now, think of them simply as the real and imaginary axes.</p>
+<p>We will return to the names ****In-phase**** and ****Quadrature**** in the next chapter.</p>
+<p>Run the flowgraph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-plane.png" class="img-fluid figure-img"></p>
+<figcaption>Real and imaginary waveforms together with their complex-plane representation</figcaption>
+</figure>
+</div>
+<p>****Figure 4.5: The real and imaginary components in time and the corresponding samples on the complex plane.****</p>
+<p>Something interesting appears.</p>
+<p>The samples form a circle.</p>
+<p>Why?</p>
+<p>We have</p>
+<p><span class="math display">\[a=\cos\theta\]</span></p>
+<p>and</p>
+<p><span class="math display">\[b=\sin\theta\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[a^2+b^2=\cos^2\theta+\sin^2\theta=1\]</span></p>
+<p>So every point is exactly one unit away from the origin.</p>
+<p>That is why GNU Radio shows a ****unit circle****.</p>
+<p>The two sinusoidal waveforms and the circle are not separate signals.</p>
+<p>They are different ways of looking at the ****same complex signal****.</p>
+<hr>
+</section>
+<section id="experiment-3-magnitude-and-phase" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-magnitude-and-phase">4.13 Experiment 3: Magnitude and Phase</h2>
+<p>We can now extend the same flowgraph again.</p>
+<p>This time add:</p>
+<ul>
+<li><p><code>Complex to Mag</code></p></li>
+<li><p><code>Complex to Arg</code></p></li>
+</ul>
+<p>Connect both directly to the output of <code>Float to Complex</code>.</p>
+<p>Display their outputs using another QT GUI Time Sink.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-magnitude-phase-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph extended to calculate magnitude and phase</figcaption>
+</figure>
+</div>
+<p>****Figure 4.6: The complex-signal flowgraph extended with magnitude and phase measurements.****</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-complex-to-mag-and-complex-to-arg" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-complex-to-mag-and-complex-to-arg">4.14 GNU Radio Toolbox: Complex to Mag and Complex to Arg</h2>
+<section id="complex-to-mag" class="level3">
+<h3 class="anchored" data-anchor-id="complex-to-mag">Complex to Mag</h3>
+<p>For each complex sample</p>
+<p><span class="math display">\[z=a+jb\]</span></p>
+<p><code>Complex to Mag</code> calculates</p>
+<p><span class="math display">\[|z|=\sqrt{a^2+b^2}\]</span></p>
+</section>
+<section id="complex-to-arg" class="level3">
+<h3 class="anchored" data-anchor-id="complex-to-arg">Complex to Arg</h3>
+<p><code>Complex to Arg</code> calculates the phase:</p>
+<p><span class="math display">\[\theta=\mathrm{atan2}(b,a)\]</span></p>
+<p>Its output is expressed in ****radians****.</p>
+<p>Now run the flowgraph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-magnitude-phase.png" class="img-fluid figure-img"></p>
+<figcaption>Magnitude, phase, real and imaginary components, and constellation</figcaption>
+</figure>
+</div>
+<p>****Figure 4.7: Three different views of the same complex signal: magnitude and phase, real and imaginary components, and the complex plane.****</p>
+<p>This figure brings almost everything we have learned together.</p>
+<hr>
+</section>
+</section>
+<section id="one-signal-three-views" class="level2">
+<h2 class="anchored" data-anchor-id="one-signal-three-views">4.15 One Signal, Three Views</h2>
+<p>Look first at the middle plot.</p>
+<p>We still have:</p>
+<p><span class="math display">\[\mathrm{Re}\\{z(t)\\}=\cos(2\pi ft)\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\mathrm{Im}\\{z(t)\\}=\sin(2\pi ft)\]</span></p>
+<p>Now look at the constellation.</p>
+<p>The samples form a unit circle.</p>
+<p>Finally, look at the magnitude.</p>
+<p>It remains at:</p>
+<p><span class="math display">\[|z|=1\]</span></p>
+<p>That is exactly what we predicted:</p>
+<p><span class="math display">\[|z|=\sqrt{\cos^2\theta+\sin^2\theta}=1\]</span></p>
+<p>Meanwhile, the phase continuously changes.</p>
+<p>These are not three different signals.</p>
+<blockquote class="blockquote">
+<p>****They are three different views of the same complex signal.****</p>
+</blockquote>
+<p>We can describe the signal using real and imaginary components:</p>
+<p><span class="math display">\[(a,b)\]</span></p>
+<p>or using magnitude and phase:</p>
+<p><span class="math display">\[(|z|,\theta)\]</span></p>
+<hr>
+</section>
+<section id="why-does-the-phase-look-like-a-sawtooth" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-the-phase-look-like-a-sawtooth">4.16 Why Does the Phase Look Like a Sawtooth?</h2>
+<p>The phase plot contains something that may initially look strange.</p>
+<p>The phase increases until it reaches approximately</p>
+<p><span class="math display">\[+\pi\]</span></p>
+<p>then suddenly jumps to</p>
+<p><span class="math display">\[-\pi\]</span></p>
+<p>It then starts increasing again.</p>
+<p>Did the complex vector suddenly jump backwards?</p>
+<p>No.</p>
+<p>The vector continues rotating smoothly.</p>
+<p>The <code>Complex to Arg</code> block reports phase within a principal interval around</p>
+<p><span class="math display">\[-\pi \leq \theta \leq \pi\]</span></p>
+<p>So once the angle passes the positive boundary, its displayed representation wraps around to the negative boundary.</p>
+<p>This is called ****phase wrapping****.</p>
+<p>For our 1 kHz signal,</p>
+<p><span class="math display">\[T=\frac{1}{1000}=1\text{ ms}\]</span></p>
+<p>Look at the phase plot again.</p>
+<p>One complete phase cycle occurs every approximately 1 ms.</p>
+<p>The time-domain waveform, the phase plot, and the rotating-vector interpretation all agree.</p>
+<hr>
+</section>
+<section id="now-lets-break-the-flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="now-lets-break-the-flowgraph">4.17 Now Let’s Break the Flowgraph</h2>
+<p>So far everything has been carefully arranged:</p>
+<ul>
+<li><p>cosine amplitude = 1</p></li>
+<li><p>sine amplitude = 1</p></li>
+<li><p>same frequency</p></li>
+<li><p>correct relationship between the components</p></li>
+</ul>
+<p>That produced a beautiful unit circle.</p>
+<p>But is a circle something that every complex signal produces?</p>
+<p>Let’s find out.</p>
+<p>Instead of adding more blocks, we will deliberately change the signal we already built.</p>
+<hr>
+</section>
+<section id="break-it-1-make-the-imaginary-component-smaller" class="level2">
+<h2 class="anchored" data-anchor-id="break-it-1-make-the-imaginary-component-smaller">4.18 Break It 1: Make the Imaginary Component Smaller</h2>
+<p>Keep the cosine amplitude at 1.</p>
+<p>Change the sine amplitude from</p>
+<p><span class="math display">\[1\]</span></p>
+<p>to</p>
+<p><span class="math display">\[0.5\]</span></p>
+<p>Our complex signal becomes</p>
+<p><span class="math display">\[z(t)=\cos(2\pi ft)+j0.5\sin(2\pi ft)\]</span></p>
+<p>Run the flowgraph again.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-ellipse.png" class="img-fluid figure-img"></p>
+<figcaption>Complex signal with a reduced imaginary-component amplitude</figcaption>
+</figure>
+</div>
+<p>****Figure 4.8: Reducing the imaginary component from 1 to 0.5 changes the unit circle into an ellipse.****</p>
+<p>The middle plot immediately shows what changed.</p>
+<p>The real component still varies between approximately</p>
+<p><span class="math display">\[-1\text{ and }+1\]</span></p>
+<p>but the imaginary component varies only between</p>
+<p><span class="math display">\[-0.5\text{ and }+0.5\]</span></p>
+<p>Now look at the constellation.</p>
+<p>The circle has become an ****ellipse****.</p>
+<p>We have</p>
+<p><span class="math display">\[a=\cos\theta\]</span></p>
+<p>and</p>
+<p><span class="math display">\[b=0.5\sin\theta\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[a^2+\frac{b^2}{(0.5)^2}=1\]</span></p>
+<p>which is the equation of an ellipse.</p>
+<p>There is another important change.</p>
+<p>The magnitude is no longer constant.</p>
+<p>Now,</p>
+<p><span class="math display">\[|z|=\sqrt{\cos^2\theta+0.25\sin^2\theta}\]</span></p>
+<p>Depending on the angle, the magnitude varies between approximately 0.5 and 1.</p>
+<p>So we have discovered something important:</p>
+<blockquote class="blockquote">
+<p>The circle was not produced simply because the signal was complex. It appeared because the real and imaginary components had equal amplitudes and the quadrature relationship required for constant magnitude.</p>
+</blockquote>
+<hr>
+</section>
+<section id="break-it-2-remove-the-imaginary-component" class="level2">
+<h2 class="anchored" data-anchor-id="break-it-2-remove-the-imaginary-component">4.19 Break It 2: Remove the Imaginary Component</h2>
+<p>Now let’s go further.</p>
+<p>Change the sine amplitude to:</p>
+<p><span class="math display">\[0\]</span></p>
+<p>Our signal becomes</p>
+<p><span class="math display">\[z(t)=\cos(2\pi ft)+j0\]</span></p>
+<p>Run the flowgraph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-real-only.png" class="img-fluid figure-img"></p>
+<figcaption>Complex signal with zero imaginary component</figcaption>
+</figure>
+</div>
+<p>****Figure 4.9: Removing the imaginary component collapses the complex-plane trajectory onto the real axis.****</p>
+<p>The imaginary waveform has disappeared.</p>
+<p>Every sample now has the form</p>
+<p><span class="math display">\[(a,0)\]</span></p>
+<p>There is no vertical component.</p>
+<p>So the constellation collapses onto the horizontal axis.</p>
+<p>In other words, we have returned to a purely real signal.</p>
+<p>This connects directly back to the signals we used in Chapter 3.</p>
+<hr>
+</section>
+<section id="what-happened-to-the-magnitude" class="level2">
+<h2 class="anchored" data-anchor-id="what-happened-to-the-magnitude">4.20 What Happened to the Magnitude?</h2>
+<p>The result at the top is also interesting.</p>
+<p>Since</p>
+<p><span class="math display">\[z(t)=\cos(2\pi ft)+j0\]</span></p>
+<p>the magnitude is</p>
+<p><span class="math display">\[|z|=\sqrt{\cos^2(2\pi ft)}\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[|z|=|\cos(2\pi ft)|\]</span></p>
+<p>That is why the magnitude looks like a rectified cosine.</p>
+<p>Notice something important:</p>
+<blockquote class="blockquote">
+<p>****Magnitude is never negative.****</p>
+</blockquote>
+<p>The original real waveform can have negative values.</p>
+<p>Magnitude cannot.</p>
+<hr>
+</section>
+<section id="why-is-the-phase-now-either-0-or-π" class="level2">
+<h2 class="anchored" data-anchor-id="why-is-the-phase-now-either-0-or-π">4.21 Why Is the Phase Now Either 0 or π?</h2>
+<p>Look at the phase trace.</p>
+<p>When the cosine is positive, the complex point lies on the positive real axis.</p>
+<p>Its phase is</p>
+<p><span class="math display">\[0\]</span></p>
+<p>When the cosine is negative, the point lies on the negative real axis.</p>
+<p>Its phase is</p>
+<p><span class="math display">\[\pi\]</span></p>
+<p>or equivalently (-), depending on the representation used at the boundary.</p>
+<p>So even this strange-looking phase plot has a simple geometric explanation.</p>
+<p>The complex plane is helping us understand what GNU Radio is displaying.</p>
+<hr>
+</section>
+<section id="break-it-3-reverse-the-imaginary-component" class="level2">
+<h2 class="anchored" data-anchor-id="break-it-3-reverse-the-imaginary-component">4.22 Break It 3: Reverse the Imaginary Component</h2>
+<p>So far, we have changed the size of the imaginary component and even removed it completely.</p>
+<p>Now let’s try something different.</p>
+<p>Restore the sine amplitude to 1, but then reverse its sign:</p>
+<pre class="text"><code>Sine amplitude: -1</code></pre>
+<p>The real component remains</p>
+<p><span class="math display">\[
+\cos(2\pi ft)
+\]</span></p>
+<p>but the imaginary component becomes</p>
+<p><span class="math display">\[
+-\sin(2\pi ft)
+\]</span></p>
+<p>So our complex signal is now</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)-j\sin(2\pi ft)
+\]</span></p>
+<p>Using Euler’s formula,</p>
+<p><span class="math display">\[
+z(t)=e^{-j2\pi ft}
+\]</span></p>
+<p>Compare this with the signal we originally created:</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)+j\sin(2\pi ft)
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+z(t)=e^{+j2\pi ft}
+\]</span></p>
+<p>Only one sign has changed.</p>
+<p>But that small change has an important consequence.</p>
+<p>Run the flowgraph again.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-negative-rotation.png" class="img-fluid figure-img"></p>
+<figcaption>Complex signal after reversing the imaginary component</figcaption>
+</figure>
+</div>
+<p>****Figure 4.10: Reversing the imaginary component leaves the magnitude and circular trajectory unchanged, but reverses the direction of phase evolution.****</p>
+<p>The magnitude is still</p>
+<p><span class="math display">\[
+|z|=1
+\]</span></p>
+<p>and the constellation still forms a circle.</p>
+<p>So if we looked only at the constellation, the two signals might appear to be identical.</p>
+<p>But look at the phase.</p>
+<p>For the original signal, the phase increased with time.</p>
+<p>After reversing the imaginary component, the phase decreases with time.</p>
+<p>Something has clearly changed.</p>
+<hr>
+</section>
+<section id="positive-and-negative-frequency" class="level2">
+<h2 class="anchored" data-anchor-id="positive-and-negative-frequency">4.23 Positive and Negative Frequency</h2>
+<p>We just discovered something interesting.</p>
+<p>Our original complex signal was</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)+j\sin(2\pi ft)
+\]</span></p>
+<p>which, using Euler’s formula, can be written as</p>
+<p><span class="math display">\[
+z(t)=e^{j2\pi ft}
+\]</span></p>
+<p>Its phase increased with time.</p>
+<p>When we reversed the imaginary component, the signal became</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)-j\sin(2\pi ft)
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+z(t)=e^{-j2\pi ft}
+\]</span></p>
+<p>and its phase decreased with time.</p>
+<p>So what does the positive or negative sign actually mean?</p>
+<p>For</p>
+<p><span class="math display">\[
+e^{j2\pi ft}
+\]</span></p>
+<p>the phase is</p>
+<p><span class="math display">\[
+\theta(t)=2\pi ft
+\]</span></p>
+<p>As time increases, the phase increases.</p>
+<p>For</p>
+<p><span class="math display">\[
+e^{-j2\pi ft}
+\]</span></p>
+<p>the phase is</p>
+<p><span class="math display">\[
+\theta(t)=-2\pi ft
+\]</span></p>
+<p>As time increases, the phase decreases.</p>
+<p>The two signals therefore rotate around the complex plane in opposite directions.</p>
+<p>This gives us a useful interpretation:</p>
+<blockquote class="blockquote">
+<p>****The magnitude of the frequency tells us how fast the complex vector rotates. The sign tells us the direction of rotation.****</p>
+</blockquote>
+<p>For example,</p>
+<p><span class="math display">\[
+e^{j2\pi(1000)t}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+e^{-j2\pi(1000)t}
+\]</span></p>
+<p>both have a frequency magnitude of 1 kHz.</p>
+<p>They rotate at the same rate, but in opposite directions.</p>
+<p>So negative frequency does ****not**** mean that a signal somehow performs a negative number of oscillations per second.</p>
+<p>For a complex signal, it represents the opposite direction of phase rotation.</p>
+<p>We have already seen this difference in the phase plot.</p>
+<p>Now let’s see whether we can observe the same thing in the frequency domain.</p>
+<section id="seeing-it-in-gnu-radio" class="level3">
+<h3 class="anchored" data-anchor-id="seeing-it-in-gnu-radio">Seeing It in GNU Radio</h3>
+<p>We already used the ****QT GUI Frequency Sink**** in Chapter 3, so there is no need to introduce the block again.</p>
+<p>This time, however, we are going to feed it a ****complex signal**** instead of using it only to examine the real signals from the previous chapter.</p>
+<p>Add a QT GUI Frequency Sink directly to the output of <code>Float to Complex</code>.</p>
+<p>Use:</p>
+<pre class="text"><code>FFT Size: &nbsp; &nbsp; &nbsp; &nbsp; 1024
+
+Center Frequency: 0
+
+Bandwidth: &nbsp; &nbsp; &nbsp; &nbsp;samp_rate</code></pre>
+<p>For this experiment, we do not need the Constellation Sink. We have already used it to understand the complex plane.</p>
+<p>Our focus now is on the relationship between ****phase direction and frequency sign****.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/positive-negative-frequency-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing positive and negative complex frequencies</figcaption>
+</figure>
+</div>
+<p>****Figure 4.11: GNU Radio flowgraph used to observe positive and negative complex frequencies.****</p>
+<p>We will run this flowgraph twice.</p>
+<p>Only one parameter will change.</p>
+<hr>
+</section>
+<section id="case-1-positive-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="case-1-positive-frequency">Case 1: Positive Frequency</h3>
+<p>First, use:</p>
+<pre class="text"><code>Cosine amplitude: 1
+
+Sine amplitude: &nbsp; 1
+
+Frequency: &nbsp; &nbsp; &nbsp; &nbsp;1 kHz
+
+Sample rate: &nbsp; &nbsp; &nbsp;32 kS/s</code></pre>
+<p>The resulting complex signal is</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)+j\sin(2\pi ft)
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+z(t)=e^{j2\pi ft}
+\]</span></p>
+<p>For our 1 kHz example,</p>
+<p><span class="math display">\[
+z(t)=e^{j2\pi(1000)t}
+\]</span></p>
+<p>Run the flowgraph.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-positive-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>Positive complex frequency in GNU Radio</figcaption>
+</figure>
+</div>
+<p>****Figure 4.12: A positive 1 kHz complex frequency. The phase increases with time and the Frequency Sink shows a peak at +1 kHz.****</p>
+<p>Look at the displays carefully.</p>
+<p>The magnitude remains constant at</p>
+<p><span class="math display">\[
+|z(t)|=1
+\]</span></p>
+<p>The real component is</p>
+<p><span class="math display">\[
+\cos(2\pi ft)
+\]</span></p>
+<p>and the imaginary component is</p>
+<p><span class="math display">\[
+\sin(2\pi ft)
+\]</span></p>
+<p>The phase increases with time.</p>
+<p>When it reaches approximately +π, the displayed phase wraps back to -π and continues increasing.</p>
+<p>Now look at the Frequency Sink.</p>
+<p>The spectral peak appears at</p>
+<p><span class="math display">\[
+\boxed{+1\text{ kHz}}
+\]</span></p>
+<p>So we have</p>
+<p><span class="math display">\[
+e^{j2\pi(1000)t} \quad\longrightarrow\quad +1\text{ kHz}
+\]</span></p>
+<hr>
+</section>
+<section id="case-2-negative-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="case-2-negative-frequency">Case 2: Negative Frequency</h3>
+<p>Now change only one parameter.</p>
+<p>Change the sine amplitude from</p>
+<pre class="text"><code>+1</code></pre>
+<p>to</p>
+<pre class="text"><code>-1</code></pre>
+<p>Keep everything else exactly the same.</p>
+<p>The signal becomes</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)-j\sin(2\pi ft)
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+z(t)=e^{-j2\pi ft}
+\]</span></p>
+<p>For our 1 kHz example,</p>
+<p><span class="math display">\[
+z(t)=e^{-j2\pi(1000)t}
+\]</span></p>
+<p>Run the flowgraph again.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch04/complex-negative-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>Negative complex frequency in GNU Radio</figcaption>
+</figure>
+</div>
+<p>****Figure 4.13: A negative 1 kHz complex frequency. The phase decreases with time and the Frequency Sink shows a peak at -1 kHz.****</p>
+<p>The magnitude is still</p>
+<p><span class="math display">\[
+|z(t)|=1
+\]</span></p>
+<p>and the real component has not changed.</p>
+<p>But the imaginary component has been inverted.</p>
+<p>The phase now decreases with time.</p>
+<p>And something very clear happens in the Frequency Sink.</p>
+<p>The peak moves from</p>
+<p><span class="math display">\[
++1\text{ kHz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+-1\text{ kHz}
+\]</span></p>
+<p>So the same idea is visible in two different ways:</p>
+<div class="line-block">Complex signal | Phase evolution | Frequency Sink |</div>
+<p>|—|—|—|</p>
+<div class="line-block"><span class="math inline">\(e^{j2\pi ft}\)</span> | Increasing | <span class="math inline">\(+f\)</span> |</div>
+<div class="line-block"><span class="math inline">\(e^{-j2\pi ft}\)</span> | Decreasing | <span class="math inline">\(-f\)</span> |</div>
+<p>For our experiment:</p>
+<div class="line-block">Complex signal | Observed frequency |</div>
+<p>|—|—:|</p>
+<div class="line-block"><span class="math inline">\(e^{j2\pi(1000)t}\)</span> | +1 kHz |</div>
+<div class="line-block"><span class="math inline">\(e^{-j2\pi(1000)t}\)</span> | -1 kHz |</div>
+<p>Now negative frequency should feel much less mysterious.</p>
+<blockquote class="blockquote">
+<p>****Positive and negative complex frequencies represent opposite directions of phase rotation.****</p>
+</blockquote>
+<p>The magnitude of the frequency tells us the rotation rate.</p>
+<p>The sign tells us the direction.</p>
+<hr>
+</section>
+</section>
+<section id="why-did-a-real-cosine-have-two-frequency-peaks" class="level2">
+<h2 class="anchored" data-anchor-id="why-did-a-real-cosine-have-two-frequency-peaks">4.24 Why Did a Real Cosine Have Two Frequency Peaks?</h2>
+<p>We can now return to the question that originally brought us to complex numbers.</p>
+<p>In Chapter 3, when we generated a real cosine, the Frequency Sink showed two peaks:</p>
+<p><span class="math display">\[
++f
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-f
+\]</span></p>
+<p>Why does one real cosine produce both?</p>
+<p>Euler’s formula gives us</p>
+<p><span class="math display">\[
+e^{j\theta}=\cos\theta+j\sin\theta
+\]</span></p>
+<p>If we reverse the sign of the angle,</p>
+<p><span class="math display">\[
+e^{-j\theta}=\cos\theta-j\sin\theta
+\]</span></p>
+<p>Now add the two equations:</p>
+<p><span class="math display">\[
+e^{j\theta}+e^{-j\theta}=2\cos\theta
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\cos\theta= \frac{1}{2}e^{j\theta} \+ \frac{1}{2}e^{-j\theta}
+\]</span></p>
+<p>Now replace θ with <span class="math inline">\(2\pi ft\)</span>:</p>
+<p><span class="math display">\[
+\boxed{ \cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft} }
+\]</span></p>
+<p>This equation explains the two peaks.</p>
+<p>A real cosine can be represented mathematically as the combination of two complex rotations:</p>
+<ul>
+<li><p>one at +f</p></li>
+<li><p>one at -f</p></li>
+</ul>
+<p>For example, a real 1 kHz cosine contains spectral components at</p>
+<p><span class="math display">\[
++1\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-1\text{ kHz}
+\]</span></p>
+<p>This is exactly what we observed in the Frequency Sink in Chapter 3.</p>
+<p>The negative-frequency component is not another physical tone hiding inside the signal.</p>
+<p>It appears because a real cosine can be represented mathematically as two complex exponentials rotating in opposite directions.</p>
+<section id="real-versus-complex-sinusoids" class="level3">
+<h3 class="anchored" data-anchor-id="real-versus-complex-sinusoids">Real Versus Complex Sinusoids</h3>
+<p>Now compare the real cosine with the complex signals we just generated.</p>
+<p>A real cosine is</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi ft)
+\]</span></p>
+<p>and can be written as</p>
+<p><span class="math display">\[
+x(t)= \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft}
+\]</span></p>
+<p>So its spectrum contains both</p>
+<p><span class="math display">\[
++f
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-f
+\]</span></p>
+<p>But the complex signal</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)+j\sin(2\pi ft)
+\]</span></p>
+<p>is simply</p>
+<p><span class="math display">\[
+e^{j2\pi ft}
+\]</span></p>
+<p>so it contains only the positive-frequency component.</p>
+<p>Similarly,</p>
+<p><span class="math display">\[
+z(t)=\cos(2\pi ft)-j\sin(2\pi ft)
+\]</span></p>
+<p>is</p>
+<p><span class="math display">\[
+e^{-j2\pi ft}
+\]</span></p>
+<p>so it contains only the negative-frequency component.</p>
+<p>We can summarize what we have discovered:</p>
+<div class="line-block">Signal | Frequency components |</div>
+<p>|—|—|</p>
+<div class="line-block"><span class="math inline">\(\cos(2\pi ft)\)</span> | <span class="math inline">\(-f\)</span> and <span class="math inline">\(+f\)</span> |</div>
+<div class="line-block"><span class="math inline">\(\cos(2\pi ft)+j\sin(2\pi ft)\)</span> | <span class="math inline">\(+f\)</span> |</div>
+<div class="line-block"><span class="math inline">\(\cos(2\pi ft)-j\sin(2\pi ft)\)</span> | <span class="math inline">\(-f\)</span> |</div>
+<p>This reveals an important difference between real and complex signals:</p>
+<blockquote class="blockquote">
+<p>****A complex signal can distinguish positive-frequency rotation from negative-frequency rotation.****</p>
+</blockquote>
+<p>A real cosine contains both rotations together.</p>
+<p>This ability to preserve the distinction between positive and negative frequency is one of the reasons complex signals are so useful in SDR.</p>
+<p>And it brings us much closer to understanding why SDR systems use two components called ****I**** and ****Q****.</p>
+<hr>
+</section>
+</section>
+<section id="a-useful-gnu-radio-habit-watch-your-data-types" class="level2">
+<h2 class="anchored" data-anchor-id="a-useful-gnu-radio-habit-watch-your-data-types">4.25 A Useful GNU Radio Habit: Watch Your Data Types</h2>
+<p>Before finishing the chapter, there is one practical GNU Radio habit worth reinforcing.</p>
+<p>As our flowgraphs become larger, one of the easiest mistakes to make is connecting incompatible data types.</p>
+<p>A block expecting a float stream cannot necessarily accept a complex stream.</p>
+<p>Similarly, a complex stream contains two components, while a float stream contains only one real value per sample.</p>
+<p>In this chapter, for example:</p>
+<ul>
+<li><p><code>Float to Complex</code> takes two float streams and produces a complex stream.</p></li>
+<li><p><code>Complex to Real</code> takes a complex stream and produces a float stream.</p></li>
+<li><p><code>Complex to Imag</code> takes a complex stream and produces a float stream.</p></li>
+<li><p><code>Complex to Mag</code> takes a complex stream and produces a float stream.</p></li>
+<li><p><code>Complex to Arg</code> takes a complex stream and produces a float stream.</p></li>
+</ul>
+<p>When a connection refuses to work, check:</p>
+<p>1. the output data type of the first block,</p>
+<p>2. the input data type expected by the second block,</p>
+<p>3. the port colours.</p>
+<p>As our GNU Radio experiments become more complicated, this simple habit will save us a lot of confusion.</p>
+<hr>
+</section>
+<section id="try-it-yourself" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself">4.26 Try It Yourself</h2>
+<p>Before moving to the next chapter, experiment with the flowgraph yourself.</p>
+<p>But there is one rule:</p>
+<blockquote class="blockquote">
+<p>****Predict what will happen before pressing Run.****</p>
+</blockquote>
+<p>The prediction is often more valuable than the experiment itself.</p>
+<section id="try-1-increase-the-imaginary-amplitude" class="level3">
+<h3 class="anchored" data-anchor-id="try-1-increase-the-imaginary-amplitude">Try 1: Increase the Imaginary Amplitude</h3>
+<p>Set the imaginary amplitude to</p>
+<p><span class="math display">\[
+2
+\]</span></p>
+<p>What shape do you expect in the constellation?</p>
+<p>Will the magnitude remain constant?</p>
+<hr>
+</section>
+<section id="try-2-swap-the-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="try-2-swap-the-inputs">Try 2: Swap the Inputs</h3>
+<p>Connect the sine to the real input and the cosine to the imaginary input.</p>
+<p>What do you expect to happen to the phase?</p>
+<p>Will the direction of rotation remain the same?</p>
+<hr>
+</section>
+<section id="try-3-change-the-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="try-3-change-the-frequency">Try 3: Change the Frequency</h3>
+<p>Change both Signal Sources from 1 kHz to 2 kHz.</p>
+<p>Before running the flowgraph, predict:</p>
+<ul>
+<li><p>Will the radius of the constellation change?</p></li>
+<li><p>Will the phase change faster or slower?</p></li>
+<li><p>Where should the peak appear in the Frequency Sink?</p></li>
+</ul>
+<p>Then run it and check your prediction.</p>
+<hr>
+</section>
+<section id="try-4-switch-between-positive-and-negative-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="try-4-switch-between-positive-and-negative-frequency">Try 4: Switch Between Positive and Negative Frequency</h3>
+<p>Switch the imaginary amplitude between</p>
+<pre class="text"><code>+1</code></pre>
+<p>and</p>
+<pre class="text"><code>-1</code></pre>
+<p>Before running the flowgraph each time, predict:</p>
+<ul>
+<li><p>Will the phase increase or decrease?</p></li>
+<li><p>Will the Frequency Sink show +f or -f?</p></li>
+</ul>
+<p>See if you can predict the result without looking back at the chapter.</p>
+<hr>
+</section>
+<section id="try-5-use-different-frequencies" class="level3">
+<h3 class="anchored" data-anchor-id="try-5-use-different-frequencies">Try 5: Use Different Frequencies</h3>
+<p>Keep the real component at 1 kHz.</p>
+<p>Change the imaginary component to another frequency.</p>
+<p>Before running it, ask yourself:</p>
+<blockquote class="blockquote">
+<p>Will the constellation still form a circle?</p>
+</blockquote>
+<p>Then observe what happens.</p>
+<p>The result may look very different from the simple shapes we have seen so far.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">4.27 What We Learned</h2>
+<p>We started this chapter with a mathematical expression:</p>
+<p><span class="math display">\[
+z=a+jb
+\]</span></p>
+<p>At first, it may have looked like an abstract way of combining a real number with an “imaginary” one.</p>
+<p>But after building complex signals in GNU Radio, the idea should now feel much more concrete.</p>
+<p>A complex sample contains two components:</p>
+<p><span class="math display">\[
+z=a+jb
+\]</span></p>
+<p>The same complex number can also be described using its magnitude and phase.</p>
+<p>Magnitude tells us how far the point is from the origin.</p>
+<p>Phase tells us its direction.</p>
+<p>Euler’s formula connects these two ways of thinking:</p>
+<p><span class="math display">\[
+e^{j\theta}=\cos\theta+j\sin\theta
+\]</span></p>
+<p>When θ changes with time, the complex number can be visualized as a rotating vector.</p>
+<p>We saw this directly in GNU Radio.</p>
+<p>Starting with</p>
+<p><span class="math display">\[
+\cos\theta+j\sin\theta
+\]</span></p>
+<p>we obtained a unit circle, constant magnitude, and changing phase.</p>
+<p>When we reduced the imaginary component, the circle became an ellipse.</p>
+<p>When we removed the imaginary component completely, the trajectory collapsed onto the real axis.</p>
+<p>When we reversed the imaginary component, something even more interesting happened.</p>
+<p>The magnitude remained the same, but the direction of phase evolution reversed.</p>
+<p>The Frequency Sink then showed us what that means:</p>
+<p><span class="math display">\[
+e^{j2\pi ft} \rightarrow +f
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+e^{-j2\pi ft} \rightarrow -f
+\]</span></p>
+<p>This gave us a useful interpretation of positive and negative complex frequency:</p>
+<blockquote class="blockquote">
+<p>****The magnitude tells us how fast the complex vector rotates, while the sign tells us the direction of rotation.****</p>
+</blockquote>
+<p>Finally, we returned to the real cosine from Chapter 3.</p>
+<p>We found that</p>
+<p><span class="math display">\[
+\cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} \+ \frac{1}{2}e^{-j2\pi ft}
+\]</span></p>
+<p>which explains why a real cosine produces two frequency peaks, one at +f and another at -f.</p>
+<p>A real cosine contains both complex rotations together.</p>
+<p>A complex sinusoid can distinguish between them.</p>
+<p>That distinction is extremely important in SDR.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">4.28 Connecting to the Next Chapter</h2>
+<p>There is one detail we have deliberately avoided explaining fully.</p>
+<p>Look again at the GNU Radio Constellation Sink.</p>
+<p>GNU Radio does not label its axes ****Real**** and ****Imaginary****.</p>
+<p>Instead, it calls them:</p>
+<p>****In-phase****</p>
+<p>and</p>
+<p>****Quadrature****.</p>
+<p>Why?</p>
+<p>Why does SDR use the names ****I**** and ****Q****?</p>
+<p>Why are the two components 90° apart?</p>
+<p>And why does an SDR receiver need both of them?</p>
+<p>The real and imaginary components we have been working with are about to receive their radio names:</p>
+<p><span class="math display">\[
+x[n]=I[n]+jQ[n]
+\]</span></p>
+<p>In the next chapter, we will find out what ****I and Q signals**** actually mean, how an SDR produces them, and why they allow us to preserve information that a single real waveform cannot.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter03.html" class="pagination-link" aria-label="Chapter 3: Sampling and Aliasing">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter05.html" class="pagination-link" aria-label="Chapter 5: I and Q Signals">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 5: I and Q Signals</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 24: Building a Complete Single-Carrier Digital Receiver – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter25.html" rel="next">
+<link href="../book/chapter23.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter24.html"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-separate-receiver-functions-to-a-complete-receiver" id="toc-from-separate-receiver-functions-to-a-complete-receiver" class="nav-link active" data-scroll-target="#from-separate-receiver-functions-to-a-complete-receiver">24.1 From Separate Receiver Functions to a Complete Receiver</a></li>
+  <li><a href="#experiment-24.1-establishing-the-ideal-end-to-end-digital-link" id="toc-experiment-24.1-establishing-the-ideal-end-to-end-digital-link" class="nav-link" data-scroll-target="#experiment-24.1-establishing-the-ideal-end-to-end-digital-link">24.2 Experiment 24.1: Establishing the Ideal End-to-End Digital Link</a>
+  <ul class="collapse">
+  <li><a href="#building-the-baseline" id="toc-building-the-baseline" class="nav-link" data-scroll-target="#building-the-baseline">24.2.1 Building the Baseline</a></li>
+  <li><a href="#what-should-we-expect" id="toc-what-should-we-expect" class="nav-link" data-scroll-target="#what-should-we-expect">24.2.2 What Should We Expect?</a></li>
+  <li><a href="#an-eye-diagram-and-a-constellation-are-not-the-same-measurement" id="toc-an-eye-diagram-and-a-constellation-are-not-the-same-measurement" class="nav-link" data-scroll-target="#an-eye-diagram-and-a-constellation-are-not-the-same-measurement">24.2.3 An Eye Diagram and a Constellation Are Not the Same Measurement</a></li>
+  </ul></li>
+  <li><a href="#experiment-24.2-integrating-carrier-and-timing-recovery" id="toc-experiment-24.2-integrating-carrier-and-timing-recovery" class="nav-link" data-scroll-target="#experiment-24.2-integrating-carrier-and-timing-recovery">24.3 Experiment 24.2: Integrating Carrier and Timing Recovery</a>
+  <ul class="collapse">
+  <li><a href="#carrier-frequency-offset-in-the-channel-model" id="toc-carrier-frequency-offset-in-the-channel-model" class="nav-link" data-scroll-target="#carrier-frequency-offset-in-the-channel-model">24.3.1 Carrier-Frequency Offset in the Channel Model</a></li>
+  <li><a href="#integrating-the-synchronization-loops" id="toc-integrating-the-synchronization-loops" class="nav-link" data-scroll-target="#integrating-the-synchronization-loops">24.3.2 Integrating the Synchronization Loops</a></li>
+  <li><a href="#ideal-integrated-receiver" id="toc-ideal-integrated-receiver" class="nav-link" data-scroll-target="#ideal-integrated-receiver">24.3.3 Ideal Integrated Receiver</a></li>
+  <li><a href="#timing-mismatch" id="toc-timing-mismatch" class="nav-link" data-scroll-target="#timing-mismatch">24.3.4 Timing Mismatch</a></li>
+  <li><a href="#carrier-frequency-offset" id="toc-carrier-frequency-offset" class="nav-link" data-scroll-target="#carrier-frequency-offset">24.3.5 Carrier-Frequency Offset</a></li>
+  <li><a href="#cfo-and-timing-mismatch-together" id="toc-cfo-and-timing-mismatch-together" class="nav-link" data-scroll-target="#cfo-and-timing-mismatch-together">24.3.6 CFO and Timing Mismatch Together</a></li>
+  <li><a href="#adding-noise" id="toc-adding-noise" class="nav-link" data-scroll-target="#adding-noise">24.3.7 Adding Noise</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#experiment-24.3-adding-multipath-and-equalization" id="toc-experiment-24.3-adding-multipath-and-equalization" class="nav-link" data-scroll-target="#experiment-24.3-adding-multipath-and-equalization">24.4 Experiment 24.3: Adding Multipath and Equalization</a>
+  <ul class="collapse">
+  <li><a href="#constructing-a-controlled-multipath-channel" id="toc-constructing-a-controlled-multipath-channel" class="nav-link" data-scroll-target="#constructing-a-controlled-multipath-channel">24.4.1 Constructing a Controlled Multipath Channel</a></li>
+  <li><a href="#receiver-without-equalization" id="toc-receiver-without-equalization" class="nav-link" data-scroll-target="#receiver-without-equalization">24.4.2 Receiver Without Equalization</a></li>
+  <li><a href="#adding-the-adaptive-equalizer" id="toc-adding-the-adaptive-equalizer" class="nav-link" data-scroll-target="#adding-the-adaptive-equalizer">24.4.3 Adding the Adaptive Equalizer</a></li>
+  <li><a href="#before-and-after-equalization" id="toc-before-and-after-equalization" class="nav-link" data-scroll-target="#before-and-after-equalization">24.4.4 Before and After Equalization</a></li>
+  </ul></li>
+  <li><a href="#experiment-24.4-recovering-an-actual-message" id="toc-experiment-24.4-recovering-an-actual-message" class="nav-link" data-scroll-target="#experiment-24.4-recovering-an-actual-message">24.5 Experiment 24.4: Recovering an Actual Message</a>
+  <ul class="collapse">
+  <li><a href="#building-a-known-frame" id="toc-building-a-known-frame" class="nav-link" data-scroll-target="#building-a-known-frame">24.5.1 Building a Known Frame</a></li>
+  <li><a href="#the-complete-receiver" id="toc-the-complete-receiver" class="nav-link" data-scroll-target="#the-complete-receiver">24.5.2 The Complete Receiver</a></li>
+  <li><a href="#gnu-radio-toolbox-differential-encoder-and-differential-decoder" id="toc-gnu-radio-toolbox-differential-encoder-and-differential-decoder" class="nav-link" data-scroll-target="#gnu-radio-toolbox-differential-encoder-and-differential-decoder">GNU Radio Toolbox: Differential Encoder and Differential Decoder</a></li>
+  <li><a href="#ideal-information-recovery" id="toc-ideal-information-recovery" class="nav-link" data-scroll-target="#ideal-information-recovery">24.5.3 Ideal Information Recovery</a></li>
+  <li><a href="#recovering-the-payload-with-carrier-frequency-offset" id="toc-recovering-the-payload-with-carrier-frequency-offset" class="nav-link" data-scroll-target="#recovering-the-payload-with-carrier-frequency-offset">24.5.4 Recovering the Payload with Carrier-Frequency Offset</a></li>
+  <li><a href="#multiple-impairments-together" id="toc-multiple-impairments-together" class="nav-link" data-scroll-target="#multiple-impairments-together">24.5.5 Multiple Impairments Together</a></li>
+  <li><a href="#when-noise-becomes-too-strong" id="toc-when-noise-becomes-too-strong" class="nav-link" data-scroll-target="#when-noise-becomes-too-strong">24.5.6 When Noise Becomes Too Strong</a></li>
+  <li><a href="#payload-decoder-implementation" id="toc-payload-decoder-implementation" class="nav-link" data-scroll-target="#payload-decoder-implementation">24.5.7 Payload Decoder Implementation</a></li>
+  </ul></li>
+  <li><a href="#experiment-24.5-diagnosing-receiver-failures" id="toc-experiment-24.5-diagnosing-receiver-failures" class="nav-link" data-scroll-target="#experiment-24.5-diagnosing-receiver-failures">24.6 Experiment 24.5: Diagnosing Receiver Failures</a>
+  <ul class="collapse">
+  <li><a href="#removing-carrier-recovery" id="toc-removing-carrier-recovery" class="nav-link" data-scroll-target="#removing-carrier-recovery">24.6.1 Removing Carrier Recovery</a></li>
+  <li><a href="#removing-timing-recovery" id="toc-removing-timing-recovery" class="nav-link" data-scroll-target="#removing-timing-recovery">24.6.2 Removing Timing Recovery</a></li>
+  <li><a href="#breaking-frame-synchronization" id="toc-breaking-frame-synchronization" class="nav-link" data-scroll-target="#breaking-frame-synchronization">24.6.3 Breaking Frame Synchronization</a></li>
+  <li><a href="#try-it-yourself-1" id="toc-try-it-yourself-1" class="nav-link" data-scroll-target="#try-it-yourself-1">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#reading-receiver-diagnostics-correctly" id="toc-reading-receiver-diagnostics-correctly" class="nav-link" data-scroll-target="#reading-receiver-diagnostics-correctly">24.7 Reading Receiver Diagnostics Correctly</a></li>
+  <li><a href="#the-complete-receiver-as-a-hierarchy" id="toc-the-complete-receiver-as-a-hierarchy" class="nav-link" data-scroll-target="#the-complete-receiver-as-a-hierarchy">24.8 The Complete Receiver as a Hierarchy</a>
+  <ul class="collapse">
+  <li><a href="#signal-recovery" id="toc-signal-recovery" class="nav-link" data-scroll-target="#signal-recovery">Signal Recovery</a></li>
+  <li><a href="#symbol-recovery" id="toc-symbol-recovery" class="nav-link" data-scroll-target="#symbol-recovery">Symbol Recovery</a></li>
+  <li><a href="#information-recovery" id="toc-information-recovery" class="nav-link" data-scroll-target="#information-recovery">Information Recovery</a></li>
+  </ul></li>
+  <li><a href="#practical-lessons-from-building-the-complete-receiver" id="toc-practical-lessons-from-building-the-complete-receiver" class="nav-link" data-scroll-target="#practical-lessons-from-building-the-complete-receiver">24.9 Practical Lessons from Building the Complete Receiver</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">24.10 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">24.11 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter24.html"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapters, we developed the major functions of a digital receiver one at a time.</p>
+<p>We learned how pulse shaping and matched filtering control the waveform, how a wireless channel introduces attenuation, noise, carrier-frequency offset, timing mismatch, and multipath, how an equalizer can reduce inter-symbol interference, how carrier synchronization removes carrier-frequency and phase errors, how symbol timing synchronization finds the correct sampling instants, and how frame synchronization locates meaningful data inside a recovered bit stream.</p>
+<p>Each of those ideas was easier to understand when studied separately.</p>
+<p>A real receiver, however, cannot solve these problems one at a time in separate experiments. The same received waveform passes through several receiver stages, and those stages must work together.</p>
+<p>That raises the central question of this chapter:</p>
+<blockquote class="blockquote">
+<p><strong>What happens when all of the receiver functions developed in the previous chapters are combined into one digital communication system?</strong></p>
+</blockquote>
+<p>This chapter answers that question experimentally.</p>
+<p>We will begin with an ideal end-to-end QPSK link, integrate timing and carrier recovery, introduce multipath and equalization, recover a known message rather than merely observing a constellation, and finally deliberately remove important receiver functions to see how the complete system fails.</p>
+<p>The goal is not simply to build a larger GNU Radio flowgraph. The goal is to understand the hierarchy of a receiver:</p>
+<pre class="text"><code>Signal recovery
+      ↓
+Symbol recovery
+      ↓
+Information recovery</code></pre>
+<p>A receiver may succeed at one level and still fail at the next. One of the most important lessons of this chapter will therefore be that a clean eye diagram or a clean constellation is not, by itself, proof that the transmitted information has been recovered correctly.</p>
+<hr>
+<section id="from-separate-receiver-functions-to-a-complete-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="from-separate-receiver-functions-to-a-complete-receiver">24.1 From Separate Receiver Functions to a Complete Receiver</h2>
+<p>A useful conceptual view of the receiver developed across the previous chapters is</p>
+<pre class="text"><code>Received IQ
+    ↓
+Matched Filtering
+    ↓
+Timing Recovery
+    ↓
+Carrier Recovery
+    ↓
+Channel Equalization, when required
+    ↓
+Symbol Decisions
+    ↓
+Bit Recovery
+    ↓
+Frame Detection
+    ↓
+Payload Recovery</code></pre>
+<p>This diagram is a useful guide, but it should not be interpreted as a universal law specifying the only possible order of every receiver algorithm. Practical receiver architectures depend on the modulation, synchronization algorithms, acquisition strategy, sample rate, channel conditions, and implementation.</p>
+<p>That point becomes important in this chapter because we will experimentally discover that two individually working synchronization blocks do not necessarily work equally well in every ordering.</p>
+<p>We also do not add blocks merely because they appear in a textbook receiver diagram. For example, practical radios often include automatic gain control and additional channel-select filtering. Those functions are important when their corresponding problems are present, but they are not required to answer the questions investigated here. Our flowgraphs therefore contain only the functions needed for the impairments we deliberately introduce.</p>
+<hr>
+</section>
+<section id="experiment-24.1-establishing-the-ideal-end-to-end-digital-link" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-24.1-establishing-the-ideal-end-to-end-digital-link">24.2 Experiment 24.1: Establishing the Ideal End-to-End Digital Link</h2>
+<p>Before combining synchronization loops and channel impairments, we need a reference case.</p>
+<p>If the ideal system does not work, any later failure becomes ambiguous. We would not know whether the problem came from the channel impairment, the synchronization algorithm, the receiver ordering, or simply an incorrect baseline implementation.</p>
+<section id="building-the-baseline" class="level3">
+<h3 class="anchored" data-anchor-id="building-the-baseline">24.2.1 Building the Baseline</h3>
+<p>The first experiment uses QPSK with root-raised-cosine pulse shaping and matched filtering.</p>
+<p>The main parameters are</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kHz</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">1 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;">32</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+<tr class="odd">
+<td>Filter span</td>
+<td style="text-align: right;">8 symbols</td>
+</tr>
+<tr class="even">
+<td>Number of RRC taps</td>
+<td style="text-align: right;">257</td>
+</tr>
+</tbody>
+</table>
+<p>Two independent random binary sources generate the in-phase and quadrature data. Each bit is mapped to either <code>-1</code> or <code>+1</code>, and the two real streams are combined into a complex QPSK signal. The transmitter RRC filter interpolates by 32, while the receiver RRC filter performs matched filtering.</p>
+<p>For this ideal experiment, a fixed <code>Keep 1 in N</code> sampler selects one sample from every 32 matched-filter output samples.</p>
+<p>The resulting flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp01_ideal_end_to_end_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Ideal end-to-end QPSK flowgraph</figcaption>
+</figure>
+</div>
+<p>Random data are deliberately used here rather than a very short repeating pattern. A short deterministic pattern contains only a limited set of symbol transitions and can therefore produce an incomplete-looking eye diagram. Random data exercise many more transitions and provide a better baseline view of the pulse-shaped waveform.</p>
+</section>
+<section id="what-should-we-expect" class="level3">
+<h3 class="anchored" data-anchor-id="what-should-we-expect">24.2.2 What Should We Expect?</h3>
+<p>With no noise, carrier offset, timing mismatch, or multipath, the matched-filter output should contain well-defined symbol intervals.</p>
+<p>The I- and Q-channel eye diagrams should therefore have clear openings, and the samples selected at the correct symbol instants should form four compact QPSK clusters.</p>
+<p>The experimental result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp01_ideal_eye_constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Ideal eye diagrams and QPSK constellation</figcaption>
+</figure>
+</div>
+<p>The eyes are open and the constellation contains four tight clusters near the expected QPSK points.</p>
+<p>This establishes the ideal baseline.</p>
+</section>
+<section id="an-eye-diagram-and-a-constellation-are-not-the-same-measurement" class="level3">
+<h3 class="anchored" data-anchor-id="an-eye-diagram-and-a-constellation-are-not-the-same-measurement">24.2.3 An Eye Diagram and a Constellation Are Not the Same Measurement</h3>
+<p>It is tempting to treat an open eye and a clean constellation as two ways of showing the same thing. They are not.</p>
+<p>The eye diagram overlays portions of the <strong>oversampled waveform</strong>. It tells us about possible sampling instants, timing margin, waveform transitions, and inter-symbol interference.</p>
+<p>The constellation displays the <strong>complex samples actually presented at particular sampling instants</strong>. It therefore tells us about symbol locations and can reveal carrier phase or frequency errors, noise, residual ISI, and incorrect sampling.</p>
+<p>This distinction becomes essential later in the chapter.</p>
+<p>A receiver can have an eye that still contains useful timing information while its I and Q components appear badly smeared because of carrier rotation. Conversely, four recognizable constellation regions do not automatically prove that the original bits or frame have been recovered correctly.</p>
+<p>The location of a diagnostic sink in the receiver chain therefore matters just as much as the appearance of its plot.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-24.2-integrating-carrier-and-timing-recovery" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-24.2-integrating-carrier-and-timing-recovery">24.3 Experiment 24.2: Integrating Carrier and Timing Recovery</h2>
+<p>Carrier synchronization and symbol timing synchronization were studied separately in Chapters 21 and 22. We now ask a different question:</p>
+<blockquote class="blockquote">
+<p><strong>Can the two synchronization systems operate successfully as parts of the same receiver?</strong></p>
+</blockquote>
+<p>This is an integration experiment rather than a repetition of those chapters.</p>
+<p>The signal parameters are changed to the values used in our later synchronization experiments:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kHz</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">4 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+<tr class="odd">
+<td>Filter span</td>
+<td style="text-align: right;">8 symbols</td>
+</tr>
+<tr class="even">
+<td>Number of RRC taps</td>
+<td style="text-align: right;">65</td>
+</tr>
+</tbody>
+</table>
+<p>The transmitter still generates random QPSK data and uses RRC pulse shaping.</p>
+<p>A GNU Radio Channel Model is now placed between transmitter and receiver so that carrier-frequency offset, sample-rate mismatch, and noise can be controlled independently.</p>
+<section id="carrier-frequency-offset-in-the-channel-model" class="level3">
+<h3 class="anchored" data-anchor-id="carrier-frequency-offset-in-the-channel-model">24.3.1 Carrier-Frequency Offset in the Channel Model</h3>
+<p>The Channel Model expresses frequency offset as a fraction of the sample rate.</p>
+<p>If the physical carrier-frequency offset is <span class="math inline">\(\Delta f\)</span> and the sample rate is <span class="math inline">\(F_s\)</span>, the normalized frequency offset is</p>
+<p><span class="math display">\[f_{\mathrm{norm}}=\frac{\Delta f}{F_s}\]</span></p>
+<p>For a 200 Hz offset at a 32 kHz sample rate,</p>
+<p><span class="math display">\[f_{\mathrm{norm}}=\frac{200}{32000}=0.00625\]</span></p>
+<p>Therefore, the Channel Model setting</p>
+<pre class="text"><code>Frequency Offset: 0.00625</code></pre>
+<p>represents a 200 Hz carrier-frequency offset in this experiment.</p>
+<p>The Channel Model parameter <code>Epsilon</code> controls the relative sample-rate mismatch. An important detail is</p>
+<pre class="text"><code>No sample-rate mismatch: Epsilon = 1.0</code></pre>
+<p>not zero.</p>
+<p>Values slightly different from one model a transmitter and receiver whose sampling clocks do not run at exactly the same rate.</p>
+</section>
+<section id="integrating-the-synchronization-loops" class="level3">
+<h3 class="anchored" data-anchor-id="integrating-the-synchronization-loops">24.3.2 Integrating the Synchronization Loops</h3>
+<p>The receiver uses the matched filter developed earlier, followed by GNU Radio’s Symbol Sync and Costas Loop.</p>
+<p>The Symbol Sync settings are</p>
+<pre class="text"><code>Timing Error Detector: Gardner
+Samples per Symbol: 8
+Expected TED Gain: 1
+Loop Bandwidth: 0.045
+Damping Factor: 1
+Maximum Deviation: 1.5
+Output Samples/Symbol: 1
+Interpolating Resampler: MMSE, 8-tap FIR</code></pre>
+<p>The Costas Loop uses</p>
+<pre class="text"><code>Loop Bandwidth: 0.0314159
+Order: 4
+Use SNR: No</code></pre>
+<p>An important integration lesson appeared while developing this receiver.</p>
+<p>Our first arrangement was</p>
+<pre class="text"><code>Matched Filter
+      ↓
+Costas Loop
+      ↓
+Symbol Sync</code></pre>
+<p>Even with an ideal channel, this arrangement produced a ring-like constellation rather than four stable QPSK clusters.</p>
+<p>We therefore tested the stages individually. Symbol Sync alone produced the expected four clusters. The Costas Loop was also capable of recovering QPSK when used with a suitable symbol-rate input. Reversing the integrated order to</p>
+<pre class="text"><code>Matched Filter
+      ↓
+Symbol Sync
+      ↓
+Costas Loop</code></pre>
+<p>produced a stable constellation.</p>
+<p>This does <strong>not</strong> establish a universal rule that timing recovery must always precede carrier recovery. Receiver ordering depends on the algorithms and signal conditions. What the experiment demonstrates is more general:</p>
+<blockquote class="blockquote">
+<p><strong>Receiver blocks that work correctly in isolation can interact when they are combined. Integration must therefore be tested, not merely assumed.</strong></p>
+</blockquote>
+<p>In our implementation, Symbol Sync first selects useful symbol-rate samples from the oversampled pulse-shaped waveform. The Costas Loop then operates on those recovered QPSK symbol samples.</p>
+<p>The final integrated flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_integrated_receiver_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Integrated timing and carrier recovery flowgraph</figcaption>
+</figure>
+</div>
+<p>The Eye Sink is connected after the matched filter but <strong>before</strong> synchronization. The Constellation Sink is connected after Symbol Sync and the Costas Loop.</p>
+<p>That placement is deliberate. It allows us to compare what arrives at the synchronization system with what emerges after correction.</p>
+</section>
+<section id="ideal-integrated-receiver" class="level3">
+<h3 class="anchored" data-anchor-id="ideal-integrated-receiver">24.3.3 Ideal Integrated Receiver</h3>
+<p>We first remove all impairments:</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0
+Epsilon: 1.0
+Taps: 1</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_ideal_integrated_receiver.png" class="img-fluid figure-img"></p>
+<figcaption>Ideal integrated receiver result</figcaption>
+</figure>
+</div>
+<p>The pre-synchronization eye diagrams are open, and the final constellation contains four compact clusters. The two synchronization blocks therefore operate correctly together under ideal conditions.</p>
+</section>
+<section id="timing-mismatch" class="level3">
+<h3 class="anchored" data-anchor-id="timing-mismatch">24.3.4 Timing Mismatch</h3>
+<p>We next change only the sample-rate mismatch.</p>
+<pre class="text"><code>Frequency Offset: 0
+Epsilon: 1.001
+Noise Voltage: 0
+Taps: 1</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_timing_mismatch.png" class="img-fluid figure-img"></p>
+<figcaption>Timing mismatch with timing recovery enabled</figcaption>
+</figure>
+</div>
+<p>The eye diagram is measured before Symbol Sync, so it reveals the incoming timing drift. The final constellation, however, remains well organized because Symbol Sync continuously adjusts the effective sampling instant.</p>
+<p>This is an important distinction between a fixed timing offset and a clock mismatch. A fixed offset can be corrected once. A sample-rate mismatch continually accumulates, so the receiver must <strong>track</strong> it.</p>
+</section>
+<section id="carrier-frequency-offset" class="level3">
+<h3 class="anchored" data-anchor-id="carrier-frequency-offset">24.3.5 Carrier-Frequency Offset</h3>
+<p>We now restore <code>Epsilon = 1.0</code> and introduce a 200 Hz CFO.</p>
+<pre class="text"><code>Frequency Offset: 0.00625
+Epsilon: 1.0
+Noise Voltage: 0
+Taps: 1</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_cfo_only.png" class="img-fluid figure-img"></p>
+<figcaption>Carrier-frequency offset with synchronization enabled</figcaption>
+</figure>
+</div>
+<p>The I- and Q-channel eye diagrams now look dramatically worse, even though the final constellation still contains four recognizable QPSK clusters.</p>
+<p>Why?</p>
+<p>A carrier-frequency offset continuously rotates the complex baseband signal:</p>
+<p><span class="math display">\[r(t)=s(t)e^{j2\pi\Delta f t}\]</span></p>
+<p>If the original complex signal is</p>
+<p><span class="math display">\[s(t)=I(t)+jQ(t)\]</span></p>
+<p>the rotating carrier reference mixes the two components:</p>
+<p><span class="math display">\[I'(t)=I(t)\cos(2\pi\Delta f t)-Q(t)\sin(2\pi\Delta f t)\]</span></p>
+<p><span class="math display">\[Q'(t)=I(t)\sin(2\pi\Delta f t)+Q(t)\cos(2\pi\Delta f t)\]</span></p>
+<p>The Eye Sink is observing fixed I and Q axes <strong>before carrier recovery</strong>. Because the constellation is rotating relative to those axes, many different projections are overlaid in the eye display.</p>
+<p>Therefore, a smeared I/Q eye in this case does <strong>not</strong> mean that timing recovery has failed.</p>
+<p>The Costas Loop later removes the carrier rotation, allowing the final constellation to settle into recognizable QPSK regions.</p>
+</section>
+<section id="cfo-and-timing-mismatch-together" class="level3">
+<h3 class="anchored" data-anchor-id="cfo-and-timing-mismatch-together">24.3.6 CFO and Timing Mismatch Together</h3>
+<p>The next test combines the two deterministic impairments:</p>
+<pre class="text"><code>Frequency Offset: 0.00625
+Epsilon: 1.001
+Noise Voltage: 0
+Taps: 1</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_cfo_timing_mismatch.png" class="img-fluid figure-img"></p>
+<figcaption>Combined CFO and timing mismatch</figcaption>
+</figure>
+</div>
+<p>The pre-synchronization eyes remain heavily smeared. The final constellation, however, retains four separated regions.</p>
+<p>In this particular test, the dramatic appearance of the pre-synchronization eye is dominated by the carrier rotation, while Symbol Sync is still able to track the relatively small sample-rate mismatch.</p>
+<p>The result demonstrates why receiver plots must be interpreted according to both the impairment and the point at which the measurement is taken.</p>
+</section>
+<section id="adding-noise" class="level3">
+<h3 class="anchored" data-anchor-id="adding-noise">24.3.7 Adding Noise</h3>
+<p>We next isolate additive noise.</p>
+<p>For moderate noise,</p>
+<pre class="text"><code>Noise Voltage: 0.5
+Frequency Offset: 0
+Epsilon: 1.0
+Taps: 1</code></pre>
+<p>the result is</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_moderate_noise.png" class="img-fluid figure-img"></p>
+<figcaption>Moderate additive noise</figcaption>
+</figure>
+</div>
+<p>The eyes remain recognizable but their traces become thicker. The constellation still contains four clear clusters, but each ideal point has become a cloud.</p>
+<p>Increasing the noise to</p>
+<pre class="text"><code>Noise Voltage: 1.0</code></pre>
+<p>gives</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp02_strong_noise.png" class="img-fluid figure-img"></p>
+<figcaption>Strong additive noise</figcaption>
+</figure>
+</div>
+<p>The eye becomes much fuzzier and the constellation clouds spread farther from their ideal locations.</p>
+<p>This behavior is fundamentally different from synchronization errors.</p>
+<p>A deterministic carrier-frequency offset can be estimated and tracked. A systematic timing mismatch can also be tracked. Random noise cannot simply be “undone” by a synchronization loop. As the noise becomes stronger, some received samples eventually cross decision boundaries and produce incorrect symbols.</p>
+</section>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<p>Before changing the flowgraph, predict what will happen if <code>Epsilon</code> is changed from <code>1.001</code> to <code>1.01</code> while the CFO and noise remain zero.</p>
+<p>Then run the experiment.</p>
+<p>Does the pre-synchronization eye show stronger timing drift? Does Symbol Sync still produce recognizable QPSK clusters? This is a useful way to explore the difference between the appearance of the incoming waveform and the performance of the timing-recovery loop.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-24.3-adding-multipath-and-equalization" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-24.3-adding-multipath-and-equalization">24.4 Experiment 24.3: Adding Multipath and Equalization</h2>
+<p>Noise, CFO, and timing mismatch do not all damage a signal in the same way.</p>
+<p>Carrier-frequency offset rotates the complex signal.</p>
+<p>Sample-rate mismatch changes the relationship between the received waveform and the receiver’s sampling instants.</p>
+<p>Noise adds random perturbations.</p>
+<p>Multipath introduces something different: <strong>channel memory</strong>.</p>
+<p>A delayed copy of one symbol can overlap later symbols, producing inter-symbol interference.</p>
+<section id="constructing-a-controlled-multipath-channel" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-a-controlled-multipath-channel">24.4.1 Constructing a Controlled Multipath Channel</h3>
+<p>Instead of using a general channel model, we construct a simple echo manually so that the physical meaning remains visible.</p>
+<p>The transmitted signal is split into two paths:</p>
+<pre class="text"><code>                ┌───────────────────────────────┐
+Transmitted ────┤                               ├──→ Add
+signal           └→ Delay 8 → Gain 0.5 ─────────┘</code></pre>
+<p>At 8 samples per symbol, a delay of 8 samples is exactly one symbol period.</p>
+<p>The channel therefore contains</p>
+<ul>
+<li>one direct path, and</li>
+<li>one delayed path arriving one symbol later with half the amplitude.</li>
+</ul>
+<p>This is intentionally simple, but it captures the central mechanism of multipath-induced ISI.</p>
+</section>
+<section id="receiver-without-equalization" class="level3">
+<h3 class="anchored" data-anchor-id="receiver-without-equalization">24.4.2 Receiver Without Equalization</h3>
+<p>The first version uses matched filtering, timing recovery, and carrier recovery but no equalizer.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp03a_multipath_before_equalization_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Multipath receiver before equalization</figcaption>
+</figure>
+</div>
+<p>The resulting constellation is not merely a random cloud. The delayed symbol combines with the current symbol in a structured way, producing arcs and multiple trajectories.</p>
+<p>That distinction matters.</p>
+<p>Noise produces random spreading around the ideal points. Multipath produces structured distortion because the current received sample depends on both the current and previous transmitted symbols.</p>
+</section>
+<section id="adding-the-adaptive-equalizer" class="level3">
+<h3 class="anchored" data-anchor-id="adding-the-adaptive-equalizer">24.4.3 Adding the Adaptive Equalizer</h3>
+<p>We now add the adaptive equalizer developed in Chapter 20 after the synchronization stages.</p>
+<p>The important settings are</p>
+<pre class="text"><code>Linear Equalizer
+    Num Taps: 5
+    Input Samples per Symbol: 1
+
+Adaptive Algorithm LMS
+    Step Size: 0.005</code></pre>
+<p>The QPSK reference constellation is</p>
+<pre class="text"><code>[1+1j, -1+1j, -1-1j, 1-1j]</code></pre>
+<p>This detail is important. The reference constellation used by the decision-directed equalizer must match the scale and locations of the actual transmitted symbols. A normalized constellation at approximately <code>±0.707 ± j0.707</code> would not match a transmitter using <code>±1 ± j</code>.</p>
+<p>The equalized receiver is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp03b_multipath_after_equalization_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Multipath receiver with adaptive equalization</figcaption>
+</figure>
+</div>
+<p>For this implementation, the stable ordering was</p>
+<pre class="text"><code>Matched Filter
+      ↓
+Symbol Sync
+      ↓
+Costas Loop
+      ↓
+Linear Equalizer
+      ↓
+Constellation</code></pre>
+<p>Again, this is an experimentally successful architecture for our system rather than a claim that all receivers must use this exact ordering.</p>
+</section>
+<section id="before-and-after-equalization" class="level3">
+<h3 class="anchored" data-anchor-id="before-and-after-equalization">24.4.4 Before and After Equalization</h3>
+<p>The comparison below shows the effect clearly.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp03_multipath_before_after_equalization.png" class="img-fluid figure-img"></p>
+<figcaption>Multipath before and after equalization</figcaption>
+</figure>
+</div>
+<p>Before equalization, the constellation contains strong structured ISI. After equalization, the four QPSK regions become much tighter.</p>
+<p>The Eye Sink in this experiment remains connected after the matched filter and before the equalizer. Therefore, the displayed eye does not suddenly become clean merely because the final constellation improves.</p>
+<p>This is another example of the diagnostic-location principle:</p>
+<blockquote class="blockquote">
+<p><strong>A downstream correction cannot change a plot measured upstream of that correction.</strong></p>
+</blockquote>
+<p>The equalizer improves the samples presented to the symbol decision process. It does not retroactively alter the matched-filter waveform being displayed by an earlier Eye Sink.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-24.4-recovering-an-actual-message" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-24.4-recovering-an-actual-message">24.5 Experiment 24.4: Recovering an Actual Message</h2>
+<p>So far, much of our definition of success has been visual.</p>
+<p>An open eye is good.</p>
+<p>Four clean QPSK clusters are good.</p>
+<p>But a communication receiver ultimately has a more demanding job:</p>
+<blockquote class="blockquote">
+<p><strong>It must recover the information that was transmitted.</strong></p>
+</blockquote>
+<p>This experiment therefore replaces the random data with a known frame and follows the receiver all the way from the transmitted bits to a recovered text message.</p>
+<section id="building-a-known-frame" class="level3">
+<h3 class="anchored" data-anchor-id="building-a-known-frame">24.5.1 Building a Known Frame</h3>
+<p>We use a 40-bit frame consisting of a 16-bit preamble and a 24-bit payload.</p>
+<p>The preamble is</p>
+<pre class="text"><code>1101001110010110</code></pre>
+<p>The payload is the ASCII text</p>
+<pre class="text"><code>SDR</code></pre>
+<p>whose binary representation is</p>
+<pre class="text"><code>S = 01010011
+D = 01000100
+R = 01010010</code></pre>
+<p>The complete frame is therefore</p>
+<pre class="text"><code>1101001110010110 | 01010011 01000100 01010010
+      preamble   |    S        D        R</code></pre>
+<p>or</p>
+<pre class="text"><code>1101001110010110010100110100010001010010</code></pre>
+<p>The frame contains 40 bits, corresponding to 20 QPSK symbols.</p>
+<p>A repeating Vector Source generates</p>
+<pre class="text"><code>[1,1,0,1,0,0,1,1,1,0,0,1,0,1,1,0,
+ 0,1,0,1,0,0,1,1,
+ 0,1,0,0,0,1,0,0,
+ 0,1,0,1,0,0,1,0]</code></pre>
+<p>A <code>Repack Bits</code> block converts the one-bit input items into two-bit QPSK symbol indices.</p>
+<p>The transmitter settings are</p>
+<pre class="text"><code>Repack Bits
+    Bits per input byte: 1
+    Bits per output byte: 2
+    Endianness: LSB</code></pre>
+<p>With LSB-first packing, an input pair <span class="math inline">\((b_0,b_1)\)</span> produces the two-bit value</p>
+<p><span class="math display">\[k=b_0+2b_1\]</span></p>
+<p>so the bit pairs are packed as</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Input bits</th>
+<th style="text-align: right;">Packed index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>00</code></td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td><code>01</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td><code>10</code></td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td><code>11</code></td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<p>The QPSK symbol table is</p>
+<pre class="text"><code>[1+1j, -1+1j, -1-1j, 1-1j]</code></pre>
+</section>
+<section id="the-complete-receiver" class="level3">
+<h3 class="anchored" data-anchor-id="the-complete-receiver">24.5.2 The Complete Receiver</h3>
+<p>The complete flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp04_complete_single_carrier_receiver_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Complete single-carrier receiver</figcaption>
+</figure>
+</div>
+<p>The receiver performs</p>
+<pre class="text"><code>Matched Filtering
+      ↓
+Timing Recovery
+      ↓
+Carrier Recovery
+      ↓
+QPSK Symbol Decisions
+      ↓
+Differential Decoding
+      ↓
+Bit Recovery
+      ↓
+Frame Detection
+      ↓
+Payload Recovery</code></pre>
+<p>The receiver <code>Repack Bits</code> block performs the inverse conversion:</p>
+<pre class="text"><code>Bits per input byte: 2
+Bits per output byte: 1
+Endianness: LSB</code></pre>
+<p>The frame synchronizer uses</p>
+<pre class="text"><code>Correlate Access Code - Tag
+    Access Code: 1101001110010110
+    Threshold: 0
+    Tag Name: frame_start</code></pre>
+<p>With the ideal channel, repeated <code>frame_start</code> tags appeared 40 bits apart, exactly matching the 40-bit transmitted frame length.</p>
+</section>
+<section id="gnu-radio-toolbox-differential-encoder-and-differential-decoder" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-differential-encoder-and-differential-decoder">GNU Radio Toolbox: Differential Encoder and Differential Decoder</h3>
+<p>When the complete receiver was first tested with carrier-frequency offset, an important practical issue appeared.</p>
+<p>The Costas Loop could remove the continuous rotation caused by CFO and still leave the QPSK constellation with an absolute phase ambiguity.</p>
+<p>For QPSK, rotations separated by 90 degrees produce geometrically valid QPSK constellations. A Costas Loop can therefore lock to one of several equivalent phase states.</p>
+<p>The constellation may look perfectly clean while the absolute symbol labels are different.</p>
+<p>That means</p>
+<blockquote class="blockquote">
+<p><strong>A clean QPSK constellation does not necessarily imply that the original bits are correct.</strong></p>
+</blockquote>
+<p>This matters only when we move from symbol recovery to actual information recovery.</p>
+<p>To make the information insensitive to this constant phase ambiguity, we add GNU Radio’s Differential Encoder and Differential Decoder.</p>
+<p>Both use</p>
+<pre class="text"><code>Coding: Differential
+Modulus: 4</code></pre>
+<p>The modulus is four because QPSK has four symbol states.</p>
+<p>The transmitter becomes</p>
+<pre class="text"><code>Known bits
+    ↓
+Repack 1 → 2
+    ↓
+Differential Encoder
+    ↓
+QPSK Mapping</code></pre>
+<p>and the receiver contains</p>
+<pre class="text"><code>QPSK Symbol Decisions
+    ↓
+Differential Decoder
+    ↓
+Repack 2 → 1</code></pre>
+<p>The central idea is simple: differential coding represents information through the <strong>change between successive symbol states</strong> rather than relying only on the absolute QPSK orientation.</p>
+<p>A constant 90-degree ambiguity can change the absolute symbol labels, but it does not destroy the relative symbol changes in the same way.</p>
+<p>Differential coding does <strong>not</strong> replace carrier recovery. If the carrier is continuously rotating because CFO has not been corrected, stable symbol decisions are still lost. We will demonstrate this distinction in Experiment 24.5.</p>
+</section>
+<section id="ideal-information-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="ideal-information-recovery">24.5.3 Ideal Information Recovery</h3>
+<p>We first use an ideal channel:</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0
+Epsilon: 1.0
+Taps: 1</code></pre>
+<p>The eye diagrams and constellation are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp04_ideal_eye_constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Ideal complete-receiver eye diagrams and constellation</figcaption>
+</figure>
+</div>
+<p>Because the known 40-bit frame repeats, the eye diagram contains fewer distinct trajectories than the random-data eye in Experiment 24.1. This is expected. A short deterministic frame contains fewer transition combinations than a long random sequence.</p>
+<p>The constellation nevertheless contains four very tight QPSK clusters.</p>
+<p>More importantly, the receiver now proves success at the information level:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp04_ideal_payload_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Ideal payload recovery</figcaption>
+</figure>
+</div>
+<p>The recovered bits are</p>
+<pre class="text"><code>010100110100010001010010</code></pre>
+<p>which decode to</p>
+<pre class="text"><code>SDR</code></pre>
+<p>For the first time in this chapter, success is no longer defined only by the appearance of a signal-processing plot. The receiver has recovered the intended message.</p>
+</section>
+<section id="recovering-the-payload-with-carrier-frequency-offset" class="level3">
+<h3 class="anchored" data-anchor-id="recovering-the-payload-with-carrier-frequency-offset">24.5.4 Recovering the Payload with Carrier-Frequency Offset</h3>
+<p>We now introduce the same 200 Hz CFO used earlier:</p>
+<pre class="text"><code>Frequency Offset: 0.00625</code></pre>
+<p>With differential encoding and decoding enabled, the receiver can recover the payload even though the Costas Loop may settle with a QPSK phase ambiguity.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp04_cfo_payload_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Payload recovery with carrier-frequency offset</figcaption>
+</figure>
+</div>
+<p>In one run, the first detected payload contained a single incorrect bit, while the following frames repeatedly recovered <code>SDR</code>.</p>
+<p>This is a useful practical observation.</p>
+<p>Synchronization loops generally require an <strong>acquisition interval</strong> after the receiver starts. During acquisition, the internal timing and carrier estimates are still converging. Once the loops settle, the receiver enters <strong>tracking</strong>, where it follows the remaining changes around the locked state.</p>
+<p>We should not interpret the particular first-frame error as a fixed property of every run. The important observation is that after acquisition the receiver repeatedly recovered the correct payload.</p>
+</section>
+<section id="multiple-impairments-together" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-impairments-together">24.5.5 Multiple Impairments Together</h3>
+<p>We next combine several impairments:</p>
+<pre class="text"><code>Frequency Offset: 0.00625
+Epsilon: 1.01
+Noise Voltage: 0.5
+Taps: 1</code></pre>
+<p>This corresponds to</p>
+<ul>
+<li>200 Hz CFO,</li>
+<li>a 1% sample-rate mismatch, and</li>
+<li>moderate additive noise.</li>
+</ul>
+<p>The receiver continued to recover the <code>SDR</code> payload repeatedly.</p>
+<p>This is an important integration result. Carrier recovery, timing recovery, differential decoding, bit recovery, and frame synchronization are no longer being tested separately. They are operating together on the same impaired waveform.</p>
+</section>
+<section id="when-noise-becomes-too-strong" class="level3">
+<h3 class="anchored" data-anchor-id="when-noise-becomes-too-strong">24.5.6 When Noise Becomes Too Strong</h3>
+<p>We then keep the CFO and timing mismatch unchanged and compare two noise levels.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp04_payload_recovery_noise_0p5_vs_1p0.png" class="img-fluid figure-img"></p>
+<figcaption>Payload recovery at noise voltages 0.5 and 1.0</figcaption>
+</figure>
+</div>
+<p>At</p>
+<pre class="text"><code>Noise Voltage: 0.5</code></pre>
+<p>all five observed payloads were recovered correctly as <code>SDR</code>.</p>
+<p>At</p>
+<pre class="text"><code>Noise Voltage: 1.0</code></pre>
+<p>several observed payloads contained incorrect characters, although some complete <code>SDR</code> frames were still recovered.</p>
+<p>This is the information-level consequence of the constellation spreading observed earlier.</p>
+<p>Synchronization algorithms can compensate for structured impairments within their operating range, but they cannot remove arbitrary random noise. Once enough received symbols cross decision boundaries, incorrect bits enter the frame and the payload becomes corrupted.</p>
+<p>The value <code>1.0</code> should not be interpreted as a universal threshold. It is simply the observed behavior of this particular experiment with its chosen signal scaling and receiver settings.</p>
+</section>
+<section id="payload-decoder-implementation" class="level3">
+<h3 class="anchored" data-anchor-id="payload-decoder-implementation">24.5.7 Payload Decoder Implementation</h3>
+<p>The final Payload Decoder is implemented with a small Embedded Python Block.</p>
+<p>Its job is intentionally limited. It watches for the <code>frame_start</code> tag generated by the GNU Radio frame synchronizer, collects the following 24 payload bits, groups them into three 8-bit bytes, converts those bytes to ASCII, and prints the recovered text.</p>
+<p>The script does <strong>not</strong> perform carrier recovery, timing recovery, symbol decisions, differential decoding, or frame detection. Those functions are already completed by the GNU Radio receiver before the payload reaches the script.</p>
+<p>The reference implementation is provided with the experiment files as</p>
+<pre class="text"><code>experiments/ch24/ch24_exp04_payload_decoder.py</code></pre>
+<p>Keeping the application-level payload extraction separate helps preserve an important architectural distinction: the DSP receiver recovers and synchronizes the communication stream, while the small script simply interprets the already recovered payload.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-24.5-diagnosing-receiver-failures" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-24.5-diagnosing-receiver-failures">24.6 Experiment 24.5: Diagnosing Receiver Failures</h2>
+<p>We now have something we did not have at the beginning of the chapter: a receiver that we know can recover the transmitted information.</p>
+<p>That allows us to ask a powerful diagnostic question:</p>
+<blockquote class="blockquote">
+<p><strong>What happens if one required receiver function is deliberately removed?</strong></p>
+</blockquote>
+<p>Rather than adding another algorithm, we now break the receiver one stage at a time.</p>
+<section id="removing-carrier-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="removing-carrier-recovery">24.6.1 Removing Carrier Recovery</h3>
+<p>For the first failure test, the channel contains a 200 Hz CFO:</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0.00625
+Epsilon: 1.0
+Taps: 1</code></pre>
+<p>Timing recovery remains enabled, but the Costas Loop is bypassed.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp05_no_carrier_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Receiver failure without carrier recovery</figcaption>
+</figure>
+</div>
+<p>Instead of four stationary QPSK clusters, the constellation forms points distributed around a ring.</p>
+<p>This is exactly what a continuously rotating QPSK constellation should produce. The CFO causes the phase to advance continuously because no carrier-recovery loop is now removing it.</p>
+<p>The terminal produces no recovered payload.</p>
+<p>The failure chain is</p>
+<pre class="text"><code>200 Hz CFO
+      +
+Costas Loop disabled
+      ↓
+Continuous carrier rotation remains
+      ↓
+No stationary QPSK clusters
+      ↓
+Stable symbol decisions are lost
+      ↓
+Frame detection fails
+      ↓
+No payload</code></pre>
+<p>This result also clarifies the role of differential coding.</p>
+<p>Differential coding solved a <strong>constant QPSK phase ambiguity after carrier recovery</strong>. It does not replace the Costas Loop when the phase is continuously changing because of uncompensated CFO.</p>
+</section>
+<section id="removing-timing-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="removing-timing-recovery">24.6.2 Removing Timing Recovery</h3>
+<p>We next restore carrier recovery and remove Symbol Sync.</p>
+<p>The channel is configured as</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0
+Epsilon: 1.01
+Taps: 1</code></pre>
+<p>Because the matched-filter output still contains 8 samples per symbol, a fixed <code>Keep 1 in N</code> sampler with</p>
+<pre class="text"><code>N: 8</code></pre>
+<p>is used in place of Symbol Sync.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch24/ch24_exp05_no_timing_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Receiver failure without timing recovery</figcaption>
+</figure>
+</div>
+<p>The result is dramatically different from the no-carrier-recovery ring.</p>
+<p>The fixed sampler takes one sample and skips seven, but it has no mechanism for changing the sampling phase as the transmitter and receiver clocks drift relative to one another.</p>
+<p>With <code>Epsilon = 1.01</code>, the correct symbol instant therefore moves continuously relative to the fixed sampler.</p>
+<p>The constellation develops structured trajectories through and between the QPSK decision regions, and reliable information recovery is lost.</p>
+<p>The failure chain is</p>
+<pre class="text"><code>Sample-rate mismatch
+      +
+Symbol Sync disabled
+      ↓
+Sampling phase continuously drifts
+      ↓
+Samples move away from symbol centers
+      ↓
+Constellation becomes strongly distorted
+      ↓
+Symbol decisions become unreliable
+      ↓
+Payload recovery fails</code></pre>
+</section>
+<section id="breaking-frame-synchronization" class="level3">
+<h3 class="anchored" data-anchor-id="breaking-frame-synchronization">24.6.3 Breaking Frame Synchronization</h3>
+<p>The final failure is conceptually different.</p>
+<p>We restore a working physical-layer receiver so that the eye and constellation are good, but replace the correct access code</p>
+<pre class="text"><code>1101001110010110</code></pre>
+<p>with an incorrect pattern.</p>
+<p>The receiver still recovers the waveform.</p>
+<p>It still recovers QPSK symbols.</p>
+<p>It can still produce the corresponding bit stream.</p>
+<p>But the frame synchronizer never finds the expected preamble, so it does not generate the required <code>frame_start</code> tag.</p>
+<p>The Payload Decoder therefore produces no output.</p>
+<p>This case does not need another figure because the clean eye and constellation would simply repeat results already shown. The important observation is the absence of information recovery despite successful earlier receiver stages.</p>
+<p>It demonstrates a fundamental hierarchy:</p>
+<blockquote class="blockquote">
+<p><strong>Correct waveform recovery and correct symbol recovery are not sufficient if the receiver does not know where the meaningful frame begins.</strong></p>
+</blockquote>
+</section>
+<section id="try-it-yourself-1" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-1">Try It Yourself</h3>
+<p>Restore the correct access code and verify that the payload immediately returns.</p>
+<p>Then change only one or two bits of the access code while keeping the correlation threshold at zero.</p>
+<p>Before running the flowgraph, predict whether any <code>frame_start</code> tags will be generated.</p>
+<p>This simple test reinforces the distinction between recovering a bit stream and locating meaningful information within that stream.</p>
+<hr>
+</section>
+</section>
+<section id="reading-receiver-diagnostics-correctly" class="level2">
+<h2 class="anchored" data-anchor-id="reading-receiver-diagnostics-correctly">24.7 Reading Receiver Diagnostics Correctly</h2>
+<p>Across the experiments in this chapter, different impairments produced different visual signatures.</p>
+<p>These signatures are useful diagnostic clues, but they should never be treated as absolute rules without considering where the plot was measured and what other impairments are present.</p>
+<p>The following table summarizes the main observations.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Impairment or failure</th>
+<th>Eye-diagram signature</th>
+<th>Constellation signature</th>
+<th>Information-level consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Additive noise</td>
+<td>Traces become thicker and increasingly fuzzy</td>
+<td>Four clusters spread randomly</td>
+<td>Increasing symbol and bit errors; sufficiently strong noise corrupts the payload</td>
+</tr>
+<tr class="even">
+<td>Multipath</td>
+<td>Eye opening degrades because of ISI</td>
+<td>Structured spreading, arcs, or multiple clusters</td>
+<td>Symbol errors increase unless the channel is equalized</td>
+</tr>
+<tr class="odd">
+<td>CFO without carrier recovery</td>
+<td>I and Q become heavily smeared because the constellation continuously rotates</td>
+<td>Ring or rotating constellation</td>
+<td>Stable symbol decisions are lost; frame and payload recovery fail</td>
+</tr>
+<tr class="even">
+<td>Sample-rate mismatch without timing recovery</td>
+<td>Sampling position drifts through the eye</td>
+<td>Structured trajectories appear between symbol locations</td>
+<td>Symbol decisions become unreliable and payload recovery fails</td>
+</tr>
+<tr class="odd">
+<td>QPSK phase ambiguity</td>
+<td>Eye may remain usable</td>
+<td>Four clean clusters may still appear with ambiguous absolute orientation</td>
+<td>Bit mapping may be wrong despite a clean constellation; differential coding removes the ambiguity</td>
+</tr>
+<tr class="even">
+<td>Frame-synchronization failure</td>
+<td>Eye can remain open</td>
+<td>Constellation can remain clean</td>
+<td>Correct symbols and bits may exist, but the receiver cannot locate the payload</td>
+</tr>
+</tbody>
+</table>
+<p>Two principles are especially important.</p>
+<p>First:</p>
+<blockquote class="blockquote">
+<p><strong>Never interpret an eye diagram or constellation without knowing where in the receiver chain it was measured.</strong></p>
+</blockquote>
+<p>An eye measured before carrier recovery can look badly smeared because I and Q are rotating, even though timing information still exists and the downstream receiver ultimately recovers the symbols.</p>
+<p>An eye measured before an equalizer cannot show the improvement produced later by that equalizer.</p>
+<p>Second:</p>
+<blockquote class="blockquote">
+<p><strong>A clean constellation is evidence of successful symbol recovery, not necessarily successful information recovery.</strong></p>
+</blockquote>
+<p>The QPSK phase-ambiguity experiment demonstrated this directly. Four clean clusters can exist with an incorrect absolute symbol labeling.</p>
+<p>The frame-synchronization failure goes one step further. Even correct bits are insufficient if the receiver cannot identify their frame boundary.</p>
+<hr>
+</section>
+<section id="the-complete-receiver-as-a-hierarchy" class="level2">
+<h2 class="anchored" data-anchor-id="the-complete-receiver-as-a-hierarchy">24.8 The Complete Receiver as a Hierarchy</h2>
+<p>It is now useful to step away from individual GNU Radio blocks and look at what the complete receiver is actually doing.</p>
+<pre class="text"><code>Received waveform
+       ↓
+Matched filtering
+       ↓
+Carrier and timing synchronization
+       ↓
+Reliable symbol-rate samples
+       ↓
+Equalization when channel memory requires it
+       ↓
+Symbol decisions
+       ↓
+Differential decoding
+       ↓
+Recovered bits
+       ↓
+Frame synchronization
+       ↓
+Payload extraction
+       ↓
+Recovered information</code></pre>
+<p>This can be understood at three levels.</p>
+<section id="signal-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="signal-recovery">Signal Recovery</h3>
+<p>At the first level, the receiver attempts to produce a usable signal representation.</p>
+<p>Matched filtering improves the signal for symbol detection. Timing synchronization finds useful sampling instants. Carrier synchronization establishes a stable complex reference. Equalization compensates for channel memory when multipath creates ISI.</p>
+</section>
+<section id="symbol-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="symbol-recovery">Symbol Recovery</h3>
+<p>Once suitable samples are available, the receiver determines which constellation symbols were most likely transmitted.</p>
+<p>For QPSK, this means deciding among four possible symbol states.</p>
+<p>A clean constellation is strong evidence that this level is working.</p>
+</section>
+<section id="information-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="information-recovery">Information Recovery</h3>
+<p>Finally, the symbol decisions must be converted into the original information.</p>
+<p>Differential decoding resolves the way information was represented across successive QPSK states. Symbol indices are repacked into bits. Frame synchronization locates the known preamble. The payload is then extracted and interpreted.</p>
+<p>Only at this final level can we say that the communication system has accomplished its actual purpose.</p>
+<p>In Experiment 24.4, that final proof was simple:</p>
+<pre class="text"><code>Recovered payload: SDR</code></pre>
+<hr>
+</section>
+</section>
+<section id="practical-lessons-from-building-the-complete-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="practical-lessons-from-building-the-complete-receiver">24.9 Practical Lessons from Building the Complete Receiver</h2>
+<p>The complete receiver reveals several lessons that are difficult to appreciate when each algorithm is studied separately.</p>
+<p>Receiver stages interact. A synchronization block cannot be assumed to behave identically when its input sample rate, waveform, or preceding processing stage changes.</p>
+<p>Receiver ordering matters, but there is no single ordering that should be memorized without context. The correct architecture depends on the algorithms and signal conditions.</p>
+<p>Acquisition and tracking are different operating phases. A synchronization loop may produce transient errors while it is converging and then operate reliably after lock.</p>
+<p>Different impairments leave different signatures. Noise produces random spreading, multipath produces structured ISI, uncompensated CFO produces rotation, and timing mismatch produces sampling-related distortion.</p>
+<p>A correction stage solves a particular class of problem. Equalization does not remove CFO. Carrier synchronization does not remove random noise. Differential decoding does not replace carrier recovery. Frame synchronization does not improve the constellation.</p>
+<p>Most importantly, intermediate plots are diagnostic tools rather than the final definition of success.</p>
+<p>The ultimate question is not</p>
+<blockquote class="blockquote">
+<p>Does the constellation look good?</p>
+</blockquote>
+<p>It is</p>
+<blockquote class="blockquote">
+<p><strong>Did the receiver recover the intended information?</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">24.10 What We Learned</h2>
+<p>In this chapter, we combined the major receiver functions developed throughout the preceding chapters into progressively more complete single-carrier communication systems.</p>
+<p>We first established an ideal pulse-shaped QPSK baseline and used it to distinguish the information provided by an eye diagram from that provided by a constellation.</p>
+<p>We then integrated timing and carrier recovery. The experiment showed that individually working receiver blocks can interact when combined and that the ordering that worked for our Symbol Sync and Costas Loop implementation had to be established experimentally.</p>
+<p>Controlled channel impairments showed how the receiver responds to timing mismatch, carrier-frequency offset, and additive noise. In particular, we saw that CFO can heavily smear pre-carrier-recovery I/Q eye diagrams even when the downstream receiver successfully recovers the QPSK constellation.</p>
+<p>We then introduced a controlled multipath echo and observed genuine inter-symbol interference. Unlike random noise, the multipath distortion produced structured constellation trajectories. An adaptive LMS equalizer significantly tightened the recovered constellation.</p>
+<p>Next, we moved beyond visual symbol recovery and transmitted a known frame containing the text <code>SDR</code>. This exposed an important QPSK phase-ambiguity problem: a Costas Loop can produce a clean constellation while the absolute symbol labeling remains ambiguous. Differential encoding and decoding made the information insensitive to this constant quadrant ambiguity.</p>
+<p>The complete receiver then recovered the payload under carrier-frequency offset, sample-rate mismatch, and moderate noise simultaneously. Increasing the noise eventually produced actual payload errors, demonstrating the direct connection between constellation spreading and information corruption.</p>
+<p>Finally, we deliberately removed receiver functions. Without carrier recovery, CFO produced a rotating ring and no payload. Without timing recovery, sample-rate mismatch caused the sampling instants to drift and the constellation became strongly distorted. With an incorrect frame access code, the waveform and symbols could still be recovered, but the receiver could not locate the payload.</p>
+<p>The complete receiver can therefore be understood as a hierarchy:</p>
+<pre class="text"><code>Signal recovery
+      ↓
+Symbol recovery
+      ↓
+Information recovery</code></pre>
+<p>Successful digital communication requires all three.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">24.11 Connecting to the Next Chapter</h2>
+<p>We have now built a complete single-carrier digital receiver.</p>
+<p>It can recover timing, track carrier-frequency error, compensate for channel distortion, make symbol decisions, reconstruct bits, locate frames, and recover an actual payload.</p>
+<p>That is a significant achievement.</p>
+<p>But Experiment 24.3 also reminds us of a fundamental difficulty.</p>
+<p>Multipath creates delayed copies of the transmitted waveform. When the symbol period is long compared with the channel delay spread, the overlap between neighboring symbols may be manageable. As the symbol rate increases, however, the symbol period becomes shorter. The same physical multipath delay then occupies a larger fraction of a symbol interval.</p>
+<p>Inter-symbol interference becomes increasingly severe.</p>
+<p>An equalizer can compensate for this distortion, but a strongly frequency-selective channel can require an increasingly capable equalizer.</p>
+<p>This leads to a different question.</p>
+<blockquote class="blockquote">
+<p><strong>Instead of transmitting one high-rate symbol stream through a difficult frequency-selective channel, what if we divided the information among many slower symbol streams?</strong></p>
+</blockquote>
+<p>That idea leads naturally to multicarrier communication and, in particular, <strong>Orthogonal Frequency Division Multiplexing (OFDM)</strong>.</p>
+<p>In the next chapter, we will begin by asking why OFDM is useful and how multiple closely spaced carriers can coexist without interfering with one another.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter23.html" class="pagination-link" aria-label="Chapter 23: Frame Synchronization and Packet Detection">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter25.html" class="pagination-link" aria-label="Chapter 25: Why OFDM?">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 25: Why OFDM?</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

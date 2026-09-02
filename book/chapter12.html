@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 12: Why Modulation Exists – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter13.html" rel="next">
+<link href="../book/chapter11.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter12.html"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#the-information-signal-is-not-the-problem" id="toc-the-information-signal-is-not-the-problem" class="nav-link" data-scroll-target="#the-information-signal-is-not-the-problem">12.1 The Information Signal Is Not the Problem</a>
+  <ul class="collapse">
+  <li><a href="#why-do-we-often-compare-antenna-size-with-lambda4" id="toc-why-do-we-often-compare-antenna-size-with-lambda4" class="nav-link" data-scroll-target="#why-do-we-often-compare-antenna-size-with-lambda4">Why do we often compare antenna size with <span class="math inline">\(\lambda/4\)</span>?</a></li>
+  </ul></li>
+  <li><a href="#experiment-12.1-moving-information-away-from-baseband" id="toc-experiment-12.1-moving-information-away-from-baseband" class="nav-link" data-scroll-target="#experiment-12.1-moving-information-away-from-baseband">Experiment 12.1: Moving Information Away from Baseband</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings" id="toc-gnu-radio-settings" class="nav-link" data-scroll-target="#gnu-radio-settings">GNU Radio settings</a></li>
+  <li><a href="#why-are-there-negative-frequency-components-too" id="toc-why-are-there-negative-frequency-components-too" class="nav-link" data-scroll-target="#why-are-there-negative-frequency-components-too">Why are there negative-frequency components too?</a></li>
+  <li><a href="#modulation-does-not-just-move-one-tone" id="toc-modulation-does-not-just-move-one-tone" class="nav-link" data-scroll-target="#modulation-does-not-just-move-one-tone">12.2 Modulation Does Not Just Move One Tone</a></li>
+  </ul></li>
+  <li><a href="#experiment-12.2-translating-a-multi-frequency-message" id="toc-experiment-12.2-translating-a-multi-frequency-message" class="nav-link" data-scroll-target="#experiment-12.2-translating-a-multi-frequency-message">Experiment 12.2: Translating a Multi-Frequency Message</a>
+  <ul class="collapse">
+  <li><a href="#message-signal-sources" id="toc-message-signal-sources" class="nav-link" data-scroll-target="#message-signal-sources">Message Signal Sources</a></li>
+  <li><a href="#a-second-reason-for-modulation-many-transmitters-need-to-share-the-medium" id="toc-a-second-reason-for-modulation-many-transmitters-need-to-share-the-medium" class="nav-link" data-scroll-target="#a-second-reason-for-modulation-many-transmitters-need-to-share-the-medium">12.3 A Second Reason for Modulation: Many Transmitters Need to Share the Medium</a></li>
+  </ul></li>
+  <li><a href="#experiment-12.3-two-signals-on-different-carriers" id="toc-experiment-12.3-two-signals-on-different-carriers" class="nav-link" data-scroll-target="#experiment-12.3-two-signals-on-different-carriers">Experiment 12.3: Two Signals on Different Carriers</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings-1" id="toc-gnu-radio-settings-1" class="nav-link" data-scroll-target="#gnu-radio-settings-1">GNU Radio settings</a></li>
+  <li><a href="#what-does-tuning-a-radio-actually-mean" id="toc-what-does-tuning-a-radio-actually-mean" class="nav-link" data-scroll-target="#what-does-tuning-a-radio-actually-mean">12.4 What Does Tuning a Radio Actually Mean?</a></li>
+  </ul></li>
+  <li><a href="#experiment-12.4-selecting-one-radio-channel" id="toc-experiment-12.4-selecting-one-radio-channel" class="nav-link" data-scroll-target="#experiment-12.4-selecting-one-radio-channel">Experiment 12.4: Selecting One Radio Channel</a>
+  <ul class="collapse">
+  <li><a href="#bringing-the-information-back" id="toc-bringing-the-information-back" class="nav-link" data-scroll-target="#bringing-the-information-back">12.5 Bringing the Information Back</a></li>
+  </ul></li>
+  <li><a href="#experiment-12.5-recovering-the-original-message" id="toc-experiment-12.5-recovering-the-original-message" class="nav-link" data-scroll-target="#experiment-12.5-recovering-the-original-message">Experiment 12.5: Recovering the Original Message</a>
+  <ul class="collapse">
+  <li><a href="#transmitted-signals" id="toc-transmitted-signals" class="nav-link" data-scroll-target="#transmitted-signals">Transmitted Signals</a></li>
+  <li><a href="#receiver-channel-selection" id="toc-receiver-channel-selection" class="nav-link" data-scroll-target="#receiver-channel-selection">Receiver Channel Selection</a></li>
+  <li><a href="#message-recovery" id="toc-message-recovery" class="nav-link" data-scroll-target="#message-recovery">Message Recovery</a></li>
+  <li><a href="#transmitted-signals-1" id="toc-transmitted-signals-1" class="nav-link" data-scroll-target="#transmitted-signals-1">Transmitted Signals</a></li>
+  <li><a href="#receiver-channel-selection-1" id="toc-receiver-channel-selection-1" class="nav-link" data-scroll-target="#receiver-channel-selection-1">Receiver Channel Selection</a></li>
+  <li><a href="#message-recovery-1" id="toc-message-recovery-1" class="nav-link" data-scroll-target="#message-recovery-1">Message Recovery</a></li>
+  <li><a href="#why-is-the-recovered-signal-smaller" id="toc-why-is-the-recovered-signal-smaller" class="nav-link" data-scroll-target="#why-is-the-recovered-signal-smaller">12.6 Why Is the Recovered Signal Smaller?</a></li>
+  <li><a href="#we-have-built-a-small-communication-system" id="toc-we-have-built-a-small-communication-system" class="nav-link" data-scroll-target="#we-have-built-a-small-communication-system">12.7 We Have Built a Small Communication System</a></li>
+  <li><a href="#connecting-the-gnu-radio-experiment-to-a-real-radio" id="toc-connecting-the-gnu-radio-experiment-to-a-real-radio" class="nav-link" data-scroll-target="#connecting-the-gnu-radio-experiment-to-a-real-radio">12.8 Connecting the GNU Radio Experiment to a Real Radio</a></li>
+  <li><a href="#a-carrier-is-not-the-message" id="toc-a-carrier-is-not-the-message" class="nav-link" data-scroll-target="#a-carrier-is-not-the-message">12.9 A Carrier Is Not the Message</a></li>
+  <li><a href="#what-exactly-did-we-build" id="toc-what-exactly-did-we-build" class="nav-link" data-scroll-target="#what-exactly-did-we-build">12.10 What Exactly Did We Build?</a></li>
+  <li><a href="#real-rf-signals-and-complex-iq-signals" id="toc-real-rf-signals-and-complex-iq-signals" class="nav-link" data-scroll-target="#real-rf-signals-and-complex-iq-signals">12.11 Real RF Signals and Complex I/Q Signals</a></li>
+  <li><a href="#why-we-did-not-filter-away-the-negative-frequencies" id="toc-why-we-did-not-filter-away-the-negative-frequencies" class="nav-link" data-scroll-target="#why-we-did-not-filter-away-the-negative-frequencies">12.12 Why We Did Not Filter Away the Negative Frequencies</a></li>
+  <li><a href="#modulated-signals-occupy-bandwidth" id="toc-modulated-signals-occupy-bandwidth" class="nav-link" data-scroll-target="#modulated-signals-occupy-bandwidth">12.13 Modulated Signals Occupy Bandwidth</a></li>
+  <li><a href="#frequency-also-affects-propagation" id="toc-frequency-also-affects-propagation" class="nav-link" data-scroll-target="#frequency-also-affects-propagation">12.14 Frequency Also Affects Propagation</a></li>
+  </ul></li>
+  <li><a href="#so-why-does-modulation-exist" id="toc-so-why-does-modulation-exist" class="nav-link" data-scroll-target="#so-why-does-modulation-exist">12.15 So Why Does Modulation Exist?</a>
+  <ul class="collapse">
+  <li><a href="#practical-radiation" id="toc-practical-radiation" class="nav-link" data-scroll-target="#practical-radiation">Practical radiation</a></li>
+  <li><a href="#multiple-users" id="toc-multiple-users" class="nav-link" data-scroll-target="#multiple-users">Multiple users</a></li>
+  <li><a href="#channel-selection" id="toc-channel-selection" class="nav-link" data-scroll-target="#channel-selection">Channel selection</a></li>
+  <li><a href="#suitable-frequency-ranges" id="toc-suitable-frequency-ranges" class="nav-link" data-scroll-target="#suitable-frequency-ranges">Suitable frequency ranges</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">12.16 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">12.17 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter12.html"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>Why can’t we simply transmit our original low-frequency information signal directly?</strong></p>
+<p>So far, most of the signals in this book have lived comfortably inside GNU Radio.</p>
+<p>We have generated sinusoids, sampled them, looked at their spectra, worked with real and complex signals, filtered unwanted frequencies, studied convolution, and finally used correlation and matched filtering to detect known signals in noise.</p>
+<p>But there is still an important gap in our receiver story.</p>
+<p>Suppose the information we want to send is ordinary speech, music, or some slowly varying sensor signal. Why do radio systems not simply feed that low-frequency information directly to an antenna?</p>
+<p>Why do we need a carrier at all?</p>
+<p>This chapter is about answering that question.</p>
+<p>We will not begin by memorizing different modulation schemes. Instead, we will build the idea step by step.</p>
+<p>First, we will look at what goes wrong when the information itself is at a very low frequency. Then we will use multiplication to move that information to another part of the spectrum. After that, we will place two different messages around two different carrier frequencies, combine them, select one of them at the receiver, and finally recover the original message.</p>
+<p>By the end of the chapter, we will have built a small but complete communication chain:</p>
+<p>``` Information | v Modulation | v Different frequency region | v Shared medium | v Channel selection | v Demodulation | v Recovered information ```</p>
+<p>The purpose is not yet to study every type of analog modulation. That comes next.</p>
+<p>For now, we want to understand <strong>why modulation exists in the first place</strong>.</p>
+<hr>
+</section>
+<section id="the-information-signal-is-not-the-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-information-signal-is-not-the-problem">12.1 The Information Signal Is Not the Problem</h2>
+<p>Suppose our information is a 1 kHz audio tone:</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi 1000t).
+\]</span></p>
+<p>There is nothing wrong with this signal as information.</p>
+<p>We can send a 1 kHz electrical signal through a wire. Audio circuits routinely handle signals in this frequency range.</p>
+<p>The problem begins when we want to <strong>radiate the signal efficiently through space using an antenna</strong>.</p>
+<p>An electromagnetic wave has a wavelength related to its frequency by</p>
+<p><span class="math display">\[
+\lambda=\frac{c}{f},
+\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">\(\lambda\)</span> is the wavelength,</li>
+<li><span class="math inline">\(c\)</span> is the speed of light, approximately <span class="math inline">\(3\times10^8\)</span> m/s,</li>
+<li><span class="math inline">\(f\)</span> is the frequency.</li>
+</ul>
+<p>For a 1 kHz electromagnetic wave,</p>
+<p><span class="math display">\[
+\lambda = \frac{3\times10^8}{1000} = 300\,000\text{ m}.
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\lambda=300\text{ km}.
+\]</span></p>
+<p>That is an enormous wavelength.</p>
+<section id="why-do-we-often-compare-antenna-size-with-lambda4" class="level3">
+<h3 class="anchored" data-anchor-id="why-do-we-often-compare-antenna-size-with-lambda4">Why do we often compare antenna size with <span class="math inline">\(\lambda/4\)</span>?</h3>
+<p>At this point, a natural question is:</p>
+<blockquote class="blockquote">
+<p>Why do antenna discussions suddenly start dividing the wavelength by four?</p>
+</blockquote>
+<p>An antenna does not have to be exactly one quarter wavelength long. There are many antenna types, and practical antennas can also be electrically shortened.</p>
+<p>However, antenna dimensions are strongly related to wavelength. Two very common resonant structures are the half-wave dipole, whose total length is approximately</p>
+<p><span class="math display">\[
+L\approx\frac{\lambda}{2},
+\]</span></p>
+<p>and the quarter-wave monopole, whose length is approximately</p>
+<p><span class="math display">\[
+L\approx\frac{\lambda}{4}.
+\]</span></p>
+<p>A quarter-wave monopole is therefore a useful reference when we simply want to understand the physical scale of an antenna at a particular frequency.</p>
+<p>For 1 kHz,</p>
+<p><span class="math display">\[
+L\approx\frac{300\text{ km}}{4}=75\text{ km}.
+\]</span></p>
+<p>This does <strong>not</strong> mean that radiation at 1 kHz is impossible unless we build a 75 km antenna. It means that an antenna that is tiny compared with such an enormous wavelength becomes difficult to use as an efficient practical radiator, with additional matching and bandwidth challenges.</p>
+<p>Now compare that with 100 MHz:</p>
+<p><span class="math display">\[
+\lambda = \frac{3\times10^8}{100\times10^6} = 3\text{ m}.
+\]</span></p>
+<p>A quarter wavelength is then</p>
+<p><span class="math display">\[
+L\approx\frac{3}{4}=0.75\text{ m}.
+\]</span></p>
+<p>The scale has changed completely.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Frequency</th>
+<th style="text-align: right;">Wavelength</th>
+<th style="text-align: right;">Approx. quarter wavelength</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1 kHz</td>
+<td style="text-align: right;">300 km</td>
+<td style="text-align: right;">75 km</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">100 kHz</td>
+<td style="text-align: right;">3 km</td>
+<td style="text-align: right;">750 m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1 MHz</td>
+<td style="text-align: right;">300 m</td>
+<td style="text-align: right;">75 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10 MHz</td>
+<td style="text-align: right;">30 m</td>
+<td style="text-align: right;">7.5 m</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">100 MHz</td>
+<td style="text-align: right;">3 m</td>
+<td style="text-align: right;">0.75 m</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1 GHz</td>
+<td style="text-align: right;">0.3 m</td>
+<td style="text-align: right;">7.5 cm</td>
+</tr>
+</tbody>
+</table>
+<p>This gives us the first major reason for using a carrier:</p>
+<blockquote class="blockquote">
+<p><strong>Higher-frequency electromagnetic waves allow practical antenna dimensions and much more convenient radio transmission.</strong></p>
+</blockquote>
+<p>But this creates another problem.</p>
+<p>Our information is still at 1 kHz.</p>
+<p>How do we move low-frequency information to a much higher frequency without losing the information itself?</p>
+<p>That is where modulation begins.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-12.1-moving-information-away-from-baseband" class="level1">
+<h1>Experiment 12.1: Moving Information Away from Baseband</h1>
+<p>We already know how a 1 kHz sinusoid looks in time and frequency, so there is no reason to repeat another basic Signal Source experiment.</p>
+<p>Instead, we will immediately try something new.</p>
+<p>Let the message be</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi f_m t),
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+f_m=1\text{ kHz}.
+\]</span></p>
+<p>Now create another sinusoid at</p>
+<p><span class="math display">\[
+f_c=10\text{ kHz}.
+\]</span></p>
+<p>We will call this the <strong>carrier</strong>:</p>
+<p><span class="math display">\[
+c(t)=\cos(2\pi f_c t).
+\]</span></p>
+<p>The carrier by itself contains none of our 1 kHz message information. It is simply a higher-frequency sinusoid.</p>
+<p>Now multiply the two signals:</p>
+<p><span class="math display">\[
+s(t)=m(t)c(t).
+\]</span></p>
+<p>For this experiment, use</p>
+<p>``` samp_rate = 64k ```</p>
+<p>so that the Nyquist frequency is</p>
+<p><span class="math display">\[
+f_N=\frac{64\text{ kHz}}{2}=32\text{ kHz}.
+\]</span></p>
+<p>This gives us plenty of room to observe the frequencies produced by the multiplication.</p>
+<section id="gnu-radio-settings" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings">GNU Radio settings</h3>
+<p>Use two <strong>Signal Source</strong> blocks.</p>
+<p>For the message:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Waveform</td>
+<td>Cosine</td>
+</tr>
+<tr class="odd">
+<td>Frequency</td>
+<td>`1k`</td>
+</tr>
+<tr class="even">
+<td>Amplitude</td>
+<td>`1`</td>
+</tr>
+<tr class="odd">
+<td>Offset</td>
+<td>`0`</td>
+</tr>
+<tr class="even">
+<td>Initial Phase</td>
+<td>`0`</td>
+</tr>
+<tr class="odd">
+<td>Sample Rate</td>
+<td>`samp_rate`</td>
+</tr>
+</tbody>
+</table>
+<p>For the carrier:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Waveform</td>
+<td>Cosine</td>
+</tr>
+<tr class="odd">
+<td>Frequency</td>
+<td>`10k`</td>
+</tr>
+<tr class="even">
+<td>Amplitude</td>
+<td>`1`</td>
+</tr>
+<tr class="odd">
+<td>Offset</td>
+<td>`0`</td>
+</tr>
+<tr class="even">
+<td>Initial Phase</td>
+<td>`0`</td>
+</tr>
+<tr class="odd">
+<td>Sample Rate</td>
+<td>`samp_rate`</td>
+</tr>
+</tbody>
+</table>
+<p>Connect both to a <strong>Multiply</strong> block.</p>
+<p>Use a Throttle at</p>
+<p>``` samp_rate ```</p>
+<p>because this is a simulated flowgraph with no hardware source or sink controlling the sample rate.</p>
+<p>Use a QT GUI Frequency Sink with three inputs so that we can compare:</p>
+<ul>
+<li>`Message`</li>
+<li>`Carrier`</li>
+<li>`Message * Carrier`</li>
+</ul>
+<p>A useful Frequency Sink configuration is:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>FFT Size</td>
+<td>`2048`</td>
+</tr>
+<tr class="even">
+<td>Center Frequency</td>
+<td>`0`</td>
+</tr>
+<tr class="odd">
+<td>Bandwidth</td>
+<td>`samp_rate`</td>
+</tr>
+</tbody>
+</table>
+<p>The complete flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp01_frequency_translation_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Frequency translation flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp01_frequency_translation.png" class="img-fluid figure-img"></p>
+<figcaption>Frequency translation</figcaption>
+</figure>
+</div>
+<p>The blue message appears at</p>
+<p><span class="math display">\[
+f=\pm1\text{ kHz},
+\]</span></p>
+<p>and the red carrier appears at</p>
+<p><span class="math display">\[
+f=\pm10\text{ kHz}.
+\]</span></p>
+<p>Both are real-valued cosines, so the positive- and negative-frequency components appear as mirror pairs.</p>
+<p>The interesting part is the green trace.</p>
+<p>After multiplication, the new positive-frequency components appear at approximately</p>
+<p><span class="math display">\[
+9\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+11\text{ kHz}.
+\]</span></p>
+<p>There is no green component at the original 1 kHz location, and there is no green component exactly at 10 kHz.</p>
+<p>Why?</p>
+<p>Now the mathematics explains what GNU Radio has already shown us.</p>
+<p>Using</p>
+<p><span class="math display">\[
+\cos A\cos B = \frac{1}{2}\cos(A-B) + \frac{1}{2}\cos(A+B),
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+s(t) = \cos(2\pi f_m t)\cos(2\pi f_c t)
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+s(t) = \frac{1}{2}\cos\left[2\pi(f_c-f_m)t\right] + \frac{1}{2}\cos\left[2\pi(f_c+f_m)t\right].
+\]</span></p>
+<p>With</p>
+<p><span class="math display">\[
+f_m=1\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_c=10\text{ kHz},
+\]</span></p>
+<p>the two positive-frequency components are</p>
+<p><span class="math display">\[
+f_c-f_m=9\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_c+f_m=11\text{ kHz}.
+\]</span></p>
+<p>So</p>
+<p><span class="math display">\[
+s(t) = \frac{1}{2}\cos(2\pi 9000t) + \frac{1}{2}\cos(2\pi 11000t).
+\]</span></p>
+<p>GNU Radio has shown us our first frequency translation.</p>
+<p>The component below the carrier,</p>
+<p><span class="math display">\[
+f_c-f_m,
+\]</span></p>
+<p>is called the <strong>lower sideband</strong>.</p>
+<p>The component above the carrier,</p>
+<p><span class="math display">\[
+f_c+f_m,
+\]</span></p>
+<p>is called the <strong>upper sideband</strong>.</p>
+<p>For this experiment,</p>
+<p><span class="math display">\[
+\text{LSB}=9\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\text{USB}=11\text{ kHz}.
+\]</span></p>
+<p>The original message information has not disappeared. Its spectral structure has been moved to a region around the carrier.</p>
+</section>
+<section id="why-are-there-negative-frequency-components-too" class="level3">
+<h3 class="anchored" data-anchor-id="why-are-there-negative-frequency-components-too">Why are there negative-frequency components too?</h3>
+<p>Because all the signals in this experiment are real-valued.</p>
+<p>For a real signal,</p>
+<p><span class="math display">\[
+X(-f)=X^*(f).
+\]</span></p>
+<p>The negative-frequency half is therefore the conjugate mirror of the positive-frequency half.</p>
+<p>The components at <span class="math inline">\(-9\)</span> kHz and <span class="math inline">\(-11\)</span> kHz are not another radio transmission that we need to remove. Together with the positive-frequency components, they form the mathematical Fourier representation of one real waveform.</p>
+<p>This is also different from the terms <strong>lower sideband</strong> and <strong>upper sideband</strong>.</p>
+<p>On the positive-frequency side, 9 kHz is the lower sideband and 11 kHz is the upper sideband. Their negative-frequency counterparts are simply the corresponding mirror components.</p>
+<p>For convenience, we will often discuss only the positive-frequency side of a real RF spectrum.</p>
+<hr>
+<blockquote class="blockquote">
+<p><strong>### GNU Radio Toolbox: Multiply</strong></p>
+<p><strong>Multiply</strong> multiplies its input streams sample by sample.</p>
+<p>If the two inputs are sinusoids at frequencies <span class="math inline">\(f_1\)</span> and <span class="math inline">\(f_2\)</span>, multiplication creates components at the sum and difference frequencies:</p>
+<p><span class="math display">\[
+f_1+f_2 &gt;
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+|f_1-f_2|. &gt;
+\]</span></p>
+<p>This makes multiplication one of the fundamental operations used for frequency translation, mixing, modulation, and demodulation.</p>
+<p>We have used multiplication in simpler contexts before, but here it takes on its communication-system meaning: it moves information from one frequency region to another.</p>
+</blockquote>
+<hr>
+</section>
+<section id="modulation-does-not-just-move-one-tone" class="level2">
+<h2 class="anchored" data-anchor-id="modulation-does-not-just-move-one-tone">12.2 Modulation Does Not Just Move One Tone</h2>
+<p>Experiment 12.1 used a single 1 kHz message.</p>
+<p>That makes the result easy to understand, but real information is rarely a single sinusoid.</p>
+<p>Speech contains many frequency components. Music contains even more. A sensor waveform can also occupy a continuous band of frequencies.</p>
+<p>So the next question is more important:</p>
+<blockquote class="blockquote">
+<p>If a message contains several frequencies, does multiplication move the whole message spectrum?</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="experiment-12.2-translating-a-multi-frequency-message" class="level1">
+<h1>Experiment 12.2: Translating a Multi-Frequency Message</h1>
+<p>Create three message components:</p>
+<p><span class="math display">\[
+f_1=500\text{ Hz},
+\]</span></p>
+<p><span class="math display">\[
+f_2=1\text{ kHz},
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_3=2\text{ kHz}.
+\]</span></p>
+<p>Add them together:</p>
+<p><span class="math display">\[
+m(t) = \cos(2\pi500t) + \cos(2\pi1000t) + \cos(2\pi2000t).
+\]</span></p>
+<p>Then multiply the complete message by the same 10 kHz carrier.</p>
+<p>The important point is that we are not separately modulating three unrelated signals. The Add block first creates one message containing three frequency components, and the complete message is then passed to the Multiply block.</p>
+<p>Use:</p>
+<p>``` samp_rate = 64k ```</p>
+<section id="message-signal-sources" class="level3">
+<h3 class="anchored" data-anchor-id="message-signal-sources">Message Signal Sources</h3>
+<p>Use three Float Signal Sources:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Frequency</th>
+<th>Amplitude Waveform</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Message component 1</td>
+<td>`500`</td>
+<td>`1` Cosine</td>
+</tr>
+<tr class="even">
+<td>Message component 2</td>
+<td>`1k`</td>
+<td>`1` Cosine</td>
+</tr>
+<tr class="odd">
+<td>Message component 3</td>
+<td>`2k`</td>
+<td>`1` Cosine</td>
+</tr>
+</tbody>
+</table>
+<p>All three use</p>
+<p>``` Sample Rate = samp_rate Offset = 0 Initial Phase = 0 ```</p>
+<p>Add the three signals using an <strong>Add</strong> block.</p>
+<p>The carrier remains:</p>
+<p>``` Frequency = 10k Amplitude = 1 Waveform = Cosine Sample Rate = samp_rate ```</p>
+<p>Multiply the combined message by the carrier.</p>
+<p>Use a QT GUI Frequency Sink to compare:</p>
+<ul>
+<li>`Message`</li>
+<li>`Carrier`</li>
+<li>`Message * Carrier`</li>
+</ul>
+<p>The flowgraph is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp02_multitone_translation_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Multitone translation flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp02_multitone_translation.png" class="img-fluid figure-img"></p>
+<figcaption>Multitone translation</figcaption>
+</figure>
+</div>
+<p>Before modulation, the positive-frequency message components are</p>
+<p><span class="math display">\[
+0.5,\quad1,\quad2\text{ kHz}.
+\]</span></p>
+<p>After multiplication by the 10 kHz carrier, every component produces a lower and an upper translated component.</p>
+<p>** ———————————————————————–** Original message Lower sideband Upper sideband | component | component | component | | — | — | — | | 0.5 kHz | 9.5 kHz | 10.5 kHz |</p>
+<pre><code>                1 kHz                   9 kHz                  11 kHz
+
+                2 kHz                   8 kHz                  12 kHz</code></pre>
+<p>** ———————————————————————–**</p>
+<p>The green trace therefore occupies a region around 10 kHz.</p>
+<p>This is a much more useful way to think about modulation:</p>
+<blockquote class="blockquote">
+<p><strong>Modulation can translate the structure of an entire baseband spectrum to a new frequency region.</strong></p>
+</blockquote>
+<p>If the original message occupied a continuous baseband from 0 to <span class="math inline">\(B\)</span>, multiplication by a carrier at <span class="math inline">\(f_c\)</span> would create translated spectral content around the carrier, extending from</p>
+<p><span class="math display">\[
+f_c-B
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+f_c+B.
+\]</span></p>
+<p>The message has not been converted into different information. Its frequency location has changed.</p>
+<p>That distinction matters.</p>
+<p>When we say that a radio station transmits around 100 MHz, we do not mean that a human voice has somehow become a 100 MHz audio tone. We mean that the low-frequency information has been represented through variations of a much higher-frequency RF waveform.</p>
+<hr>
+</section>
+<section id="a-second-reason-for-modulation-many-transmitters-need-to-share-the-medium" class="level2">
+<h2 class="anchored" data-anchor-id="a-second-reason-for-modulation-many-transmitters-need-to-share-the-medium">12.3 A Second Reason for Modulation: Many Transmitters Need to Share the Medium</h2>
+<p>The antenna-size argument already gives us a strong reason to move information to higher frequencies.</p>
+<p>But modulation solves another major problem.</p>
+<p>Imagine two radio stations.</p>
+<p>Both may transmit speech and music. Their original audio signals can occupy almost the same baseband frequency range.</p>
+<p>If both stations simply sent their original low-frequency waveforms into the same medium, their spectra would overlap.</p>
+<p>A receiver would hear a mixture, and there would be no simple frequency-based way to say:</p>
+<blockquote class="blockquote">
+<p>I want Station A, not Station B.</p>
+</blockquote>
+<p>Carriers give us a way to place different messages in different parts of the spectrum.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-12.3-two-signals-on-different-carriers" class="level1">
+<h1>Experiment 12.3: Two Signals on Different Carriers</h1>
+<p>We will create two simplified radio stations.</p>
+<p>Station A uses</p>
+<p><span class="math display">\[
+f_{mA}=500\text{ Hz}
+\]</span></p>
+<p>with a carrier at</p>
+<p><span class="math display">\[
+f_{cA}=10\text{ kHz}.
+\]</span></p>
+<p>Station B uses</p>
+<p><span class="math display">\[
+f_{mB}=2\text{ kHz}
+\]</span></p>
+<p>with a carrier at</p>
+<p><span class="math display">\[
+f_{cB}=20\text{ kHz}.
+\]</span></p>
+<p>The two modulated signals are</p>
+<p><span class="math display">\[
+s_A(t) = m_A(t)\cos(2\pi f_{cA}t)
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+s_B(t) = m_B(t)\cos(2\pi f_{cB}t).
+\]</span></p>
+<p>Finally, add them:</p>
+<p><span class="math display">\[
+s(t)=s_A(t)+s_B(t).
+\]</span></p>
+<p>Use</p>
+<p>``` samp_rate = 64k ```</p>
+<p>throughout the experiment.</p>
+<section id="gnu-radio-settings-1" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings-1">GNU Radio settings</h3>
+<p>Station A:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Block</th>
+<th>Frequency</th>
+<th>Amplitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Message Signal Source</td>
+<td>`500`</td>
+<td>`1`</td>
+</tr>
+<tr class="even">
+<td>Carrier Signal Source</td>
+<td>`10k`</td>
+<td>`1`</td>
+</tr>
+</tbody>
+</table>
+<p>Station B:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Block</th>
+<th>Frequency</th>
+<th>Amplitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Message Signal Source</td>
+<td>`2k`</td>
+<td>`1`</td>
+</tr>
+<tr class="even">
+<td>Carrier Signal Source</td>
+<td>`20k`</td>
+<td>`1`</td>
+</tr>
+</tbody>
+</table>
+<p>All four Signal Sources use:</p>
+<p>``` Output Type = Float Waveform = Cosine Offset = 0 Initial Phase = 0 Sample Rate = samp_rate ```</p>
+<p>Use one Multiply block for each station and an Add block to combine the two modulated signals.</p>
+<p>Use a QT GUI Frequency Sink with three traces:</p>
+<ul>
+<li>`Station A`</li>
+<li>`Station B`</li>
+<li>`Combined Signal`</li>
+</ul>
+<p>A useful title for the Options block and display is:</p>
+<p>``` Two Signals on Different Carriers ```</p>
+<p>The flowgraph is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp03_two_signals_different_carriers_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Two signals on different carriers flowgraph</figcaption>
+</figure>
+</div>
+<p>For Station A,</p>
+<p><span class="math display">\[
+f_{cA}-f_{mA} = 10-0.5 = 9.5\text{ kHz},
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{cA}+f_{mA} = 10+0.5 = 10.5\text{ kHz}.
+\]</span></p>
+<p>For Station B,</p>
+<p><span class="math display">\[
+f_{cB}-f_{mB} = 20-2 = 18\text{ kHz},
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{cB}+f_{mB} = 20+2 = 22\text{ kHz}.
+\]</span></p>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp03_two_signals_different_carriers.png" class="img-fluid figure-img"></p>
+<figcaption>Two signals on different carriers</figcaption>
+</figure>
+</div>
+<p>The green Combined Signal contains both transmissions at the same time.</p>
+<p>Yet the two messages occupy different frequency regions.</p>
+<p>Station A is around 10 kHz.</p>
+<p>Station B is around 20 kHz.</p>
+<p>This is the basic idea behind <strong>frequency-division multiplexing</strong>: different signals can share the same medium by occupying different frequency regions.</p>
+<p>We do not need a full treatment of multiplexing here. What matters is the communication idea:</p>
+<blockquote class="blockquote">
+<p><strong>A carrier gives a transmitter an address in frequency.</strong></p>
+</blockquote>
+<p>That is why many radio stations can be present in the air at the same time.</p>
+<hr>
+</section>
+<section id="what-does-tuning-a-radio-actually-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-tuning-a-radio-actually-mean">12.4 What Does Tuning a Radio Actually Mean?</h2>
+<p>Experiment 12.3 gives us a useful connection to everyday radio.</p>
+<p>Suppose several stations are transmitting at the same time.</p>
+<p>One may occupy a channel around one RF frequency and another may occupy a different channel.</p>
+<p>The antenna at our receiver does not magically receive only the station we want. Many signals can arrive at the antenna together.</p>
+<p>Conceptually:</p>
+<p>``` Station A ──► frequency region A ──┐ │ Station B ──► frequency region B ──┼──► Air ──► Receiver antenna │ Station C ──► frequency region C ──┘ ```</p>
+<p>The receiver must decide which part of the spectrum it wants.</p>
+<p>This is what makes the familiar act of <strong>tuning</strong> a radio meaningful.</p>
+<p>When we tune an FM radio to a station around 100 MHz, the music itself is not a 100 MHz sound. Human ears could never hear such a frequency.</p>
+<p>The voice or music is still low-frequency information.</p>
+<p>The transmitter has used modulation to place that information into an RF channel around its assigned carrier frequency.</p>
+<p>At the receiver, tuning means selecting the desired frequency region.</p>
+<p>But there is another important point:</p>
+<blockquote class="blockquote">
+<p><strong>Tuning is not the same as demodulation.</strong></p>
+</blockquote>
+<p>Selecting a station gives us the desired <strong>modulated channel</strong>.</p>
+<p>We still have to recover the original information from it.</p>
+<p>The receiver story is therefore</p>
+<p>``` Many received channels | v Select desired channel | v Desired modulated signal | v Demodulate | v Original information ```</p>
+<p>We can demonstrate both steps in GNU Radio.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-12.4-selecting-one-radio-channel" class="level1">
+<h1>Experiment 12.4: Selecting One Radio Channel</h1>
+<p>Continue from Experiment 12.3.</p>
+<p>The combined signal contains Station A around 10 kHz and Station B around 20 kHz.</p>
+<p>Now imagine that this combined signal has arrived at the receiver and we want Station A.</p>
+<p>We already know a tool that can select a particular frequency region: a <strong>band-pass filter</strong>.</p>
+<p>Station A contains components at</p>
+<p><span class="math display">\[
+9.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+10.5\text{ kHz}.
+\]</span></p>
+<p>So use a Band-Pass Filter with:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Decimation</td>
+<td>`1`</td>
+</tr>
+<tr class="even">
+<td>Gain</td>
+<td>`1`</td>
+</tr>
+<tr class="odd">
+<td>Sample Rate</td>
+<td>`samp_rate`</td>
+</tr>
+<tr class="even">
+<td>Low Cutoff Frequency</td>
+<td>`9k`</td>
+</tr>
+<tr class="odd">
+<td>High Cutoff Frequency</td>
+<td>`11k`</td>
+</tr>
+<tr class="even">
+<td>Transition Width</td>
+<td>`1k`</td>
+</tr>
+<tr class="odd">
+<td>Window</td>
+<td>Hamming</td>
+</tr>
+</tbody>
+</table>
+<p>Use two QT GUI Frequency Sinks.</p>
+<p>The first is titled:</p>
+<p>``` Transmitted Signals ```</p>
+<p>and displays:</p>
+<ul>
+<li>`Station A`</li>
+<li>`Station B`</li>
+<li>`Combined Signal`</li>
+</ul>
+<p>The second is titled:</p>
+<p>``` Receiver Channel Selection ```</p>
+<p>and displays:</p>
+<ul>
+<li>`Combined Received Signal`</li>
+<li>`Selected Station A`</li>
+</ul>
+<p>A clear GUI arrangement is to place the two sinks in separate rows or otherwise give each enough horizontal space to make the frequency components easy to distinguish.</p>
+<p>The complete flowgraph is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp04_selecting_radio_channel_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Selecting one radio channel flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp04_selecting_radio_channel.png" class="img-fluid figure-img"></p>
+<figcaption>Selecting one radio channel</figcaption>
+</figure>
+</div>
+<p>The upper display shows both transmitted stations.</p>
+<p>In the receiver display, the blue Combined Received Signal still contains both channels.</p>
+<p>After the Band-Pass Filter, the red Selected Station A trace remains around</p>
+<p><span class="math display">\[
+9.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+10.5\text{ kHz},
+\]</span></p>
+<p>while the components belonging to Station B around 18 kHz and 22 kHz are strongly suppressed.</p>
+<p>This is our simplified model of radio channel selection.</p>
+<p>The real RF front end of a radio or SDR can perform tuning and channel selection using RF filters, mixers, local oscillators, complex downconversion, and digital filters. Our Band-Pass Filter is not intended to reproduce every detail of that hardware.</p>
+<p>It is showing the central idea:</p>
+<blockquote class="blockquote">
+<p><strong>Different carriers place signals in different spectral regions, and the receiver can select the region containing the signal it wants.</strong></p>
+</blockquote>
+<p>But look carefully at the selected signal.</p>
+<p>It is still around 10 kHz.</p>
+<p>Our original message was at 500 Hz.</p>
+<p>We have selected the correct station, but we have not yet recovered its information.</p>
+<p>That requires demodulation.</p>
+<hr>
+<section id="bringing-the-information-back" class="level2">
+<h2 class="anchored" data-anchor-id="bringing-the-information-back">12.5 Bringing the Information Back</h2>
+<p>Station A began as</p>
+<p><span class="math display">\[
+m_A(t)=\cos(2\pi500t).
+\]</span></p>
+<p>After modulation by the 10 kHz carrier, its positive-frequency components moved to</p>
+<p><span class="math display">\[
+9.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+10.5\text{ kHz}.
+\]</span></p>
+<p>The Band-Pass Filter selected those components.</p>
+<p>Now suppose the receiver multiplies the selected signal by another 10 kHz sinusoid.</p>
+<p>This receiver sinusoid is called a <strong>local oscillator</strong>, or LO.</p>
+<p>Consider the 9.5 kHz component.</p>
+<p>Mixing it with 10 kHz creates</p>
+<p><span class="math display">\[
+10-9.5=0.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+10+9.5=19.5\text{ kHz}.
+\]</span></p>
+<p>Now consider the 10.5 kHz component.</p>
+<p>It creates</p>
+<p><span class="math display">\[
+10.5-10=0.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+10.5+10=20.5\text{ kHz}.
+\]</span></p>
+<p>Something very useful has happened.</p>
+<p>The original</p>
+<p><span class="math display">\[
+500\text{ Hz}
+\]</span></p>
+<p>frequency has reappeared.</p>
+<p>But it is accompanied by unwanted high-frequency mixing products around 20 kHz.</p>
+<p>This time, a low-pass filter is exactly what we need.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-12.5-recovering-the-original-message" class="level1">
+<h1>Experiment 12.5: Recovering the Original Message</h1>
+<p>Extend the receiver from Experiment 12.4.</p>
+<p>After the Band-Pass Filter, multiply Selected Station A by a new 10 kHz Signal Source.</p>
+<p>Use this new Signal Source as the receiver local oscillator:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Waveform</td>
+<td>Cosine</td>
+</tr>
+<tr class="odd">
+<td>Frequency</td>
+<td>`10k`</td>
+</tr>
+<tr class="even">
+<td>Amplitude</td>
+<td>`1`</td>
+</tr>
+<tr class="odd">
+<td>Offset</td>
+<td>`0`</td>
+</tr>
+<tr class="even">
+<td>Initial Phase</td>
+<td>`0`</td>
+</tr>
+<tr class="odd">
+<td>Sample Rate</td>
+<td>`samp_rate`</td>
+</tr>
+</tbody>
+</table>
+<p>Then pass the mixer output through a Low-Pass Filter.</p>
+<p>Use:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Decimation</td>
+<td>`1`</td>
+</tr>
+<tr class="even">
+<td>Gain</td>
+<td>`1`</td>
+</tr>
+<tr class="odd">
+<td>Sample Rate</td>
+<td>`samp_rate`</td>
+</tr>
+<tr class="even">
+<td>Cutoff Frequency</td>
+<td>`1k`</td>
+</tr>
+<tr class="odd">
+<td>Transition Width</td>
+<td>`300`</td>
+</tr>
+<tr class="even">
+<td>Window</td>
+<td>Hamming</td>
+</tr>
+</tbody>
+</table>
+<p>Why a 1 kHz cutoff?</p>
+<p>Our desired message is at 500 Hz, so</p>
+<p><span class="math display">\[
+500\text{ Hz}&lt;1\text{ kHz}.
+\]</span></p>
+<p>The unwanted mixer products are around 19.5 kHz and 20.5 kHz, far outside the low-pass region.</p>
+<p>The LPF therefore passes the recovered message and rejects the high-frequency products.</p>
+<p>For this experiment, use three QT GUI Frequency Sinks.</p>
+<section id="transmitted-signals" class="level3">
+<h3 class="anchored" data-anchor-id="transmitted-signals">Transmitted Signals</h3>
+<p>Display:</p>
+<ul>
+<li>`Station A`</li>
+<li>`Station B`</li>
+<li>`Combined Signal`</li>
+</ul>
+</section>
+<section id="receiver-channel-selection" class="level3">
+<h3 class="anchored" data-anchor-id="receiver-channel-selection">Receiver Channel Selection</h3>
+<p>Display:</p>
+<ul>
+<li>`Combined Received Signal`</li>
+<li>`Selected Station A`</li>
+</ul>
+</section>
+<section id="message-recovery" class="level3">
+<h3 class="anchored" data-anchor-id="message-recovery">Message Recovery</h3>
+<p>Display:</p>
+<ul>
+<li>`Original Message`</li>
+<li>`After Receiver Mixer`</li>
+<li>`Recovered Message`</li>
+</ul>
+<p>A useful GUI layout is:</p>
+<p>``` ┌────────────────────────┬────────────────────────┐ │ Transmitted Signals │ Receiver Channel │ │ │ Selection │ └────────────────────────┴────────────────────────┘ ┌─────────────────────────────────────────────────┐ │ Message Recovery │ └─────────────────────────────────────────────────┘ ```</p>
+<p>The corresponding GUI Hints are:</p>
+<p>``` Transmitted Signals: 0,0,1,1 Receiver Channel Selection: 0,1,1,1 Message Recovery: 1,0,1,2 ```</p>
+<p>Use the Options title:</p>
+<p>``` Recovering the Original Message ```</p>
+<p>The complete flowgraph is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp05_recovering_original_message_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Recovering the original message flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch12/ch12_exp05_recovering_original_message.png" class="img-fluid figure-img"></p>
+<figcaption>Recovering the original message</figcaption>
+</figure>
+</div>
+<p>The three displays now tell the entire communication story.</p>
+</section>
+<section id="transmitted-signals-1" class="level3">
+<h3 class="anchored" data-anchor-id="transmitted-signals-1">Transmitted Signals</h3>
+<p>Station A and Station B occupy separate frequency regions, and the Combined Signal contains both.</p>
+</section>
+<section id="receiver-channel-selection-1" class="level3">
+<h3 class="anchored" data-anchor-id="receiver-channel-selection-1">Receiver Channel Selection</h3>
+<p>The receiver initially sees both stations.</p>
+<p>The Band-Pass Filter keeps Station A and suppresses Station B.</p>
+</section>
+<section id="message-recovery-1" class="level3">
+<h3 class="anchored" data-anchor-id="message-recovery-1">Message Recovery</h3>
+<p>The blue Original Message appears at</p>
+<p><span class="math display">\[
+\pm0.5\text{ kHz}.
+\]</span></p>
+<p>After the receiver mixer, the red spectrum contains the desired component again at</p>
+<p><span class="math display">\[
+\pm0.5\text{ kHz},
+\]</span></p>
+<p>but it also contains high-frequency components around</p>
+<p><span class="math display">\[
+\pm19.5\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\pm20.5\text{ kHz}.
+\]</span></p>
+<p>The Low-Pass Filter removes those high-frequency products.</p>
+<p>The green Recovered Message is left at</p>
+<p><span class="math display">\[
+\boxed{\pm500\text{ Hz}}.
+\]</span></p>
+<p>We have brought the information back to baseband.</p>
+<hr>
+<blockquote class="blockquote">
+<p><strong>### GNU Radio Toolbox: Band-Pass Filter</strong></p>
+<p>A <strong>Band-Pass Filter</strong> passes a selected range of frequencies while attenuating frequencies outside that range.</p>
+<p>In Experiment 12.4, the combined received signal contains two different channels. We use the Band-Pass Filter to keep the region from approximately 9 kHz to 11 kHz, which contains Station A.</p>
+<p>In a practical receiver, channel selection may involve several analog and digital stages. Here, the Band-Pass Filter gives us a simple and visible way to understand the basic idea of tuning to one frequency region.</p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<p><strong>### GNU Radio Toolbox: Low-Pass Filter in a Demodulator</strong></p>
+<p>We have already used low-pass filtering earlier in the book, so the block itself is not new.</p>
+<p>Its role here is new.</p>
+<p>After the receiver multiplies the selected station by its local oscillator, the desired message returns near zero frequency, but additional high-frequency mixing products are also created.</p>
+<p>The Low-Pass Filter keeps the recovered baseband message and removes those unwanted high-frequency components.</p>
+<p>This combination,</p>
+<p>``` text Mixer -&gt; Low-Pass Filter ```</p>
+<p>is a fundamental receiver structure that we will encounter again.</p>
+</blockquote>
+<hr>
+</section>
+<section id="why-is-the-recovered-signal-smaller" class="level2">
+<h2 class="anchored" data-anchor-id="why-is-the-recovered-signal-smaller">12.6 Why Is the Recovered Signal Smaller?</h2>
+<p>In Experiment 12.5, the recovered message has the correct frequency, but its amplitude is smaller than the original.</p>
+<p>This is expected.</p>
+<p>At the transmitter, we formed</p>
+<p><span class="math display">\[
+s(t)=m(t)\cos(2\pi f_ct).
+\]</span></p>
+<p>At the receiver, we multiply by the same carrier frequency again:</p>
+<p><span class="math display">\[
+s(t)\cos(2\pi f_ct) = m(t)\cos^2(2\pi f_ct).
+\]</span></p>
+<p>Using</p>
+<p><span class="math display">\[
+\cos^2\theta = \frac{1}{2} + \frac{1}{2}\cos(2\theta),
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+m(t)\cos^2(2\pi f_ct) = \frac{1}{2}m(t) + \frac{1}{2}m(t)\cos(4\pi f_ct).
+\]</span></p>
+<p>The first term is our recovered baseband message:</p>
+<p><span class="math display">\[
+\frac{1}{2}m(t).
+\]</span></p>
+<p>The second term is at high frequency and is removed by the Low-Pass Filter.</p>
+<p>Therefore, ideally,</p>
+<p><span class="math display">\[
+y(t)=\frac{1}{2}m(t).
+\]</span></p>
+<p>So the smaller recovered amplitude is not an error.</p>
+<p>A later gain stage could compensate for this if necessary.</p>
+<p>The important result is that the original information has returned to the correct baseband frequency.</p>
+<hr>
+</section>
+<section id="we-have-built-a-small-communication-system" class="level2">
+<h2 class="anchored" data-anchor-id="we-have-built-a-small-communication-system">12.7 We Have Built a Small Communication System</h2>
+<p>It is worth stopping here and looking at what the five experiments have built.</p>
+<p>We started with a low-frequency message.</p>
+<p>We discovered that multiplication by a carrier moves its spectral content.</p>
+<p>Then we used two carriers to place two different messages in different frequency regions.</p>
+<p>We added them together, just as multiple transmissions can share a physical medium.</p>
+<p>At the receiver, we selected one frequency region.</p>
+<p>Finally, we mixed that selected channel back toward baseband and used a Low-Pass Filter to recover the original message.</p>
+<p>The complete chain is:</p>
+<p>``` TRANSMITTER</p>
+<p>500 Hz Message A | v Multiply by 10 kHz carrier | v Station A around 10 kHz ——–\\ \\ +–&gt; Shared medium / Station B around 20 kHz ——–/ ^ | Multiply by 20 kHz carrier ^ | 2 kHz Message B</p>
+<pre><code>                      RECEIVER
+
+                Both stations arrive
+                        |
+                        v
+               Select around 10 kHz
+                        |
+                        v
+                   Station A
+                        |
+                        v
+                Multiply by 10 kHz LO
+                        |
+                        v
+          Baseband + high-frequency products
+                        |
+                        v
+                  Low-Pass Filter
+                        |
+                        v
+                Recovered 500 Hz message</code></pre>
+<p>```</p>
+<p>This is deliberately simplified, but the ideas are real.</p>
+<p>A practical radio has more stages, and actual modulation schemes can be more sophisticated. Yet the basic logic remains recognizable:</p>
+<p><span class="math display">\[
+\boxed{ \text{information} \rightarrow \text{modulation} \rightarrow \text{channel} \rightarrow \text{selection} \rightarrow \text{demodulation} \rightarrow \text{information} }
+\]</span></p>
+<hr>
+</section>
+<section id="connecting-the-gnu-radio-experiment-to-a-real-radio" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-the-gnu-radio-experiment-to-a-real-radio">12.8 Connecting the GNU Radio Experiment to a Real Radio</h2>
+<p>The frequencies in our experiments were intentionally small.</p>
+<p>We used 10 kHz and 20 kHz carriers because they fit comfortably inside a 64 kS/s GNU Radio simulation and are easy to see on the Frequency Sink.</p>
+<p>A real radio system may use carriers in the MHz or GHz range.</p>
+<p>The principle is still the same.</p>
+<p>Suppose several radio stations are transmitting.</p>
+<p>Their audio programs may all contain similar baseband frequencies. One station may be broadcasting speech, another music, and another a news program. The audio spectra can overlap heavily if we look only at the original information.</p>
+<p>The stations therefore use different RF channels.</p>
+<p>Conceptually:</p>
+<p>``` Audio A -&gt; modulation -&gt; RF channel A Audio B -&gt; modulation -&gt; RF channel B Audio C -&gt; modulation -&gt; RF channel C ```</p>
+<p>All three electromagnetic waves can reach the same receiving antenna.</p>
+<p>The receiver then chooses the desired RF channel.</p>
+<p>This is why a radio has something to <strong>tune</strong>.</p>
+<p>When we tune to a station, we are not choosing the frequency of the sound we want to hear. We are choosing the RF frequency region in which that station has placed its information.</p>
+<p>After the channel is selected, the receiver demodulates it.</p>
+<p>Only then do we recover the low-frequency audio that can eventually be sent to a speaker.</p>
+<p>So the everyday action</p>
+<blockquote class="blockquote">
+<p>“Tune the radio to this station”</p>
+</blockquote>
+<p>really hides two different ideas:</p>
+<ol type="1">
+<li><strong>Select the desired RF channel.</strong></li>
+<li><strong>Demodulate that channel to recover the information.</strong></li>
+</ol>
+<p>Experiment 12.4 demonstrated the first.</p>
+<p>Experiment 12.5 demonstrated the second.</p>
+<hr>
+</section>
+<section id="a-carrier-is-not-the-message" class="level2">
+<h2 class="anchored" data-anchor-id="a-carrier-is-not-the-message">12.9 A Carrier Is Not the Message</h2>
+<p>Another useful distinction is now easier to make.</p>
+<p>A carrier such as</p>
+<p><span class="math display">\[
+c(t)=\cos(2\pi f_ct)
+\]</span></p>
+<p>is just a sinusoid.</p>
+<p>By itself, it tells us nothing about the message.</p>
+<p>The information appears when some property of the transmitted waveform is made dependent on the message.</p>
+<p>In our experiments, we used multiplication:</p>
+<p><span class="math display">\[
+s(t)=m(t)\cos(2\pi f_ct).
+\]</span></p>
+<p>This created sidebands around the carrier frequency.</p>
+<p>So it is better to think of the carrier as a way of <strong>placing information into a chosen frequency region</strong>, rather than as the information itself.</p>
+<p>This also explains why the red 10 kHz carrier trace in Experiment 12.1 was visible only because we connected the original carrier separately to the Frequency Sink.</p>
+<p>The actual product signal did not contain a spectral line exactly at 10 kHz.</p>
+<p>That detail will become important in the next chapter.</p>
+<hr>
+</section>
+<section id="what-exactly-did-we-build" class="level2">
+<h2 class="anchored" data-anchor-id="what-exactly-did-we-build">12.10 What Exactly Did We Build?</h2>
+<p>The modulation used in our experiments has the form</p>
+<p><span class="math display">\[
+s(t)=m(t)\cos(2\pi f_ct).
+\]</span></p>
+<p>For a sinusoidal message, this produces two sidebands but no separate carrier component at <span class="math inline">\(f_c\)</span>.</p>
+<p>This modulation method is called <strong>double-sideband suppressed-carrier</strong>, usually abbreviated <strong>DSB-SC</strong>.</p>
+<p>We did not begin the chapter by giving it that name because the name is less important than understanding what the multiplication actually does.</p>
+<p>Now that we have seen the spectrum, the terminology makes sense:</p>
+<ul>
+<li><strong>double-sideband</strong> because both the lower and upper sidebands are present,</li>
+<li><strong>suppressed-carrier</strong> because the transmitted product does not contain a separate carrier spectral line at <span class="math inline">\(f_c\)</span>.</li>
+</ul>
+<p>Our receiver also used a matching local oscillator to recover the message. This is a form of <strong>coherent demodulation</strong>.</p>
+<p>For our controlled GNU Radio experiment, the transmitter carrier and receiver local oscillator were both exactly 10 kHz and had matching phase.</p>
+<p>A real receiver has to deal with practical issues such as carrier-frequency error and phase error. We will not add those complications here because the purpose of this chapter is to understand why modulation is needed.</p>
+<hr>
+</section>
+<section id="real-rf-signals-and-complex-iq-signals" class="level2">
+<h2 class="anchored" data-anchor-id="real-rf-signals-and-complex-iq-signals">12.11 Real RF Signals and Complex I/Q Signals</h2>
+<p>Earlier in the book, we spent time understanding complex signals and positive and negative frequencies.</p>
+<p>Now we can connect that discussion to radio.</p>
+<p>The physical voltage driving an antenna is real-valued. The electromagnetic fields radiated through space are also physical, real quantities.</p>
+<p>So a physical RF waveform is real.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+s(t)=A\cos(2\pi f_ct+\phi)
+\]</span></p>
+<p>is a real RF waveform.</p>
+<p>Its mathematical two-sided Fourier spectrum contains both positive- and negative-frequency components.</p>
+<p>Inside an SDR, however, we very often represent signals using complex I/Q samples:</p>
+<p><span class="math display">\[
+x[n]=I[n]+jQ[n].
+\]</span></p>
+<p>A complex signal does not need to have conjugate symmetry between positive and negative frequencies.</p>
+<p>This is extremely useful.</p>
+<p>If an SDR is tuned to an RF center frequency <span class="math inline">\(f_c\)</span>, then a complex-baseband component at a positive offset can represent RF content above the center frequency, while a negative offset can represent RF content below it.</p>
+<p>For example, if the SDR is centered at</p>
+<p><span class="math display">\[
+100\text{ MHz},
+\]</span></p>
+<p>then, under the usual convention,</p>
+<p><span class="math display">\[
++1\text{ MHz}
+\]</span></p>
+<p>at complex baseband corresponds to RF content around</p>
+<p><span class="math display">\[
+101\text{ MHz},
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+-1\text{ MHz}
+\]</span></p>
+<p>corresponds to RF content around</p>
+<p><span class="math display">\[
+99\text{ MHz}.
+\]</span></p>
+<p>So both statements are true:</p>
+<blockquote class="blockquote">
+<p><strong>Physical RF waveforms are real-valued.</strong></p>
+</blockquote>
+<p>and</p>
+<blockquote class="blockquote">
+<p><strong>SDRs commonly process those waveforms using complex I/Q representations.</strong></p>
+</blockquote>
+<p>A complex signal also does not automatically mean a one-sided spectrum. A complex signal <strong>can</strong> contain only positive or only negative frequency, but a general complex SDR signal may contain both. The important difference is that the two sides no longer have to be mirror images.</p>
+<p>This is one reason I/Q processing is so useful for modulation, mixing, filtering, and channel selection.</p>
+<hr>
+</section>
+<section id="why-we-did-not-filter-away-the-negative-frequencies" class="level2">
+<h2 class="anchored" data-anchor-id="why-we-did-not-filter-away-the-negative-frequencies">12.12 Why We Did Not Filter Away the Negative Frequencies</h2>
+<p>When we first saw the modulated spectrum, it was tempting to look at the negative-frequency half and ask whether a low-pass filter should remove it.</p>
+<p>That is not what we want to do.</p>
+<p>For the real-valued signals used in these experiments, the negative-frequency spectrum is required by the real waveform’s conjugate symmetry.</p>
+<p>For example, a real cosine can be written as</p>
+<p><span class="math display">\[
+\cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} + \frac{1}{2}e^{-j2\pi ft}.
+\]</span></p>
+<p>The <span class="math inline">\(+f\)</span> and <span class="math inline">\(-f\)</span> terms together describe the real cosine.</p>
+<p>The Low-Pass Filter in Experiment 12.5 had a completely different job.</p>
+<p>After the receiver mixer, the desired information returned near zero frequency while unwanted products appeared around 20 kHz.</p>
+<p>The LPF separated <strong>low-frequency desired content from high-frequency mixing products</strong>.</p>
+<p>It was not removing “the negative half” of a real spectrum.</p>
+<p>Keeping those two ideas separate will become especially important when we later study single-sideband signals and complex modulation.</p>
+<hr>
+</section>
+<section id="modulated-signals-occupy-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="modulated-signals-occupy-bandwidth">12.13 Modulated Signals Occupy Bandwidth</h2>
+<p>A carrier is often drawn as one vertical line in a spectrum.</p>
+<p>A real message, however, occupies a range of frequencies.</p>
+<p>Once that message is modulated, its translated spectrum also occupies a range around the carrier.</p>
+<p>This means two communication channels cannot simply be placed arbitrarily close together.</p>
+<p>If their occupied spectral regions overlap too much, one channel can interfere with the other.</p>
+<p>Real communication systems therefore care about:</p>
+<ul>
+<li>signal bandwidth,</li>
+<li>channel bandwidth,</li>
+<li>channel spacing,</li>
+<li>filtering,</li>
+<li>adjacent-channel interference,</li>
+<li>frequency allocation.</li>
+</ul>
+<p>We do not need another GNU Radio experiment for those ideas yet. The important point follows directly from Experiment 12.2:</p>
+<blockquote class="blockquote">
+<p><strong>Modulation moves a spectrum, not just a single infinitely thin frequency line.</strong></p>
+</blockquote>
+<p>This is why spectrum is a limited resource and why real radio services are assigned particular frequency bands and channels.</p>
+<hr>
+</section>
+<section id="frequency-also-affects-propagation" class="level2">
+<h2 class="anchored" data-anchor-id="frequency-also-affects-propagation">12.14 Frequency Also Affects Propagation</h2>
+<p>Antenna size and channel separation are not the only reasons different radio systems use different carrier frequencies.</p>
+<p>Electromagnetic waves at different frequency ranges can behave differently in the real world.</p>
+<p>Depending on frequency and environment, radio waves can differ in how they:</p>
+<ul>
+<li>propagate over long distances,</li>
+<li>interact with the ground and terrain,</li>
+<li>penetrate buildings and materials,</li>
+<li>diffract around obstacles,</li>
+<li>interact with the atmosphere or ionosphere,</li>
+<li>support available communication bandwidth.</li>
+</ul>
+<p>We will not turn this chapter into a propagation chapter.</p>
+<p>The important connection is simply that modulation gives us the freedom to place information in a frequency range that is useful for the communication system we are trying to build.</p>
+<hr>
+</section>
+</section>
+<section id="so-why-does-modulation-exist" class="level1">
+<h1>12.15 So Why Does Modulation Exist?</h1>
+<p>We can now answer the question that opened the chapter.</p>
+<p>Why not simply transmit our original low-frequency information directly?</p>
+<p>There is not just one reason.</p>
+<section id="practical-radiation" class="level3">
+<h3 class="anchored" data-anchor-id="practical-radiation">Practical radiation</h3>
+<p>Low-frequency information corresponds to extremely long electromagnetic wavelengths. Practical resonant antenna dimensions become very large, and antennas that are electrically tiny compared with the wavelength are difficult to use efficiently.</p>
+<p>Moving information to a higher carrier frequency makes practical radio transmission possible.</p>
+</section>
+<section id="multiple-users" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-users">Multiple users</h3>
+<p>Different transmitters often generate information occupying similar baseband frequency ranges.</p>
+<p>Modulation allows those messages to be placed in different parts of the spectrum.</p>
+<p>That lets many signals share the same physical medium.</p>
+</section>
+<section id="channel-selection" class="level3">
+<h3 class="anchored" data-anchor-id="channel-selection">Channel selection</h3>
+<p>Once different transmissions occupy different frequency regions, a receiver can tune to the desired channel and reject others.</p>
+</section>
+<section id="suitable-frequency-ranges" class="level3">
+<h3 class="anchored" data-anchor-id="suitable-frequency-ranges">Suitable frequency ranges</h3>
+<p>Different frequency bands have different antenna, propagation, bandwidth, and regulatory characteristics.</p>
+<p>Modulation lets the information be placed in a frequency region appropriate for the application.</p>
+<p>The central idea is therefore:</p>
+<blockquote class="blockquote">
+<p><strong>Modulation lets us take information from where it naturally exists and place it where it is useful for transmission.</strong></p>
+</blockquote>
+<p>And demodulation brings it back.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level1">
+<h1>12.16 What We Learned</h1>
+<p>In this chapter, we built the reason for modulation experimentally.</p>
+<ul>
+<li>A low-frequency information signal can be perfectly useful in a wire but inconvenient for direct radio radiation.</li>
+<li>Wavelength is related to frequency by <span class="math display">\[
+\lambda=\frac{c}{f}.
+\]</span></li>
+<li>A quarter-wave monopole is a useful reference for understanding antenna scale, although not every antenna must be exactly <span class="math inline">\(\lambda/4\)</span> long.</li>
+<li>Multiplying a message by a sinusoidal carrier creates sum and difference frequencies.</li>
+<li>A 1 kHz message multiplied by a 10 kHz carrier produced components at 9 kHz and 11 kHz.</li>
+<li>These are the lower and upper sidebands.</li>
+<li>A complete multi-frequency message spectrum can be translated around a carrier.</li>
+<li>Real-valued signals have conjugate-symmetric positive- and negative-frequency spectra.</li>
+<li>The negative-frequency half is not something that should simply be removed with an LPF.</li>
+<li>Different messages can be placed around different carrier frequencies.</li>
+<li>This allows several transmissions to coexist in the same medium.</li>
+<li>Tuning means selecting the desired frequency region.</li>
+<li>Tuning and demodulation are different operations.</li>
+<li>Mixing the selected channel with a local oscillator can bring the information back toward baseband.</li>
+<li>A Low-Pass Filter can then remove unwanted high-frequency mixing products.</li>
+<li>Our recovered 500 Hz message appeared at the same frequency as the original.</li>
+<li>The recovered amplitude was half the original in our ideal coherent multiplication experiment, which follows directly from the <span class="math inline">\(\cos^2\)</span> identity.</li>
+<li>The simple modulation used here is DSB-SC.</li>
+<li>Physical RF signals are real-valued, while SDRs commonly use complex I/Q samples internally.</li>
+<li>Modulated signals occupy bandwidth, so practical channels need appropriate spacing and filtering.</li>
+</ul>
+<p>Most importantly, we have moved from treating modulation as a word to seeing what it actually does.</p>
+<p>It <strong>moves information in frequency</strong>.</p>
+<p>That one operation makes practical antennas, frequency sharing, tuning, and radio communication possible.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level1">
+<h1>12.17 Connecting to the Next Chapter</h1>
+<p>We now understand why a carrier is useful and why information needs to be moved away from its original baseband location.</p>
+<p>But our first modulation method was deliberately simple:</p>
+<p><span class="math display">\[
+s(t)=m(t)\cos(2\pi f_ct).
+\]</span></p>
+<p>It produced two sidebands and suppressed the carrier itself.</p>
+<p>That was ideal for understanding frequency translation, but it is not the only way to place information onto a carrier.</p>
+<p>A very natural next question is:</p>
+<blockquote class="blockquote">
+<p><strong>What if we make the amplitude of a carrier vary according to the message?</strong></p>
+</blockquote>
+<p>That leads us to <strong>Amplitude Modulation</strong>.</p>
+<p>In the next chapter, we will look carefully at how ordinary AM differs from the DSB-SC signal we built here, why a carrier component appears in conventional AM, what the modulation index means, what overmodulation looks like, and how the message can be recovered from the envelope.</p>
+<p>The important thing is that we are no longer starting AM from an unexplained formula.</p>
+<p>We already know why modulation is needed.</p>
+<p>Now we are ready to study <strong>how a particular modulation scheme works</strong>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter11.html" class="pagination-link" aria-label="Chapter 11: Correlation, Matched Filtering and Signal Detection">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter13.html" class="pagination-link" aria-label="Chapter 13: Amplitude Modulation">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

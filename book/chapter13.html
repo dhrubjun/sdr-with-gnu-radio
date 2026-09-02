@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 13: Amplitude Modulation – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter14.html" rel="next">
+<link href="../book/chapter12.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter13.html"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-frequency-translation-to-amplitude-modulation" id="toc-from-frequency-translation-to-amplitude-modulation" class="nav-link" data-scroll-target="#from-frequency-translation-to-amplitude-modulation">From Frequency Translation to Amplitude Modulation</a></li>
+  <li><a href="#what-does-amplitude-modulation-actually-mean" id="toc-what-does-amplitude-modulation-actually-mean" class="nav-link" data-scroll-target="#what-does-amplitude-modulation-actually-mean">13.1 What Does Amplitude Modulation Actually Mean?</a></li>
+  <li><a href="#experiment-13.1-building-conventional-am-and-exploring-the-modulation-index" id="toc-experiment-13.1-building-conventional-am-and-exploring-the-modulation-index" class="nav-link" data-scroll-target="#experiment-13.1-building-conventional-am-and-exploring-the-modulation-index">Experiment 13.1: Building Conventional AM and Exploring the Modulation Index</a>
+  <ul class="collapse">
+  <li><a href="#what-are-we-trying-to-discover" id="toc-what-are-we-trying-to-discover" class="nav-link" data-scroll-target="#what-are-we-trying-to-discover">What Are We Trying to Discover?</a></li>
+  <li><a href="#building-the-signal" id="toc-building-the-signal" class="nav-link" data-scroll-target="#building-the-signal">Building the Signal</a></li>
+  <li><a href="#experiment-setup" id="toc-experiment-setup" class="nav-link" data-scroll-target="#experiment-setup">Experiment Setup</a></li>
+  <li><a href="#start-with-a-small-modulation-index" id="toc-start-with-a-small-modulation-index" class="nav-link" data-scroll-target="#start-with-a-small-modulation-index">Start with a Small Modulation Index</a></li>
+  <li><a href="#what-appears-in-the-spectrum" id="toc-what-appears-in-the-spectrum" class="nav-link" data-scroll-target="#what-appears-in-the-spectrum">What Appears in the Spectrum?</a></li>
+  <li><a href="#what-does-the-modulation-index-mean" id="toc-what-does-the-modulation-index-mean" class="nav-link" data-scroll-target="#what-does-the-modulation-index-mean">What Does the Modulation Index Mean?</a>
+  <ul class="collapse">
+  <li><a href="#under-100-modulation-0mu1" id="toc-under-100-modulation-0mu1" class="nav-link" data-scroll-target="#under-100-modulation-0mu1">Under 100% Modulation: <span class="math inline">\(0&lt;\mu&lt;1\)</span></a></li>
+  <li><a href="#modulation-mu1" id="toc-modulation-mu1" class="nav-link" data-scroll-target="#modulation-mu1">100% Modulation: <span class="math inline">\(\mu=1\)</span></a></li>
+  <li><a href="#overmodulation-mu1" id="toc-overmodulation-mu1" class="nav-link" data-scroll-target="#overmodulation-mu1">Overmodulation: <span class="math inline">\(\mu&gt;1\)</span></a></li>
+  </ul></li>
+  <li><a href="#try-it-yourself-predict-the-sidebands" id="toc-try-it-yourself-predict-the-sidebands" class="nav-link" data-scroll-target="#try-it-yourself-predict-the-sidebands">Try It Yourself: Predict the Sidebands</a></li>
+  </ul></li>
+  <li><a href="#why-transmit-the-carrier-at-all" id="toc-why-transmit-the-carrier-at-all" class="nav-link" data-scroll-target="#why-transmit-the-carrier-at-all">13.2 Why Transmit the Carrier at All?</a></li>
+  <li><a href="#experiment-13.2-recovering-am-with-an-envelope-detector" id="toc-experiment-13.2-recovering-am-with-an-envelope-detector" class="nav-link" data-scroll-target="#experiment-13.2-recovering-am-with-an-envelope-detector">Experiment 13.2: Recovering AM with an Envelope Detector</a>
+  <ul class="collapse">
+  <li><a href="#the-basic-idea" id="toc-the-basic-idea" class="nav-link" data-scroll-target="#the-basic-idea">The Basic Idea</a></li>
+  <li><a href="#receiver-setup" id="toc-receiver-setup" class="nav-link" data-scroll-target="#receiver-setup">Receiver Setup</a></li>
+  <li><a href="#clean-envelope-recovery" id="toc-clean-envelope-recovery" class="nav-link" data-scroll-target="#clean-envelope-recovery">Clean Envelope Recovery</a></li>
+  <li><a href="#gnu-radio-toolbox-abs" id="toc-gnu-radio-toolbox-abs" class="nav-link" data-scroll-target="#gnu-radio-toolbox-abs">GNU Radio Toolbox: Abs</a>
+  <ul class="collapse">
+  <li><a href="#watch-out" id="toc-watch-out" class="nav-link" data-scroll-target="#watch-out">Watch Out</a></li>
+  </ul></li>
+  <li><a href="#gnu-radio-toolbox-dc-blocker" id="toc-gnu-radio-toolbox-dc-blocker" class="nav-link" data-scroll-target="#gnu-radio-toolbox-dc-blocker">GNU Radio Toolbox: DC Blocker</a></li>
+  </ul></li>
+  <li><a href="#why-overmodulation-breaks-a-simple-envelope-detector" id="toc-why-overmodulation-breaks-a-simple-envelope-detector" class="nav-link" data-scroll-target="#why-overmodulation-breaks-a-simple-envelope-detector">13.3 Why Overmodulation Breaks a Simple Envelope Detector</a>
+  <ul class="collapse">
+  <li><a href="#now-break-the-flowgraph" id="toc-now-break-the-flowgraph" class="nav-link" data-scroll-target="#now-break-the-flowgraph">Now Break the Flowgraph</a></li>
+  </ul></li>
+  <li><a href="#the-price-of-a-simple-receiver" id="toc-the-price-of-a-simple-receiver" class="nav-link" data-scroll-target="#the-price-of-a-simple-receiver">13.4 The Price of a Simple Receiver</a></li>
+  <li><a href="#experiment-13.3-where-does-the-power-go-in-conventional-am" id="toc-experiment-13.3-where-does-the-power-go-in-conventional-am" class="nav-link" data-scroll-target="#experiment-13.3-where-does-the-power-go-in-conventional-am">Experiment 13.3: Where Does the Power Go in Conventional AM?</a>
+  <ul class="collapse">
+  <li><a href="#experiment-setup-1" id="toc-experiment-setup-1" class="nav-link" data-scroll-target="#experiment-setup-1">Experiment Setup</a></li>
+  <li><a href="#first-observation-mu0" id="toc-first-observation-mu0" class="nav-link" data-scroll-target="#first-observation-mu0">First Observation: <span class="math inline">\(\mu=0\)</span></a></li>
+  <li><a href="#at-mu0.5" id="toc-at-mu0.5" class="nav-link" data-scroll-target="#at-mu0.5">At <span class="math inline">\(\mu=0.5\)</span></a></li>
+  <li><a href="#at-mu1" id="toc-at-mu1" class="nav-link" data-scroll-target="#at-mu1">At <span class="math inline">\(\mu=1\)</span></a></li>
+  </ul></li>
+  <li><a href="#am-power-and-efficiency" id="toc-am-power-and-efficiency" class="nav-link" data-scroll-target="#am-power-and-efficiency">13.5 AM Power and Efficiency</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-toolbox-qt-gui-number-sink" id="toc-gnu-radio-toolbox-qt-gui-number-sink" class="nav-link" data-scroll-target="#gnu-radio-toolbox-qt-gui-number-sink">GNU Radio Toolbox: QT GUI Number Sink</a>
+  <ul class="collapse">
+  <li><a href="#why-not-estimate-power-from-peak-height-alone" id="toc-why-not-estimate-power-from-peak-height-alone" class="nav-link" data-scroll-target="#why-not-estimate-power-from-peak-height-alone">Why Not Estimate Power from Peak Height Alone?</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#do-the-sidebands-really-carry-the-message" id="toc-do-the-sidebands-really-carry-the-message" class="nav-link" data-scroll-target="#do-the-sidebands-really-carry-the-message">13.6 Do the Sidebands Really Carry the Message?</a></li>
+  <li><a href="#experiment-13.4-conventional-am-vs-dsb-sc" id="toc-experiment-13.4-conventional-am-vs-dsb-sc" class="nav-link" data-scroll-target="#experiment-13.4-conventional-am-vs-dsb-sc">Experiment 13.4: Conventional AM vs DSB-SC</a>
+  <ul class="collapse">
+  <li><a href="#experiment-setup-2" id="toc-experiment-setup-2" class="nav-link" data-scroll-target="#experiment-setup-2">Experiment Setup</a></li>
+  <li><a href="#what-do-we-see" id="toc-what-do-we-see" class="nav-link" data-scroll-target="#what-do-we-see">What Do We See?</a></li>
+  <li><a href="#suppressing-the-carrier-saves-power-not-bandwidth" id="toc-suppressing-the-carrier-saves-power-not-bandwidth" class="nav-link" data-scroll-target="#suppressing-the-carrier-saves-power-not-bandwidth">Suppressing the Carrier Saves Power, Not Bandwidth</a></li>
+  </ul></li>
+  <li><a href="#do-we-really-need-both-sidebands" id="toc-do-we-really-need-both-sidebands" class="nav-link" data-scroll-target="#do-we-really-need-both-sidebands">13.7 Do We Really Need Both Sidebands?</a></li>
+  <li><a href="#experiment-13.5-from-dsb-sc-to-ssb-sc" id="toc-experiment-13.5-from-dsb-sc-to-ssb-sc" class="nav-link" data-scroll-target="#experiment-13.5-from-dsb-sc-to-ssb-sc">Experiment 13.5: From DSB-SC to SSB-SC</a>
+  <ul class="collapse">
+  <li><a href="#step-1-build-a-multi-tone-message" id="toc-step-1-build-a-multi-tone-message" class="nav-link" data-scroll-target="#step-1-build-a-multi-tone-message">Step 1: Build a Multi-Tone Message</a></li>
+  <li><a href="#step-2-remove-one-sideband" id="toc-step-2-remove-one-sideband" class="nav-link" data-scroll-target="#step-2-remove-one-sideband">Step 2: Remove One Sideband</a></li>
+  <li><a href="#experiment-setup-3" id="toc-experiment-setup-3" class="nav-link" data-scroll-target="#experiment-setup-3">Experiment Setup</a></li>
+  <li><a href="#what-did-the-spectrum-show" id="toc-what-did-the-spectrum-show" class="nav-link" data-scroll-target="#what-did-the-spectrum-show">What Did the Spectrum Show?</a></li>
+  <li><a href="#a-practical-filtering-lesson" id="toc-a-practical-filtering-lesson" class="nav-link" data-scroll-target="#a-practical-filtering-lesson">A Practical Filtering Lesson</a></li>
+  <li><a href="#step-3-can-we-recover-the-complete-message-from-one-sideband" id="toc-step-3-can-we-recover-the-complete-message-from-one-sideband" class="nav-link" data-scroll-target="#step-3-can-we-recover-the-complete-message-from-one-sideband">Step 3: Can We Recover the Complete Message from One Sideband?</a></li>
+  <li><a href="#bandwidth-dsb-sc-vs-ssb-sc" id="toc-bandwidth-dsb-sc-vs-ssb-sc" class="nav-link" data-scroll-target="#bandwidth-dsb-sc-vs-ssb-sc">Bandwidth: DSB-SC vs SSB-SC</a></li>
+  <li><a href="#gnu-radio-toolbox-band-pass-filter" id="toc-gnu-radio-toolbox-band-pass-filter" class="nav-link" data-scroll-target="#gnu-radio-toolbox-band-pass-filter">GNU Radio Toolbox: Band Pass Filter</a>
+  <ul class="collapse">
+  <li><a href="#watch-out-1" id="toc-watch-out-1" class="nav-link" data-scroll-target="#watch-out-1">Watch Out</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#how-is-ssb-generated-in-practice" id="toc-how-is-ssb-generated-in-practice" class="nav-link" data-scroll-target="#how-is-ssb-generated-in-practice">13.8 How Is SSB Generated in Practice?</a></li>
+  <li><a href="#the-filter-method" id="toc-the-filter-method" class="nav-link" data-scroll-target="#the-filter-method">13.9 The Filter Method</a></li>
+  <li><a href="#the-phasing-method-cancel-the-sideband-instead-of-filtering-it" id="toc-the-phasing-method-cancel-the-sideband-instead-of-filtering-it" class="nav-link" data-scroll-target="#the-phasing-method-cancel-the-sideband-instead-of-filtering-it">13.10 The Phasing Method: Cancel the Sideband Instead of Filtering It</a></li>
+  <li><a href="#the-hilbert-transform-creating-the-quadrature-message" id="toc-the-hilbert-transform-creating-the-quadrature-message" class="nav-link" data-scroll-target="#the-hilbert-transform-creating-the-quadrature-message">13.11 The Hilbert Transform: Creating the Quadrature Message</a></li>
+  <li><a href="#the-analytic-signal" id="toc-the-analytic-signal" class="nav-link" data-scroll-target="#the-analytic-signal">13.12 The Analytic Signal</a></li>
+  <li><a href="#why-analytic-signals-matter-in-sdr" id="toc-why-analytic-signals-matter-in-sdr" class="nav-link" data-scroll-target="#why-analytic-signals-matter-in-sdr">13.13 Why Analytic Signals Matter in SDR</a></li>
+  <li><a href="#ssb-with-carrier-and-reduced-carrier" id="toc-ssb-with-carrier-and-reduced-carrier" class="nav-link" data-scroll-target="#ssb-with-carrier-and-reduced-carrier">13.14 SSB with Carrier and Reduced Carrier</a></li>
+  <li><a href="#vestigial-sideband-a-practical-compromise" id="toc-vestigial-sideband-a-practical-compromise" class="nav-link" data-scroll-target="#vestigial-sideband-a-practical-compromise">13.15 Vestigial Sideband: A Practical Compromise</a></li>
+  <li><a href="#comparing-the-main-am-families" id="toc-comparing-the-main-am-families" class="nav-link" data-scroll-target="#comparing-the-main-am-families">13.16 Comparing the Main AM Families</a>
+  <ul class="collapse">
+  <li><a href="#conventional-am" id="toc-conventional-am" class="nav-link" data-scroll-target="#conventional-am">Conventional AM</a></li>
+  <li><a href="#dsb-sc" id="toc-dsb-sc" class="nav-link" data-scroll-target="#dsb-sc">DSB-SC</a></li>
+  <li><a href="#ssb-sc" id="toc-ssb-sc" class="nav-link" data-scroll-target="#ssb-sc">SSB-SC</a></li>
+  <li><a href="#vsb" id="toc-vsb" class="nav-link" data-scroll-target="#vsb">VSB</a></li>
+  </ul></li>
+  <li><a href="#a-note-about-bandwidth-in-our-single-tone-experiments" id="toc-a-note-about-bandwidth-in-our-single-tone-experiments" class="nav-link" data-scroll-target="#a-note-about-bandwidth-in-our-single-tone-experiments">13.17 A Note About “Bandwidth” in Our Single-Tone Experiments</a></li>
+  <li><a href="#putting-the-whole-chapter-together" id="toc-putting-the-whole-chapter-together" class="nav-link" data-scroll-target="#putting-the-whole-chapter-together">13.18 Putting the Whole Chapter Together</a></li>
+  <li><a href="#gnu-radio-toolbox-new-tools-used-in-this-chapter" id="toc-gnu-radio-toolbox-new-tools-used-in-this-chapter" class="nav-link" data-scroll-target="#gnu-radio-toolbox-new-tools-used-in-this-chapter">GNU Radio Toolbox: New Tools Used in This Chapter</a>
+  <ul class="collapse">
+  <li><a href="#abs" id="toc-abs" class="nav-link" data-scroll-target="#abs">Abs</a></li>
+  <li><a href="#dc-blocker" id="toc-dc-blocker" class="nav-link" data-scroll-target="#dc-blocker">DC Blocker</a></li>
+  <li><a href="#qt-gui-number-sink" id="toc-qt-gui-number-sink" class="nav-link" data-scroll-target="#qt-gui-number-sink">QT GUI Number Sink</a></li>
+  <li><a href="#band-pass-filter" id="toc-band-pass-filter" class="nav-link" data-scroll-target="#band-pass-filter">Band Pass Filter</a></li>
+  </ul></li>
+  <li><a href="#try-it-yourself-keep-the-other-sideband" id="toc-try-it-yourself-keep-the-other-sideband" class="nav-link" data-scroll-target="#try-it-yourself-keep-the-other-sideband">Try It Yourself: Keep the Other Sideband</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter13.html"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>How can information be carried by changing the amplitude of a carrier, and what do we gain or lose when we transmit the carrier and one or both sidebands?</strong></p>
+<hr>
+</section>
+<section id="from-frequency-translation-to-amplitude-modulation" class="level2">
+<h2 class="anchored" data-anchor-id="from-frequency-translation-to-amplitude-modulation">From Frequency Translation to Amplitude Modulation</h2>
+<p>In Chapter 12, we started with a simple question: why do we need modulation at all?</p>
+<p>By multiplying a low-frequency message by a higher-frequency carrier, we moved the message away from baseband and placed it around a carrier frequency. We saw that multiplication created two shifted copies of the message spectrum, one below the carrier and one above it. We also learned how a receiver could tune to the translated signal and coherently recover the original message.</p>
+<p>For a single-tone message, the basic multiplication looked like this:</p>
+<p><span class="math display">\[
+m(t)\cos(2\pi f_c t)
+\]</span></p>
+<p>and produced components at</p>
+<p><span class="math display">\[
+f_c-f_m
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_c+f_m.
+\]</span></p>
+<p>At the end of Chapter 12, we gave that signal a name: <strong>double-sideband suppressed-carrier</strong>, or <strong>DSB-SC</strong>.</p>
+<p>The name tells us exactly what we observed:</p>
+<ul>
+<li><strong>double-sideband</strong> because both the lower and upper sidebands are present;</li>
+<li><strong>suppressed-carrier</strong> because there is no separate carrier component at <span class="math inline">\(f_c\)</span>.</li>
+</ul>
+<p>That raises a natural question.</p>
+<blockquote class="blockquote">
+<p>If multiplying the message by the carrier already moves the information to the frequency region we want, why would we deliberately transmit the carrier as well?</p>
+</blockquote>
+<p>That question leads directly to conventional amplitude modulation.</p>
+<hr>
+</section>
+<section id="what-does-amplitude-modulation-actually-mean" class="level1">
+<h1>13.1 What Does Amplitude Modulation Actually Mean?</h1>
+<p>Imagine a pure carrier:</p>
+<p><span class="math display">\[
+c(t)=A_c\cos(2\pi f_c t).
+\]</span></p>
+<p>Its frequency and phase remain fixed. Its amplitude is also fixed, so by itself it carries no changing message.</p>
+<p>Now imagine that instead of keeping the carrier amplitude constant, we allow a message signal to make the carrier larger and smaller with time.</p>
+<p>A positive part of the message makes the carrier larger. A negative part makes it smaller. If the message varies slowly compared with the carrier, the rapidly oscillating carrier appears to sit inside a slowly changing outline.</p>
+<p>That outline is called the <strong>envelope</strong>.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Message changes slowly
+        |
+        v
+Carrier amplitude grows and shrinks
+        |
+        v
+The envelope follows the message</code></pre>
+<p>This is the central idea of amplitude modulation.</p>
+<p>The carrier frequency is not being moved back and forth. The carrier amplitude is being controlled by the message.</p>
+<p>For a normalized message <span class="math inline">\(m(t)\)</span>, conventional AM can be written as</p>
+<p><span class="math display">\[
+s(t)=A_c[1+\mu m(t)]\cos(2\pi f_c t),
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(A_c\)</span> is the carrier amplitude;</li>
+<li><span class="math inline">\(f_c\)</span> is the carrier frequency;</li>
+<li><span class="math inline">\(m(t)\)</span> is the normalized message;</li>
+<li><span class="math inline">\(\mu\)</span> is the <strong>modulation index</strong>.</li>
+</ul>
+<p>The term</p>
+<p><span class="math display">\[
+1+\mu m(t)
+\]</span></p>
+<p>is what controls the instantaneous carrier amplitude.</p>
+<p>The constant <span class="math inline">\(1\)</span> will turn out to be extremely important. It is the reason conventional AM contains a transmitted carrier, and it is also the reason a very simple receiver can recover the message.</p>
+<p>Rather than beginning with a long derivation, let us build the signal and watch what happens.</p>
+<hr>
+</section>
+<section id="experiment-13.1-building-conventional-am-and-exploring-the-modulation-index" class="level1">
+<h1>Experiment 13.1: Building Conventional AM and Exploring the Modulation Index</h1>
+<section id="what-are-we-trying-to-discover" class="level2">
+<h2 class="anchored" data-anchor-id="what-are-we-trying-to-discover">What Are We Trying to Discover?</h2>
+<p>We want to answer four questions experimentally:</p>
+<ol type="1">
+<li>What does a conventional AM waveform look like in time?</li>
+<li>What appears in its spectrum?</li>
+<li>What does the modulation index <span class="math inline">\(\mu\)</span> actually change?</li>
+<li>What happens when we increase <span class="math inline">\(\mu\)</span> beyond 1?</li>
+</ol>
+<p>We will use:</p>
+<p><span class="math display">\[
+f_m=1\text{ kHz}
+\]</span></p>
+<p>for the message and</p>
+<p><span class="math display">\[
+f_c=10\text{ kHz}
+\]</span></p>
+<p>for the carrier.</p>
+<p>The sample rate is</p>
+<p><span class="math display">\[
+f_s=64\text{ kS/s}.
+\]</span></p>
+</section>
+<section id="building-the-signal" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-signal">Building the Signal</h2>
+<p>The flowgraph follows the AM equation directly:</p>
+<pre class="text"><code>1 kHz message
+      |
+      v
+  scale by μ
+      |
+      v
+    Add 1
+      |
+      v
+Multiply by 10 kHz carrier
+      |
+      +------&gt; Time Sink
+      |
+      +------&gt; Frequency Sink</code></pre>
+<p>In the actual flowgraph, the message amplitude is controlled by the QT GUI Range <code>mu</code>, so adding the constant <code>1</code> produces</p>
+<p><span class="math display">\[
+1+\mu\cos(2\pi f_m t).
+\]</span></p>
+<p>Multiplying by the carrier then produces conventional AM.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp1-am-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 13.1 flowgraph for generating conventional AM and varying the modulation index</figcaption>
+</figure>
+</div>
+</section>
+<section id="experiment-setup" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-setup">Experiment Setup</h2>
+<p>We use the following main parameters:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Message frequency</td>
+<td style="text-align: right;">1 kHz</td>
+</tr>
+<tr class="odd">
+<td>Carrier frequency</td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="even">
+<td>Carrier amplitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>DC term added before modulation</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>The message Signal Source uses <code>mu</code> as its amplitude. A QT GUI Range lets us change the modulation index while the flowgraph is running:</p>
+<pre class="text"><code>ID: mu
+Label: Modulation Index (μ)
+Default Value: 500m
+Start: 0
+Stop: 1.5
+Step: 100m</code></pre>
+<p>The Time Sink displays the AM waveform together with the original message, while the Frequency Sink shows the carrier and sidebands. The familiar Signal Source and GUI Sink settings are otherwise unchanged from the earlier experiments.</p>
+</section>
+<section id="start-with-a-small-modulation-index" class="level2">
+<h2 class="anchored" data-anchor-id="start-with-a-small-modulation-index">Start with a Small Modulation Index</h2>
+<p>At a small value such as</p>
+<p><span class="math display">\[
+\mu=0.1,
+\]</span></p>
+<p>the carrier amplitude changes only slightly. The envelope is visible, but shallow.</p>
+<p>As <span class="math inline">\(\mu\)</span> is increased to</p>
+<p><span class="math display">\[
+\mu=0.5,
+\]</span></p>
+<p>the carrier amplitude varies much more clearly with the message.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp1-am-mu-01.png" class="img-fluid figure-img"></p>
+<figcaption>Conventional AM at a low modulation index</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp1-am-mu-05.png" class="img-fluid figure-img"></p>
+<figcaption>Conventional AM at a modulation index of 0.5</figcaption>
+</figure>
+</div>
+<p>The important observation is that the high-frequency oscillation is still the 10 kHz carrier, but its outer boundary follows the much slower 1 kHz message.</p>
+</section>
+<section id="what-appears-in-the-spectrum" class="level2">
+<h2 class="anchored" data-anchor-id="what-appears-in-the-spectrum">What Appears in the Spectrum?</h2>
+<p>The Frequency Sink shows three positive-frequency components:</p>
+<p><span class="math display">\[
+9\text{ kHz},\quad10\text{ kHz},\quad11\text{ kHz}.
+\]</span></p>
+<p>The middle component is the carrier:</p>
+<p><span class="math display">\[
+f_c=10\text{ kHz}.
+\]</span></p>
+<p>The two components on either side are the sidebands:</p>
+<p><span class="math display">\[
+f_{LSB}=f_c-f_m=9\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{USB}=f_c+f_m=11\text{ kHz}.
+\]</span></p>
+<p>Because the AM waveform is real-valued, the Frequency Sink also shows corresponding negative-frequency components. As we learned earlier in the book, these are part of the Fourier representation of a real signal. They are not additional independent radio channels.</p>
+<p>Now that we have seen the three components experimentally, the mathematics becomes much easier to interpret.</p>
+<p>For a single-tone message,</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi f_m t),
+\]</span></p>
+<p>conventional AM is</p>
+<p><span class="math display">\[
+s(t)=A_c[1+\mu\cos(2\pi f_m t)]\cos(2\pi f_c t).
+\]</span></p>
+<p>Expanding it gives</p>
+<p><span class="math display">\[
+s(t)=A_c\cos(2\pi f_c t)+A_c\mu\cos(2\pi f_m t)\cos(2\pi f_c t).
+\]</span></p>
+<p>Using the product-to-sum identity gives</p>
+<p><span class="math display">\[
+s(t)=A_c\cos(2\pi f_c t)+\frac{A_c\mu}{2}\cos[2\pi(f_c-f_m)t]+\frac{A_c\mu}{2}\cos[2\pi(f_c+f_m)t].
+\]</span></p>
+<p>That equation describes exactly what GNU Radio showed us:</p>
+<pre class="text"><code>Lower sideband        Carrier        Upper sideband
+   fc - fm               fc              fc + fm
+      |                   |                  |
+------|-------------------|------------------|------</code></pre>
+</section>
+<section id="what-does-the-modulation-index-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-the-modulation-index-mean">What Does the Modulation Index Mean?</h2>
+<p>For our normalized cosine message, the envelope-controlling term is</p>
+<p><span class="math display">\[
+1+\mu\cos(2\pi f_m t).
+\]</span></p>
+<p>Its largest value is</p>
+<p><span class="math display">\[
+1+\mu
+\]</span></p>
+<p>and its smallest value is</p>
+<p><span class="math display">\[
+1-\mu.
+\]</span></p>
+<p>This immediately explains the three important operating regions.</p>
+<section id="under-100-modulation-0mu1" class="level3">
+<h3 class="anchored" data-anchor-id="under-100-modulation-0mu1">Under 100% Modulation: <span class="math inline">\(0&lt;\mu&lt;1\)</span></h3>
+<p>The minimum envelope remains positive:</p>
+<p><span class="math display">\[
+1-\mu&gt;0.
+\]</span></p>
+<p>The envelope never reaches zero.</p>
+</section>
+<section id="modulation-mu1" class="level3">
+<h3 class="anchored" data-anchor-id="modulation-mu1">100% Modulation: <span class="math inline">\(\mu=1\)</span></h3>
+<p>Now</p>
+<p><span class="math display">\[
+1-\mu=0.
+\]</span></p>
+<p>The envelope just touches zero.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp1-100-percent-modulation.png" class="img-fluid figure-img"></p>
+<figcaption>Conventional AM at 100 percent modulation</figcaption>
+</figure>
+</div>
+<p>This is the limiting case for ordinary envelope detection without overmodulation.</p>
+</section>
+<section id="overmodulation-mu1" class="level3">
+<h3 class="anchored" data-anchor-id="overmodulation-mu1">Overmodulation: <span class="math inline">\(\mu&gt;1\)</span></h3>
+<p>Now</p>
+<p><span class="math display">\[
+1-\mu&lt;0.
+\]</span></p>
+<p>The quantity controlling the carrier amplitude becomes negative during part of the message cycle.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp1-overmodulation.png" class="img-fluid figure-img"></p>
+<figcaption>Overmodulated conventional AM at a modulation index of 1.5</figcaption>
+</figure>
+</div>
+<p>The waveform no longer has the simple nonnegative envelope that an ordinary envelope detector expects.</p>
+<p>This will matter greatly when we build the receiver.</p>
+<hr>
+</section>
+</section>
+<section id="try-it-yourself-predict-the-sidebands" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself-predict-the-sidebands">Try It Yourself: Predict the Sidebands</h2>
+<p>Before changing the flowgraph, predict what will happen if the message frequency is changed from 1 kHz to 2 kHz while the carrier remains at 10 kHz.</p>
+<p>Where should the two sidebands appear?</p>
+<p>Use</p>
+<p><span class="math display">\[
+f_c-f_m
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_c+f_m
+\]</span></p>
+<p>to make the prediction first. Then change the message frequency and check the Frequency Sink.</p>
+<p>The carrier should remain at 10 kHz, while the sidebands move to 8 kHz and 12 kHz.</p>
+<hr>
+</section>
+</section>
+<section id="why-transmit-the-carrier-at-all" class="level1">
+<h1>13.2 Why Transmit the Carrier at All?</h1>
+<p>At this point conventional AM may seem wasteful.</p>
+<p>Chapter 12 already showed us that DSB-SC can move the message around a carrier frequency without transmitting a separate carrier component. Conventional AM adds a large carrier at <span class="math inline">\(f_c\)</span>.</p>
+<p>Why?</p>
+<p>The answer becomes clear at the receiver.</p>
+<p>A DSB-SC receiver needs coherent detection. It multiplies the received signal by a locally generated carrier with the correct frequency and phase, then low-pass filters the result.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>DSB-SC signal
+     |
+     v
+Multiply by synchronized local carrier
+     |
+     v
+Low-Pass Filter
+     |
+     v
+Recovered message</code></pre>
+<p>Conventional AM gives us another possibility. Because the message is visible in the envelope, we can recover it without generating a synchronized 10 kHz oscillator.</p>
+<p>That is what we test next.</p>
+<hr>
+</section>
+<section id="experiment-13.2-recovering-am-with-an-envelope-detector" class="level1">
+<h1>Experiment 13.2: Recovering AM with an Envelope Detector</h1>
+<section id="the-basic-idea" class="level2">
+<h2 class="anchored" data-anchor-id="the-basic-idea">The Basic Idea</h2>
+<p>A simple envelope detector needs to do three things:</p>
+<ol type="1">
+<li>make the rapidly alternating AM waveform nonnegative;</li>
+<li>smooth away the carrier-frequency ripple;</li>
+<li>remove the remaining DC offset.</li>
+</ol>
+<p>Our GNU Radio version is therefore:</p>
+<pre class="text"><code>AM signal
+    |
+    v
+   Abs
+    |
+    v
+Low-Pass Filter
+    |
+    v
+DC Blocker
+    |
+    v
+Recovered message</code></pre>
+<p>We keep the AM transmitter from Experiment 13.1 and add the receiver to it.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp2-envelope-detection-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for conventional AM envelope detection</figcaption>
+</figure>
+</div>
+</section>
+<section id="receiver-setup" class="level2">
+<h2 class="anchored" data-anchor-id="receiver-setup">Receiver Setup</h2>
+<p>We keep the same 64 kS/s sample rate, 1 kHz message, 10 kHz carrier, and modulation-index control from Experiment 13.1. Only the new receiver blocks need special attention.</p>
+<p>The Low Pass Filter is configured as:</p>
+<pre class="text"><code>Decimation: 1
+Gain: 1
+Sample Rate: samp_rate
+Cutoff Frequency: 2k
+Transition Width: 1k
+Window: Hamming</code></pre>
+<p>The DC Blocker uses:</p>
+<pre class="text"><code>Length: 32
+Long Form: True</code></pre>
+<p>A two-input Time Sink named <code>Original and Recovered Message</code> displays the original message and the demodulated output together.</p>
+</section>
+<section id="clean-envelope-recovery" class="level2">
+<h2 class="anchored" data-anchor-id="clean-envelope-recovery">Clean Envelope Recovery</h2>
+<p>At</p>
+<p><span class="math display">\[
+\mu=0.5,
+\]</span></p>
+<p>the envelope never reaches zero. The detector recovers a clean 1 kHz sinusoidal message.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp2-envelope-detection-clean.png" class="img-fluid figure-img"></p>
+<figcaption>Clean envelope detection of conventional AM</figcaption>
+</figure>
+</div>
+<p>The recovered waveform is not necessarily identical in amplitude or perfectly aligned in time with the original. The filtering stages introduce scaling and delay. What matters here is that the original message shape is recovered without a synchronized local carrier.</p>
+<p>This is the major practical advantage of conventional AM.</p>
+<blockquote class="blockquote">
+<p>The transmitted carrier consumes power, but it allows a much simpler receiver.</p>
+</blockquote>
+<p>Historically, that simplicity mattered enormously. A receiver that can recover audio with a simple envelope detector is easier and cheaper to build than one requiring accurate carrier synchronization.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-abs" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-abs">GNU Radio Toolbox: Abs</h2>
+<p>The <strong>Abs</strong> block outputs the absolute value of each real input sample.</p>
+<p>If the input is <span class="math inline">\(x(t)\)</span>, the output is</p>
+<p><span class="math display">\[
+y(t)=|x(t)|.
+\]</span></p>
+<p>In our envelope detector, the AM carrier swings above and below zero rapidly. Taking the absolute value folds the negative portions upward.</p>
+<p>That creates a waveform whose slow variation follows the AM envelope. The Low Pass Filter then removes most of the rapid carrier-related variation.</p>
+<section id="watch-out" class="level3">
+<h3 class="anchored" data-anchor-id="watch-out">Watch Out</h3>
+<p>The Abs block does not magically know what the message is. It discards sign information.</p>
+<p>That is harmless only while the desired envelope itself does not cross below zero. This is why overmodulation causes a problem.</p>
+<hr>
+</section>
+</section>
+<section id="gnu-radio-toolbox-dc-blocker" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-dc-blocker">GNU Radio Toolbox: DC Blocker</h2>
+<p>After rectification and low-pass filtering, the recovered signal contains a DC component because conventional AM was built from</p>
+<p><span class="math display">\[
+1+\mu m(t).
+\]</span></p>
+<p>The <strong>DC Blocker</strong> removes the constant or very slowly varying DC component, leaving the changing message centered around zero.</p>
+<p>In this experiment it performs the final cleanup step:</p>
+<pre class="text"><code>Rectified AM
+     |
+     v
+Low-pass smoothing
+     |
+     v
+Message + DC offset
+     |
+     v
+DC Blocker
+     |
+     v
+Message centered around zero</code></pre>
+<hr>
+</section>
+</section>
+<section id="why-overmodulation-breaks-a-simple-envelope-detector" class="level1">
+<h1>13.3 Why Overmodulation Breaks a Simple Envelope Detector</h1>
+<p>At</p>
+<p><span class="math display">\[
+\mu=1,
+\]</span></p>
+<p>the envelope just touches zero. This is the boundary case.</p>
+<p>For</p>
+<p><span class="math display">\[
+\mu&gt;1,
+\]</span></p>
+<p>the term</p>
+<p><span class="math display">\[
+1+\mu\cos(2\pi f_m t)
+\]</span></p>
+<p>becomes negative during part of each message cycle.</p>
+<p>Our detector begins with an absolute-value operation, so it effectively observes</p>
+<p><span class="math display">\[
+|1+\mu\cos(2\pi f_m t)|.
+\]</span></p>
+<p>For <span class="math inline">\(\mu\leq1\)</span>, the expression inside the absolute value never becomes negative, so</p>
+<p><span class="math display">\[
+|1+\mu\cos(2\pi f_m t)|=1+\mu\cos(2\pi f_m t).
+\]</span></p>
+<p>But once <span class="math inline">\(\mu&gt;1\)</span>, this is no longer true.</p>
+<p>A negative value is folded upward:</p>
+<pre class="text"><code>-0.2  -&gt;  0.2
+-0.5  -&gt;  0.5
+-1.0  -&gt;  1.0</code></pre>
+<p>The detector can no longer tell whether a positive envelope value originally came from a positive or a negative value. Sign information has been lost before the Low Pass Filter even sees the signal.</p>
+<p>To make this failure unmistakable, we deliberately increased the modulation index to</p>
+<p><span class="math display">\[
+\mu=2.
+\]</span></p>
+<p>Then the envelope-controlling term ranges from</p>
+<p><span class="math display">\[
+-1
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+3.
+\]</span></p>
+<p>The recovered waveform becomes visibly distorted and develops broad flattened regions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp2-overmodulation-distortion.png" class="img-fluid figure-img"></p>
+<figcaption>Envelope-detector distortion during severe overmodulation at a modulation index of 2</figcaption>
+</figure>
+</div>
+<p>The value <span class="math inline">\(\mu=2\)</span> is not a special boundary. Overmodulation begins as soon as <span class="math inline">\(\mu&gt;1\)</span>. We used <span class="math inline">\(\mu=2\)</span> simply because it makes the failure easy to see.</p>
+<section id="now-break-the-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="now-break-the-flowgraph">Now Break the Flowgraph</h3>
+<p>Move the modulation-index control slowly through</p>
+<p><span class="math display">\[
+0.5\rightarrow1.0\rightarrow1.5\rightarrow2.0.
+\]</span></p>
+<p>Watch the recovered waveform rather than only the transmitted AM waveform.</p>
+<p>Ask:</p>
+<blockquote class="blockquote">
+<p>At what point does the receiver stop recovering a faithful sinusoid?</p>
+</blockquote>
+<p>This is a useful reminder that a transmitter waveform should not be judged only by how it looks at the transmitter. What matters is whether the receiver can recover the information.</p>
+<hr>
+</section>
+</section>
+<section id="the-price-of-a-simple-receiver" class="level1">
+<h1>13.4 The Price of a Simple Receiver</h1>
+<p>We now understand why conventional AM transmits a carrier.</p>
+<p>It buys receiver simplicity.</p>
+<p>But how expensive is that convenience in transmitted power?</p>
+<p>Look again at the conventional AM spectrum:</p>
+<pre class="text"><code>LSB        Carrier        USB
+ |            |            |
+9 kHz       10 kHz       11 kHz</code></pre>
+<p>The sidebands change when the message changes. The carrier remains at the same frequency and amplitude.</p>
+<p>This suggests an important question:</p>
+<blockquote class="blockquote">
+<p>How much of the transmitter’s power is going into the carrier, and how much is going into the sidebands that represent the changing message?</p>
+</blockquote>
+<p>Instead of estimating this from the dB scale of a spectrum display, we built the percentages directly into GNU Radio.</p>
+<hr>
+</section>
+<section id="experiment-13.3-where-does-the-power-go-in-conventional-am" class="level1">
+<h1>Experiment 13.3: Where Does the Power Go in Conventional AM?</h1>
+<p>The transmitter is the same conventional AM generator used earlier, but the GUI now calculates and displays the carrier and sideband power percentages as the modulation index changes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp3-am-power-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for visualizing conventional AM power distribution</figcaption>
+</figure>
+</div>
+<section id="experiment-setup-1" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-setup-1">Experiment Setup</h2>
+<p>We keep the same 64 kS/s sample rate, 1 kHz message, and 10 kHz carrier. The message Signal Source again uses <code>mu</code> as its amplitude, but for this experiment the QT GUI Range is limited to the normal AM region:</p>
+<pre class="text"><code>ID: mu
+Label: Modulation Index (μ)
+Default Value: 500m
+Start: 0
+Stop: 1
+Step: 100m</code></pre>
+<p>The power percentages are calculated directly inside four Float Constant Source blocks:</p>
+<pre class="text"><code>Carrier Power: 100 / (1 + mu**2 / 2)
+LSB Power: 50 * (mu**2 / 2) / (1 + mu**2 / 2)
+USB Power: 50 * (mu**2 / 2) / (1 + mu**2 / 2)
+Total Sideband Power: 100 * (mu**2 / 2) / (1 + mu**2 / 2)</code></pre>
+<p>These four constant streams feed a QT GUI Number Sink named <code>AM Power Distribution (%)</code>, with its display range set from 0 to 100. The Frequency Sink remains <code>AM Spectrum: Carrier and Sidebands</code>. This lets the numerical power distribution and the changing spectrum respond to the same <code>mu</code> control.</p>
+<hr>
+</section>
+<section id="first-observation-mu0" class="level2">
+<h2 class="anchored" data-anchor-id="first-observation-mu0">First Observation: <span class="math inline">\(\mu=0\)</span></h2>
+<p>With</p>
+<p><span class="math display">\[
+\mu=0,
+\]</span></p>
+<p>the AM equation reduces to</p>
+<p><span class="math display">\[
+s(t)=A_c\cos(2\pi f_c t).
+\]</span></p>
+<p>There is no message modulation at all.</p>
+<p>GNU Radio shows:</p>
+<p><span class="math display">\[
+P_C=100\%
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+P_{LSB}=P_{USB}=0\%.
+\]</span></p>
+<p>The spectrum contains only the carrier at 10 kHz on the positive-frequency side.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp3-power-mu-0.png" class="img-fluid figure-img"></p>
+<figcaption>AM power distribution with no modulation</figcaption>
+</figure>
+</div>
+<p>This gives us a useful interpretation:</p>
+<blockquote class="blockquote">
+<p>No modulation means no sidebands.</p>
+</blockquote>
+<p>The transmitter can radiate a perfectly strong carrier while conveying none of our changing 1 kHz message.</p>
+<hr>
+</section>
+<section id="at-mu0.5" class="level2">
+<h2 class="anchored" data-anchor-id="at-mu0.5">At <span class="math inline">\(\mu=0.5\)</span></h2>
+<p>The sidebands appear and the live display shows approximately</p>
+<p><span class="math display">\[
+P_C=88.89\%,
+\]</span></p>
+<p><span class="math display">\[
+P_{LSB}=P_{USB}=5.56\%,
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+P_{SB,total}=11.11\%.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp3-power-mu-05.png" class="img-fluid figure-img"></p>
+<figcaption>AM power distribution at a modulation index of 0.5</figcaption>
+</figure>
+</div>
+<p>The sidebands have grown, but almost 89% of the total transmitted power is still in the carrier.</p>
+<hr>
+</section>
+<section id="at-mu1" class="level2">
+<h2 class="anchored" data-anchor-id="at-mu1">At <span class="math inline">\(\mu=1\)</span></h2>
+<p>At 100% modulation, the sidebands are at their strongest without entering overmodulation.</p>
+<p>GNU Radio shows approximately</p>
+<p><span class="math display">\[
+P_C=66.67\%,
+\]</span></p>
+<p><span class="math display">\[
+P_{LSB}=P_{USB}=16.67\%,
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+P_{SB,total}=33.33\%.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp3-power-mu-1.png" class="img-fluid figure-img"></p>
+<figcaption>AM power distribution at 100 percent modulation</figcaption>
+</figure>
+</div>
+<p>This is the key result:</p>
+<blockquote class="blockquote">
+<p>Even at 100% modulation, about two-thirds of the transmitted power is in the carrier. Only one-third is in the two information-bearing sidebands.</p>
+</blockquote>
+<p>Now let us see where those percentages come from.</p>
+<hr>
+</section>
+</section>
+<section id="am-power-and-efficiency" class="level1">
+<h1>13.5 AM Power and Efficiency</h1>
+<p>For a sinusoid with amplitude <span class="math inline">\(A\)</span> across a normalized <span class="math inline">\(1\ \Omega\)</span> load, the average power is</p>
+<p><span class="math display">\[
+P=\frac{A^2}{2}.
+\]</span></p>
+<p>The conventional AM carrier has amplitude <span class="math inline">\(A_c\)</span>, so</p>
+<p><span class="math display">\[
+P_c=\frac{A_c^2}{2}.
+\]</span></p>
+<p>From the expansion of the AM signal, each sideband has amplitude</p>
+<p><span class="math display">\[
+\frac{A_c\mu}{2}.
+\]</span></p>
+<p>Therefore the power in each sideband is</p>
+<p><span class="math display">\[
+P_{SB}=\frac{1}{2}\left(\frac{A_c\mu}{2}\right)^2=\frac{A_c^2\mu^2}{8}.
+\]</span></p>
+<p>There are two sidebands, so their total power is</p>
+<p><span class="math display">\[
+P_{SB,total}=\frac{A_c^2\mu^2}{4}.
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+P_c=\frac{A_c^2}{2},
+\]</span></p>
+<p>we can write</p>
+<p><span class="math display">\[
+P_{SB,total}=P_c\frac{\mu^2}{2}.
+\]</span></p>
+<p>The total transmitted power is therefore</p>
+<p><span class="math display">\[
+P_T=P_c+P_{SB,total}=P_c\left(1+\frac{\mu^2}{2}\right).
+\]</span></p>
+<p>If we define conventional AM power efficiency as the fraction of total transmitted power contained in the information-bearing sidebands, then</p>
+<p><span class="math display">\[
+\eta=\frac{P_{SB,total}}{P_T}=\frac{\mu^2/2}{1+\mu^2/2}.
+\]</span></p>
+<p>At the largest modulation index normally used without overmodulation,</p>
+<p><span class="math display">\[
+\mu=1,
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\eta=\frac{1/2}{1+1/2}=\frac{1}{3}\approx33.3\%.
+\]</span></p>
+<p>For single-tone conventional AM at 100% modulation,</p>
+<p><span class="math display">\[
+\boxed{\eta_{max}\approx33.3\%}.
+\]</span></p>
+<p>The remaining</p>
+<p><span class="math display">\[
+66.7\%
+\]</span></p>
+<p>is carrier power.</p>
+<p>This does not mean the carrier is useless. It is precisely what enabled our simple envelope detector. The point is that conventional AM makes an engineering trade-off:</p>
+<p><span class="math display">\[
+\boxed{\text{simple receiver}\quad\longleftrightarrow\quad\text{poor power efficiency}}
+\]</span></p>
+<hr>
+<section id="gnu-radio-toolbox-qt-gui-number-sink" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-qt-gui-number-sink">GNU Radio Toolbox: QT GUI Number Sink</h2>
+<p>The <strong>QT GUI Number Sink</strong> displays numerical values from one or more input streams.</p>
+<p>In this experiment, the quantities we wanted to display were calculated from the modulation index rather than measured from a changing signal stream. We therefore used Constant Source blocks whose values depend on <code>mu</code>, then connected those streams to the Number Sink.</p>
+<p>This gave us a live display of:</p>
+<ul>
+<li>carrier power percentage;</li>
+<li>LSB power percentage;</li>
+<li>USB power percentage;</li>
+<li>total sideband power percentage.</li>
+</ul>
+<p>The horizontal graph range was set from 0 to 100 so the bar length itself also represented a percentage visually.</p>
+<section id="why-not-estimate-power-from-peak-height-alone" class="level3">
+<h3 class="anchored" data-anchor-id="why-not-estimate-power-from-peak-height-alone">Why Not Estimate Power from Peak Height Alone?</h3>
+<p>The Frequency Sink is excellent for showing where spectral components are located and how they change, but a dB peak height is not the same thing as directly reading a percentage of total transmitted power.</p>
+<p>The Number Sink made the power relationship explicit while the Frequency Sink provided the spectral evidence.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="do-the-sidebands-really-carry-the-message" class="level1">
+<h1>13.6 Do the Sidebands Really Carry the Message?</h1>
+<p>It is common to say that the sidebands carry the information. That statement is useful, but it deserves a careful interpretation.</p>
+<p>At <span class="math inline">\(\mu=0\)</span>, the transmitter produces only the carrier. Whether our intended message was 500 Hz, 1 kHz, speech, music, or nothing at all, that unmodulated carrier by itself does not reproduce the changing message waveform.</p>
+<p>When a 1 kHz message is applied, sidebands appear at</p>
+<p><span class="math display">\[
+f_c-1\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_c+1\text{ kHz}.
+\]</span></p>
+<p>If the message frequency changes to 2 kHz, those sidebands move accordingly.</p>
+<p>For a complicated message, such as speech, the whole baseband spectrum is translated into sidebands around the carrier.</p>
+<p>So when we say that the sidebands carry the information, we mean that their spectral content reflects the changing amplitude and frequency content of the message. The carrier mainly provides the reference that makes simple envelope detection possible.</p>
+<p>That immediately suggests another question:</p>
+<blockquote class="blockquote">
+<p>If the carrier consumes most of the power, what happens if we stop transmitting it?</p>
+</blockquote>
+<p>We already know the answer from Chapter 12: we return to DSB-SC.</p>
+<p>Now we can compare the two schemes for a much more meaningful reason.</p>
+<hr>
+</section>
+<section id="experiment-13.4-conventional-am-vs-dsb-sc" class="level1">
+<h1>Experiment 13.4: Conventional AM vs DSB-SC</h1>
+<p>We generate conventional AM and DSB-SC from the same 1 kHz message and the same 10 kHz carrier.</p>
+<p>The two branches differ by only one important step.</p>
+<pre class="text"><code>                         +--&gt; Add 1 --&gt; Multiply --&gt; Conventional AM
+                         |                ^
+1 kHz message -----------+             10 kHz
+                         |              carrier
+                         |                v
+                         +----------&gt; Multiply --&gt; DSB-SC</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp4-am-vs-dsbsc-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph comparing conventional AM and DSB-SC</figcaption>
+</figure>
+</div>
+<section id="experiment-setup-2" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-setup-2">Experiment Setup</h2>
+<p>For this comparison we use a 64 kS/s sample rate, a 1 kHz message of amplitude 1, and a 10 kHz carrier of amplitude 1. The same message and carrier feed both branches.</p>
+<pre class="text"><code>Conventional AM: Message --&gt; Add Constant 1 --&gt; Multiply by carrier
+DSB-SC:          Message ---------------------&gt; Multiply by carrier</code></pre>
+<p>Two Frequency Sinks, <code>Conventional AM Spectrum</code> and <code>DSB-SC Spectrum</code>, display the results side by side. No special settings are needed beyond the familiar 1024-point FFT and <code>samp_rate</code> bandwidth.</p>
+</section>
+<section id="what-do-we-see" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-see">What Do We See?</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp4-am-vs-dsbsc-spectrum.png" class="img-fluid figure-img"></p>
+<figcaption>Spectrum comparison between conventional AM and DSB-SC</figcaption>
+</figure>
+</div>
+<p>Conventional AM contains</p>
+<p><span class="math display">\[
+9\text{ kHz},\quad10\text{ kHz},\quad11\text{ kHz}.
+\]</span></p>
+<p>DSB-SC contains</p>
+<p><span class="math display">\[
+9\text{ kHz},\quad11\text{ kHz},
+\]</span></p>
+<p>but no separate 10 kHz carrier component.</p>
+<p>So:</p>
+<p><span class="math display">\[
+\boxed{\text{Conventional AM}=\text{Carrier}+\text{LSB}+\text{USB}}
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\boxed{\text{DSB-SC}=\text{LSB}+\text{USB}}.
+\]</span></p>
+</section>
+<section id="suppressing-the-carrier-saves-power-not-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="suppressing-the-carrier-saves-power-not-bandwidth">Suppressing the Carrier Saves Power, Not Bandwidth</h2>
+<p>This distinction is important.</p>
+<p>Both signals still extend from 9 kHz to 11 kHz for our single-tone demonstration. For a general baseband message of bandwidth <span class="math inline">\(B\)</span>,</p>
+<p><span class="math display">\[
+BW_{AM}=2B
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+BW_{DSB-SC}=2B.
+\]</span></p>
+<p>Removing the carrier therefore improves power efficiency, but it does <strong>not</strong> reduce the occupied bandwidth.</p>
+<p>And the power saving comes with a cost.</p>
+<p>Conventional AM can use the simple envelope detector from Experiment 13.2.</p>
+<p>DSB-SC normally requires coherent detection, which means the receiver must recreate or recover a carrier with suitable frequency and phase accuracy.</p>
+<p>So we have another engineering trade-off:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Conventional AM</th>
+<th>DSB-SC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Carrier</td>
+<td>Transmitted</td>
+<td>Suppressed</td>
+</tr>
+<tr class="even">
+<td>Sidebands</td>
+<td>LSB + USB</td>
+<td>LSB + USB</td>
+</tr>
+<tr class="odd">
+<td>Bandwidth for message bandwidth <span class="math inline">\(B\)</span></td>
+<td><span class="math inline">\(2B\)</span></td>
+<td><span class="math inline">\(2B\)</span></td>
+</tr>
+<tr class="even">
+<td>Power efficiency</td>
+<td>Poor</td>
+<td>Better</td>
+</tr>
+<tr class="odd">
+<td>Simple envelope detection</td>
+<td>Yes, when not overmodulated</td>
+<td>No</td>
+</tr>
+<tr class="even">
+<td>Coherent detection</td>
+<td>Not required for basic envelope detection</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p>Neither scheme is automatically better in every situation. One favors receiver simplicity; the other avoids spending transmitter power on a large carrier.</p>
+<p>But DSB-SC leaves us with another question.</p>
+<blockquote class="blockquote">
+<p>We removed the carrier, but why are we still transmitting two sidebands?</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="do-we-really-need-both-sidebands" class="level1">
+<h1>13.7 Do We Really Need Both Sidebands?</h1>
+<p>With a single 1 kHz message, DSB-SC gives us components at 9 kHz and 11 kHz. Both came from the same original 1 kHz tone.</p>
+<p>For a real message with many frequencies, the situation is more interesting. The lower and upper sidebands contain mirrored versions of the same baseband information.</p>
+<p>If one complete sideband is sufficient to reconstruct the message, then transmitting both uses twice the necessary sideband bandwidth.</p>
+<p>To make this visible, a single-tone message is not enough. A single sinusoid has no meaningful occupied band to compare. So we built a simple three-tone message:</p>
+<p><span class="math display">\[
+m(t)=0.3\cos(2\pi500t)+0.3\cos(2\pi1000t)+0.3\cos(2\pi1500t).
+\]</span></p>
+<p>This gives us a message extending to 1.5 kHz and lets us see how a group of message frequencies behaves.</p>
+<hr>
+</section>
+<section id="experiment-13.5-from-dsb-sc-to-ssb-sc" class="level1">
+<h1>Experiment 13.5: From DSB-SC to SSB-SC</h1>
+<section id="step-1-build-a-multi-tone-message" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-build-a-multi-tone-message">Step 1: Build a Multi-Tone Message</h2>
+<p>Three Signal Source blocks generate:</p>
+<pre class="text"><code>500 Hz   amplitude 0.3
+1 kHz    amplitude 0.3
+1.5 kHz  amplitude 0.3</code></pre>
+<p>They are added together and multiplied by a 10 kHz carrier.</p>
+<p>The resulting DSB-SC signal contains the lower-sideband components</p>
+<p><span class="math display">\[
+8.5\text{ kHz},\quad9\text{ kHz},\quad9.5\text{ kHz}
+\]</span></p>
+<p>and the upper-sideband components</p>
+<p><span class="math display">\[
+10.5\text{ kHz},\quad11\text{ kHz},\quad11.5\text{ kHz}.
+\]</span></p>
+<p>Notice something important about the order.</p>
+<p>The USB maps</p>
+<pre class="text"><code>500 Hz   -&gt; 10.5 kHz
+1 kHz    -&gt; 11.0 kHz
+1.5 kHz  -&gt; 11.5 kHz</code></pre>
+<p>while the LSB maps</p>
+<pre class="text"><code>500 Hz   -&gt; 9.5 kHz
+1 kHz    -&gt; 9.0 kHz
+1.5 kHz  -&gt; 8.5 kHz</code></pre>
+<p>The lower sideband is therefore frequency-reversed around the carrier. The two sidebands are not simply identical left-to-right drawings. They are mirrored representations of the same message information.</p>
+</section>
+<section id="step-2-remove-one-sideband" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-remove-one-sideband">Step 2: Remove One Sideband</h2>
+<p>We pass the DSB-SC signal through a Band Pass Filter that retains the USB.</p>
+<pre class="text"><code>Three-tone message
+       |
+       v
+Multiply by 10 kHz carrier
+       |
+       v
+     DSB-SC
+       |
+       v
+Band Pass Filter
+       |
+       v
+SSB-SC: USB only</code></pre>
+<p>The final flowgraph also includes coherent demodulation so that we can prove the message survives.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp5-dsbsc-to-ssbsc-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for generating and recovering SSB-SC from DSB-SC</figcaption>
+</figure>
+</div>
+</section>
+<section id="experiment-setup-3" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-setup-3">Experiment Setup</h2>
+<p>The sample rate remains 64 kS/s and the carrier remains 10 kHz. The baseband message is now the sum of three cosine tones:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tone</th>
+<th style="text-align: right;">Frequency</th>
+<th style="text-align: right;">Amplitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">0.3</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td style="text-align: right;">1 kHz</td>
+<td style="text-align: right;">0.3</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td style="text-align: right;">1.5 kHz</td>
+<td style="text-align: right;">0.3</td>
+</tr>
+</tbody>
+</table>
+<p>The familiar Signal Sources use the common <code>samp_rate</code>. The important new setting is the Band Pass Filter that selects the USB:</p>
+<pre class="text"><code>Decimation: 1
+Gain: 1
+Sample Rate: samp_rate
+Low Cutoff Frequency: 10.3k
+High Cutoff Frequency: 11.7k
+Transition Width: 200
+Window: Blackman-Harris</code></pre>
+<p>The filtered USB-only signal is then coherently multiplied by the same 10 kHz carrier. The recovery Low Pass Filter uses:</p>
+<pre class="text"><code>Decimation: 1
+Gain: 2
+Sample Rate: samp_rate
+Cutoff Frequency: 2k
+Transition Width: 500
+Window: Hamming</code></pre>
+<p>The GUI shows <code>DSB-SC Spectrum</code>, <code>SSB-SC Spectrum (USB Only)</code>, <code>Original and Recovered Message</code>, and <code>Original and Recovered Message Spectrum</code>.</p>
+</section>
+<section id="what-did-the-spectrum-show" class="level2">
+<h2 class="anchored" data-anchor-id="what-did-the-spectrum-show">What Did the Spectrum Show?</h2>
+<p>The DSB-SC spectrum contains both groups of three tones.</p>
+<p>After the Band Pass Filter, only the USB group remains strongly around the positive carrier frequency.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch13/ch13-exp5-ssbsc-generation-and-recovery.png" class="img-fluid figure-img"></p>
+<figcaption>DSB-SC, USB-only SSB-SC, and recovery of the original multi-tone message</figcaption>
+</figure>
+</div>
+<p>The SSB Frequency Sink still shows corresponding components around negative 10 kHz. This can be confusing at first.</p>
+<p>They do <strong>not</strong> mean that the unwanted lower sideband has returned.</p>
+<p>Our transmitted SSB waveform in this experiment is real-valued. A real signal has conjugate-symmetric positive- and negative-frequency components. When we say that the positive-frequency signal contains the USB only, the corresponding negative-frequency mirror is still required by the Fourier representation of a real waveform.</p>
+<p>This connects directly to our earlier chapters on positive and negative frequencies and real versus complex signals.</p>
+<hr>
+</section>
+<section id="a-practical-filtering-lesson" class="level2">
+<h2 class="anchored" data-anchor-id="a-practical-filtering-lesson">A Practical Filtering Lesson</h2>
+<p>Initially, the unwanted sideband was still visibly present after filtering. Changing the Band Pass Filter window to <strong>Blackman-Harris</strong> produced much stronger rejection.</p>
+<p>That observation teaches something useful about practical SSB generation.</p>
+<p>An ideal textbook filter may be drawn as a perfectly vertical wall:</p>
+<pre class="text"><code>Pass everything here | Reject everything there
+                     |
+                     |
+---------------------|-------------------------</code></pre>
+<p>A real digital filter has a transition region and finite stopband attenuation.</p>
+<p>This becomes especially important when message components lie very close to the carrier, because the LSB and USB then approach one another closely. Separating them by filtering can require a demanding filter.</p>
+<p>Our experiment therefore did more than demonstrate SSB. It also showed why practical filter design matters in communication systems.</p>
+<hr>
+</section>
+<section id="step-3-can-we-recover-the-complete-message-from-one-sideband" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-can-we-recover-the-complete-message-from-one-sideband">Step 3: Can We Recover the Complete Message from One Sideband?</h2>
+<p>This is the most important part of the experiment.</p>
+<p>The USB-only signal is coherently mixed with the 10 kHz carrier and low-pass filtered.</p>
+<p>The recovered spectrum contains the original message components at</p>
+<p><span class="math display">\[
+500\text{ Hz},\quad1\text{ kHz},\quad1.5\text{ kHz}.
+\]</span></p>
+<p>So even though we transmitted only one sideband, the complete three-tone message could still be recovered.</p>
+<p>That gives us the central result:</p>
+<p><span class="math display">\[
+\boxed{\text{One complete sideband contains enough information to reconstruct the original message.}}
+\]</span></p>
+<p>The recovered time waveform does not lie perfectly on top of the original waveform. This is not surprising. The signal has passed through both a Band Pass Filter and a Low Pass Filter, which introduce delay and frequency-dependent phase shifts. A multi-tone waveform is particularly sensitive to the relative phases of its components.</p>
+<p>For that reason, the recovered frequency spectrum is especially useful here. It shows directly that all three message frequencies survived.</p>
+<hr>
+</section>
+<section id="bandwidth-dsb-sc-vs-ssb-sc" class="level2">
+<h2 class="anchored" data-anchor-id="bandwidth-dsb-sc-vs-ssb-sc">Bandwidth: DSB-SC vs SSB-SC</h2>
+<p>For a message with bandwidth <span class="math inline">\(B\)</span>, DSB-SC occupies both sides of the carrier:</p>
+<p><span class="math display">\[
+BW_{DSB-SC}=2B.
+\]</span></p>
+<p>SSB transmits only one of them:</p>
+<p><span class="math display">\[
+BW_{SSB}=B.
+\]</span></p>
+<p>So the progression is now clear:</p>
+<pre class="text"><code>Conventional AM
+Carrier + LSB + USB
+        |
+        | suppress carrier
+        v
+DSB-SC
+LSB + USB
+        |
+        | suppress one sideband
+        v
+SSB-SC
+LSB or USB</code></pre>
+<p>Suppressing the carrier saves power.</p>
+<p>Suppressing one sideband saves additional power <strong>and</strong> cuts the required sideband bandwidth in half.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-band-pass-filter" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-band-pass-filter">GNU Radio Toolbox: Band Pass Filter</h2>
+<p>A <strong>Band Pass Filter</strong> passes a selected range of frequencies while attenuating frequencies below and above that range.</p>
+<p>In Experiment 13.5, we used it to keep the upper sideband:</p>
+<pre class="text"><code>Wanted USB:     10.5 kHz to 11.5 kHz
+Carrier region: 10 kHz
+Unwanted LSB:    8.5 kHz to 9.5 kHz</code></pre>
+<p>The important parameters were:</p>
+<ul>
+<li>low cutoff frequency;</li>
+<li>high cutoff frequency;</li>
+<li>transition width;</li>
+<li>window;</li>
+<li>sample rate.</li>
+</ul>
+<p>The transition width determines how quickly the filter moves between its stopband and passband. A narrower transition generally demands a more selective filter.</p>
+<p>The window affects characteristics such as stopband attenuation and transition behavior. In our SSB experiment, changing to Blackman-Harris improved rejection of the unwanted sideband enough to make the USB-only result much clearer.</p>
+<section id="watch-out-1" class="level3">
+<h3 class="anchored" data-anchor-id="watch-out-1">Watch Out</h3>
+<p>Do not interpret a practical band-pass filter as an ideal frequency-domain knife. Some residual unwanted-sideband energy may remain. In real communication systems we often talk about <strong>sideband suppression</strong> rather than pretending the unwanted sideband has mathematically vanished.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="how-is-ssb-generated-in-practice" class="level1">
+<h1>13.8 How Is SSB Generated in Practice?</h1>
+<p>Our experiment used the most intuitive route:</p>
+<pre class="text"><code>Generate DSB-SC
+      |
+      v
+Filter away one sideband
+      |
+      v
+SSB-SC</code></pre>
+<p>This is called the <strong>filter method</strong>.</p>
+<p>It is an excellent way to understand what SSB means, but it is not the only way to generate it.</p>
+<p>In SDR, another route is especially important because it connects SSB to complex signals, I/Q processing, Hilbert transforms, and analytic signals.</p>
+<p>Those ideas may have seemed abstract when we first met positive and negative frequencies. Here they solve a real modulation problem.</p>
+<hr>
+</section>
+<section id="the-filter-method" class="level1">
+<h1>13.9 The Filter Method</h1>
+<p>The filter method begins with DSB-SC:</p>
+<p><span class="math display">\[
+s_{DSB-SC}(t)=m(t)\cos(2\pi f_c t).
+\]</span></p>
+<p>This creates both sidebands. A selective band-pass filter then keeps either the USB or the LSB.</p>
+<p>The advantage is conceptual simplicity.</p>
+<p>The difficulty appears when the message contains important frequencies very close to DC. Those components create sideband energy very close to the carrier frequency. The gap between the wanted and unwanted sidebands can then become extremely small, making the required filter more difficult to realize.</p>
+<p>Our Experiment 13.5 gave us a mild version of this practical problem. The choice of filter window visibly affected how well the unwanted sideband was suppressed.</p>
+<p>So engineers developed other ways of creating SSB that do not rely only on cutting one sideband away with an extremely sharp filter.</p>
+<hr>
+</section>
+<section id="the-phasing-method-cancel-the-sideband-instead-of-filtering-it" class="level1">
+<h1>13.10 The Phasing Method: Cancel the Sideband Instead of Filtering It</h1>
+<p>Suppose we could create two versions of the message that are 90 degrees apart in phase, and also two carrier signals that are 90 degrees apart.</p>
+<p>Then we could combine the resulting products so that one sideband adds while the other cancels.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>                         +--&gt; × cos(2πfct) --+
+Message ----------------|                    |
+                         |                    +--&gt; Add/Subtract --&gt; SSB
+                         |                    |
+                         +--&gt; 90° shift --&gt; × sin(2πfct)</code></pre>
+<p>This is the basic idea behind the <strong>phasing method</strong>.</p>
+<p>Instead of first producing both sidebands and then removing one with a narrow filter, we arrange the phases so that the unwanted sideband cancels during addition or subtraction.</p>
+<p>To do this for a general message, we need a way to construct the required quadrature version of that message.</p>
+<p>That is where the Hilbert transform enters.</p>
+<hr>
+</section>
+<section id="the-hilbert-transform-creating-the-quadrature-message" class="level1">
+<h1>13.11 The Hilbert Transform: Creating the Quadrature Message</h1>
+<p>Let the original real message be</p>
+<p><span class="math display">\[
+m(t).
+\]</span></p>
+<p>Its Hilbert transform is commonly written as</p>
+<p><span class="math display">\[
+\hat{m}(t).
+\]</span></p>
+<p>For our purpose, the most useful intuition is this:</p>
+<blockquote class="blockquote">
+<p>The Hilbert transform creates a quadrature version of the signal, applying a 90-degree phase relationship in the frequency-domain sense required for analytic-signal construction.</p>
+</blockquote>
+<p>For a simple cosine, depending on the sign convention,</p>
+<p><span class="math display">\[
+\cos(2\pi f_m t)\xrightarrow{\text{Hilbert}}\sin(2\pi f_m t)
+\]</span></p>
+<p>up to sign.</p>
+<p>For a complicated message, however, it is better not to think of the Hilbert transform as merely delaying the whole waveform by one-quarter of a cycle. Different frequencies have different periods, so there is no single time delay that represents 90 degrees for every frequency simultaneously.</p>
+<p>The Hilbert transform is a frequency-dependent phase operation.</p>
+<p>That distinction is important.</p>
+<hr>
+</section>
+<section id="the-analytic-signal" class="level1">
+<h1>13.12 The Analytic Signal</h1>
+<p>Once we have the original message and its Hilbert transform, we can combine them into a complex signal:</p>
+<p><span class="math display">\[
+m_a(t)=m(t)+j\hat{m}(t).
+\]</span></p>
+<p>This is called the <strong>analytic signal</strong> associated with <span class="math inline">\(m(t)\)</span>.</p>
+<p>The remarkable property of the analytic signal is that, ideally, it contains only one side of the frequency spectrum.</p>
+<p>This connects directly to something we learned much earlier:</p>
+<ul>
+<li>a real cosine contains positive and negative frequency components;</li>
+<li>a properly constructed complex signal can represent only one frequency direction.</li>
+</ul>
+<p>The analytic signal uses exactly that idea.</p>
+<p>We can then translate it to the carrier frequency using a complex exponential:</p>
+<p><span class="math display">\[
+m_a(t)e^{j2\pi f_c t}.
+\]</span></p>
+<p>Taking the real part gives an SSB waveform:</p>
+<p><span class="math display">\[
+s_{SSB}(t)=\operatorname{Re}\{m_a(t)e^{j2\pi f_c t}\}.
+\]</span></p>
+<p>Expanding the expression gives</p>
+<p><span class="math display">\[
+s_{SSB}(t)=m(t)\cos(2\pi f_c t)-\hat{m}(t)\sin(2\pi f_c t).
+\]</span></p>
+<p>With the corresponding sign choice, the other sideband can be selected:</p>
+<p><span class="math display">\[
+s_{SSB}(t)=m(t)\cos(2\pi f_c t)+\hat{m}(t)\sin(2\pi f_c t).
+\]</span></p>
+<p>Which sign is labeled USB or LSB depends on the Hilbert-transform and oscillator sign convention being used. The important idea is not to memorize a sign blindly.</p>
+<p>The important idea is:</p>
+<blockquote class="blockquote">
+<p>One combination makes the unwanted sideband cancel while the desired sideband reinforces.</p>
+</blockquote>
+<p>This is the phasing method expressed using the language of complex signals.</p>
+<hr>
+</section>
+<section id="why-analytic-signals-matter-in-sdr" class="level1">
+<h1>13.13 Why Analytic Signals Matter in SDR</h1>
+<p>This is one of the places where several earlier chapters come together.</p>
+<p>We previously learned about:</p>
+<ul>
+<li>complex numbers;</li>
+<li>I and Q components;</li>
+<li>positive and negative frequencies;</li>
+<li>complex baseband;</li>
+<li>frequency translation.</li>
+</ul>
+<p>Now we can see why SDR systems use those ideas so heavily.</p>
+<p>The analytic signal gives us a complex representation in which one side of the spectrum can be treated independently. Complex multiplication by</p>
+<p><span class="math display">\[
+e^{j2\pi f_c t}
+\]</span></p>
+<p>then shifts that spectrum cleanly in frequency.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Real message m(t)
+       |
+       +--------------------+
+       |                    |
+       v                    v
+       I                 Hilbert
+       |                    |
+       |                    v
+       |                    Q
+       +---------+----------+
+                 |
+                 v
+          Complex analytic signal
+             m(t) + j m^(t)
+                 |
+                 v
+        Complex frequency shift
+                 |
+                 v
+          Selectable SSB signal</code></pre>
+<p>Here <code>m^(t)</code> in the diagram represents the Hilbert-transformed message <span class="math inline">\(\hat{m}(t)\)</span>.</p>
+<p>This is much more than a trick for SSB. Analytic and complex signals are fundamental tools throughout modern SDR because they let us represent and manipulate spectral direction explicitly.</p>
+<hr>
+</section>
+<section id="ssb-with-carrier-and-reduced-carrier" class="level1">
+<h1>13.14 SSB with Carrier and Reduced Carrier</h1>
+<p>So far, when we said SSB we mainly meant <strong>SSB-SC</strong>:</p>
+<pre class="text"><code>One sideband
+No transmitted carrier</code></pre>
+<p>But a system does not always have to suppress the carrier completely.</p>
+<p>An SSB signal may retain a carrier or a reduced carrier component. The general idea is:</p>
+<pre class="text"><code>SSB-SC
+One sideband + no carrier
+
+SSB with carrier
+One sideband + carrier
+
+Reduced-carrier SSB
+One sideband + smaller carrier reference</code></pre>
+<p>Why would we put some carrier back after working so hard to remove it?</p>
+<p>For the same reason conventional AM transmitted one in the first place: a carrier reference can simplify parts of the receiver, especially carrier recovery or tuning.</p>
+<p>The trade-off returns:</p>
+<ul>
+<li>more carrier power can make reception easier;</li>
+<li>less carrier power improves transmitter power efficiency.</li>
+</ul>
+<p>So SSB is not only one rigid waveform. Practical systems can choose how much carrier, if any, is appropriate for the application.</p>
+<hr>
+</section>
+<section id="vestigial-sideband-a-practical-compromise" class="level1">
+<h1>13.15 Vestigial Sideband: A Practical Compromise</h1>
+<p>There is another problem with ideal SSB.</p>
+<p>Suppose the message contains important frequencies very close to zero. After modulation, the two sidebands meet very close to the carrier. Removing one sideband perfectly would require a very sharp transition.</p>
+<p>Instead of demanding perfect removal, we can deliberately keep:</p>
+<ul>
+<li>one complete sideband;</li>
+<li>a small <strong>vestige</strong> of the other sideband.</li>
+</ul>
+<p>This is called <strong>vestigial sideband</strong>, or <strong>VSB</strong>.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>DSB                 SSB                 VSB
+
+LSB | USB               | USB            vestige | USB
+----|----             ---|----            -------|----
+    fc                   fc                      fc</code></pre>
+<p>VSB occupies slightly more bandwidth than ideal SSB, but less than full DSB.</p>
+<p>It is therefore a compromise between:</p>
+<ul>
+<li>bandwidth efficiency;</li>
+<li>practical filter realizability;</li>
+<li>receiver requirements.</li>
+</ul>
+<p>VSB became particularly important in traditional analog television video transmission, where completely removing one sideband near the carrier would have been inconvenient.</p>
+<p>The lesson is broader than television:</p>
+<blockquote class="blockquote">
+<p>Communication-system design is often about choosing a practical compromise rather than maximizing one property in isolation.</p>
+</blockquote>
+<hr>
+</section>
+<section id="comparing-the-main-am-families" class="level1">
+<h1>13.16 Comparing the Main AM Families</h1>
+<p>We can now put the major variants side by side.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scheme</th>
+<th>Carrier</th>
+<th>Sidebands</th>
+<th>Approximate bandwidth for message bandwidth <span class="math inline">\(B\)</span></th>
+<th>Power efficiency</th>
+<th>Receiver complexity</th>
+<th>Main idea</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Conventional AM</td>
+<td>Full carrier</td>
+<td>LSB + USB</td>
+<td><span class="math inline">\(2B\)</span></td>
+<td>Poor</td>
+<td>Low</td>
+<td>Spend carrier power to allow simple envelope detection</td>
+</tr>
+<tr class="even">
+<td>DSB-SC</td>
+<td>Suppressed</td>
+<td>LSB + USB</td>
+<td><span class="math inline">\(2B\)</span></td>
+<td>Better</td>
+<td>Higher</td>
+<td>Remove the carrier and use coherent detection</td>
+</tr>
+<tr class="odd">
+<td>SSB-SC</td>
+<td>Suppressed</td>
+<td>LSB or USB</td>
+<td><span class="math inline">\(B\)</span></td>
+<td>High</td>
+<td>Higher</td>
+<td>Transmit only one information-bearing sideband</td>
+</tr>
+<tr class="even">
+<td>SSB with carrier / reduced carrier</td>
+<td>Full or partial carrier</td>
+<td>One sideband</td>
+<td>About <span class="math inline">\(B\)</span></td>
+<td>Between conventional AM and SSB-SC</td>
+<td>Depends on implementation</td>
+<td>Trade some power efficiency for an easier carrier reference</td>
+</tr>
+<tr class="odd">
+<td>VSB</td>
+<td>Depends on system</td>
+<td>One full sideband + vestige of the other</td>
+<td>Slightly greater than <span class="math inline">\(B\)</span></td>
+<td>Good</td>
+<td>Moderate</td>
+<td>Relax the filtering problem while saving bandwidth</td>
+</tr>
+</tbody>
+</table>
+<p>There is no universally best scheme.</p>
+<section id="conventional-am" class="level3">
+<h3 class="anchored" data-anchor-id="conventional-am">Conventional AM</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>simple envelope-detector receivers are possible;</li>
+<li>intuitive and historically easy to implement;</li>
+<li>no coherent local carrier is required for basic envelope detection.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>most transmitted power can be spent on the carrier;</li>
+<li>two sidebands are transmitted;</li>
+<li>bandwidth is <span class="math inline">\(2B\)</span>.</li>
+</ul>
+</section>
+<section id="dsb-sc" class="level3">
+<h3 class="anchored" data-anchor-id="dsb-sc">DSB-SC</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>eliminates the large carrier-power expenditure;</li>
+<li>both sidebands preserve the message spectrum.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>still occupies <span class="math inline">\(2B\)</span>;</li>
+<li>coherent carrier recovery or synchronization is required.</li>
+</ul>
+</section>
+<section id="ssb-sc" class="level3">
+<h3 class="anchored" data-anchor-id="ssb-sc">SSB-SC</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>no large transmitted carrier;</li>
+<li>only one sideband is transmitted;</li>
+<li>bandwidth is reduced to <span class="math inline">\(B\)</span>;</li>
+<li>well suited to applications where spectrum and transmitter power are valuable.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>generation is more demanding than conventional AM;</li>
+<li>coherent reception and carrier/frequency accuracy matter;</li>
+<li>practical filters or phasing networks are not ideal.</li>
+</ul>
+</section>
+<section id="vsb" class="level3">
+<h3 class="anchored" data-anchor-id="vsb">VSB</h3>
+<p><strong>Advantages</strong></p>
+<ul>
+<li>saves substantial bandwidth compared with DSB;</li>
+<li>relaxes the requirement for an extremely sharp sideband-removal filter.</li>
+</ul>
+<p><strong>Disadvantages</strong></p>
+<ul>
+<li>occupies more bandwidth than ideal SSB;</li>
+<li>transmitter and receiver design must account for the vestigial response.</li>
+</ul>
+<p>The correct choice therefore depends on what the system values most:</p>
+<pre class="text"><code>Receiver simplicity?
+Transmitter power?
+Available spectrum?
+Filter difficulty?
+Carrier synchronization?
+Implementation cost?</code></pre>
+<p>That is a more useful engineering question than asking which modulation type is simply “best.”</p>
+<hr>
+</section>
+</section>
+<section id="a-note-about-bandwidth-in-our-single-tone-experiments" class="level1">
+<h1>13.17 A Note About “Bandwidth” in Our Single-Tone Experiments</h1>
+<p>There is one subtle point worth making before we leave AM.</p>
+<p>When we used a single 1 kHz sinusoid, the spectrum consisted of discrete lines. Strictly speaking, a perfect sinusoid is not a broad message band.</p>
+<p>We still used the distance between the sideband components to understand where the modulation products appear, but the real bandwidth advantage of SSB becomes clearer with a message containing a range of frequencies.</p>
+<p>That is why Experiment 13.5 used three message tones instead of only one.</p>
+<p>For a general baseband message occupying frequencies up to <span class="math inline">\(B\)</span>:</p>
+<pre class="text"><code>DSB / conventional AM
+
+fc-B              fc              fc+B
+ |----------------|----------------|
+       LSB               USB
+
+Total RF bandwidth = 2B</code></pre>
+<p>while an ideal USB SSB signal occupies only</p>
+<pre class="text"><code>fc                              fc+B
+ |--------------------------------|
+               USB
+
+Total RF bandwidth = B</code></pre>
+<p>The three-tone experiment was our first step from isolated spectral lines toward that more general picture.</p>
+<hr>
+</section>
+<section id="putting-the-whole-chapter-together" class="level1">
+<h1>13.18 Putting the Whole Chapter Together</h1>
+<p>We began with the DSB-SC signal from Chapter 12.</p>
+<p>Then, instead of treating AM, DSB-SC, and SSB as unrelated modulation names to memorize, we developed them by asking what happens when parts of the transmitted spectrum are added or removed.</p>
+<p>The progression is:</p>
+<pre class="text"><code>                         CONVENTIONAL AM
+
+                    Carrier + LSB + USB
+                             |
+             simple envelope detection possible
+                             |
+                             | suppress carrier
+                             v
+                           DSB-SC
+
+                         LSB + USB
+                             |
+                  better power efficiency
+                             |
+                             | suppress one sideband
+                             v
+                           SSB-SC
+
+                         LSB or USB
+                             |
+                better bandwidth efficiency</code></pre>
+<p>Each step solves one problem but changes another part of the system.</p>
+<p>Conventional AM gives us an easy receiver but wastes carrier power.</p>
+<p>DSB-SC removes that carrier power but requires coherent detection and still uses two sidebands.</p>
+<p>SSB-SC removes one redundant sideband as well, reducing the required bandwidth, but its generation and reception are more demanding.</p>
+<p>VSB then shows us that real systems do not always choose the mathematically pure extreme. Sometimes keeping a small part of the unwanted sideband makes the hardware or filtering problem much easier.</p>
+<p>This is a recurring theme in SDR and communication engineering:</p>
+<blockquote class="blockquote">
+<p>A waveform is not chosen because one equation looks elegant. It is chosen because its power, bandwidth, receiver complexity, synchronization requirements, and implementation cost fit the system being built.</p>
+</blockquote>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-new-tools-used-in-this-chapter" class="level1">
+<h1>GNU Radio Toolbox: New Tools Used in This Chapter</h1>
+<p>This chapter reused many familiar blocks, including Signal Source, Constant Source, Add, Multiply, Throttle, QT GUI Range, QT GUI Time Sink, QT GUI Frequency Sink, and Low Pass Filter.</p>
+<p>The main new tools were the following.</p>
+<section id="abs" class="level2">
+<h2 class="anchored" data-anchor-id="abs">Abs</h2>
+<p><strong>Purpose:</strong> Rectifies a real-valued signal by outputting its absolute value.</p>
+<p><strong>Used for:</strong> The first stage of our simple AM envelope detector.</p>
+<p><strong>Key idea:</strong> It folds negative samples upward, which is useful for envelope extraction but destroys sign information if the envelope itself becomes negative.</p>
+<hr>
+</section>
+<section id="dc-blocker" class="level2">
+<h2 class="anchored" data-anchor-id="dc-blocker">DC Blocker</h2>
+<p><strong>Purpose:</strong> Removes DC or very slowly varying offset from a signal.</p>
+<p><strong>Used for:</strong> Removing the constant component remaining after AM envelope detection.</p>
+<p><strong>Important setting used:</strong></p>
+<pre class="text"><code>Length: 32
+Long Form: True</code></pre>
+<hr>
+</section>
+<section id="qt-gui-number-sink" class="level2">
+<h2 class="anchored" data-anchor-id="qt-gui-number-sink">QT GUI Number Sink</h2>
+<p><strong>Purpose:</strong> Displays numerical values from one or more input streams.</p>
+<p><strong>Used for:</strong> Showing carrier, LSB, USB, and total sideband power percentages live while the modulation index changed.</p>
+<p><strong>Important display range used:</strong></p>
+<pre class="text"><code>Minimum: 0
+Maximum: 100
+Graph Type: Horizontal</code></pre>
+<hr>
+</section>
+<section id="band-pass-filter" class="level2">
+<h2 class="anchored" data-anchor-id="band-pass-filter">Band Pass Filter</h2>
+<p><strong>Purpose:</strong> Passes a selected frequency interval while attenuating frequencies outside it.</p>
+<p><strong>Used for:</strong> Suppressing the LSB and retaining the USB in our SSB-SC experiment.</p>
+<p><strong>Important settings used:</strong></p>
+<pre class="text"><code>Low Cutoff Frequency: 10.3k
+High Cutoff Frequency: 11.7k
+Transition Width: 200
+Window: Blackman-Harris</code></pre>
+<p>The experiment also reminded us that a filter window is not merely a cosmetic choice. It affects practical stopband suppression and transition behavior.</p>
+<hr>
+</section>
+</section>
+<section id="try-it-yourself-keep-the-other-sideband" class="level1">
+<h1>Try It Yourself: Keep the Other Sideband</h1>
+<p>Experiment 13.5 kept the USB.</p>
+<p>Before changing anything, predict what should happen if the Band Pass Filter is moved to the lower side of the carrier instead.</p>
+<p>The desired positive-frequency components would be</p>
+<p><span class="math display">\[
+8.5\text{ kHz},\quad9\text{ kHz},\quad9.5\text{ kHz}.
+\]</span></p>
+<p>Adjust the Band Pass Filter to retain the LSB instead of the USB, then coherently demodulate it.</p>
+<p>Questions to investigate:</p>
+<ol type="1">
+<li>Do the same three baseband frequencies return?</li>
+<li>Does the recovered time waveform have the same phase relationship as the USB case?</li>
+<li>What does the negative-frequency mirror look like?</li>
+</ol>
+<p>The important prediction is that the complete message information should still be recoverable from the LSB alone.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level1">
+<h1>What We Learned</h1>
+<p>In this chapter, we moved from the basic frequency translation of Chapter 12 to the main family of amplitude-modulation schemes.</p>
+<p>We learned that conventional AM can be written as</p>
+<p><span class="math display">\[
+s(t)=A_c[1+\mu m(t)]\cos(2\pi f_c t),
+\]</span></p>
+<p>and that for a single-tone message it produces a carrier plus a lower and upper sideband.</p>
+<p>We saw experimentally that the modulation index controls the depth of the envelope. For</p>
+<p><span class="math display">\[
+0&lt;\mu&lt;1,
+\]</span></p>
+<p>the signal is under 100% modulation. At</p>
+<p><span class="math display">\[
+\mu=1,
+\]</span></p>
+<p>the envelope just touches zero. For</p>
+<p><span class="math display">\[
+\mu&gt;1,
+\]</span></p>
+<p>the signal is overmodulated and a simple envelope detector becomes distorted.</p>
+<p>We built an envelope detector using</p>
+<pre class="text"><code>Abs --&gt; Low Pass Filter --&gt; DC Blocker</code></pre>
+<p>and saw why conventional AM does not require a synchronized local carrier for this simple form of reception.</p>
+<p>That simplicity has a cost. For single-tone conventional AM at 100% modulation, only about</p>
+<p><span class="math display">\[
+33.3\%
+\]</span></p>
+<p>of the total transmitted power is in the two sidebands, while about</p>
+<p><span class="math display">\[
+66.7\%
+\]</span></p>
+<p>remains in the carrier.</p>
+<p>We then compared conventional AM with DSB-SC and found that suppressing the carrier saves power but does not reduce the bandwidth:</p>
+<p><span class="math display">\[
+BW_{AM}=BW_{DSB-SC}=2B.
+\]</span></p>
+<p>Next, we used a three-tone message to show that the LSB and USB contain mirrored representations of the same message information. By filtering away the LSB, transmitting only the USB, and coherently demodulating it, we recovered all three original message frequencies.</p>
+<p>That demonstrated why SSB works:</p>
+<p><span class="math display">\[
+BW_{SSB}=B.
+\]</span></p>
+<p>We also connected SSB to the filter method, phasing method, Hilbert transform, analytic signals, complex frequency translation, and I/Q processing.</p>
+<p>Finally, we looked at SSB with carrier, reduced-carrier SSB, and VSB and saw that the AM family is really a set of engineering trade-offs involving:</p>
+<ul>
+<li>transmitted power;</li>
+<li>occupied bandwidth;</li>
+<li>receiver simplicity;</li>
+<li>carrier synchronization;</li>
+<li>filter requirements;</li>
+<li>implementation complexity.</li>
+</ul>
+<p>The most important lesson is not a formula or a list of modulation names.</p>
+<p>It is the progression:</p>
+<pre class="text"><code>Conventional AM
+Carrier + LSB + USB
+        |
+        v
+DSB-SC
+LSB + USB
+        |
+        v
+SSB-SC
+LSB or USB</code></pre>
+<p>Once we understand what each spectral component contributes, the different AM schemes stop looking like unrelated definitions. They become different answers to the same design question:</p>
+<blockquote class="blockquote">
+<p>How much power, bandwidth, and receiver complexity are we willing to spend to carry the message?</p>
+</blockquote>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level1">
+<h1>Connecting to the Next Chapter</h1>
+<p>Throughout this chapter, the information was carried by changing the <strong>amplitude</strong> of a carrier.</p>
+<p>That immediately creates a new possibility.</p>
+<p>What if we keep the carrier amplitude essentially constant and make the message change something else?</p>
+<p>For example, instead of making the carrier taller and shorter, what if the message makes its instantaneous frequency move above and below a center frequency?</p>
+<p>That leads us to <strong>frequency modulation</strong>, or FM.</p>
+<p>In the next chapter, we will build that idea experimentally and ask a new main question:</p>
+<blockquote class="blockquote">
+<p><strong>What happens when the message controls the frequency of the carrier instead of its amplitude?</strong></p>
+</blockquote>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter12.html" class="pagination-link" aria-label="Chapter 12: Why Modulation Exists">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter14.html" class="pagination-link" aria-label="Chapter 14: Frequency Modulation">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 14: Frequency Modulation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

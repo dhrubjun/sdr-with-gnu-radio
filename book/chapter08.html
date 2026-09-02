@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 8: Mixing and Frequency Translation – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter09.html" rel="next">
+<link href="../book/chapter07.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter08.html"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-basic-problem" id="toc-the-basic-problem" class="nav-link active" data-scroll-target="#the-basic-problem">8.1 The Basic Problem</a></li>
+  <li><a href="#experiment-1-real-mixing" id="toc-experiment-1-real-mixing" class="nav-link" data-scroll-target="#experiment-1-real-mixing">Experiment 1: Real Mixing</a></li>
+  <li><a href="#building-a-real-mixer" id="toc-building-a-real-mixer" class="nav-link" data-scroll-target="#building-a-real-mixer">8.2 Building a Real Mixer</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings" id="toc-gnu-radio-settings" class="nav-link" data-scroll-target="#gnu-radio-settings">GNU Radio Settings</a></li>
+  <li><a href="#reusing-multiply" id="toc-reusing-multiply" class="nav-link" data-scroll-target="#reusing-multiply">Reusing Multiply</a></li>
+  </ul></li>
+  <li><a href="#what-do-we-expect" id="toc-what-do-we-expect" class="nav-link" data-scroll-target="#what-do-we-expect">8.3 What Do We Expect?</a></li>
+  <li><a href="#moving-the-lo" id="toc-moving-the-lo" class="nav-link" data-scroll-target="#moving-the-lo">8.4 Moving the LO</a>
+  <ul class="collapse">
+  <li><a href="#lo-1-khz" id="toc-lo-1-khz" class="nav-link" data-scroll-target="#lo-1-khz">LO = 1 kHz</a></li>
+  <li><a href="#lo-3-khz" id="toc-lo-3-khz" class="nav-link" data-scroll-target="#lo-3-khz">LO = 3 kHz</a></li>
+  <li><a href="#lo-6-khz" id="toc-lo-6-khz" class="nav-link" data-scroll-target="#lo-6-khz">LO = 6 kHz</a></li>
+  <li><a href="#lo-7-khz" id="toc-lo-7-khz" class="nav-link" data-scroll-target="#lo-7-khz">LO = 7 kHz</a></li>
+  </ul></li>
+  <li><a href="#what-did-the-mixer-actually-do" id="toc-what-did-the-mixer-actually-do" class="nav-link" data-scroll-target="#what-did-the-mixer-actually-do">8.5 What Did the Mixer Actually Do?</a></li>
+  <li><a href="#upconversion-and-downconversion" id="toc-upconversion-and-downconversion" class="nav-link" data-scroll-target="#upconversion-and-downconversion">8.6 Upconversion and Downconversion</a></li>
+  <li><a href="#experiment-2-real-downconversion-to-baseband" id="toc-experiment-2-real-downconversion-to-baseband" class="nav-link" data-scroll-target="#experiment-2-real-downconversion-to-baseband">Experiment 2: Real Downconversion to Baseband</a></li>
+  <li><a href="#mixing-is-only-part-of-the-receiver" id="toc-mixing-is-only-part-of-the-receiver" class="nav-link" data-scroll-target="#mixing-is-only-part-of-the-receiver">8.7 Mixing Is Only Part of the Receiver</a></li>
+  <li><a href="#gnu-radio-settings-1" id="toc-gnu-radio-settings-1" class="nav-link" data-scroll-target="#gnu-radio-settings-1">8.8 GNU Radio Settings</a>
+  <ul class="collapse">
+  <li><a href="#reusing-the-low-pass-filter" id="toc-reusing-the-low-pass-filter" class="nav-link" data-scroll-target="#reusing-the-low-pass-filter">Reusing the Low Pass Filter</a></li>
+  </ul></li>
+  <li><a href="#predict-before-running" id="toc-predict-before-running" class="nav-link" data-scroll-target="#predict-before-running">8.9 Predict Before Running</a></li>
+  <li><a href="#watching-the-signal-approach-baseband" id="toc-watching-the-signal-approach-baseband" class="nav-link" data-scroll-target="#watching-the-signal-approach-baseband">8.10 Watching the Signal Approach Baseband</a></li>
+  <li><a href="#what-is-baseband" id="toc-what-is-baseband" class="nav-link" data-scroll-target="#what-is-baseband">8.11 What Is Baseband?</a></li>
+  <li><a href="#what-happens-if-the-lo-is-not-exact" id="toc-what-happens-if-the-lo-is-not-exact" class="nav-link" data-scroll-target="#what-happens-if-the-lo-is-not-exact">8.12 What Happens If the LO Is Not Exact?</a></li>
+  <li><a href="#a-problem-with-real-mixing" id="toc-a-problem-with-real-mixing" class="nav-link" data-scroll-target="#a-problem-with-real-mixing">8.13 A Problem With Real Mixing</a></li>
+  <li><a href="#experiment-3-complex-mixing-and-frequency-translation" id="toc-experiment-3-complex-mixing-and-frequency-translation" class="nav-link" data-scroll-target="#experiment-3-complex-mixing-and-frequency-translation">Experiment 3: Complex Mixing and Frequency Translation</a></li>
+  <li><a href="#moving-from-real-signals-to-complex-signals" id="toc-moving-from-real-signals-to-complex-signals" class="nav-link" data-scroll-target="#moving-from-real-signals-to-complex-signals">8.14 Moving From Real Signals to Complex Signals</a></li>
+  <li><a href="#gnu-radio-flowgraph" id="toc-gnu-radio-flowgraph" class="nav-link" data-scroll-target="#gnu-radio-flowgraph">8.15 GNU Radio Flowgraph</a></li>
+  <li><a href="#predict-the-translation" id="toc-predict-the-translation" class="nav-link" data-scroll-target="#predict-the-translation">8.16 Predict the Translation</a>
+  <ul class="collapse">
+  <li><a href="#lo-4-khz" id="toc-lo-4-khz" class="nav-link" data-scroll-target="#lo-4-khz">LO = 4 kHz</a></li>
+  <li><a href="#lo-5-khz" id="toc-lo-5-khz" class="nav-link" data-scroll-target="#lo-5-khz">LO = 5 kHz</a></li>
+  <li><a href="#lo-6-khz-1" id="toc-lo-6-khz-1" class="nav-link" data-scroll-target="#lo-6-khz-1">LO = 6 kHz</a></li>
+  <li><a href="#lo-7-khz-1" id="toc-lo-7-khz-1" class="nav-link" data-scroll-target="#lo-7-khz-1">LO = 7 kHz</a></li>
+  </ul></li>
+  <li><a href="#what-we-observe" id="toc-what-we-observe" class="nav-link" data-scroll-target="#what-we-observe">8.17 What We Observe</a></li>
+  <li><a href="#what-happens-to-i-and-q-at-dc" id="toc-what-happens-to-i-and-q-at-dc" class="nav-link" data-scroll-target="#what-happens-to-i-and-q-at-dc">8.18 What Happens to I and Q at DC?</a></li>
+  <li><a href="#positive-and-negative-frequency-revisited" id="toc-positive-and-negative-frequency-revisited" class="nav-link" data-scroll-target="#positive-and-negative-frequency-revisited">8.19 Positive and Negative Frequency Revisited</a></li>
+  <li><a href="#why-real-and-complex-mixing-look-so-different" id="toc-why-real-and-complex-mixing-look-so-different" class="nav-link" data-scroll-target="#why-real-and-complex-mixing-look-so-different">8.20 Why Real and Complex Mixing Look So Different</a></li>
+  <li><a href="#experiment-4-reversing-the-complex-lo" id="toc-experiment-4-reversing-the-complex-lo" class="nav-link" data-scroll-target="#experiment-4-reversing-the-complex-lo">Experiment 4: Reversing the Complex LO</a></li>
+  <li><a href="#can-we-choose-the-direction" id="toc-can-we-choose-the-direction" class="nav-link" data-scroll-target="#can-we-choose-the-direction">8.21 Can We Choose the Direction?</a></li>
+  <li><a href="#gnu-radio-settings-2" id="toc-gnu-radio-settings-2" class="nav-link" data-scroll-target="#gnu-radio-settings-2">8.22 GNU Radio Settings</a>
+  <ul class="collapse">
+  <li><a href="#reusing-qt-gui-chooser" id="toc-reusing-qt-gui-chooser" class="nav-link" data-scroll-target="#reusing-qt-gui-chooser">Reusing QT GUI Chooser</a></li>
+  </ul></li>
+  <li><a href="#downshift" id="toc-downshift" class="nav-link" data-scroll-target="#downshift">8.23 Downshift</a></li>
+  <li><a href="#upshift" id="toc-upshift" class="nav-link" data-scroll-target="#upshift">8.24 Upshift</a></li>
+  <li><a href="#the-big-difference-between-real-and-complex-mixing" id="toc-the-big-difference-between-real-and-complex-mixing" class="nav-link" data-scroll-target="#the-big-difference-between-real-and-complex-mixing">8.25 The Big Difference Between Real and Complex Mixing</a>
+  <ul class="collapse">
+  <li><a href="#real-mixing" id="toc-real-mixing" class="nav-link" data-scroll-target="#real-mixing">Real Mixing</a></li>
+  <li><a href="#complex-mixing" id="toc-complex-mixing" class="nav-link" data-scroll-target="#complex-mixing">Complex Mixing</a></li>
+  </ul></li>
+  <li><a href="#a-useful-mental-picture" id="toc-a-useful-mental-picture" class="nav-link" data-scroll-target="#a-useful-mental-picture">8.26 A Useful Mental Picture</a></li>
+  <li><a href="#what-does-the-local-oscillator-actually-mean-in-a-receiver" id="toc-what-does-the-local-oscillator-actually-mean-in-a-receiver" class="nav-link" data-scroll-target="#what-does-the-local-oscillator-actually-mean-in-a-receiver">8.27 What Does the Local Oscillator Actually Mean in a Receiver?</a></li>
+  <li><a href="#what-happens-inside-an-sdr" id="toc-what-happens-inside-an-sdr" class="nav-link" data-scroll-target="#what-happens-inside-an-sdr">8.28 What Happens Inside an SDR?</a></li>
+  <li><a href="#mistuning-the-lo" id="toc-mistuning-the-lo" class="nav-link" data-scroll-target="#mistuning-the-lo">8.29 Mistuning the LO</a></li>
+  <li><a href="#now-break-the-flowgraph" id="toc-now-break-the-flowgraph" class="nav-link" data-scroll-target="#now-break-the-flowgraph">8.30 Now Break the Flowgraph</a>
+  <ul class="collapse">
+  <li><a href="#put-the-lo-below-the-signal" id="toc-put-the-lo-below-the-signal" class="nav-link" data-scroll-target="#put-the-lo-below-the-signal">Put the LO Below the Signal</a></li>
+  <li><a href="#match-the-lo-exactly" id="toc-match-the-lo-exactly" class="nav-link" data-scroll-target="#match-the-lo-exactly">Match the LO Exactly</a></li>
+  <li><a href="#move-past-the-signal" id="toc-move-past-the-signal" class="nav-link" data-scroll-target="#move-past-the-signal">Move Past the Signal</a></li>
+  <li><a href="#reverse-the-complex-lo" id="toc-reverse-the-complex-lo" class="nav-link" data-scroll-target="#reverse-the-complex-lo">Reverse the Complex LO</a></li>
+  <li><a href="#mistune-the-lo-slightly" id="toc-mistune-the-lo-slightly" class="nav-link" data-scroll-target="#mistune-the-lo-slightly">Mistune the LO Slightly</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">8.31 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">8.32 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter08.html"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapters, we spent a lot of time looking at signals where they already were.</p>
+<p>We generated tones, sampled them, looked at their spectra, added noise, measured power, and changed bandwidth.</p>
+<p>But a radio receiver has another problem.</p>
+<p>The signal we want may not be sitting at a convenient frequency.</p>
+<p>Suppose a receiver is interested in a signal around 100 MHz. We may eventually want to filter it, demodulate it, measure it, or process its information digitally. Working directly at that frequency is not always the most convenient way to do those things.</p>
+<p>So radios routinely do something that may seem strange at first:</p>
+<blockquote class="blockquote">
+<p>****They move signals from one frequency to another.****</p>
+</blockquote>
+<p>A signal at one part of the spectrum can be shifted somewhere else while preserving the information carried by it.</p>
+<p>This process is called ****frequency translation****, and one of the main tools used to perform it is the ****mixer****.</p>
+<p>In this chapter, we will build that idea gradually.</p>
+<p>We will begin with ordinary real cosine signals. That will immediately produce an interesting result: two new frequencies appear.</p>
+<p>Then we will use one of those frequencies to understand downconversion and baseband.</p>
+<p>After that, we will repeat the idea with complex signals and discover why complex mixing is so useful in SDR.</p>
+<hr>
+<section id="the-basic-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-basic-problem">8.1 The Basic Problem</h2>
+<p>Imagine that we have a signal at</p>
+<p><span class="math display">\[
+f_{\text{signal}} = 6\text{ kHz}
+\]</span></p>
+<p>but we would rather process it near 1 kHz.</p>
+<p>We need some operation that can move the signal.</p>
+<p>At first, we might imagine simply changing its frequency somehow.</p>
+<p>A mixer does something more specific.</p>
+<p>It ****multiplies one signal by another****.</p>
+<p>The second signal is normally called the ****local oscillator****, or ****LO****.</p>
+<p>So the basic structure is:</p>
+<p><span class="math display">\[
+\text{Signal} \times \text{Local Oscillator}
+\]</span></p>
+<p>The surprising part is what multiplication does in the frequency domain.</p>
+<p>Let us see it before trying to explain it.</p>
+<hr>
+</section>
+<section id="experiment-1-real-mixing" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-real-mixing">Experiment 1: Real Mixing</h2>
+</section>
+<section id="building-a-real-mixer" class="level2">
+<h2 class="anchored" data-anchor-id="building-a-real-mixer">8.2 Building a Real Mixer</h2>
+<p>We begin with two ordinary real cosine signals.</p>
+<p>The first is our signal:</p>
+<p><span class="math display">\[
+f_{\text{signal}} = 6\text{ kHz}
+\]</span></p>
+<p>The second acts as the local oscillator:</p>
+<p><span class="math display">\[
+f_{\text{LO}} = 1\text{ kHz}
+\]</span></p>
+<p>Both signals have amplitude 1.</p>
+<p>We multiply them using the GNU Radio ****Multiply**** block.</p>
+<p>The flowgraph used for this experiment is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp1-real-mixing-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for real mixing</figcaption>
+</figure>
+</div>
+<section id="gnu-radio-settings" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings">GNU Radio Settings</h3>
+<p>Set the common sample rate to:</p>
+<pre class="text"><code>samp_rate = 32000</code></pre>
+<p>For the first ****Signal Source****:</p>
+<div class="line-block">Setting | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block">Output Type | Float |</div>
+<div class="line-block">Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">Waveform | Cosine |</div>
+<div class="line-block">Frequency | <code>6000</code> |</div>
+<div class="line-block">Amplitude | <code>1</code> |</div>
+<div class="line-block">Offset | <code>0</code> |</div>
+<div class="line-block">Initial Phase | <code>0</code> |</div>
+<p>For the LO ****Signal Source****:</p>
+<div class="line-block">Setting | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block">Output Type | Float |</div>
+<div class="line-block">Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">Waveform | Cosine |</div>
+<div class="line-block">Frequency | <code>lo_freq</code> |</div>
+<div class="line-block">Amplitude | <code>1</code> |</div>
+<div class="line-block">Offset | <code>0</code> |</div>
+<div class="line-block">Initial Phase | <code>0</code> |</div>
+<p>Add a ****QT GUI Range**** for the LO frequency.</p>
+<pre class="text"><code>ID: lo_freq
+
+Label: LO Frequency
+
+Default Value: 1000
+
+Start: 1000
+
+Stop: 7000
+
+Step: 500</code></pre>
+<p>Connect the two Signal Sources to a ****Multiply**** block.</p>
+<p>Send the mixer output through a ****Throttle**** block and then to:</p>
+<ul>
+<li><p>a QT GUI Time Sink</p></li>
+<li><p>a QT GUI Frequency Sink</p></li>
+</ul>
+<p>For the Frequency Sink, use:</p>
+<pre class="text"><code>Center Frequency: 0
+
+Bandwidth: samp_rate
+
+FFT Size: 1024</code></pre>
+<p>The important point is that everything in this first experiment is ****real-valued****.</p>
+<hr>
+</section>
+<section id="reusing-multiply" class="level3">
+<h3 class="anchored" data-anchor-id="reusing-multiply">Reusing Multiply</h3>
+<p>The ****Multiply**** block performs sample-by-sample multiplication.</p>
+<p>If its two inputs are <span class="math inline">\(x[n]\)</span> and <span class="math inline">\(y[n]\)</span>, its output is</p>
+<p><span class="math display">\[
+z[n] = x[n]y[n]
+\]</span></p>
+<p>That sounds simple, but multiplication has a very important consequence in the frequency domain.</p>
+<p>We will use the Multiply block repeatedly in this chapter.</p>
+<p>For the full block reference, see the GNU Radio Toolbox.</p>
+<hr>
+</section>
+</section>
+<section id="what-do-we-expect" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-expect">8.3 What Do We Expect?</h2>
+<p>Our two signals are</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi f_{\text{signal}}t)
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+l(t)=\cos(2\pi f_{\text{LO}}t)
+\]</span></p>
+<p>The mixer output is therefore</p>
+<p><span class="math display">\[
+y(t)=x(t)l(t)
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+y(t)=\cos(2\pi f_{\text{signal}}t) \cos(2\pi f_{\text{LO}}t)
+\]</span></p>
+<p>Now we use the familiar trigonometric identity</p>
+<p><span class="math display">\[
+\cos A\cos B = \frac{1}{2}\cos(A-B) \+ \frac{1}{2}\cos(A+B)
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y(t) = \frac{1}{2} \cos\left(2\pi(f_{\text{signal}}-f_{\text{LO}})t\right) \+ \frac{1}{2} \cos\left(2\pi(f_{\text{signal}}+f_{\text{LO}})t\right)
+\]</span></p>
+<p>This is the key result.</p>
+<p>The mixer does not simply replace one frequency with another.</p>
+<p>For real cosine mixing, it produces two components:</p>
+<p><span class="math display">\[
+f_{\text{difference}} = f_{\text{signal}}-f_{\text{LO}}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{\text{sum}} = f_{\text{signal}}+f_{\text{LO}}
+\]</span></p>
+<p>For our first case,</p>
+<p><span class="math display">\[
+f_{\text{signal}}=6\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{\text{LO}}=1\text{ kHz}
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+f_{\text{difference}} = 6-1 = 5\text{ kHz}
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+f_{\text{sum}} = 6+1 = 7\text{ kHz}
+\]</span></p>
+<p>We therefore expect components at 5 kHz and 7 kHz.</p>
+<p>Because the mixer output is real, each positive-frequency component also has its corresponding negative-frequency component.</p>
+<p>So the complete two-sided spectrum contains peaks at approximately</p>
+<p><span class="math display">\[
+-7,\ -5,\ +5,\ +7\text{ kHz}
+\]</span></p>
+<p>That is exactly what we observe.</p>
+<hr>
+</section>
+<section id="moving-the-lo" class="level2">
+<h2 class="anchored" data-anchor-id="moving-the-lo">8.4 Moving the LO</h2>
+<p>The advantage of making <code>lo_freq</code> adjustable is that we can watch the mixer products move in real time.</p>
+<p>The following figure compares several LO settings.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp1-real-mixing-lo-sweep.png" class="img-fluid figure-img"></p>
+<figcaption>Real mixing while sweeping the LO frequency</figcaption>
+</figure>
+</div>
+<p>The input signal remains fixed at 6 kHz.</p>
+<p>Only the LO changes.</p>
+<section id="lo-1-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-1-khz">LO = 1 kHz</h3>
+<p>The difference frequency is</p>
+<p><span class="math display">\[
+6-1=5\text{ kHz}
+\]</span></p>
+<p>and the sum frequency is</p>
+<p><span class="math display">\[
+6+1=7\text{ kHz}
+\]</span></p>
+</section>
+<section id="lo-3-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-3-khz">LO = 3 kHz</h3>
+<p>Now,</p>
+<p><span class="math display">\[
+6-3=3\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+6+3=9\text{ kHz}
+\]</span></p>
+<p>The two mixer products have moved.</p>
+</section>
+<section id="lo-6-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-6-khz">LO = 6 kHz</h3>
+<p>This case is especially important.</p>
+<p>Now,</p>
+<p><span class="math display">\[
+6-6=0
+\]</span></p>
+<p>so the difference component reaches DC.</p>
+<p>The other component is</p>
+<p><span class="math display">\[
+6+6=12\text{ kHz}
+\]</span></p>
+<p>This is our first glimpse of ****downconversion to baseband****.</p>
+</section>
+<section id="lo-7-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-7-khz">LO = 7 kHz</h3>
+<p>Now the formal difference is</p>
+<p><span class="math display">\[
+6-7=-1\text{ kHz}
+\]</span></p>
+<p>while the sum is</p>
+<p><span class="math display">\[
+6+7=13\text{ kHz}
+\]</span></p>
+<p>For a real signal, however, the spectrum is mirrored about zero frequency. We therefore see energy at both <span class="math inline">\(+1\)</span> kHz and <span class="math inline">\(-1\)</span> kHz.</p>
+<p>This is one reason why the sign of frequency becomes much more meaningful once we begin working with complex signals.</p>
+<p>We will return to that shortly.</p>
+<hr>
+</section>
+</section>
+<section id="what-did-the-mixer-actually-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-did-the-mixer-actually-do">8.5 What Did the Mixer Actually Do?</h2>
+<p>The most important lesson from Experiment 1 is not simply that we obtained several FFT peaks.</p>
+<p>It is this:</p>
+<blockquote class="blockquote">
+<p>****Multiplication in time can move spectral components in frequency.****</p>
+</blockquote>
+<p>Changing the LO changes where the mixer products appear.</p>
+<p>This is the basic mechanism behind frequency conversion.</p>
+<p>The LO is therefore not the signal we ultimately care about.</p>
+<p>It is a tool we use to reposition another signal.</p>
+<hr>
+</section>
+<section id="upconversion-and-downconversion" class="level2">
+<h2 class="anchored" data-anchor-id="upconversion-and-downconversion">8.6 Upconversion and Downconversion</h2>
+<p>Two words appear constantly in radio systems:</p>
+<p>****upconversion**** and ****downconversion****.</p>
+<p>If frequency translation moves the desired signal toward a higher frequency region, we call it ****upconversion****.</p>
+<p>If it moves the desired signal toward a lower frequency region, we call it ****downconversion****.</p>
+<p>For example, starting with a 6 kHz signal and using a 5 kHz LO gives a difference component at</p>
+<p><span class="math display">\[
+6-5=1\text{ kHz}
+\]</span></p>
+<p>We have moved one mixer product from 6 kHz down to 1 kHz.</p>
+<p>That is downconversion.</p>
+<p>But there is an important problem.</p>
+<p>The real mixer also produces</p>
+<p><span class="math display">\[
+6+5=11\text{ kHz}
+\]</span></p>
+<p>So the mixer output contains both the component we want and another component that we may not want.</p>
+<p>What do we do with the unwanted one?</p>
+<p>We filter it.</p>
+<p>That leads directly to our second experiment.</p>
+<hr>
+</section>
+<section id="experiment-2-real-downconversion-to-baseband" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-real-downconversion-to-baseband">Experiment 2: Real Downconversion to Baseband</h2>
+</section>
+<section id="mixing-is-only-part-of-the-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="mixing-is-only-part-of-the-receiver">8.7 Mixing Is Only Part of the Receiver</h2>
+<p>We now keep the input signal fixed at</p>
+<p><span class="math display">\[
+6\text{ kHz}
+\]</span></p>
+<p>and vary the LO around that frequency.</p>
+<p>This time, however, we place a ****Low Pass Filter**** after the mixer.</p>
+<p>The purpose is simple.</p>
+<p>We want to keep the low-frequency difference component and reject the high-frequency sum component.</p>
+<p>The GNU Radio flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp2-real-downconversion-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for real downconversion</figcaption>
+</figure>
+</div>
+<p>The first part of the flowgraph is familiar:</p>
+<p><span class="math display">\[
+\text{Signal} \rightarrow \text{Mixer}
+\]</span></p>
+<p>but now we add</p>
+<p><span class="math display">\[
+\text{Mixer} \rightarrow \text{Low Pass Filter}
+\]</span></p>
+<p>We observe both the raw mixer output and the filtered output.</p>
+<hr>
+</section>
+<section id="gnu-radio-settings-1" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-settings-1">8.8 GNU Radio Settings</h2>
+<p>Keep:</p>
+<pre class="text"><code>samp_rate = 32000</code></pre>
+<p>The input Signal Source remains:</p>
+<pre class="text"><code>Frequency: 6000
+
+Amplitude: 1
+
+Waveform: Cosine</code></pre>
+<p>The LO frequency is controlled using the QT GUI Range.</p>
+<p>Useful values for this experiment include:</p>
+<pre class="text"><code>4000 Hz
+
+5000 Hz
+
+5500 Hz
+
+6000 Hz
+
+6500 Hz</code></pre>
+<p>For the ****Low Pass Filter****, use:</p>
+<div class="line-block">Setting | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block">Decimation | <code>1</code> |</div>
+<div class="line-block">Gain | <code>1</code> |</div>
+<div class="line-block">Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">Cutoff Frequency | <code>1000</code> |</div>
+<div class="line-block">Transition Width | <code>500</code> |</div>
+<div class="line-block">Window | Hamming |</div>
+<p>Display the mixer output and the LPF output together so that we can compare them directly.</p>
+<hr>
+<section id="reusing-the-low-pass-filter" class="level3">
+<h3 class="anchored" data-anchor-id="reusing-the-low-pass-filter">Reusing the Low Pass Filter</h3>
+<p>A ****Low Pass Filter**** allows low-frequency components to pass while attenuating components above its cutoff region.</p>
+<p>Here we are not yet trying to study filter design in detail. That is the subject of the next chapter.</p>
+<p>For now, the Low Pass Filter has one job:</p>
+<blockquote class="blockquote">
+<p>****Keep the low-frequency mixer product and suppress the high-frequency mixer product.****</p>
+</blockquote>
+<p>The full Low Pass Filter reference is available in the GNU Radio Toolbox.</p>
+<hr>
+</section>
+</section>
+<section id="predict-before-running" class="level2">
+<h2 class="anchored" data-anchor-id="predict-before-running">8.9 Predict Before Running</h2>
+<p>The difference frequency is</p>
+<p><span class="math display">\[
+f_{\text{difference}} = \left|f_{\text{signal}}-f_{\text{LO}}\right|
+\]</span></p>
+<p>for the real sinusoidal output we observe after mixing.</p>
+<p>With the signal fixed at 6 kHz, we can predict:</p>
+<div class="line-block">LO Frequency | Difference Component | Sum Component |</div>
+<p>|—:|—:|—:|</p>
+<div class="line-block">4 kHz | 2 kHz | 10 kHz |</div>
+<div class="line-block">5 kHz | 1 kHz | 11 kHz |</div>
+<div class="line-block">5.5 kHz | 0.5 kHz | 11.5 kHz |</div>
+<div class="line-block">6 kHz | 0 Hz | 12 kHz |</div>
+<div class="line-block">6.5 kHz | 0.5 kHz | 12.5 kHz |</div>
+<p>Now compare these frequencies with the low-pass filter.</p>
+<p>The high-frequency sum component should be strongly suppressed.</p>
+<p>The low-frequency difference component moves progressively toward DC as the LO approaches 6 kHz.</p>
+<hr>
+</section>
+<section id="watching-the-signal-approach-baseband" class="level2">
+<h2 class="anchored" data-anchor-id="watching-the-signal-approach-baseband">8.10 Watching the Signal Approach Baseband</h2>
+<p>The measured results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp2-real-downconversion-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Real downconversion as the LO approaches the signal frequency</figcaption>
+</figure>
+</div>
+<p>This figure is worth studying carefully.</p>
+<p>At an LO of 4 kHz, the difference component is still around 2 kHz. With our chosen low-pass filter, it lies outside the main passband and is strongly attenuated.</p>
+<p>At 5 kHz,</p>
+<p><span class="math display">\[
+6-5=1\text{ kHz}
+\]</span></p>
+<p>so the difference component has reached the cutoff region.</p>
+<p>At 5.5 kHz,</p>
+<p><span class="math display">\[
+6-5.5=0.5\text{ kHz}
+\]</span></p>
+<p>and the low-frequency component is clearly retained.</p>
+<p>At 6 kHz,</p>
+<p><span class="math display">\[
+6-6=0
+\]</span></p>
+<p>The desired difference component has reached DC.</p>
+<p>When the LO moves beyond the signal, for example to 6.5 kHz, the separation becomes 0.5 kHz again.</p>
+<p>For a real mixer output, the sign information is not available in the same way that it is for a complex signal. A real cosine at <span class="math inline">\(+0.5\)</span> kHz and one at <span class="math inline">\(-0.5\)</span> kHz are not distinguishable as two different directions of spectral rotation.</p>
+<p>This limitation becomes important later in the chapter.</p>
+<hr>
+</section>
+<section id="what-is-baseband" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-baseband">8.11 What Is Baseband?</h2>
+<p>We have used the word ****baseband****, so let us make sure it means something concrete.</p>
+<p>A baseband signal is a signal represented around zero frequency rather than around some higher carrier frequency.</p>
+<p>Suppose a radio signal is centred at</p>
+<p><span class="math display">\[
+f_c
+\]</span></p>
+<p>If we mix it with an appropriate LO, we can translate that signal so that its centre moves toward</p>
+<p><span class="math display">\[
+0\text{ Hz}
+\]</span></p>
+<p>The information has not necessarily disappeared.</p>
+<p>We have changed ****where that information sits in the spectrum****.</p>
+<p>That is the important idea.</p>
+<p>A receiver might therefore perform something conceptually like</p>
+<p><span class="math display">\[
+\text{RF signal} \rightarrow \text{Mixer} \rightarrow \text{Baseband} \rightarrow \text{Further processing}
+\]</span></p>
+<p>Once the signal is near baseband, many later operations become easier.</p>
+<hr>
+</section>
+<section id="what-happens-if-the-lo-is-not-exact" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-if-the-lo-is-not-exact">8.12 What Happens If the LO Is Not Exact?</h2>
+<p>Experiment 2 also gives us a useful way to understand ****frequency offset****.</p>
+<p>Suppose the desired signal is at</p>
+<p><span class="math display">\[
+6\text{ kHz}
+\]</span></p>
+<p>and we want to move it exactly to DC.</p>
+<p>Ideally,</p>
+<p><span class="math display">\[
+f_{\text{LO}}=6\text{ kHz}
+\]</span></p>
+<p>Then,</p>
+<p><span class="math display">\[
+f_{\text{signal}}-f_{\text{LO}}=0
+\]</span></p>
+<p>But suppose the LO is actually</p>
+<p><span class="math display">\[
+5.5\text{ kHz}
+\]</span></p>
+<p>Then the difference becomes</p>
+<p><span class="math display">\[
+6-5.5=0.5\text{ kHz}
+\]</span></p>
+<p>The signal does not land at DC.</p>
+<p>It lands 500 Hz away.</p>
+<p>That remaining separation is a ****frequency offset****.</p>
+<p>This is not just a GNU Radio effect.</p>
+<p>Real radios also have frequency errors. Oscillators are not perfectly exact, transmitters and receivers may not agree perfectly, and motion can introduce Doppler shifts.</p>
+<p>So a signal that we expect at DC may appear slightly to one side.</p>
+<hr>
+</section>
+<section id="a-problem-with-real-mixing" class="level2">
+<h2 class="anchored" data-anchor-id="a-problem-with-real-mixing">8.13 A Problem With Real Mixing</h2>
+<p>At this point, real mixing seems to work quite well.</p>
+<p>Why do SDR systems make such a big deal about complex signals?</p>
+<p>Experiment 1 already gave us a clue.</p>
+<p>A real cosine has two spectral components:</p>
+<p><span class="math display">\[
++f
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-f
+\]</span></p>
+<p>A real LO also has components at both positive and negative frequencies.</p>
+<p>When we multiply them, both directions interact.</p>
+<p>That is why real mixing naturally produces multiple mixer products.</p>
+<p>There is another limitation.</p>
+<p>When the LO moves from below the signal to above it, the difference frequency crosses through zero.</p>
+<p>With real signals, the spectrum remains mirrored.</p>
+<p>The sign of that frequency is therefore difficult to preserve as a unique piece of information.</p>
+<p>Complex signals change this.</p>
+<hr>
+</section>
+<section id="experiment-3-complex-mixing-and-frequency-translation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-complex-mixing-and-frequency-translation">Experiment 3: Complex Mixing and Frequency Translation</h2>
+</section>
+<section id="moving-from-real-signals-to-complex-signals" class="level2">
+<h2 class="anchored" data-anchor-id="moving-from-real-signals-to-complex-signals">8.14 Moving From Real Signals to Complex Signals</h2>
+<p>Earlier in this book, we introduced I and Q and saw that a complex signal can be written as</p>
+<p><span class="math display">\[
+x(t)=I(t)+jQ(t)
+\]</span></p>
+<p>A complex exponential can be written as</p>
+<p><span class="math display">\[
+e^{j2\pi ft}
+\]</span></p>
+<p>Using Euler’s relation,</p>
+<p><span class="math display">\[
+e^{j2\pi ft} = \cos(2\pi ft) \+ j\sin(2\pi ft)
+\]</span></p>
+<p>Unlike a real cosine, an ideal complex exponential can represent a ****single signed frequency****.</p>
+<p>That changes the behaviour of mixing dramatically.</p>
+<p>Suppose our complex input is</p>
+<p><span class="math display">\[
+x(t)=e^{j2\pi f_{\text{signal}}t}
+\]</span></p>
+<p>and we multiply it by a complex LO rotating in the negative-frequency direction:</p>
+<p><span class="math display">\[
+l(t)=e^{-j2\pi f_{\text{LO}}t}
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+y(t) = e^{j2\pi f_{\text{signal}}t} e^{-j2\pi f_{\text{LO}}t}
+\]</span></p>
+<p>Using the exponent rule,</p>
+<p><span class="math display">\[
+e^Ae^B=e^{A+B}
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+y(t) = e^{j2\pi(f_{\text{signal}}-f_{\text{LO}})t}
+\]</span></p>
+<p>Notice what is missing.</p>
+<p>There is no second term at</p>
+<p><span class="math display">\[
+f_{\text{signal}}+f_{\text{LO}}
+\]</span></p>
+<p>We get a direct frequency translation.</p>
+<p>That is the behaviour we want to observe.</p>
+<hr>
+</section>
+<section id="gnu-radio-flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-flowgraph">8.15 GNU Radio Flowgraph</h2>
+<p>The flowgraph for complex mixing is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp3-complex-mixing-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for complex frequency translation</figcaption>
+</figure>
+</div>
+<p>Use:</p>
+<pre class="text"><code>samp_rate = 32000</code></pre>
+<p>Keep the complex signal at:</p>
+<pre class="text"><code>Signal Frequency: 6000 Hz</code></pre>
+<p>Use the adjustable LO frequency:</p>
+<pre class="text"><code>lo_freq</code></pre>
+<p>For this experiment, the LO is applied in the ****negative-frequency direction****, so that the output follows</p>
+<p><span class="math display">\[
+f_{\text{out}} = f_{\text{signal}}-f_{\text{LO}}
+\]</span></p>
+<p>Observe:</p>
+<ul>
+<li><p>the I component</p></li>
+<li><p>the Q component</p></li>
+<li><p>the complex output spectrum</p></li>
+</ul>
+<p>The I and Q traces allow us to see the complex tone in the time domain, while the Frequency Sink shows where the signed frequency lies.</p>
+<hr>
+</section>
+<section id="predict-the-translation" class="level2">
+<h2 class="anchored" data-anchor-id="predict-the-translation">8.16 Predict the Translation</h2>
+<p>The signal remains fixed at</p>
+<p><span class="math display">\[
+f_{\text{signal}}=6\text{ kHz}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+f_{\text{out}} = 6\text{ kHz}-f_{\text{LO}}
+\]</span></p>
+<p>Consider four LO values.</p>
+<section id="lo-4-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-4-khz">LO = 4 kHz</h3>
+<p><span class="math display">\[
+f_{\text{out}} = 6-4 = +2\text{ kHz}
+\]</span></p>
+</section>
+<section id="lo-5-khz" class="level3">
+<h3 class="anchored" data-anchor-id="lo-5-khz">LO = 5 kHz</h3>
+<p><span class="math display">\[
+f_{\text{out}} = 6-5 = +1\text{ kHz}
+\]</span></p>
+</section>
+<section id="lo-6-khz-1" class="level3">
+<h3 class="anchored" data-anchor-id="lo-6-khz-1">LO = 6 kHz</h3>
+<p><span class="math display">\[
+f_{\text{out}} = 6-6 = 0
+\]</span></p>
+</section>
+<section id="lo-7-khz-1" class="level3">
+<h3 class="anchored" data-anchor-id="lo-7-khz-1">LO = 7 kHz</h3>
+<p><span class="math display">\[
+f_{\text{out}} = 6-7 = -1\text{ kHz}
+\]</span></p>
+<p>This is the behaviour we were unable to see cleanly with the real mixer.</p>
+<p>The signal can pass through DC and continue into ****negative frequency****.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-observe" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-observe">8.17 What We Observe</h2>
+<p>The four cases are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp3-complex-mixing-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Complex mixing as the signal moves through DC</figcaption>
+</figure>
+</div>
+<p>The spectrum behaves exactly as predicted.</p>
+<p>At 4 kHz LO, the output lies around</p>
+<p><span class="math display">\[
++2\text{ kHz}
+\]</span></p>
+<p>At 5 kHz LO, it moves to</p>
+<p><span class="math display">\[
++1\text{ kHz}
+\]</span></p>
+<p>At 6 kHz LO, it reaches</p>
+<p><span class="math display">\[
+0\text{ Hz}
+\]</span></p>
+<p>and at 7 kHz LO, it continues to</p>
+<p><span class="math display">\[
+-1\text{ kHz}
+\]</span></p>
+<p>There is no mirrored partner automatically appearing on the other side in the way we saw for a real cosine.</p>
+<p>This is one of the most important reasons complex I/Q signals are so useful in SDR.</p>
+<hr>
+</section>
+<section id="what-happens-to-i-and-q-at-dc" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-to-i-and-q-at-dc">8.18 What Happens to I and Q at DC?</h2>
+<p>The 6 kHz LO case deserves special attention.</p>
+<p>When</p>
+<p><span class="math display">\[
+f_{\text{signal}}=f_{\text{LO}}
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+f_{\text{out}}=0
+\]</span></p>
+<p>A zero-frequency complex exponential does not rotate.</p>
+<p>Since</p>
+<p><span class="math display">\[
+e^{j0}=1
+\]</span></p>
+<p>the I and Q values become constant rather than continuing to oscillate.</p>
+<p>The exact constant values depend on the phases and amplitudes used in the flowgraph, but the important observation is this:</p>
+<blockquote class="blockquote">
+<p>****When a complex tone is translated exactly to DC, its rotating I/Q vector stops rotating.****</p>
+</blockquote>
+<p>That is why the time-domain traces become horizontal in the DC case.</p>
+<p>This connects directly to the rotating-vector picture of I/Q that we developed earlier.</p>
+<hr>
+</section>
+<section id="positive-and-negative-frequency-revisited" class="level2">
+<h2 class="anchored" data-anchor-id="positive-and-negative-frequency-revisited">8.19 Positive and Negative Frequency Revisited</h2>
+<p>Negative frequency can sound like an abstract mathematical trick until we perform this experiment.</p>
+<p>Here it becomes much more concrete.</p>
+<p>Consider</p>
+<p><span class="math display">\[
+e^{j2\pi ft}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+e^{-j2\pi ft}
+\]</span></p>
+<p>Both have ordinary sinusoidal I and Q components.</p>
+<p>The difference is their direction of rotation in the complex plane.</p>
+<p>One rotates one way.</p>
+<p>The other rotates the opposite way.</p>
+<p>So when the translated signal moves from</p>
+<p><span class="math display">\[
++1\text{ kHz}
+\]</span></p>
+<p>through</p>
+<p><span class="math display">\[
+0
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+-1\text{ kHz}
+\]</span></p>
+<p>the physical interpretation is not that time or frequency somehow becomes negative.</p>
+<p>Instead, the ****complex rotation reverses direction****.</p>
+<p>That distinction is invisible if we keep only a single real cosine.</p>
+<p>It becomes visible when we retain both I and Q.</p>
+<hr>
+</section>
+<section id="why-real-and-complex-mixing-look-so-different" class="level2">
+<h2 class="anchored" data-anchor-id="why-real-and-complex-mixing-look-so-different">8.20 Why Real and Complex Mixing Look So Different</h2>
+<p>We can now compare the two cases directly.</p>
+<p>For real mixing,</p>
+<p><span class="math display">\[
+\cos(2\pi f_1t)\cos(2\pi f_2t)
+\]</span></p>
+<p>produces</p>
+<p><span class="math display">\[
+\frac{1}{2}\cos\left(2\pi(f_1-f_2)t\right) \+ \frac{1}{2}\cos\left(2\pi(f_1+f_2)t\right)
+\]</span></p>
+<p>So we obtain both a sum and a difference term.</p>
+<p>For ideal complex mixing,</p>
+<p><span class="math display">\[
+e^{j2\pi f_1t} e^{j2\pi f_2t}
+\]</span></p>
+<p>gives</p>
+<p><span class="math display">\[
+e^{j2\pi(f_1+f_2)t}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+e^{j2\pi f_1t} e^{-j2\pi f_2t}
+\]</span></p>
+<p>gives</p>
+<p><span class="math display">\[
+e^{j2\pi(f_1-f_2)t}
+\]</span></p>
+<p>There is no trigonometric splitting into two cosine terms.</p>
+<p>The sign of the complex LO determines the translation direction.</p>
+<p>This is powerful enough that we should test it directly.</p>
+<hr>
+</section>
+<section id="experiment-4-reversing-the-complex-lo" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-reversing-the-complex-lo">Experiment 4: Reversing the Complex LO</h2>
+</section>
+<section id="can-we-choose-the-direction" class="level2">
+<h2 class="anchored" data-anchor-id="can-we-choose-the-direction">8.21 Can We Choose the Direction?</h2>
+<p>For the final experiment, we keep the signal fixed at</p>
+<p><span class="math display">\[
++6\text{ kHz}
+\]</span></p>
+<p>and the LO magnitude fixed at</p>
+<p><span class="math display">\[
+4\text{ kHz}
+\]</span></p>
+<p>This time, instead of sweeping only the LO magnitude, we allow ourselves to reverse its sign.</p>
+<p>We add a ****QT GUI Chooser**** with two options:</p>
+<pre class="text"><code>Downshift
+
+Upshift</code></pre>
+<p>The flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp4-lo-direction-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for reversing the complex LO</figcaption>
+</figure>
+</div>
+<hr>
+</section>
+<section id="gnu-radio-settings-2" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-settings-2">8.22 GNU Radio Settings</h2>
+<p>Create a QT GUI Chooser with:</p>
+<div class="line-block">Setting | Value |</div>
+<p>|—|—|</p>
+<div class="line-block">ID | <code>lo_direction</code> |</div>
+<div class="line-block">Label | <code>LO Direction</code> |</div>
+<div class="line-block">Type | Integer |</div>
+<div class="line-block">Num Options | <code>2</code> |</div>
+<div class="line-block">Default Option | <code>-1</code> |</div>
+<div class="line-block">Option 0 | <code>-1</code> |</div>
+<div class="line-block">Label 0 | <code>Downshift</code> |</div>
+<div class="line-block">Option 1 | <code>1</code> |</div>
+<div class="line-block">Label 1 | <code>Upshift</code> |</div>
+<div class="line-block">Widget | Radio Buttons |</div>
+<div class="line-block">Orientation | Horizontal |</div>
+<p>One small detail is important here.</p>
+<p>The ****Default Option**** is an actual option value, not the position of the option in the list.</p>
+<p>Since our available values are</p>
+<pre class="text"><code>-1
+
+1</code></pre>
+<p>the default must be one of those values.</p>
+<p>Using <code>0</code> would not be valid.</p>
+<p>Set the LO Signal Source frequency using:</p>
+<pre class="text"><code>lo_direction * lo_freq</code></pre>
+<p>with</p>
+<pre class="text"><code>lo_freq = 4000</code></pre>
+<p>Now the same control can generate either</p>
+<p><span class="math display">\[
+-4\text{ kHz}
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
++4\text{ kHz}
+\]</span></p>
+<p>as the complex LO frequency.</p>
+<hr>
+<section id="reusing-qt-gui-chooser" class="level3">
+<h3 class="anchored" data-anchor-id="reusing-qt-gui-chooser">Reusing QT GUI Chooser</h3>
+<p>The ****QT GUI Chooser**** lets us select one value from a predefined set while the flowgraph is running.</p>
+<p>Here we use it to choose between:</p>
+<pre class="text"><code>-1</code></pre>
+<p>and</p>
+<pre class="text"><code>+1</code></pre>
+<p>Those values multiply the LO frequency and therefore reverse the sign of the complex oscillator.</p>
+<p>A chooser is useful when the variable should take only a small number of known states rather than vary continuously.</p>
+<p>For the complete reference, see the GNU Radio Toolbox.</p>
+<hr>
+</section>
+</section>
+<section id="downshift" class="level2">
+<h2 class="anchored" data-anchor-id="downshift">8.23 Downshift</h2>
+<p>First select:</p>
+<pre class="text"><code>Downshift</code></pre>
+<p>Then,</p>
+<p><span class="math display">\[
+\text{lo\\_direction}=-1
+\]</span></p>
+<p>so the actual LO frequency becomes</p>
+<p><span class="math display">\[
+f_{\text{LO}} = -1\times4\text{ kHz} = -4\text{ kHz}
+\]</span></p>
+<p>The input is at</p>
+<p><span class="math display">\[
++6\text{ kHz}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+f_{\text{out}} = 6+(-4) = +2\text{ kHz}
+\]</span></p>
+<p>The Frequency Sink shows a single peak at approximately</p>
+<p><span class="math display">\[
++2\text{ kHz}
+\]</span></p>
+<p>The I and Q traces also oscillate at the translated frequency.</p>
+<hr>
+</section>
+<section id="upshift" class="level2">
+<h2 class="anchored" data-anchor-id="upshift">8.24 Upshift</h2>
+<p>Now select:</p>
+<pre class="text"><code>Upshift</code></pre>
+<p>Nothing else changes.</p>
+<p>This time,</p>
+<p><span class="math display">\[
+\text{lo\\_direction}=+1
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+f_{\text{LO}} = +4\text{ kHz}
+\]</span></p>
+<p>The output becomes</p>
+<p><span class="math display">\[
+f_{\text{out}} = 6+4 = +10\text{ kHz}
+\]</span></p>
+<p>The single spectral peak moves from approximately</p>
+<p><span class="math display">\[
++2\text{ kHz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
++10\text{ kHz}
+\]</span></p>
+<p>The two cases are shown side by side below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch08/ch08-exp4-lo-direction-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Complex mixing with downshift and upshift LO directions</figcaption>
+</figure>
+</div>
+<p>This experiment makes the role of the LO sign very clear.</p>
+<p>With the negative complex LO,</p>
+<p><span class="math display">\[
+6\text{ kHz} \rightarrow 2\text{ kHz}
+\]</span></p>
+<p>With the positive complex LO,</p>
+<p><span class="math display">\[
+6\text{ kHz} \rightarrow 10\text{ kHz}
+\]</span></p>
+<p>We are not generating both results simultaneously.</p>
+<p>We are choosing the direction of translation.</p>
+<hr>
+</section>
+<section id="the-big-difference-between-real-and-complex-mixing" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-difference-between-real-and-complex-mixing">8.25 The Big Difference Between Real and Complex Mixing</h2>
+<p>We can now summarize the distinction that has been developing throughout the chapter.</p>
+<section id="real-mixing" class="level3">
+<h3 class="anchored" data-anchor-id="real-mixing">Real Mixing</h3>
+<p>With a real signal and a real LO, multiplication produces sum and difference components.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+6\text{ kHz}\times4\text{ kHz}
+\]</span></p>
+<p>produces components associated with</p>
+<p><span class="math display">\[
+6-4=2\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+6+4=10\text{ kHz}
+\]</span></p>
+<p>Because the resulting signal is real, its spectrum also has the corresponding negative-frequency mirror components.</p>
+</section>
+<section id="complex-mixing" class="level3">
+<h3 class="anchored" data-anchor-id="complex-mixing">Complex Mixing</h3>
+<p>With complex exponentials, frequency translation behaves more directly.</p>
+<p>Using a negative 4 kHz complex LO gives</p>
+<p><span class="math display">\[
+6+(-4)=2\text{ kHz}
+\]</span></p>
+<p>Using a positive 4 kHz complex LO gives</p>
+<p><span class="math display">\[
+6+4=10\text{ kHz}
+\]</span></p>
+<p>The sign of the complex oscillator determines which way the spectrum moves.</p>
+<p>That is why complex mixing is such a natural operation in SDR.</p>
+<hr>
+</section>
+</section>
+<section id="a-useful-mental-picture" class="level2">
+<h2 class="anchored" data-anchor-id="a-useful-mental-picture">8.26 A Useful Mental Picture</h2>
+<p>There are several equations in this chapter, but there is a simple picture worth keeping in mind.</p>
+<p>Imagine the frequency axis as a ruler.</p>
+<p>Your signal is sitting somewhere on that ruler.</p>
+<p>Complex mixing shifts the signal along the ruler.</p>
+<p>If we multiply by</p>
+<p><span class="math display">\[
+e^{j2\pi f_{\text{LO}}t}
+\]</span></p>
+<p>the spectrum shifts by</p>
+<p><span class="math display">\[
++f_{\text{LO}}
+\]</span></p>
+<p>If we multiply by</p>
+<p><span class="math display">\[
+e^{-j2\pi f_{\text{LO}}t}
+\]</span></p>
+<p>the spectrum shifts by</p>
+<p><span class="math display">\[
+-f_{\text{LO}}
+\]</span></p>
+<p>So, in a simplified form,</p>
+<p><span class="math display">\[
+f_{\text{out}} = f_{\text{in}} \+ f_{\text{LO}}
+\]</span></p>
+<p>where the sign of <span class="math inline">\(f_{\text{LO}}\)</span> matters.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+6+(-4)=2
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+6+(+4)=10
+\]</span></p>
+<p>This is often easier to remember than thinking separately about “upconversion” and “downconversion.”</p>
+<p>The LO simply tells the spectrum how far, and in which direction, to move.</p>
+<hr>
+</section>
+<section id="what-does-the-local-oscillator-actually-mean-in-a-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-the-local-oscillator-actually-mean-in-a-receiver">8.27 What Does the Local Oscillator Actually Mean in a Receiver?</h2>
+<p>The word ****local oscillator**** comes from radio hardware.</p>
+<p>A receiver generates an oscillator locally and combines it with the incoming signal in a mixer.</p>
+<p>Conceptually,</p>
+<p><span class="math display">\[
+\text{Received signal} \+ \text{Local oscillator} \rightarrow \text{Mixer}
+\]</span></p>
+<p>although the actual mixer operation is multiplication, not addition.</p>
+<p>The LO frequency determines where signals move after mixing.</p>
+<p>Suppose a receiver contains a signal centred at</p>
+<p><span class="math display">\[
+100.1\text{ MHz}
+\]</span></p>
+<p>and we want to translate it to baseband.</p>
+<p>In an idealized complex receiver, we can use an appropriate complex LO so that the centre frequency is shifted by approximately</p>
+<p><span class="math display">\[
+-100.1\text{ MHz}
+\]</span></p>
+<p>Then,</p>
+<p><span class="math display">\[
+100.1\text{ MHz} - 100.1\text{ MHz} = 0
+\]</span></p>
+<p>The signal that was centred around 100.1 MHz is now centred around DC.</p>
+<p>Its information has not been thrown away simply because its centre frequency moved.</p>
+<p>The spectrum has been translated.</p>
+<hr>
+</section>
+<section id="what-happens-inside-an-sdr" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-inside-an-sdr">8.28 What Happens Inside an SDR?</h2>
+<p>This idea becomes particularly important when using SDR hardware.</p>
+<p>Suppose an SDR is tuned to a radio frequency <span class="math inline">\(f_c\)</span>.</p>
+<p>The hardware can use oscillators and mixers to translate a region around that RF frequency into a complex I/Q signal that can be sampled by the ADC and processed digitally.</p>
+<p>Once we are working digitally, further frequency translation can also be performed mathematically.</p>
+<p>A digital complex mixer can multiply the sampled signal by a complex oscillator.</p>
+<p>So the same idea appears both in hardware and software:</p>
+<p><span class="math display">\[
+\text{frequency translation} = \text{signal}\times\text{oscillator}
+\]</span></p>
+<p>GNU Radio lets us see this operation directly rather than hiding it inside a radio.</p>
+<hr>
+</section>
+<section id="mistuning-the-lo" class="level2">
+<h2 class="anchored" data-anchor-id="mistuning-the-lo">8.29 Mistuning the LO</h2>
+<p>Now suppose we intend to translate a signal exactly to DC.</p>
+<p>The desired signal is at</p>
+<p><span class="math display">\[
+f_{\text{signal}}
+\]</span></p>
+<p>and ideally we use</p>
+<p><span class="math display">\[
+f_{\text{LO}}=-f_{\text{signal}}
+\]</span></p>
+<p>Then,</p>
+<p><span class="math display">\[
+f_{\text{out}}=0
+\]</span></p>
+<p>But if the LO is slightly wrong,</p>
+<p><span class="math display">\[
+f_{\text{LO}} = -f_{\text{signal}}+\Delta f
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+f_{\text{out}} = f_{\text{signal}} \+ \left(-f_{\text{signal}}+\Delta f\right)
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+f_{\text{out}}=\Delta f
+\]</span></p>
+<p>The remaining frequency is exactly the offset between the desired tuning and the actual tuning.</p>
+<p>This gives us a useful interpretation:</p>
+<blockquote class="blockquote">
+<p>****A tone near DC after downconversion may represent a frequency mismatch between the received signal and the LO.****</p>
+</blockquote>
+<p>In an I/Q display, that offset appears as continued rotation.</p>
+<p>At exact tuning, the complex tone reaches DC and stops rotating.</p>
+<p>With a small frequency offset, it rotates slowly.</p>
+<p>With a larger offset, it rotates faster.</p>
+<p>This connects frequency translation, negative frequency, and the rotating I/Q vector into one picture.</p>
+<hr>
+</section>
+<section id="now-break-the-flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="now-break-the-flowgraph">8.30 Now Break the Flowgraph</h2>
+<p>The experiments in this chapter become even more useful when we deliberately change things.</p>
+<section id="put-the-lo-below-the-signal" class="level3">
+<h3 class="anchored" data-anchor-id="put-the-lo-below-the-signal">Put the LO Below the Signal</h3>
+<p>Keep the signal at 6 kHz and use a negative complex LO with magnitude less than 6 kHz.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+f_{\text{LO}}=-4\text{ kHz}
+\]</span></p>
+<p>The result is</p>
+<p><span class="math display">\[
+f_{\text{out}}=+2\text{ kHz}
+\]</span></p>
+</section>
+<section id="match-the-lo-exactly" class="level3">
+<h3 class="anchored" data-anchor-id="match-the-lo-exactly">Match the LO Exactly</h3>
+<p>Use</p>
+<p><span class="math display">\[
+f_{\text{LO}}=-6\text{ kHz}
+\]</span></p>
+<p>Now,</p>
+<p><span class="math display">\[
+f_{\text{out}}=0
+\]</span></p>
+<p>Watch both the Frequency Sink and the I/Q traces.</p>
+<p>The spectral peak reaches DC and the complex rotation stops.</p>
+</section>
+<section id="move-past-the-signal" class="level3">
+<h3 class="anchored" data-anchor-id="move-past-the-signal">Move Past the Signal</h3>
+<p>Increase the magnitude of the negative LO to 7 kHz.</p>
+<p>Then,</p>
+<p><span class="math display">\[
+f_{\text{out}} = 6-7 = -1\text{ kHz}
+\]</span></p>
+<p>The signal crosses through DC and appears at negative frequency.</p>
+</section>
+<section id="reverse-the-complex-lo" class="level3">
+<h3 class="anchored" data-anchor-id="reverse-the-complex-lo">Reverse the Complex LO</h3>
+<p>Change from</p>
+<p><span class="math display">\[
+-4\text{ kHz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
++4\text{ kHz}
+\]</span></p>
+<p>The output moves from</p>
+<p><span class="math display">\[
++2\text{ kHz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
++10\text{ kHz}
+\]</span></p>
+</section>
+<section id="mistune-the-lo-slightly" class="level3">
+<h3 class="anchored" data-anchor-id="mistune-the-lo-slightly">Mistune the LO Slightly</h3>
+<p>Try to bring the 6 kHz signal to DC, but set the LO to something such as</p>
+<p><span class="math display">\[
+-5.9\text{ kHz}
+\]</span></p>
+<p>The output should remain approximately</p>
+<p><span class="math display">\[
++100\text{ Hz}
+\]</span></p>
+<p>away from DC.</p>
+<p>This is a simple way to create a controlled frequency offset.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">8.31 What We Learned</h2>
+<p>We began this chapter with a simple question:</p>
+<blockquote class="blockquote">
+<p>****How does a radio move a signal from one frequency to another?****</p>
+</blockquote>
+<p>The answer is mixing.</p>
+<p>A mixer multiplies a signal by an oscillator.</p>
+<p>For real cosine mixing, this multiplication produces both sum and difference frequencies:</p>
+<p><span class="math display">\[
+f_{\text{sum}} = f_{\text{signal}}+f_{\text{LO}}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{\text{difference}} = f_{\text{signal}}-f_{\text{LO}}
+\]</span></p>
+<p>By selecting the low-frequency difference component with a filter, we can downconvert a signal toward baseband.</p>
+<p>When the signal and LO frequencies match, the difference component reaches DC.</p>
+<p>If they do not match exactly, the remaining difference appears as a frequency offset.</p>
+<p>Complex mixing gives us more control.</p>
+<p>A complex exponential represents a signed frequency, so multiplying by a complex oscillator can translate a spectrum directly in one direction.</p>
+<p>With</p>
+<p><span class="math display">\[
+f_{\text{signal}}=+6\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{\text{LO}}=-4\text{ kHz}
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+f_{\text{out}}=+2\text{ kHz}
+\]</span></p>
+<p>while reversing the LO to</p>
+<p><span class="math display">\[
+f_{\text{LO}}=+4\text{ kHz}
+\]</span></p>
+<p>gives</p>
+<p><span class="math display">\[
+f_{\text{out}}=+10\text{ kHz}
+\]</span></p>
+<p>We also saw what happens when a complex signal crosses DC.</p>
+<p>Positive and negative frequency are not simply duplicate FFT labels for a complex signal. They represent opposite directions of complex rotation.</p>
+<p>That is why I/Q representation and complex mixing are so closely connected.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">8.32 Connecting to the Next Chapter</h2>
+<p>We now know how to move a signal.</p>
+<p>But moving a signal does not automatically isolate it.</p>
+<p>A real receiver may contain many signals at different frequencies.</p>
+<p>After mixing, some of those signals may move into regions we do not want. Mixer products may also remain. Noise is still present.</p>
+<p>So the next problem is:</p>
+<blockquote class="blockquote">
+<p>****How can the receiver keep the part of the spectrum it wants and reject the rest?****</p>
+</blockquote>
+<p>We already used a Low Pass Filter briefly in this chapter to keep a difference component.</p>
+<p>But we treated the filter almost like a black box.</p>
+<p>In the next chapter, we will open that box.</p>
+<p>We will look at low-pass, high-pass, band-pass, and band-stop filters, and see what cutoff frequency, transition width, passband, stopband, filter order, and decimation actually do to a signal.</p>
+<p>That takes us to:</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter07.html" class="pagination-link" aria-label="Chapter 7: Noise, Noise Floor, and SNR">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter09.html" class="pagination-link" aria-label="Chapter 9: Filters and Channel Selection">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

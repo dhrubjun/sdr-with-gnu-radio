@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 22: Symbol Timing Synchronization – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter23.html" rel="next">
+<link href="../book/chapter21.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter22.html"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-pulse-shaping-to-timing-recovery" id="toc-from-pulse-shaping-to-timing-recovery" class="nav-link active" data-scroll-target="#from-pulse-shaping-to-timing-recovery">22.1 From Pulse Shaping to Timing Recovery</a></li>
+  <li><a href="#experiment-22.1-effect-of-symbol-timing-offset" id="toc-experiment-22.1-effect-of-symbol-timing-offset" class="nav-link" data-scroll-target="#experiment-22.1-effect-of-symbol-timing-offset">22.2 Experiment 22.1: Effect of Symbol Timing Offset</a>
+  <ul class="collapse">
+  <li><a href="#what-we-observe" id="toc-what-we-observe" class="nav-link" data-scroll-target="#what-we-observe">What We Observe</a></li>
+  <li><a href="#physical-meaning" id="toc-physical-meaning" class="nav-link" data-scroll-target="#physical-meaning">Physical Meaning</a></li>
+  </ul></li>
+  <li><a href="#timing-error-how-can-a-receiver-know-it-is-early-or-late" id="toc-timing-error-how-can-a-receiver-know-it-is-early-or-late" class="nav-link" data-scroll-target="#timing-error-how-can-a-receiver-know-it-is-early-or-late">22.3 Timing Error: How Can a Receiver Know It Is Early or Late?</a></li>
+  <li><a href="#experiment-22.2-timing-error-detection" id="toc-experiment-22.2-timing-error-detection" class="nav-link" data-scroll-target="#experiment-22.2-timing-error-detection">22.4 Experiment 22.2: Timing-Error Detection</a>
+  <ul class="collapse">
+  <li><a href="#why-compare-squared-values" id="toc-why-compare-squared-values" class="nav-link" data-scroll-target="#why-compare-squared-values">Why Compare Squared Values?</a></li>
+  <li><a href="#why-squaring-is-important-in-timing-synchronization" id="toc-why-squaring-is-important-in-timing-synchronization" class="nav-link" data-scroll-target="#why-squaring-is-important-in-timing-synchronization">Why Squaring Is Important in Timing Synchronization</a></li>
+  <li><a href="#what-we-observe-1" id="toc-what-we-observe-1" class="nav-link" data-scroll-target="#what-we-observe-1">What We Observe</a></li>
+  <li><a href="#why-transitions-matter" id="toc-why-transitions-matter" class="nav-link" data-scroll-target="#why-transitions-matter">Why Transitions Matter</a></li>
+  </ul></li>
+  <li><a href="#from-a-timing-error-to-a-timing-loop" id="toc-from-a-timing-error-to-a-timing-loop" class="nav-link" data-scroll-target="#from-a-timing-error-to-a-timing-loop">22.5 From a Timing Error to a Timing Loop</a></li>
+  <li><a href="#why-an-interpolator-is-necessary" id="toc-why-an-interpolator-is-necessary" class="nav-link" data-scroll-target="#why-an-interpolator-is-necessary">22.6 Why an Interpolator Is Necessary</a></li>
+  <li><a href="#gnu-radio-toolbox-symbol-sync" id="toc-gnu-radio-toolbox-symbol-sync" class="nav-link" data-scroll-target="#gnu-radio-toolbox-symbol-sync">GNU Radio Toolbox: Symbol Sync</a>
+  <ul class="collapse">
+  <li><a href="#why-gardner" id="toc-why-gardner" class="nav-link" data-scroll-target="#why-gardner">Why Gardner?</a></li>
+  </ul></li>
+  <li><a href="#experiment-22.3-automatic-timing-recovery-with-symbol-sync" id="toc-experiment-22.3-automatic-timing-recovery-with-symbol-sync" class="nav-link" data-scroll-target="#experiment-22.3-automatic-timing-recovery-with-symbol-sync">22.7 Experiment 22.3: Automatic Timing Recovery with Symbol Sync</a>
+  <ul class="collapse">
+  <li><a href="#what-we-observe-2" id="toc-what-we-observe-2" class="nav-link" data-scroll-target="#what-we-observe-2">What We Observe</a></li>
+  <li><a href="#acquisition-and-tracking" id="toc-acquisition-and-tracking" class="nav-link" data-scroll-target="#acquisition-and-tracking">Acquisition and Tracking</a></li>
+  </ul></li>
+  <li><a href="#timing-offset-is-not-the-same-as-sampling-clock-mismatch" id="toc-timing-offset-is-not-the-same-as-sampling-clock-mismatch" class="nav-link" data-scroll-target="#timing-offset-is-not-the-same-as-sampling-clock-mismatch">22.8 Timing Offset Is Not the Same as Sampling-Clock Mismatch</a>
+  <ul class="collapse">
+  <li><a href="#fixed-timing-offset" id="toc-fixed-timing-offset" class="nav-link" data-scroll-target="#fixed-timing-offset">Fixed Timing Offset</a></li>
+  <li><a href="#sampling-clock-mismatch" id="toc-sampling-clock-mismatch" class="nav-link" data-scroll-target="#sampling-clock-mismatch">Sampling-Clock Mismatch</a></li>
+  </ul></li>
+  <li><a href="#experiment-22.4-sampling-clock-mismatch-and-timing-tracking" id="toc-experiment-22.4-sampling-clock-mismatch-and-timing-tracking" class="nav-link" data-scroll-target="#experiment-22.4-sampling-clock-mismatch-and-timing-tracking">22.9 Experiment 22.4: Sampling-Clock Mismatch and Timing Tracking</a>
+  <ul class="collapse">
+  <li><a href="#eye-diagram-and-constellation-together" id="toc-eye-diagram-and-constellation-together" class="nav-link" data-scroll-target="#eye-diagram-and-constellation-together">Eye Diagram and Constellation Together</a></li>
+  <li><a href="#a-subtle-point-about-the-eye-diagram" id="toc-a-subtle-point-about-the-eye-diagram" class="nav-link" data-scroll-target="#a-subtle-point-about-the-eye-diagram">A Subtle Point About the Eye Diagram</a></li>
+  <li><a href="#physical-meaning-1" id="toc-physical-meaning-1" class="nav-link" data-scroll-target="#physical-meaning-1">Physical Meaning</a></li>
+  </ul></li>
+  <li><a href="#the-role-of-excess-bandwidth" id="toc-the-role-of-excess-bandwidth" class="nav-link" data-scroll-target="#the-role-of-excess-bandwidth">22.10 The Role of Excess Bandwidth</a></li>
+  <li><a href="#gardner-and-mueller-and-müller" id="toc-gardner-and-mueller-and-müller" class="nav-link" data-scroll-target="#gardner-and-mueller-and-müller">22.11 Gardner and Mueller and Müller</a>
+  <ul class="collapse">
+  <li><a href="#gardner" id="toc-gardner" class="nav-link" data-scroll-target="#gardner">Gardner</a></li>
+  <li><a href="#mueller-and-müller" id="toc-mueller-and-müller" class="nav-link" data-scroll-target="#mueller-and-müller">Mueller and Müller</a></li>
+  </ul></li>
+  <li><a href="#experiment-22.5-effect-of-timing-loop-bandwidth" id="toc-experiment-22.5-effect-of-timing-loop-bandwidth" class="nav-link" data-scroll-target="#experiment-22.5-effect-of-timing-loop-bandwidth">22.12 Experiment 22.5: Effect of Timing-Loop Bandwidth</a>
+  <ul class="collapse">
+  <li><a href="#what-we-observe-3" id="toc-what-we-observe-3" class="nav-link" data-scroll-target="#what-we-observe-3">What We Observe</a></li>
+  <li><a href="#do-we-need-to-wait-after-pressing-play" id="toc-do-we-need-to-wait-after-pressing-play" class="nav-link" data-scroll-target="#do-we-need-to-wait-after-pressing-play">Do We Need to Wait After Pressing Play?</a></li>
+  </ul></li>
+  <li><a href="#what-is-actually-being-recovered" id="toc-what-is-actually-being-recovered" class="nav-link" data-scroll-target="#what-is-actually-being-recovered">22.13 What Is Actually Being Recovered?</a></li>
+  <li><a href="#fixed-timing-error-versus-timing-drift" id="toc-fixed-timing-error-versus-timing-drift" class="nav-link" data-scroll-target="#fixed-timing-error-versus-timing-drift">22.14 Fixed Timing Error Versus Timing Drift</a></li>
+  <li><a href="#the-big-picture-how-timing-recovery-works" id="toc-the-big-picture-how-timing-recovery-works" class="nav-link" data-scroll-target="#the-big-picture-how-timing-recovery-works">22.15 The Big Picture: How Timing Recovery Works</a>
+  <ul class="collapse">
+  <li><a href="#step-1-oversample-the-waveform" id="toc-step-1-oversample-the-waveform" class="nav-link" data-scroll-target="#step-1-oversample-the-waveform">Step 1: Oversample the waveform</a></li>
+  <li><a href="#step-2-observe-timing-sensitive-structure" id="toc-step-2-observe-timing-sensitive-structure" class="nav-link" data-scroll-target="#step-2-observe-timing-sensitive-structure">Step 2: Observe timing-sensitive structure</a></li>
+  <li><a href="#step-3-generate-a-timing-error" id="toc-step-3-generate-a-timing-error" class="nav-link" data-scroll-target="#step-3-generate-a-timing-error">Step 3: Generate a timing error</a></li>
+  <li><a href="#step-4-filter-the-error" id="toc-step-4-filter-the-error" class="nav-link" data-scroll-target="#step-4-filter-the-error">Step 4: Filter the error</a></li>
+  <li><a href="#step-5-adjust-the-sampling-phase" id="toc-step-5-adjust-the-sampling-phase" class="nav-link" data-scroll-target="#step-5-adjust-the-sampling-phase">Step 5: Adjust the sampling phase</a></li>
+  <li><a href="#step-6-repeat" id="toc-step-6-repeat" class="nav-link" data-scroll-target="#step-6-repeat">Step 6: Repeat</a></li>
+  </ul></li>
+  <li><a href="#other-timing-recovery-approaches" id="toc-other-timing-recovery-approaches" class="nav-link" data-scroll-target="#other-timing-recovery-approaches">22.16 Other Timing-Recovery Approaches</a></li>
+  <li><a href="#practical-sdr-interpretation" id="toc-practical-sdr-interpretation" class="nav-link" data-scroll-target="#practical-sdr-interpretation">22.17 Practical SDR Interpretation</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a>
+  <ul class="collapse">
+  <li><a href="#change-the-initial-timing-offset" id="toc-change-the-initial-timing-offset" class="nav-link" data-scroll-target="#change-the-initial-timing-offset">Change the Initial Timing Offset</a></li>
+  <li><a href="#increase-the-sampling-clock-mismatch" id="toc-increase-the-sampling-clock-mismatch" class="nav-link" data-scroll-target="#increase-the-sampling-clock-mismatch">Increase the Sampling-Clock Mismatch</a></li>
+  <li><a href="#explore-timing-loop-bandwidth" id="toc-explore-timing-loop-bandwidth" class="nav-link" data-scroll-target="#explore-timing-loop-bandwidth">Explore Timing-Loop Bandwidth</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">22.18 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">22.19 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter21.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/chapter22.html"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, we recovered the carrier. A Costas loop, PLL, FLL, or another carrier-recovery method can correct frequency and phase errors, but that still does not tell the receiver <strong>when to measure each symbol</strong>.</p>
+<p>That is the problem of <strong>symbol timing synchronization</strong>.</p>
+<p>A digital receiver does not receive one isolated number for every transmitted symbol. It receives a continuous-time waveform that has been sampled by an ADC. After pulse shaping and matched filtering, several digital samples may represent one symbol interval. Somewhere among those samples is the best instant at which to make the symbol decision.</p>
+<p>If the receiver samples at the wrong instant, the constellation spreads even when the carrier is perfectly synchronized. If the transmitter and receiver sampling clocks run at slightly different rates, the correct instant does not even remain fixed: it slowly moves with time.</p>
+<p>This chapter develops the receiver mechanisms that solve these problems.</p>
+<p>We will begin by deliberately sampling QPSK at the wrong instant. Then we will build a simple timing-error detector so that the receiver can determine whether it is early or late. After that, GNU Radio’s <strong>Symbol Sync</strong> block will close the loop automatically. Finally, we will introduce a sampling-clock mismatch and observe the receiver continuously tracking it.</p>
+<p>The central idea is simple:</p>
+<blockquote class="blockquote">
+<p>Carrier synchronization determines the correct rotation of the constellation. Timing synchronization determines the correct instant at which the constellation should be observed.</p>
+</blockquote>
+<hr>
+<section id="from-pulse-shaping-to-timing-recovery" class="level2">
+<h2 class="anchored" data-anchor-id="from-pulse-shaping-to-timing-recovery">22.1 From Pulse Shaping to Timing Recovery</h2>
+<p>Chapter 18 introduced pulse shaping and matched filtering. We learned that a Nyquist pulse can be designed so that, at the correct symbol instants, neighboring symbols do not interfere with the symbol being measured.</p>
+<p>If the symbol period is (T), the desired receiver samples occur at times such as</p>
+<p><span class="math display">\[
+t=kT+\tau
+\]</span></p>
+<p>where (k) is the symbol index and () represents the receiver’s timing phase.</p>
+<p>The important phrase is <strong>at the correct symbol instants</strong>.</p>
+<p>The matched filter does not automatically tell the receiver where those instants are. It produces a waveform containing many samples, and the receiver must determine where in each symbol interval it should sample.</p>
+<p>For our experiments,</p>
+<p><span class="math display">\[
+f_s=32000\ \text{samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+R_s=4000\ \text{symbols/s}
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\text{sps}=\frac{f_s}{R_s}=8
+\]</span></p>
+<p>There are therefore eight digital samples per symbol.</p>
+<p>A simplified picture is</p>
+<pre class="text"><code>one symbol interval
+&lt;----------------------&gt;
+
+o   o   o   o   o   o   o   o
+0   1   2   3   4   5   6   7
+                ^
+        useful sampling region</code></pre>
+<p>The receiver must determine where that useful region is.</p>
+<p>This is not a carrier problem. A receiver can have perfect carrier phase and frequency recovery and still make poor decisions because it samples at the wrong time.</p>
+<hr>
+</section>
+<section id="experiment-22.1-effect-of-symbol-timing-offset" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-22.1-effect-of-symbol-timing-offset">22.2 Experiment 22.1: Effect of Symbol Timing Offset</h2>
+<p>Before trying to recover timing, we first need to see what incorrect timing actually does.</p>
+<p>We generate pulse-shaped QPSK, pass it through a receive matched filter, and then deliberately choose different samples from each eight-sample symbol interval.</p>
+<p>The main parameters are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kS/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">4 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off, ()</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+<tr class="odd">
+<td>RRC taps</td>
+<td style="text-align: right;">65</td>
+</tr>
+<tr class="even">
+<td>Timing-offset range</td>
+<td style="text-align: right;">0 to 7 samples</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22-exp1-symbol-timing-offset-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph for deliberately changing the QPSK symbol-sampling position</figcaption>
+</figure>
+</div>
+<p>The important point is that the transmitted data and pulse shape are not being changed. Only the <strong>sampling position</strong> is changed.</p>
+<p>The eight possible integer positions represent one complete symbol interval. After eight samples, the pattern repeats into the next symbol.</p>
+<section id="what-we-observe" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-observe">What We Observe</h3>
+<p>We selected offsets 0, 2, 4, and 6 for the final comparison because they show the movement through the symbol interval without requiring eight nearly redundant plots.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22-exp1-symbol-timing-offset-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of different symbol-timing offsets on the QPSK constellation</figcaption>
+</figure>
+</div>
+<p>At a favorable sampling position, the points form four compact QPSK clusters. At poor positions, many samples are taken while the pulse-shaped waveform is moving between symbols. The constellation therefore spreads through the space between the ideal QPSK points.</p>
+<p>This explains an important observation:</p>
+<blockquote class="blockquote">
+<p>A smeared constellation does not automatically mean noise, multipath, or failed carrier recovery.</p>
+</blockquote>
+<p>Incorrect symbol timing can also spread the constellation.</p>
+</section>
+<section id="physical-meaning" class="level3">
+<h3 class="anchored" data-anchor-id="physical-meaning">Physical Meaning</h3>
+<p>Imagine that every transmitted symbol is a small pulse with a best measurement point near its center. The receiver does not know where that center lies relative to its own sampling clock.</p>
+<p>Sampling near the best point gives a reliable estimate of the symbol. Sampling near a transition mixes the influence of adjacent symbols and gives a poor estimate.</p>
+<p>The receiver therefore needs more than a fixed <code>Keep 1 in N</code> operation. It needs a way to determine whether its current sampling position is too early or too late.</p>
+<p>That leads to the timing-error detector.</p>
+<hr>
+</section>
+</section>
+<section id="timing-error-how-can-a-receiver-know-it-is-early-or-late" class="level2">
+<h2 class="anchored" data-anchor-id="timing-error-how-can-a-receiver-know-it-is-early-or-late">22.3 Timing Error: How Can a Receiver Know It Is Early or Late?</h2>
+<p>Suppose the receiver is currently examining a candidate symbol time.</p>
+<p>It can ask a remarkably useful question:</p>
+<blockquote class="blockquote">
+<p>Does the waveform look more appropriate slightly before this instant or slightly after it?</p>
+</blockquote>
+<p>Conceptually, take three measurements:</p>
+<pre class="text"><code>              candidate symbol time
+                       |
+                       v
+---------o-------------o-------------o---------
+       early          on-time        late</code></pre>
+<p>If the receiver is correctly centered, the early and late observations should balance in the way expected by the timing detector.</p>
+<p>If they do not balance, their difference produces a <strong>timing error</strong>.</p>
+<p>The sign tells the loop which direction to move.</p>
+<p>This is analogous to carrier synchronization. A PLL needs a phase-error detector before it can correct phase. A timing loop needs a timing-error detector before it can correct sampling time.</p>
+<hr>
+</section>
+<section id="experiment-22.2-timing-error-detection" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-22.2-timing-error-detection">22.4 Experiment 22.2: Timing-Error Detection</h2>
+<p>To expose this mechanism directly, we construct a simple Early-Late-style timing-error detector rather than immediately hiding the process inside Symbol Sync.</p>
+<p>A controlled alternating sequence is useful because it produces regular transitions:</p>
+<pre class="text"><code>+1, -1, +1, -1, +1, -1, ...</code></pre>
+<p>After interpolation and matched filtering, two nearby sampling branches represent early and late observations. Their energies are compared and averaged.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp2_early_late_ted_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph for the Early-Late timing-error detector</figcaption>
+</figure>
+</div>
+<p>For this experiment the assumed timing offset is swept over a small neighborhood:</p>
+<pre class="text"><code>Timing offset:
+Start: -3
+Stop:   3
+Step:   1</code></pre>
+<p>This range is intentionally different from Experiment 22.1.</p>
+<p>Experiment 22.1 explored <strong>one complete eight-sample symbol interval</strong>, so offsets 0 through 7 were natural. Here we are no longer asking, “What happens at every possible sample position?” We are asking, “If I am near a candidate timing point, am I early or late?”</p>
+<p>That is a local error-detection problem, so a signed range around the operating point is more useful.</p>
+<section id="why-compare-squared-values" class="level3">
+<h3 class="anchored" data-anchor-id="why-compare-squared-values">Why Compare Squared Values?</h3>
+<p>A simple energy-style Early-Late error can be written conceptually as</p>
+<p><span class="math display">\[
+e[k]=|r_E[k]|^2-|r_L[k]|^2
+\]</span></p>
+<p>where (r_E[k]) and (r_L[k]) are the early and late measurements.</p>
+<p>The exact sign convention can be reversed depending on how the detector is constructed. What matters is that opposite timing directions produce opposite error signs.</p>
+<p>Why square the samples?</p>
+<p>Suppose one PAM symbol is positive and the next is negative. If we directly compare signed amplitudes, the sign of the transmitted data can dominate the comparison. Squaring removes that data sign:</p>
+<p><span class="math display">\[
+(+a)^2=(-a)^2=a^2
+\]</span></p>
+<p>The detector can therefore compare <strong>signal magnitude or energy</strong> rather than confusing symbol polarity with timing direction.</p>
+</section>
+<section id="why-squaring-is-important-in-timing-synchronization" class="level3">
+<h3 class="anchored" data-anchor-id="why-squaring-is-important-in-timing-synchronization">Why Squaring Is Important in Timing Synchronization</h3>
+<p>There is a deeper reason that squaring repeatedly appears in timing-recovery theory.</p>
+<p>The transmitted data itself may look random, so the symbol clock is not necessarily visible as an obvious sinusoid. Pulse shaping, however, creates a waveform whose statistical structure repeats every symbol period. A nonlinear operation such as squaring can convert some of that hidden periodic structure into a component related to the symbol rate.</p>
+<p>For an alternating pulse-shaped sequence, this is especially easy to visualize. The waveform changes sign from symbol to symbol, but after squaring, positive and negative excursions both become positive. The repeated symbol-period structure becomes much easier to detect.</p>
+<p>This gives two related but distinct roles for squaring:</p>
+<ol type="1">
+<li><strong>In our Early-Late detector</strong>, it removes symbol polarity and lets us compare early and late energies.</li>
+<li><strong>In classical clock extraction</strong>, squaring can reveal periodic timing information that was hidden by the data modulation.</li>
+</ol>
+<p>Squaring is therefore a fundamental timing-extraction idea, but it is <strong>not a mandatory operation inside every timing-error detector</strong>. Gardner, Mueller and Müller, and other TEDs obtain timing information using different relationships among received samples.</p>
+</section>
+<section id="what-we-observe-1" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-observe-1">What We Observe</h3>
+<p>The final comparison uses offsets (-2), (-1), (0), and (+1).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp2_timing_error_detector_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Timing-error detector response for selected assumed timing offsets</figcaption>
+</figure>
+</div>
+<p>Our experimental detector produced approximately:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Assumed offset</th>
+<th style="text-align: right;">Average timing error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-3</td>
+<td style="text-align: right;">-0.738</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-2</td>
+<td style="text-align: right;">-0.522</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">approximately 0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">+0.522</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">+0.738</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">+2</td>
+<td style="text-align: right;">+0.522</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">+3</td>
+<td style="text-align: right;">approximately 0</td>
+</tr>
+</tbody>
+</table>
+<p>At first, it may seem surprising that offset 0 does <strong>not</strong> produce zero error.</p>
+<p>The important lesson is that the number written in the GUI is not automatically the physical zero of the TED.</p>
+<p>The detector contains filter delay, branch delays, and the particular early/late sample geometry we constructed. In this implementation, the TED’s balance point occurs near an assumed offset of (-1), not at the GUI value 0.</p>
+<p>So:</p>
+<blockquote class="blockquote">
+<p>A timing detector’s zero-error point is defined by its complete signal path, not by the label we happen to assign to one delay variable.</p>
+</blockquote>
+<p>This is a useful practical lesson. In a real synchronization loop, the receiver does not care whether the internal variable is numerically called 0, (-1), or 0.37. It cares about finding the point where the timing error balances.</p>
+</section>
+<section id="why-transitions-matter" class="level3">
+<h3 class="anchored" data-anchor-id="why-transitions-matter">Why Transitions Matter</h3>
+<p>Timing information is strongest when the waveform changes.</p>
+<p>If the received signal remained at the same level for a long time, an early sample and a late sample could look almost identical. The receiver would have little evidence telling it which direction to move.</p>
+<p>Transitions create slope, and slope creates timing information.</p>
+<p>This is why timing-recovery algorithms are closely connected to the pulse shape, transition density, and excess bandwidth of the signal.</p>
+<hr>
+</section>
+</section>
+<section id="from-a-timing-error-to-a-timing-loop" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-timing-error-to-a-timing-loop">22.5 From a Timing Error to a Timing Loop</h2>
+<p>A timing-error detector alone does not synchronize anything.</p>
+<p>It only says something like:</p>
+<pre class="text"><code>too early
+too late
+approximately correct</code></pre>
+<p>The receiver still needs to use that information to change where it samples.</p>
+<p>The complete structure is a <strong>timing-locked loop</strong>:</p>
+<pre class="text"><code>oversampled received waveform
+            |
+            v
+   +--------------------+
+   | Timing Error       |
+   | Detector (TED)     |
+   +--------------------+
+            |
+         error
+            |
+            v
+   +--------------------+
+   | Loop Filter /      |
+   | Loop Controller    |
+   +--------------------+
+            |
+     timing correction
+            |
+            v
+   +--------------------+
+   | Interpolator       |
+   +--------------------+
+            |
+            v
+   recovered symbol samples
+            |
+            +---------- feedback ----------+</code></pre>
+<p>The analogy with the carrier-recovery loops of Chapter 21 is strong.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Carrier synchronization</th>
+<th>Timing synchronization</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Phase/frequency error detector</td>
+<td>Timing-error detector</td>
+</tr>
+<tr class="even">
+<td>Loop filter</td>
+<td>Loop filter</td>
+</tr>
+<tr class="odd">
+<td>Correcting oscillator</td>
+<td>Interpolator timing control</td>
+</tr>
+<tr class="even">
+<td>Correct carrier phase/frequency</td>
+<td>Correct symbol-sampling time</td>
+</tr>
+</tbody>
+</table>
+<p>The quantity being corrected is different, but the feedback idea is the same.</p>
+<hr>
+</section>
+<section id="why-an-interpolator-is-necessary" class="level2">
+<h2 class="anchored" data-anchor-id="why-an-interpolator-is-necessary">22.6 Why an Interpolator Is Necessary</h2>
+<p>This is one of the most important ideas in practical timing recovery.</p>
+<p>With eight samples per symbol, it may be tempting to think that the receiver only needs to choose sample 0, 1, 2, …, or 7.</p>
+<p>Real timing is not restricted to integer sample positions.</p>
+<p>The optimum point might lie here:</p>
+<pre class="text"><code>ADC samples:
+
+o-------o-------o-------o-------o
+                ^
+                |
+          not necessarily
+          exactly on a sample</code></pre>
+<p>For example, the best symbol time could correspond to sample position 3.42.</p>
+<p>There is no ADC sample exactly at 3.42.</p>
+<p>But a properly sampled bandlimited waveform contains enough information to estimate the signal between the existing samples. An <strong>interpolator</strong> constructs that estimate.</p>
+<p>Conceptually,</p>
+<p><span class="math display">\[
+y(kT+\hat{\tau})=\text{interpolated value of the received waveform}
+\]</span></p>
+<p>where () is the receiver’s current timing estimate.</p>
+<p>This is why a synchronization block is fundamentally more capable than <code>Keep 1 in N</code>.</p>
+<p><code>Keep 1 in N</code> says:</p>
+<blockquote class="blockquote">
+<p>Give me one of the samples that already exists.</p>
+</blockquote>
+<p>A timing-recovery interpolator says:</p>
+<blockquote class="blockquote">
+<p>Estimate the waveform at the time where I actually need the symbol measurement.</p>
+</blockquote>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-symbol-sync" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-symbol-sync">GNU Radio Toolbox: Symbol Sync</h2>
+<p>GNU Radio’s <strong>Symbol Sync</strong> block combines the major pieces required for feedback timing recovery.</p>
+<p>It can:</p>
+<ul>
+<li>evaluate a timing-error detector,</li>
+<li>filter the timing error,</li>
+<li>update the timing estimate,</li>
+<li>control an interpolating resampler,</li>
+<li>and produce synchronized symbol-rate output.</li>
+</ul>
+<p>For our main experiment we use the <strong>Gardner</strong> timing-error detector.</p>
+<p>Important settings are:</p>
+<pre class="text"><code>I/O Type: Complex
+Timing Error Detector: Gardner
+Samples per Symbol: 8
+Expected TED Gain: 1.0
+Loop Bandwidth: 0.045
+Damping Factor: 1.0
+Maximum Deviation: 1.5
+Output Samples/Symbol: 1
+Interpolating Resampler: MMSE, 8 tap FIR</code></pre>
+<section id="why-gardner" class="level3">
+<h3 class="anchored" data-anchor-id="why-gardner">Why Gardner?</h3>
+<p>The Gardner TED is widely useful because it can derive timing information from an oversampled waveform without first requiring correct symbol decisions.</p>
+<p>Its intuition can be expressed using three samples around a symbol interval:</p>
+<pre class="text"><code>previous symbol       midpoint       current symbol
+      o------------------o------------------o
+                         ^
+                  transition information</code></pre>
+<p>A common real-valued form is</p>
+<p><span class="math display">\[
+e[k]=(x[k]-x[k-1])x[k-\tfrac{1}{2}]
+\]</span></p>
+<p>For complex signals, the I and Q contributions can be combined. GNU Radio handles the implementation internally.</p>
+<p>We do not need to derive the full loop mathematics to understand the physical meaning: the detector looks at how the waveform behaves around symbol transitions and generates an error indicating how the sampling phase should move.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-22.3-automatic-timing-recovery-with-symbol-sync" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-22.3-automatic-timing-recovery-with-symbol-sync">22.7 Experiment 22.3: Automatic Timing Recovery with Symbol Sync</h2>
+<p>We now return to pulse-shaped QPSK and replace manual timing selection with a real synchronization loop.</p>
+<p>One branch uses fixed sampling as a reference. The second branch passes the matched-filter output into Symbol Sync.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp3_symbol_sync_timing_recovery_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph for automatic QPSK timing recovery using Symbol Sync</figcaption>
+</figure>
+</div>
+<p>The principal signal settings remain the same:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kS/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">4 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+<tr class="odd">
+<td>Symbol Sync TED</td>
+<td style="text-align: right;">Gardner</td>
+</tr>
+<tr class="even">
+<td>Symbol Sync loop bandwidth</td>
+<td style="text-align: right;">0.045</td>
+</tr>
+<tr class="odd">
+<td>Output samples/symbol</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<section id="what-we-observe-2" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-observe-2">What We Observe</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp3_symbol_sync_timing_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Automatic timing recovery using the Gardner TED in Symbol Sync</figcaption>
+</figure>
+</div>
+<p>When the fixed sampling position is poor, its constellation spreads. The Symbol Sync output remains concentrated around the QPSK decision points because the timing loop estimates the correct phase and uses interpolation to obtain the symbol values at the appropriate times.</p>
+<p>This experiment changes the receiver from a <strong>fixed sampler</strong> into an <strong>adaptive sampler</strong>.</p>
+</section>
+<section id="acquisition-and-tracking" class="level3">
+<h3 class="anchored" data-anchor-id="acquisition-and-tracking">Acquisition and Tracking</h3>
+<p>Two terms introduced for carrier synchronization are equally useful here.</p>
+<p><strong>Acquisition</strong> is the process of finding a useful timing phase after the receiver starts.</p>
+<p><strong>Tracking</strong> is the process of continuing to follow the correct timing after acquisition.</p>
+<p>A fixed timing offset mainly tests acquisition. Once the loop finds the correct position, that position may remain approximately constant.</p>
+<p>But real transmitter and receiver clocks are independent. Their rates will not be exactly equal.</p>
+<p>That creates a harder problem.</p>
+<hr>
+</section>
+</section>
+<section id="timing-offset-is-not-the-same-as-sampling-clock-mismatch" class="level2">
+<h2 class="anchored" data-anchor-id="timing-offset-is-not-the-same-as-sampling-clock-mismatch">22.8 Timing Offset Is Not the Same as Sampling-Clock Mismatch</h2>
+<p>This distinction is essential.</p>
+<section id="fixed-timing-offset" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-timing-offset">Fixed Timing Offset</h3>
+<p>Suppose the receiver is always two samples late.</p>
+<pre class="text"><code>Tx:  |----symbol----|----symbol----|----symbol----|
+Rx:    ^              ^              ^
+       same relative error every symbol</code></pre>
+<p>The timing phase is wrong, but the error does not necessarily grow.</p>
+</section>
+<section id="sampling-clock-mismatch" class="level3">
+<h3 class="anchored" data-anchor-id="sampling-clock-mismatch">Sampling-Clock Mismatch</h3>
+<p>Now suppose the transmitter and receiver clocks run at slightly different rates.</p>
+<pre class="text"><code>Tx:  |----symbol----|----symbol----|----symbol----|
+Rx:   ^              ^               ^                ^
+      small error     larger error    still larger error</code></pre>
+<p>The relative timing continuously drifts.</p>
+<p>If the receiver samples slightly too fast, it gradually moves through the transmitted symbol waveform in one direction. If it samples slightly too slowly, it drifts in the other direction.</p>
+<p>This is exactly the impairment we first introduced with the Channel Model’s <code>Epsilon</code> parameter in Chapter 19. There we deliberately observed the problem without correcting it. Now we are ready to correct it.</p>
+<p>If</p>
+<p><span class="math display">\[
+\epsilon=\frac{f_{s,\text{out}}}{f_{s,\text{in}}}
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+\epsilon=1
+\]</span></p>
+<p>represents matched sampling rates.</p>
+<p>A value such as</p>
+<p><span class="math display">\[
+\epsilon=1.004
+\]</span></p>
+<p>represents a small but continuous sampling-rate mismatch.</p>
+<p>The exact convention should always be interpreted according to the block being used, but the practical meaning is what matters here: when epsilon differs from 1, the receiver’s sample timing progressively slips relative to the transmitted symbols.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-22.4-sampling-clock-mismatch-and-timing-tracking" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-22.4-sampling-clock-mismatch-and-timing-tracking">22.9 Experiment 22.4: Sampling-Clock Mismatch and Timing Tracking</h2>
+<p>This experiment extends the previous QPSK receiver by introducing a controlled clock-rate mismatch through the Channel Model.</p>
+<p>The receiver contains two paths:</p>
+<pre class="text"><code>Matched-filter output
+        |
+        +----&gt; Keep 1 in N ----&gt; Fixed Sampling
+        |
+        +----&gt; Symbol Sync ----&gt; Timing-Recovered QPSK</code></pre>
+<p>The first path cannot adapt. The second can.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp4_clock_mismatch_tracking_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Flowgraph for sampling-clock mismatch and timing tracking</figcaption>
+</figure>
+</div>
+<p>The main parameters are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kS/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">4 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off</td>
+<td style="text-align: right;">0.35</td>
+</tr>
+<tr class="odd">
+<td>Channel noise voltage</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Channel frequency offset</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>Symbol Sync TED</td>
+<td style="text-align: right;">Gardner</td>
+</tr>
+<tr class="even">
+<td>Symbol Sync loop bandwidth</td>
+<td style="text-align: right;">0.045</td>
+</tr>
+</tbody>
+</table>
+<p>We compare two clock ratios:</p>
+<pre class="text"><code>Matched clocks:
+epsilon = 1.000
+
+Exaggerated clock mismatch:
+epsilon = 1.004</code></pre>
+<p>The value 1.004 is intentionally large enough to make the effect easy to see. It is a teaching value, not a claim that every practical radio has a 0.4% clock error.</p>
+<section id="eye-diagram-and-constellation-together" class="level3">
+<h3 class="anchored" data-anchor-id="eye-diagram-and-constellation-together">Eye Diagram and Constellation Together</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp4_clock_mismatch_eye_timing_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Eye diagrams and timing recovery with matched and mismatched sampling clocks</figcaption>
+</figure>
+</div>
+<p>At (), the transmitter and receiver sampling rates agree. The I and Q eye diagrams show a stable timing structure.</p>
+<p>At (), the receiver’s sample grid continuously moves relative to the waveform. Over time, traces appear at different timing phases, so the eye becomes horizontally smeared.</p>
+<p>The fixed-sampling constellation suffers badly because the receiver keeps taking one predetermined sample position even though the correct position is moving.</p>
+<p>The red timing-recovered QPSK points remain concentrated near the four symbol locations because Symbol Sync continuously changes its interpolation phase.</p>
+</section>
+<section id="a-subtle-point-about-the-eye-diagram" class="level3">
+<h3 class="anchored" data-anchor-id="a-subtle-point-about-the-eye-diagram">A Subtle Point About the Eye Diagram</h3>
+<p>The Eye Sink is connected <strong>before Symbol Sync</strong>.</p>
+<p>Therefore, it displays the clock-impaired matched-filter waveform as seen on the receiver’s current sample grid. It does not show a magically repaired analog waveform after synchronization.</p>
+<p>Symbol Sync acts later. It estimates where the symbol measurements should occur and interpolates those values.</p>
+<p>That is why these two observations can occur simultaneously:</p>
+<pre class="text"><code>Input eye:
+smeared because the receiver clock is mismatched
+
+Recovered constellation:
+clean because Symbol Sync tracks the correct symbol times</code></pre>
+<p>This is not a contradiction. It is evidence that the timing-recovery loop is doing its job.</p>
+</section>
+<section id="physical-meaning-1" class="level3">
+<h3 class="anchored" data-anchor-id="physical-meaning-1">Physical Meaning</h3>
+<p>Imagine two watches that are set to the same time but one runs slightly faster.</p>
+<p>Initially, their readings agree. After a while they differ by a little. Later they differ by more.</p>
+<p>A sampling-clock mismatch behaves the same way.</p>
+<p>A one-time delay cannot solve this problem because the required correction keeps changing. The receiver must <strong>track</strong> the timing continuously.</p>
+<p>That is why practical symbol synchronization is a feedback process rather than merely choosing the best sample once.</p>
+<hr>
+</section>
+</section>
+<section id="the-role-of-excess-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="the-role-of-excess-bandwidth">22.10 The Role of Excess Bandwidth</h2>
+<p>Our experiments repeatedly use an RRC roll-off factor</p>
+<p><span class="math display">\[
+\alpha=0.35
+\]</span></p>
+<p>Earlier, () was mainly discussed in terms of pulse shape and occupied bandwidth. It also matters for timing recovery.</p>
+<p>Timing detectors obtain information from how the waveform changes between symbol centers. If the signal were constrained in such a way that there were very little useful transition structure between symbols, some TEDs would have less information available.</p>
+<p>Excess bandwidth therefore influences the timing information present in the received waveform.</p>
+<p>This does not mean “more roll-off is always better.” Increasing excess bandwidth costs spectrum. It means that pulse shaping, spectral efficiency, and synchronization are connected design choices rather than completely independent topics.</p>
+<p>This becomes particularly important when comparing different timing-error detectors.</p>
+<hr>
+</section>
+<section id="gardner-and-mueller-and-müller" class="level2">
+<h2 class="anchored" data-anchor-id="gardner-and-mueller-and-müller">22.11 Gardner and Mueller and Müller</h2>
+<p>GNU Radio’s Symbol Sync block offers several TEDs, including:</p>
+<ul>
+<li>Mueller and Müller,</li>
+<li>Modified Mueller and Müller,</li>
+<li>Zero Crossing,</li>
+<li>Gardner,</li>
+<li>Early-Late,</li>
+<li>and maximum-likelihood-related detectors.</li>
+</ul>
+<p>We used Gardner for our main synchronization experiments.</p>
+<p>Another important detector is <strong>Mueller and Müller (M&amp;M)</strong>.</p>
+<p>The two algorithms should not be thought of as “good” and “bad” versions of the same thing. They obtain timing information differently and are useful in different receiver structures.</p>
+<section id="gardner" class="level3">
+<h3 class="anchored" data-anchor-id="gardner">Gardner</h3>
+<p>Gardner is naturally associated with an oversampled waveform. It uses samples around symbol transitions and does not require correct symbol decisions before it can begin producing timing information.</p>
+<p>This makes it attractive for acquisition.</p>
+</section>
+<section id="mueller-and-müller" class="level3">
+<h3 class="anchored" data-anchor-id="mueller-and-müller">Mueller and Müller</h3>
+<p>M&amp;M is more symbol-centric and is commonly associated with decision-directed timing recovery. It uses relationships between received samples and estimated symbol values to generate the timing error.</p>
+<p>Its behavior also depends on the pulse shape and excess bandwidth.</p>
+<p>During our development we tested M&amp;M in the same receiver and obtained essentially the same practical recovery for this clean QPSK example. A second full experiment would therefore add little to the chapter.</p>
+<p>The useful lesson is broader:</p>
+<blockquote class="blockquote">
+<p>There is no single universal timing-error detector for every waveform and receiver architecture.</p>
+</blockquote>
+<p>The TED is chosen according to factors such as modulation, samples per symbol, transition information, acquisition requirements, decision availability, pulse shape, and expected operating conditions.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-22.5-effect-of-timing-loop-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-22.5-effect-of-timing-loop-bandwidth">22.12 Experiment 22.5: Effect of Timing-Loop Bandwidth</h2>
+<p>A synchronization loop must decide how aggressively to react to its timing-error signal.</p>
+<p>That behavior is controlled in part by the <strong>loop bandwidth</strong>.</p>
+<p>For this experiment, we retain the sampling-clock mismatch</p>
+<p><span class="math display">\[
+\epsilon=1.001
+\]</span></p>
+<p>and compare:</p>
+<pre class="text"><code>Narrow timing loop:
+Loop Bandwidth = 0.005
+
+Wide timing loop:
+Loop Bandwidth = 0.100</code></pre>
+<p>All other important receiver settings remain unchanged.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch22/ch22_exp5_timing_loop_bandwidth.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of timing-loop bandwidth on timing recovery</figcaption>
+</figure>
+</div>
+<section id="what-we-observe-3" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-observe-3">What We Observe</h3>
+<p>Both settings can recover timing in this controlled experiment, but their recovered clusters do not have identical quality.</p>
+<p>With the narrower loop bandwidth, the recovered QPSK points are more tightly concentrated.</p>
+<p>With the larger value of 0.100, the recovered constellation becomes more degraded and jittery.</p>
+<p>This is an important correction to a tempting assumption:</p>
+<blockquote class="blockquote">
+<p>A larger synchronization-loop bandwidth does not automatically mean better synchronization.</p>
+</blockquote>
+<p>A wide loop reacts quickly, but it also reacts more strongly to rapid variations in the timing-error estimate.</p>
+<p>A narrow loop responds more slowly but smooths those variations more strongly.</p>
+<p>The practical trade-off is:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Narrow loop bandwidth</th>
+<th>Wide loop bandwidth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Slower response</td>
+<td>Faster response</td>
+</tr>
+<tr class="even">
+<td>Better smoothing</td>
+<td>Follows rapid changes more readily</td>
+</tr>
+<tr class="odd">
+<td>Less timing jitter in steady conditions</td>
+<td>More sensitive to noisy/rapid TED variations</td>
+</tr>
+<tr class="even">
+<td>May struggle with rapid clock variation</td>
+<td>Can track faster timing changes</td>
+</tr>
+</tbody>
+</table>
+<p>The best loop bandwidth therefore depends on the receiver environment.</p>
+</section>
+<section id="do-we-need-to-wait-after-pressing-play" class="level3">
+<h3 class="anchored" data-anchor-id="do-we-need-to-wait-after-pressing-play">Do We Need to Wait After Pressing Play?</h3>
+<p>Yes, briefly.</p>
+<p>A feedback synchronization loop generally has an <strong>acquisition transient</strong>. Immediately after the flowgraph starts, its internal timing estimate may not yet have settled.</p>
+<p>The required settling time depends on the loop bandwidth, initial timing error, signal conditions, and implementation. A narrower loop usually takes longer to settle than a wider one.</p>
+<p>When visually comparing synchronization settings, it is therefore good practice to allow the receiver to reach steady behavior before judging the constellation.</p>
+<p>This is not unique to timing recovery. We saw the same acquisition-versus-tracking idea with carrier loops in Chapter 21.</p>
+<hr>
+</section>
+</section>
+<section id="what-is-actually-being-recovered" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-actually-being-recovered">22.13 What Is Actually Being Recovered?</h2>
+<p>It is useful to state precisely what Symbol Sync does <strong>not</strong> do.</p>
+<p>It does not recover the transmitted carrier frequency.</p>
+<p>It does not correct an arbitrary carrier phase rotation.</p>
+<p>It does not equalize a multipath channel.</p>
+<p>It does not remove random noise.</p>
+<p>It recovers the <strong>symbol timing</strong>.</p>
+<p>A practical receiver may therefore contain several different correction stages:</p>
+<pre class="text"><code>received samples
+      |
+      v
+matched filtering
+      |
+      v
+carrier-frequency / phase recovery
+      |
+      v
+symbol timing recovery
+      |
+      v
+equalization / symbol decisions
+      |
+      v
+decoded information</code></pre>
+<p>The exact ordering can vary between real receiver architectures, and synchronization loops may interact, but the conceptual responsibilities remain distinct.</p>
+<p>This separation has been one of the central ideas of the last several chapters:</p>
+<ul>
+<li>the channel creates impairments,</li>
+<li>equalization addresses structured channel distortion,</li>
+<li>carrier synchronization addresses oscillator frequency and phase,</li>
+<li>timing synchronization addresses the receiver’s sampling instants.</li>
+</ul>
+<p>A constellation plot can reveal that something is wrong, but diagnosing <strong>which synchronization mechanism is wrong</strong> requires understanding these different physical effects.</p>
+<hr>
+</section>
+<section id="fixed-timing-error-versus-timing-drift" class="level2">
+<h2 class="anchored" data-anchor-id="fixed-timing-error-versus-timing-drift">22.14 Fixed Timing Error Versus Timing Drift</h2>
+<p>The experiments in this chapter reveal two timing problems that are easy to confuse.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>What happens?</th>
+<th>Required receiver behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Timing phase offset</td>
+<td>Sampling position is displaced</td>
+<td>Acquire the correct phase</td>
+</tr>
+<tr class="even">
+<td>Sampling-clock mismatch</td>
+<td>Sampling position progressively drifts</td>
+<td>Continuously track timing</td>
+</tr>
+</tbody>
+</table>
+<p>This distinction explains why Experiment 22.1 and Experiment 22.4 look related but are not the same experiment.</p>
+<p>In Experiment 22.1, we manually choose a different position within the eight-sample symbol.</p>
+<p>In Experiment 22.4, the correct position itself moves because the two clocks disagree.</p>
+<p>A real receiver must generally be able to handle both.</p>
+<hr>
+</section>
+<section id="the-big-picture-how-timing-recovery-works" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-picture-how-timing-recovery-works">22.15 The Big Picture: How Timing Recovery Works</h2>
+<p>We can now summarize the complete mechanism without hiding behind a GNU Radio block.</p>
+<section id="step-1-oversample-the-waveform" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-oversample-the-waveform">Step 1: Oversample the waveform</h3>
+<p>The ADC and signal-processing chain provide multiple samples per symbol.</p>
+</section>
+<section id="step-2-observe-timing-sensitive-structure" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-observe-timing-sensitive-structure">Step 2: Observe timing-sensitive structure</h3>
+<p>Transitions and pulse-shape information tell the receiver something about whether it is sampling early or late.</p>
+</section>
+<section id="step-3-generate-a-timing-error" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-generate-a-timing-error">Step 3: Generate a timing error</h3>
+<p>A TED such as Gardner, Early-Late, or M&amp;M converts that structure into a signed error.</p>
+</section>
+<section id="step-4-filter-the-error" class="level3">
+<h3 class="anchored" data-anchor-id="step-4-filter-the-error">Step 4: Filter the error</h3>
+<p>The timing loop determines how rapidly the receiver should react.</p>
+</section>
+<section id="step-5-adjust-the-sampling-phase" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-adjust-the-sampling-phase">Step 5: Adjust the sampling phase</h3>
+<p>An interpolator estimates the waveform at the desired fractional-sample time.</p>
+</section>
+<section id="step-6-repeat" class="level3">
+<h3 class="anchored" data-anchor-id="step-6-repeat">Step 6: Repeat</h3>
+<p>The process continues so that clock drift can be tracked.</p>
+<p>In compact form:</p>
+<pre class="text"><code>waveform
+   |
+   v
+[ TED ] ---&gt; timing error
+   ^              |
+   |              v
+   |        [ loop filter ]
+   |              |
+   |              v
+   +------ [ interpolator control ]
+                  |
+                  v
+          corrected symbol sample</code></pre>
+<p>The receiver is continually answering:</p>
+<blockquote class="blockquote">
+<p>“Given what I just observed, where should I sample the next symbol?”</p>
+</blockquote>
+<p>That is symbol timing synchronization.</p>
+<hr>
+</section>
+</section>
+<section id="other-timing-recovery-approaches" class="level2">
+<h2 class="anchored" data-anchor-id="other-timing-recovery-approaches">22.16 Other Timing-Recovery Approaches</h2>
+<p>The experiments in this chapter focus on feedback timing recovery because it gives the clearest path from timing error to practical GNU Radio synchronization.</p>
+<p>Timing recovery is a broader subject.</p>
+<p>Receivers can use:</p>
+<ul>
+<li>feedforward timing estimators,</li>
+<li>Early-Late detectors,</li>
+<li>derivative-based detectors,</li>
+<li>zero-crossing detectors,</li>
+<li>Gardner detectors,</li>
+<li>Mueller and Müller detectors,</li>
+<li>maximum-likelihood approaches,</li>
+<li>band-edge timing methods,</li>
+<li>polyphase filter-bank synchronization,</li>
+<li>and other specialized techniques.</li>
+</ul>
+<p>Some methods estimate timing from a block of received data and then apply the correction. Others continuously update timing in a feedback loop.</p>
+<p>Some rely on known training symbols or decisions. Others can operate without them.</p>
+<p>The common objective remains unchanged:</p>
+<p><span class="math display">\[
+\text{estimate the correct symbol times and sample the waveform there}
+\]</span></p>
+<p>The detailed algorithm depends on the signal and receiver architecture.</p>
+<hr>
+</section>
+<section id="practical-sdr-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="practical-sdr-interpretation">22.17 Practical SDR Interpretation</h2>
+<p>In a real SDR, the transmitter’s DAC clock and receiver’s ADC clock are produced by different oscillators.</p>
+<p>Even if both devices nominally claim the same sample rate, their physical oscillators have finite accuracy.</p>
+<p>For example, both radios may be configured for the same nominal rate:</p>
+<pre class="text"><code>Transmitter: 1.000000 MS/s
+Receiver:    1.000000 MS/s</code></pre>
+<p>but their actual clocks may differ slightly.</p>
+<p>The resulting error may be tiny over one symbol. Over thousands or millions of symbols, however, the accumulated timing drift becomes significant.</p>
+<p>This is why simply knowing the configured sample rate is not enough.</p>
+<p>A practical receiver must estimate timing from the received waveform itself and continually compensate for clock differences.</p>
+<p>The same idea applies far beyond GNU Radio:</p>
+<ul>
+<li>wireless communication receivers,</li>
+<li>cable modems,</li>
+<li>satellite links,</li>
+<li>telemetry systems,</li>
+<li>acoustic modems,</li>
+<li>optical communication,</li>
+<li>and many other digital links.</li>
+</ul>
+<p>Whenever independently clocked transmitter and receiver hardware exchange symbols, timing synchronization becomes necessary.</p>
+<hr>
+</section>
+<section id="try-it-yourself" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h2>
+<section id="change-the-initial-timing-offset" class="level3">
+<h3 class="anchored" data-anchor-id="change-the-initial-timing-offset">Change the Initial Timing Offset</h3>
+<p>Return to Experiment 22.3.</p>
+<p>Before running the flowgraph, predict what will happen if the initial fixed sampling position is moved farther from the best point.</p>
+<p>Then compare:</p>
+<pre class="text"><code>Fixed-sampling branch
+Symbol Sync branch</code></pre>
+<p>Does Symbol Sync acquire the correct timing from each starting position?</p>
+</section>
+<section id="increase-the-sampling-clock-mismatch" class="level3">
+<h3 class="anchored" data-anchor-id="increase-the-sampling-clock-mismatch">Increase the Sampling-Clock Mismatch</h3>
+<p>In Experiment 22.4, begin with</p>
+<pre class="text"><code>epsilon = 1.000</code></pre>
+<p>and slowly increase it toward</p>
+<pre class="text"><code>epsilon = 1.004</code></pre>
+<p>Before moving the control, predict which will degrade first:</p>
+<ol type="1">
+<li>the fixed-sampling constellation,</li>
+<li>the timing-recovered constellation,</li>
+<li>or both equally.</li>
+</ol>
+<p>Watch the eye diagram at the same time.</p>
+<p>The important observation is not merely that the constellation spreads. Look for the <strong>progressive loss of a fixed timing phase</strong> in the eye.</p>
+</section>
+<section id="explore-timing-loop-bandwidth" class="level3">
+<h3 class="anchored" data-anchor-id="explore-timing-loop-bandwidth">Explore Timing-Loop Bandwidth</h3>
+<p>With</p>
+<pre class="text"><code>epsilon = 1.001</code></pre>
+<p>compare a narrow and wide loop again.</p>
+<p>Predict the trade-off before changing the value:</p>
+<pre class="text"><code>0.005
+0.100</code></pre>
+<p>Allow the loop to settle after each change.</p>
+<p>Look for both acquisition speed and steady-state constellation quality.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">22.18 What We Learned</h2>
+<p>In this chapter, we completed the receiver synchronization picture by adding symbol timing recovery.</p>
+<p>We learned that:</p>
+<ul>
+<li>a matched filter produces the waveform needed for good symbol decisions, but the receiver must still determine <strong>when</strong> to sample it;</li>
+<li>with eight samples per symbol, different sample positions can produce dramatically different constellation quality;</li>
+<li>incorrect timing can smear a constellation even when noise, carrier offset, and multipath are absent;</li>
+<li>a timing-error detector determines whether the receiver is sampling early or late;</li>
+<li>Early-Late-style detection can compare the energy on opposite sides of a candidate sampling point;</li>
+<li>squaring removes symbol polarity in energy comparisons and can also reveal hidden symbol-rate periodicity in classical timing extraction;</li>
+<li>the zero of a timing-error detector is determined by the complete detector geometry and delays, not by an arbitrary GUI value called zero;</li>
+<li>symbol transitions contain valuable timing information;</li>
+<li>a timing-error detector must be placed inside a feedback structure to create a timing-locked loop;</li>
+<li>interpolation is essential because the optimum symbol time generally lies between existing ADC samples;</li>
+<li>GNU Radio’s Symbol Sync combines timing-error detection, loop control, and interpolation;</li>
+<li>the Gardner TED is well suited to our oversampled QPSK experiments and does not require initial correct symbol decisions;</li>
+<li>timing <strong>acquisition</strong> finds a useful sampling phase, while timing <strong>tracking</strong> follows that phase as it changes;</li>
+<li>a fixed timing offset and a sampling-clock mismatch are different impairments;</li>
+<li>a clock-rate mismatch causes timing error to accumulate continuously;</li>
+<li>the eye diagram provides a direct view of timing stability and timing drift;</li>
+<li>Symbol Sync can recover clean QPSK decisions even while the pre-synchronization eye shows the effect of clock mismatch;</li>
+<li>Gardner and Mueller and Müller are different TED approaches rather than competing versions of the same algorithm;</li>
+<li>pulse-shaping excess bandwidth affects the timing information available to synchronization algorithms;</li>
+<li>timing-loop bandwidth creates a trade-off between response speed and steady-state timing jitter;</li>
+<li>synchronization loops require some acquisition time after startup;</li>
+<li>and timing synchronization corrects sampling time, not carrier phase, multipath, or random noise.</li>
+</ul>
+<p>The receiver has now learned not only <strong>what constellation orientation to use</strong>, but also <strong>when to observe each symbol</strong>.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">22.19 Connecting to the Next Chapter</h2>
+<p>The last few chapters have progressively repaired the received signal.</p>
+<p>The wireless channel introduced attenuation, noise, carrier offset, multipath, and sampling-rate mismatch. Equalization addressed structured channel distortion. Carrier synchronization corrected frequency and phase uncertainty. This chapter recovered the symbol timing.</p>
+<p>We can now obtain stable symbol samples at the correct instants.</p>
+<p>But recovering individual symbols is still not the same as recovering a complete transmitted message.</p>
+<p>A practical receiver must also determine where a packet or frame begins, identify known synchronization structures, establish boundaries in the incoming symbol stream, and organize recovered symbols into meaningful units.</p>
+<p>That takes us from <strong>waveform synchronization</strong> toward <strong>packet and frame synchronization</strong>, the next step in building a complete digital receiver.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter21.html" class="pagination-link" aria-label="Chapter 21: PLL and Carrier Synchronization">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter23.html" class="pagination-link" aria-label="Chapter 23: Frame Synchronization and Packet Detection">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

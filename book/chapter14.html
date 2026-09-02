@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 14: Frequency Modulation – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter15.html" rel="next">
+<link href="../book/chapter13.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter14.html"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-basic-idea-let-the-frequency-carry-the-message" id="toc-the-basic-idea-let-the-frequency-carry-the-message" class="nav-link active" data-scroll-target="#the-basic-idea-let-the-frequency-carry-the-message">14.1 The Basic Idea: Let the Frequency Carry the Message</a></li>
+  <li><a href="#experiment-1-seeing-frequency-modulation" id="toc-experiment-1-seeing-frequency-modulation" class="nav-link" data-scroll-target="#experiment-1-seeing-frequency-modulation">14.2 Experiment 1: Seeing Frequency Modulation</a>
+  <ul class="collapse">
+  <li><a href="#main-setup" id="toc-main-setup" class="nav-link" data-scroll-target="#main-setup">Main setup</a></li>
+  <li><a href="#start-with-no-deviation" id="toc-start-with-no-deviation" class="nav-link" data-scroll-target="#start-with-no-deviation">Start with no deviation</a></li>
+  <li><a href="#three-frequencies-that-are-easy-to-confuse" id="toc-three-frequencies-that-are-easy-to-confuse" class="nav-link" data-scroll-target="#three-frequencies-that-are-easy-to-confuse">Three frequencies that are easy to confuse</a></li>
+  </ul></li>
+  <li><a href="#from-instantaneous-frequency-to-the-fm-equation" id="toc-from-instantaneous-frequency-to-the-fm-equation" class="nav-link" data-scroll-target="#from-instantaneous-frequency-to-the-fm-equation">14.3 From Instantaneous Frequency to the FM Equation</a></li>
+  <li><a href="#experiment-2-exploring-the-fm-sidebands" id="toc-experiment-2-exploring-the-fm-sidebands" class="nav-link" data-scroll-target="#experiment-2-exploring-the-fm-sidebands">14.4 Experiment 2: Exploring the FM Sidebands</a>
+  <ul class="collapse">
+  <li><a href="#part-a-keep-f_m-fixed-and-change-delta-f" id="toc-part-a-keep-f_m-fixed-and-change-delta-f" class="nav-link" data-scroll-target="#part-a-keep-f_m-fixed-and-change-delta-f">Part A: Keep <span class="math inline">\(f_m\)</span> fixed and change <span class="math inline">\(\Delta f\)</span></a></li>
+  <li><a href="#part-b-keep-delta-f-fixed-and-change-f_m" id="toc-part-b-keep-delta-f-fixed-and-change-f_m" class="nav-link" data-scroll-target="#part-b-keep-delta-f-fixed-and-change-f_m">Part B: Keep <span class="math inline">\(\Delta f\)</span> fixed and change <span class="math inline">\(f_m\)</span></a></li>
+  <li><a href="#a-note-about-the-two-groups-in-the-spectrum" id="toc-a-note-about-the-two-groups-in-the-spectrum" class="nav-link" data-scroll-target="#a-note-about-the-two-groups-in-the-spectrum">A note about the two groups in the spectrum</a></li>
+  </ul></li>
+  <li><a href="#why-does-fm-have-so-many-sidebands" id="toc-why-does-fm-have-so-many-sidebands" class="nav-link" data-scroll-target="#why-does-fm-have-so-many-sidebands">14.5 Why Does FM Have So Many Sidebands?</a>
+  <ul class="collapse">
+  <li><a href="#infinite-sidebands-but-not-infinite-useful-bandwidth" id="toc-infinite-sidebands-but-not-infinite-useful-bandwidth" class="nav-link" data-scroll-target="#infinite-sidebands-but-not-infinite-useful-bandwidth">Infinite sidebands, but not infinite useful bandwidth</a></li>
+  </ul></li>
+  <li><a href="#experiment-3-narrowband-fm" id="toc-experiment-3-narrowband-fm" class="nav-link" data-scroll-target="#experiment-3-narrowband-fm">14.6 Experiment 3: Narrowband FM</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself-predict-before-moving-the-slider" id="toc-try-it-yourself-predict-before-moving-the-slider" class="nav-link" data-scroll-target="#try-it-yourself-predict-before-moving-the-slider">Try It Yourself: Predict Before Moving the Slider</a></li>
+  </ul></li>
+  <li><a href="#how-much-bandwidth-does-fm-need" id="toc-how-much-bandwidth-does-fm-need" class="nav-link" data-scroll-target="#how-much-bandwidth-does-fm-need">14.7 How Much Bandwidth Does FM Need?</a>
+  <ul class="collapse">
+  <li><a href="#example-from-our-experiment" id="toc-example-from-our-experiment" class="nav-link" data-scroll-target="#example-from-our-experiment">Example from our experiment</a></li>
+  </ul></li>
+  <li><a href="#how-do-we-recover-the-message" id="toc-how-do-we-recover-the-message" class="nav-link" data-scroll-target="#how-do-we-recover-the-message">14.8 How Do We Recover the Message?</a></li>
+  <li><a href="#experiment-4-recovering-the-message-from-fm" id="toc-experiment-4-recovering-the-message-from-fm" class="nav-link" data-scroll-target="#experiment-4-recovering-the-message-from-fm">14.9 Experiment 4: Recovering the Message from FM</a>
+  <ul class="collapse">
+  <li><a href="#main-setup-1" id="toc-main-setup-1" class="nav-link" data-scroll-target="#main-setup-1">Main setup</a></li>
+  <li><a href="#what-is-the-quadrature-demodulator-actually-measuring" id="toc-what-is-the-quadrature-demodulator-actually-measuring" class="nav-link" data-scroll-target="#what-is-the-quadrature-demodulator-actually-measuring">What is the Quadrature Demodulator actually measuring?</a></li>
+  </ul></li>
+  <li><a href="#gnu-radio-toolbox-fm-generation-and-demodulation" id="toc-gnu-radio-toolbox-fm-generation-and-demodulation" class="nav-link" data-scroll-target="#gnu-radio-toolbox-fm-generation-and-demodulation">14.10 GNU Radio Toolbox: FM Generation and Demodulation</a>
+  <ul class="collapse">
+  <li><a href="#vco-complex" id="toc-vco-complex" class="nav-link" data-scroll-target="#vco-complex">VCO (complex)</a></li>
+  <li><a href="#quadrature-demod" id="toc-quadrature-demod" class="nav-link" data-scroll-target="#quadrature-demod">Quadrature Demod</a></li>
+  <li><a href="#complex-to-mag" id="toc-complex-to-mag" class="nav-link" data-scroll-target="#complex-to-mag">Complex to Mag</a></li>
+  <li><a href="#noise-source" id="toc-noise-source" class="nav-link" data-scroll-target="#noise-source">Noise Source</a></li>
+  </ul></li>
+  <li><a href="#where-is-the-information-in-an-fm-signal" id="toc-where-is-the-information-in-an-fm-signal" class="nav-link" data-scroll-target="#where-is-the-information-in-an-fm-signal">14.11 Where Is the Information in an FM Signal?</a></li>
+  <li><a href="#experiment-5-disturbing-the-amplitude" id="toc-experiment-5-disturbing-the-amplitude" class="nav-link" data-scroll-target="#experiment-5-disturbing-the-amplitude">14.12 Experiment 5: Disturbing the Amplitude</a></li>
+  <li><a href="#experiment-6-fm-through-an-additive-noise-channel" id="toc-experiment-6-fm-through-an-additive-noise-channel" class="nav-link" data-scroll-target="#experiment-6-fm-through-an-additive-noise-channel">14.13 Experiment 6: FM Through an Additive Noise Channel</a>
+  <ul class="collapse">
+  <li><a href="#main-setup-2" id="toc-main-setup-2" class="nav-link" data-scroll-target="#main-setup-2">Main setup</a></li>
+  <li><a href="#start-with-a-clean-channel" id="toc-start-with-a-clean-channel" class="nav-link" data-scroll-target="#start-with-a-clean-channel">Start with a clean channel</a></li>
+  <li><a href="#add-moderate-channel-noise" id="toc-add-moderate-channel-noise" class="nav-link" data-scroll-target="#add-moderate-channel-noise">Add moderate channel noise</a></li>
+  <li><a href="#increase-the-noise-further" id="toc-increase-the-noise-further" class="nav-link" data-scroll-target="#increase-the-noise-further">Increase the noise further</a></li>
+  <li><a href="#a-practical-receiver-would-do-more" id="toc-a-practical-receiver-would-do-more" class="nav-link" data-scroll-target="#a-practical-receiver-would-do-more">A practical receiver would do more</a></li>
+  </ul></li>
+  <li><a href="#try-it-yourself-find-the-point-where-the-message-disappears" id="toc-try-it-yourself-find-the-point-where-the-message-disappears" class="nav-link" data-scroll-target="#try-it-yourself-find-the-point-where-the-message-disappears">14.14 Try It Yourself: Find the Point Where the Message Disappears</a></li>
+  <li><a href="#putting-the-fm-story-together" id="toc-putting-the-fm-story-together" class="nav-link" data-scroll-target="#putting-the-fm-story-together">14.15 Putting the FM Story Together</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">14.16 What We Learned</a></li>
+  <li><a href="#fms-close-relative-phase-modulation" id="toc-fms-close-relative-phase-modulation" class="nav-link" data-scroll-target="#fms-close-relative-phase-modulation">14.7 FM’s Close Relative: Phase Modulation</a>
+  <ul class="collapse">
+  <li><a href="#fm-and-pm-what-is-the-difference" id="toc-fm-and-pm-what-is-the-difference" class="nav-link" data-scroll-target="#fm-and-pm-what-is-the-difference">FM and PM: What Is the Difference?</a></li>
+  </ul></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">14.18 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter12.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/chapter14.html"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 14: Frequency Modulation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, we explored amplitude modulation. We took a message signal, used it to change the amplitude of a carrier, examined the resulting spectrum, and then recovered the message again.</p>
+<p>But amplitude is only one property of a sinusoid.</p>
+<p>A carrier also has a frequency and a phase.</p>
+<p>This raises a natural question:</p>
+<blockquote class="blockquote">
+<p>What happens if we keep the carrier amplitude essentially constant and make its frequency change with the message instead?</p>
+</blockquote>
+<p>That is the basic idea behind <strong>frequency modulation</strong>, or <strong>FM</strong>.</p>
+<p>FM is familiar from radio broadcasting, but the idea is much broader than broadcast radio. It is also a useful way to understand a deeper signal-processing concept: information does not have to be stored in the amplitude of a waveform. It can be carried by the way the signal’s phase evolves with time.</p>
+<p>In this chapter, we will build FM experimentally. We will first watch a carrier speed up and slow down, then examine the sidebands that appear in the frequency domain. From there, we will introduce frequency deviation, modulation index, Bessel functions, narrowband and wideband FM, practical bandwidth, and finally FM demodulation.</p>
+<p>We will also deliberately disturb the signal in two different ways. That will answer an important question that often causes confusion:</p>
+<blockquote class="blockquote">
+<p>If FM does not carry information in amplitude, does that mean noise cannot affect it?</p>
+</blockquote>
+<p>By the end of the chapter, the answer will be visible directly in GNU Radio.</p>
+<hr>
+<section id="the-basic-idea-let-the-frequency-carry-the-message" class="level2">
+<h2 class="anchored" data-anchor-id="the-basic-idea-let-the-frequency-carry-the-message">14.1 The Basic Idea: Let the Frequency Carry the Message</h2>
+<p>Consider an ordinary unmodulated carrier:</p>
+<p><span class="math display">\[
+c(t)=A_c\cos(2\pi f_ct)
+\]</span></p>
+<p>Its amplitude is fixed at <span class="math inline">\(A_c\)</span>, and its frequency is fixed at <span class="math inline">\(f_c\)</span>.</p>
+<p>With amplitude modulation, the message changes <span class="math inline">\(A_c\)</span>.</p>
+<p>With frequency modulation, we take a different approach. We keep the amplitude essentially constant and allow the <strong>instantaneous frequency</strong> of the carrier to move above and below <span class="math inline">\(f_c\)</span>.</p>
+<p>For a normalized message, the basic picture is:</p>
+<pre class="text"><code>Positive message value  -&gt; carrier frequency moves above fc
+Zero message value      -&gt; carrier frequency returns to fc
+Negative message value  -&gt; carrier frequency moves below fc</code></pre>
+<p>Suppose the carrier is centered at 10 kHz and we allow a maximum frequency deviation of 2 kHz.</p>
+<p>Then the carrier can move between:</p>
+<p><span class="math display">\[
+f_{\min}=10\,000-2\,000=8\,000\text{ Hz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{\max}=10\,000+2\,000=12\,000\text{ Hz}
+\]</span></p>
+<p>If the message changes smoothly, the instantaneous frequency also moves smoothly between these limits.</p>
+<p>Notice what is <em>not</em> changing: the ideal FM signal does not need to grow taller or shorter. The information is being represented by the changing frequency.</p>
+<p>Let’s build this before adding more mathematics.</p>
+<hr>
+</section>
+<section id="experiment-1-seeing-frequency-modulation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-seeing-frequency-modulation">14.2 Experiment 1: Seeing Frequency Modulation</h2>
+<p>The first experiment is designed to make FM visible in both time and frequency.</p>
+<p>We use a sinusoidal message and allow it to control a complex voltage-controlled oscillator. Two QT GUI Range controls let us change the message frequency and frequency deviation while the flowgraph is running.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-fm-basics-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for exploring the basic behavior of frequency modulation</figcaption>
+</figure>
+</div>
+<section id="main-setup" class="level3">
+<h3 class="anchored" data-anchor-id="main-setup">Main setup</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency <span class="math inline">\(f_c\)</span></td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="odd">
+<td>Initial message frequency <span class="math inline">\(f_m\)</span></td>
+<td style="text-align: right;">500 Hz</td>
+</tr>
+<tr class="even">
+<td>Message amplitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>Initial frequency deviation <span class="math inline">\(\Delta f\)</span></td>
+<td style="text-align: right;">2 kHz</td>
+</tr>
+</tbody>
+</table>
+<p>The important signal path is conceptually:</p>
+<pre class="text"><code>Message
+   |
+   v
+Scale by frequency deviation
+   |
+   v
+Add carrier-frequency control
+   |
+   v
+Complex VCO
+   |
+   +------&gt; Time-domain display
+   |
+   +------&gt; Frequency-domain display</code></pre>
+<p>The VCO is the key new block. Its input controls how quickly the phase of its complex output rotates. In other words, changing the VCO input changes its instantaneous frequency.</p>
+</section>
+<section id="start-with-no-deviation" class="level3">
+<h3 class="anchored" data-anchor-id="start-with-no-deviation">Start with no deviation</h3>
+<p>Before applying FM, set:</p>
+<pre class="text"><code>Frequency Deviation = 0 Hz
+Message Frequency   = 500 Hz
+Carrier Frequency   = 10 kHz</code></pre>
+<p>The message is still present in the flowgraph, but it has no influence on the oscillator frequency because its contribution has been multiplied by zero.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-zero-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>FM experiment with zero frequency deviation</figcaption>
+</figure>
+</div>
+<p>This is an important reference case.</p>
+<p>The output is simply an unmodulated carrier at 10 kHz. There is no frequency excursion and therefore no FM.</p>
+<p>Now increase the frequency deviation.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-combined-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of increasing frequency deviation on the FM waveform and spectrum</figcaption>
+</figure>
+</div>
+<p>The time-domain waveform begins to look unusual. In some regions the cycles crowd together. In other regions they spread apart.</p>
+<p>That is not an amplitude change.</p>
+<p>When the cycles are closer together, the instantaneous frequency is higher. When they are farther apart, the instantaneous frequency is lower.</p>
+<p>For our sinusoidal message:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Message value</th>
+<th>Instantaneous frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(m(t)=+1\)</span></td>
+<td><span class="math inline">\(f_c+\Delta f\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(m(t)=0\)</span></td>
+<td><span class="math inline">\(f_c\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(m(t)=-1\)</span></td>
+<td><span class="math inline">\(f_c-\Delta f\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>This gives us a compact mathematical description:</p>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\,m(t)
+\]</span></p>
+<p>For a sinusoidal message,</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi f_mt)
+\]</span></p>
+<p>so:</p>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\cos(2\pi f_mt)
+\]</span></p>
+<p>This equation says exactly what we just observed.</p>
+<p>The message does not directly become the FM waveform. Instead, it controls the <strong>instantaneous frequency</strong> of the carrier.</p>
+</section>
+<section id="three-frequencies-that-are-easy-to-confuse" class="level3">
+<h3 class="anchored" data-anchor-id="three-frequencies-that-are-easy-to-confuse">Three frequencies that are easy to confuse</h3>
+<p>At this point, it is worth separating three quantities that will appear throughout the chapter.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>Meaning</th>
+<th>Main effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(f_c\)</span></td>
+<td>Carrier frequency</td>
+<td>Sets the center frequency</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(f_m\)</span></td>
+<td>Message frequency</td>
+<td>Sets how quickly the carrier moves back and forth and the sideband spacing</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\Delta f\)</span></td>
+<td>Peak frequency deviation</td>
+<td>Sets how far the instantaneous frequency moves from <span class="math inline">\(f_c\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>This distinction becomes especially important when we look at the FM spectrum.</p>
+<hr>
+</section>
+</section>
+<section id="from-instantaneous-frequency-to-the-fm-equation" class="level2">
+<h2 class="anchored" data-anchor-id="from-instantaneous-frequency-to-the-fm-equation">14.3 From Instantaneous Frequency to the FM Equation</h2>
+<p>We now understand FM in terms of a changing instantaneous frequency. We can therefore introduce the standard FM equation without treating it as something mysterious.</p>
+<p>Frequency and phase are closely related. Instantaneous frequency tells us how quickly phase is changing:</p>
+<p><span class="math display">\[
+f_i(t)=\frac{1}{2\pi}\frac{d\theta(t)}{dt}
+\]</span></p>
+<p>If the instantaneous frequency varies sinusoidally, integrating that frequency variation gives the corresponding phase variation.</p>
+<p>For a single-tone message, the FM signal becomes:</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right)
+\]</span></p>
+<p>where:</p>
+<p><span class="math display">\[
+\beta=\frac{\Delta f}{f_m}
+\]</span></p>
+<p>The quantity <span class="math inline">\(\beta\)</span> is called the <strong>FM modulation index</strong>.</p>
+<p>We will shortly see why this ratio matters so much.</p>
+<p>For now, notice something important about the equation. The message-dependent term appears <strong>inside the phase</strong> of the cosine. That is fundamentally different from ordinary AM, where the message changes the amplitude multiplying the carrier.</p>
+<p>This is our first mathematical clue that FM stores its information in phase/frequency evolution rather than in amplitude.</p>
+<hr>
+</section>
+<section id="experiment-2-exploring-the-fm-sidebands" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-exploring-the-fm-sidebands">14.4 Experiment 2: Exploring the FM Sidebands</h2>
+<p>The time-domain waveform showed the carrier speeding up and slowing down. But the frequency-domain display revealed something even more interesting: FM does not normally produce only one carrier and one pair of sidebands.</p>
+<p>It can produce many spectral lines.</p>
+<p>We do not need another flowgraph for this experiment. We simply reuse Experiment 1 and change the two QT GUI controls.</p>
+<p>This is useful because it lets us answer two separate questions:</p>
+<ol type="1">
+<li>What happens when we change frequency deviation?</li>
+<li>What happens when we change message frequency?</li>
+</ol>
+<p>These sound similar, but they produce different spectral effects.</p>
+<section id="part-a-keep-f_m-fixed-and-change-delta-f" class="level3">
+<h3 class="anchored" data-anchor-id="part-a-keep-f_m-fixed-and-change-delta-f">Part A: Keep <span class="math inline">\(f_m\)</span> fixed and change <span class="math inline">\(\Delta f\)</span></h3>
+<p>Keep:</p>
+<p><span class="math display">\[
+f_m=500\text{ Hz}
+\]</span></p>
+<p>and increase the frequency deviation.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp2-sidebands-vs-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>FM sidebands as frequency deviation is increased while message frequency remains fixed</figcaption>
+</figure>
+</div>
+<p>As <span class="math inline">\(\Delta f\)</span> increases, more significant spectral components appear farther from the carrier.</p>
+<p>This is where the modulation index becomes useful.</p>
+<p>With <span class="math inline">\(f_m=500\)</span> Hz:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\(\Delta f\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(f_m\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(\beta=\Delta f/f_m\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p>As <span class="math inline">\(\beta\)</span> increases, energy is distributed among more sideband orders and the practical spectrum becomes wider.</p>
+<p>But notice another detail: the spacing between neighboring spectral lines remains 500 Hz because <span class="math inline">\(f_m\)</span> has not changed.</p>
+</section>
+<section id="part-b-keep-delta-f-fixed-and-change-f_m" class="level3">
+<h3 class="anchored" data-anchor-id="part-b-keep-delta-f-fixed-and-change-f_m">Part B: Keep <span class="math inline">\(\Delta f\)</span> fixed and change <span class="math inline">\(f_m\)</span></h3>
+<p>Now keep:</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>and change the message frequency.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp2-sideband-spacing-vs-message-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>FM sideband spacing as message frequency is changed while frequency deviation remains fixed</figcaption>
+</figure>
+</div>
+<p>Now something different happens.</p>
+<p>The spectral lines become farther apart as <span class="math inline">\(f_m\)</span> increases.</p>
+<p>For a single-tone FM signal, adjacent sidebands are separated by:</p>
+<p><span class="math display">\[
+f_m
+\]</span></p>
+<p>At the same time, because <span class="math inline">\(\Delta f\)</span> is fixed, increasing <span class="math inline">\(f_m\)</span> reduces the modulation index:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\(\Delta f\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(f_m\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(\beta\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>This gives us an important summary.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>What we change</th>
+<th>What we mainly observe</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Increase <span class="math inline">\(\Delta f\)</span> with <span class="math inline">\(f_m\)</span> fixed</td>
+<td>More significant sideband orders and a wider spectrum</td>
+</tr>
+<tr class="even">
+<td>Increase <span class="math inline">\(f_m\)</span> with <span class="math inline">\(\Delta f\)</span> fixed</td>
+<td>Greater sideband spacing and a smaller <span class="math inline">\(\beta\)</span></td>
+</tr>
+<tr class="odd">
+<td>Increase <span class="math inline">\(\beta\)</span></td>
+<td>Energy spreads among more significant sidebands</td>
+</tr>
+<tr class="even">
+<td>Change <span class="math inline">\(f_c\)</span></td>
+<td>The entire FM spectrum moves to a different center frequency</td>
+</tr>
+</tbody>
+</table>
+<p>This is why <span class="math inline">\(f_m\)</span> and <span class="math inline">\(\Delta f\)</span> should not be treated as interchangeable controls.</p>
+</section>
+<section id="a-note-about-the-two-groups-in-the-spectrum" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-about-the-two-groups-in-the-spectrum">A note about the two groups in the spectrum</h3>
+<p>Depending on how the signal is displayed, you may see spectral structure around both positive and negative carrier frequencies.</p>
+<p>This is not two separate transmissions.</p>
+<p>A real sinusoidal waveform has conjugate-symmetric positive- and negative-frequency components, something we encountered earlier in the book. FM does not remove that property. The negative-frequency structure is the corresponding spectral mirror of the real signal representation.</p>
+<hr>
+</section>
+</section>
+<section id="why-does-fm-have-so-many-sidebands" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-fm-have-so-many-sidebands">14.5 Why Does FM Have So Many Sidebands?</h2>
+<p>This is one of the biggest differences between the AM experiment from the previous chapter and what we have just seen.</p>
+<p>For ordinary single-tone AM, we encountered components at:</p>
+<p><span class="math display">\[
+f_c-f_m,\quad f_c,\quad f_c+f_m
+\]</span></p>
+<p>Single-tone FM can contain components at:</p>
+<p><span class="math display">\[
+f_c\pm nf_m,\qquad n=0,1,2,3,\ldots
+\]</span></p>
+<p>So we can have:</p>
+<pre class="text"><code>fc
+fc +/- fm
+fc +/- 2fm
+fc +/- 3fm
+fc +/- 4fm
+...</code></pre>
+<p>But the sidebands are not all equally strong.</p>
+<p>Their amplitudes are described by <strong>Bessel functions of the first kind</strong>.</p>
+<p>For the single-tone FM signal,</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right)
+\]</span></p>
+<p>the relative amplitudes of the spectral components depend on <span class="math inline">\(J_n(\beta)\)</span>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Spectral component</th>
+<th>Amplitude factor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Carrier at <span class="math inline">\(f_c\)</span></td>
+<td><span class="math inline">\(A_cJ_0(\beta)\)</span></td>
+</tr>
+<tr class="even">
+<td>First sidebands at <span class="math inline">\(f_c\pm f_m\)</span></td>
+<td><span class="math inline">\(A_cJ_1(\beta)\)</span></td>
+</tr>
+<tr class="odd">
+<td>Second sidebands at <span class="math inline">\(f_c\pm2f_m\)</span></td>
+<td><span class="math inline">\(A_cJ_2(\beta)\)</span></td>
+</tr>
+<tr class="even">
+<td>Third sidebands at <span class="math inline">\(f_c\pm3f_m\)</span></td>
+<td><span class="math inline">\(A_cJ_3(\beta)\)</span></td>
+</tr>
+<tr class="odd">
+<td>Higher orders</td>
+<td><span class="math inline">\(A_cJ_n(\beta)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>You do not need to derive the Bessel expansion to use this idea.</p>
+<p>The important interpretation is:</p>
+<blockquote class="blockquote">
+<p>Changing <span class="math inline">\(\beta\)</span> redistributes the FM signal’s energy among the carrier and different sideband orders.</p>
+</blockquote>
+<p>This explains why the spectral lines in Experiment 2 did not simply grow together.</p>
+<p>Some components become stronger while others become weaker as <span class="math inline">\(\beta\)</span> changes. At particular values of <span class="math inline">\(\beta\)</span>, a Bessel coefficient can even become zero. For example, when <span class="math inline">\(J_0(\beta)=0\)</span>, the spectral line at the carrier frequency disappears even though the FM signal itself is still present.</p>
+<p>That would be very strange if we tried to interpret FM as “a carrier plus a little frequency wobble.” The Bessel-function view makes clear that FM has a richer spectrum.</p>
+<section id="infinite-sidebands-but-not-infinite-useful-bandwidth" class="level3">
+<h3 class="anchored" data-anchor-id="infinite-sidebands-but-not-infinite-useful-bandwidth">Infinite sidebands, but not infinite useful bandwidth</h3>
+<p>Mathematically, the index <span class="math inline">\(n\)</span> can continue indefinitely. Therefore ideal single-tone FM has infinitely many sidebands.</p>
+<p>That does <strong>not</strong> mean every sideband is equally important.</p>
+<p>As we move to sufficiently high orders, the corresponding Bessel coefficients become very small. In practice, we therefore talk about <strong>significant sidebands</strong> and occupied bandwidth rather than pretending that every mathematically nonzero component needs to be transmitted with equal importance.</p>
+<p>This distinction will become useful when we estimate FM bandwidth.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-3-narrowband-fm" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-narrowband-fm">14.6 Experiment 3: Narrowband FM</h2>
+<p>Experiment 2 showed that a large modulation index can produce many significant sidebands.</p>
+<p>What happens at the other extreme?</p>
+<p>Set the modulation index to a very small value. In this experiment we use:</p>
+<p><span class="math display">\[
+\beta=0.1
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp3-narrowband-fm-beta-0p1.png" class="img-fluid figure-img"></p>
+<figcaption>Narrowband FM spectrum for a modulation index of 0.1</figcaption>
+</figure>
+</div>
+<p>The spectrum is now much simpler.</p>
+<p>When:</p>
+<p><span class="math display">\[
+\beta\ll1
+\]</span></p>
+<p>the useful approximations are:</p>
+<p><span class="math display">\[
+J_0(\beta)\approx1
+\]</span></p>
+<p>and:</p>
+<p><span class="math display">\[
+J_1(\beta)\approx\frac{\beta}{2}
+\]</span></p>
+<p>while higher-order Bessel terms become very small.</p>
+<p>So most of the important spectral content is concentrated in the carrier and the first sideband pair.</p>
+<p>This operating region is called <strong>narrowband FM</strong>, or <strong>NBFM</strong>.</p>
+<p>As the modulation index becomes larger, more sideband orders become important. We then move toward <strong>wideband FM</strong>, or <strong>WBFM</strong>.</p>
+<p>A useful qualitative picture is:</p>
+<pre class="text"><code>Small beta
+   |
+   v
+Few significant sidebands
+   |
+   v
+Narrowband FM
+
+
+Larger beta
+   |
+   v
+More significant sidebands
+   |
+   v
+Wideband FM</code></pre>
+<p>The distinction should not be treated as a magical switch at one exact value. The important idea is the spectral behavior: small <span class="math inline">\(\beta\)</span> concentrates the useful energy into fewer sidebands, while larger <span class="math inline">\(\beta\)</span> spreads it across more sideband orders.</p>
+<section id="try-it-yourself-predict-before-moving-the-slider" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-predict-before-moving-the-slider">Try It Yourself: Predict Before Moving the Slider</h3>
+<p>Return to the Experiment 2 flowgraph.</p>
+<p>Before changing anything, predict what will happen if you:</p>
+<ol type="1">
+<li>Keep <span class="math inline">\(f_m\)</span> fixed and reduce <span class="math inline">\(\Delta f\)</span> until <span class="math inline">\(\beta\ll1\)</span>.</li>
+<li>Keep <span class="math inline">\(\Delta f\)</span> fixed and increase <span class="math inline">\(f_m\)</span>.</li>
+<li>Make <span class="math inline">\(\Delta f\)</span> much larger while keeping <span class="math inline">\(f_m\)</span> unchanged.</li>
+</ol>
+<p>Then move the controls and compare the spectrum with your prediction.</p>
+<p>The goal is no longer simply to watch the spectrum change. Try to explain the change using <span class="math inline">\(\Delta f\)</span>, <span class="math inline">\(f_m\)</span>, and <span class="math inline">\(\beta\)</span> before GNU Radio shows you the answer.</p>
+<hr>
+</section>
+</section>
+<section id="how-much-bandwidth-does-fm-need" class="level2">
+<h2 class="anchored" data-anchor-id="how-much-bandwidth-does-fm-need">14.7 How Much Bandwidth Does FM Need?</h2>
+<p>We now face an interesting problem.</p>
+<p>If ideal FM has infinitely many sidebands, does it require infinite bandwidth?</p>
+<p>Mathematically, its spectrum does extend indefinitely. Practically, however, sufficiently distant sidebands contain negligible energy.</p>
+<p>A widely used engineering estimate of the occupied FM bandwidth is <strong>Carson’s rule</strong>:</p>
+<p><span class="math display">\[
+B\approx2(\Delta f+f_m)
+\]</span></p>
+<p>Using:</p>
+<p><span class="math display">\[
+\beta=\frac{\Delta f}{f_m}
+\]</span></p>
+<p>we can also write:</p>
+<p><span class="math display">\[
+B\approx2f_m(\beta+1)
+\]</span></p>
+<p>Carson’s rule is a practical approximation. It does not claim that every component outside this range is exactly zero.</p>
+<section id="example-from-our-experiment" class="level3">
+<h3 class="anchored" data-anchor-id="example-from-our-experiment">Example from our experiment</h3>
+<p>Take the values we used repeatedly:</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>and:</p>
+<p><span class="math display">\[
+f_m=500\text{ Hz}
+\]</span></p>
+<p>The modulation index is:</p>
+<p><span class="math display">\[
+\beta=\frac{2000}{500}=4
+\]</span></p>
+<p>Carson’s rule gives:</p>
+<p><span class="math display">\[
+B\approx2(2000+500)=5000\text{ Hz}
+\]</span></p>
+<p>So although the mathematical FM spectrum contains sidebands extending beyond this range, approximately 5 kHz gives us a useful engineering estimate of the occupied bandwidth for this single-tone case.</p>
+<p>This also explains something we observed experimentally: increasing frequency deviation generally costs bandwidth.</p>
+<p>FM gives us useful properties, but it does not give them for free.</p>
+<hr>
+</section>
+</section>
+<section id="how-do-we-recover-the-message" class="level2">
+<h2 class="anchored" data-anchor-id="how-do-we-recover-the-message">14.8 How Do We Recover the Message?</h2>
+<p>So far, we have concentrated on generating FM.</p>
+<p>At the transmitter, the message caused the instantaneous frequency to move above and below the carrier frequency.</p>
+<p>At the receiver, we need to reverse that process.</p>
+<p>Conceptually, the receiver needs to perform:</p>
+<pre class="text"><code>Instantaneous frequency
+        |
+        v
+Measure deviation from fc
+        |
+        v
+Scale the deviation
+        |
+        v
+Recovered message</code></pre>
+<p>For our experiment:</p>
+<p><span class="math display">\[
+f_c=10\,000\text{ Hz}
+\]</span></p>
+<p>and:</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>Therefore, when the message is at its positive peak, the instantaneous frequency is approximately:</p>
+<p><span class="math display">\[
+12\,000\text{ Hz}
+\]</span></p>
+<p>At the negative peak:</p>
+<p><span class="math display">\[
+8\,000\text{ Hz}
+\]</span></p>
+<p>At a message zero crossing:</p>
+<p><span class="math display">\[
+10\,000\text{ Hz}
+\]</span></p>
+<p>If we can measure that instantaneous frequency, subtract the 10 kHz center frequency, and divide by the 2 kHz deviation, we should get our original normalized message back.</p>
+<p>Let’s test that.</p>
+<hr>
+</section>
+<section id="experiment-4-recovering-the-message-from-fm" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-recovering-the-message-from-fm">14.9 Experiment 4: Recovering the Message from FM</h2>
+<p>We now extend the FM flowgraph by adding a <strong>Quadrature Demod</strong> block.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp4-fm-demodulation-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for FM demodulation and message recovery</figcaption>
+</figure>
+</div>
+<section id="main-setup-1" class="level3">
+<h3 class="anchored" data-anchor-id="main-setup-1">Main setup</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency</td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="odd">
+<td>Message frequency</td>
+<td style="text-align: right;">500 Hz</td>
+</tr>
+<tr class="even">
+<td>Frequency deviation</td>
+<td style="text-align: right;">2 kHz</td>
+</tr>
+<tr class="odd">
+<td>Message amplitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>The demodulation path can be understood as:</p>
+<pre class="text"><code>FM signal
+   |
+   v
+Quadrature Demod
+   |
+   v
+Instantaneous-frequency information
+   |
+   v
+Subtract fc
+   |
+   v
+Divide by Delta f
+   |
+   v
+Recovered message</code></pre>
+<p>The Quadrature Demod block uses a gain of approximately:</p>
+<pre class="text"><code>Gain = 10.1859k</code></pre>
+<p>For a complex sampled signal, the relationship between phase change and frequency gives the useful scaling:</p>
+<p><span class="math display">\[
+G=\frac{f_s}{2\pi}
+\]</span></p>
+<p>With:</p>
+<p><span class="math display">\[
+f_s=64\,000\text{ samples/s}
+\]</span></p>
+<p>we obtain approximately:</p>
+<p><span class="math display">\[
+G=\frac{64\,000}{2\pi}\approx10\,185.9
+\]</span></p>
+<p>This makes the block output convenient to interpret in hertz.</p>
+<p>The raw output therefore follows the instantaneous frequency and moves approximately between 8 kHz and 12 kHz.</p>
+<p>To remove the carrier-frequency offset, subtract:</p>
+<pre class="text"><code>Constant = -10k</code></pre>
+<p>Then scale the remaining deviation by:</p>
+<pre class="text"><code>Constant = 500u</code></pre>
+<p>because:</p>
+<p><span class="math display">\[
+\frac{1}{\Delta f}=\frac{1}{2000}=0.0005
+\]</span></p>
+<p>The result is a recovered message with approximately unit amplitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp4-original-and-recovered-message.png" class="img-fluid figure-img"></p>
+<figcaption>Original message compared with the message recovered from FM</figcaption>
+</figure>
+</div>
+<p>The two traces lie almost directly on top of one another.</p>
+<p>This is a satisfying result because it closes the loop:</p>
+<pre class="text"><code>Message
+   |
+   v
+Frequency modulation
+   |
+   v
+Changing instantaneous frequency
+   |
+   v
+Quadrature demodulation
+   |
+   v
+Message recovered</code></pre>
+</section>
+<section id="what-is-the-quadrature-demodulator-actually-measuring" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-the-quadrature-demodulator-actually-measuring">What is the Quadrature Demodulator actually measuring?</h3>
+<p>It is worth looking one level deeper.</p>
+<p>Write a complex sample as:</p>
+<p><span class="math display">\[
+x[n]=A[n]e^{j\phi[n]}
+\]</span></p>
+<p>Now compare one sample with the previous sample:</p>
+<p><span class="math display">\[
+x[n]x^*[n-1]
+\]</span></p>
+<p>Its phase contains approximately:</p>
+<p><span class="math display">\[
+\phi[n]-\phi[n-1]
+\]</span></p>
+<p>That is the phase change between consecutive samples.</p>
+<p>A larger phase change per sample means a higher instantaneous frequency. A smaller phase change means a lower instantaneous frequency.</p>
+<p>So the Quadrature Demodulator is not looking at how tall the FM waveform is. It is looking at how its <strong>phase advances from sample to sample</strong>.</p>
+<p>This connects FM directly back to our earlier work with complex signals and I/Q.</p>
+<hr>
+</section>
+</section>
+<section id="gnu-radio-toolbox-fm-generation-and-demodulation" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-fm-generation-and-demodulation">14.10 GNU Radio Toolbox: FM Generation and Demodulation</h2>
+<section id="vco-complex" class="level3">
+<h3 class="anchored" data-anchor-id="vco-complex">VCO (complex)</h3>
+<p><strong>VCO</strong> stands for <strong>Voltage-Controlled Oscillator</strong>.</p>
+<p>In GNU Radio, the complex VCO produces a complex sinusoid whose phase rate is controlled by its input.</p>
+<p>The important parameters in our experiment are:</p>
+<pre class="text"><code>Sample Rate = 64k
+Sensitivity = 6.28319
+Amplitude   = 1</code></pre>
+<p>Conceptually:</p>
+<pre class="text"><code>Larger control input
+        |
+        v
+Faster phase rotation
+        |
+        v
+Higher instantaneous frequency</code></pre>
+<p>The VCO is useful because FM is naturally produced by controlling phase rate rather than by directly editing individual sinusoidal cycles.</p>
+</section>
+<section id="quadrature-demod" class="level3">
+<h3 class="anchored" data-anchor-id="quadrature-demod">Quadrature Demod</h3>
+<p>The <strong>Quadrature Demod</strong> block estimates the change in phase between consecutive complex samples.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Complex FM samples
+        |
+        v
+Measure phase difference
+        |
+        v
+Frequency-related output</code></pre>
+<p>Its <strong>Gain</strong> determines the scale of the output.</p>
+<p>In this experiment we choose:</p>
+<p><span class="math display">\[
+G=\frac{f_s}{2\pi}
+\]</span></p>
+<p>so that the output can be interpreted conveniently as instantaneous frequency in hertz.</p>
+</section>
+<section id="complex-to-mag" class="level3">
+<h3 class="anchored" data-anchor-id="complex-to-mag">Complex to Mag</h3>
+<p>The <strong>Complex to Mag</strong> block converts a complex signal:</p>
+<p><span class="math display">\[
+z=I+jQ
+\]</span></p>
+<p>into its magnitude:</p>
+<p><span class="math display">\[
+|z|=\sqrt{I^2+Q^2}
+\]</span></p>
+<p>This block will become especially useful in the next experiments because it allows us to inspect whether the received FM signal’s magnitude remains constant.</p>
+</section>
+<section id="noise-source" class="level3">
+<h3 class="anchored" data-anchor-id="noise-source">Noise Source</h3>
+<p>The <strong>Noise Source</strong> block generates random samples from a selected statistical distribution.</p>
+<p>For the channel-noise experiment later in this chapter, we use Gaussian noise and control its amplitude from a QT GUI Range.</p>
+<p>The important point is where the noise is inserted. Adding noise to the FM signal is fundamentally different from merely multiplying the FM signal by a changing amplitude.</p>
+<p>We will see that difference experimentally.</p>
+<hr>
+</section>
+</section>
+<section id="where-is-the-information-in-an-fm-signal" class="level2">
+<h2 class="anchored" data-anchor-id="where-is-the-information-in-an-fm-signal">14.11 Where Is the Information in an FM Signal?</h2>
+<p>Before adding noise, there is a useful question to answer.</p>
+<p>If we have successfully recovered the message, where was that information actually stored?</p>
+<p>For ideal FM, the magnitude is constant:</p>
+<p><span class="math display">\[
+|s_{\mathrm{FM}}(t)|=A_c
+\]</span></p>
+<p>The message therefore cannot be encoded in the changing amplitude, because the amplitude does not need to change at all.</p>
+<p>Instead, the information is encoded in the evolution of phase and therefore in instantaneous frequency.</p>
+<p>This gives FM its <strong>constant-envelope</strong> property.</p>
+<p>In complex form, we can think of an ideal FM signal as a vector rotating in the I/Q plane. Its length can remain constant while its rotation rate changes.</p>
+<pre class="text"><code>Constant vector length
+        +
+Changing rotation rate
+        |
+        v
+Frequency modulation</code></pre>
+<p>This raises a useful experimental question.</p>
+<blockquote class="blockquote">
+<p>If amplitude is not carrying the information, what happens if the FM amplitude changes?</p>
+</blockquote>
+<hr>
+</section>
+<section id="experiment-5-disturbing-the-amplitude" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-disturbing-the-amplitude">14.12 Experiment 5: Disturbing the Amplitude</h2>
+<p>In this experiment, we deliberately change the amplitude of the FM signal while leaving its phase/frequency modulation intact.</p>
+<p>The filename uses the phrase “amplitude noise,” but conceptually this experiment should be understood as <strong>multiplicative amplitude variation</strong>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-amplitude-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for applying amplitude variation to an FM signal</figcaption>
+</figure>
+</div>
+<p>The important idea is:</p>
+<p><span class="math display">\[
+r(t)=A(t)s_{\mathrm{FM}}(t)
+\]</span></p>
+<p>where <span class="math inline">\(A(t)\)</span> changes the received magnitude.</p>
+<p>First observe the undisturbed case.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-no-amplitude-noise.png" class="img-fluid figure-img"></p>
+<figcaption>FM message recovery with no amplitude disturbance</figcaption>
+</figure>
+</div>
+<p>The FM magnitude remains at approximately 1 and the recovered message follows the original.</p>
+<p>Now increase the amplitude disturbance.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-amplitude-noise-0p3.png" class="img-fluid figure-img"></p>
+<figcaption>FM message recovery with amplitude disturbance level 0.3</figcaption>
+</figure>
+</div>
+<p>The FM magnitude is no longer perfectly flat. It visibly fluctuates.</p>
+<p>But something interesting happens in the recovered message: it remains essentially unchanged.</p>
+<p>Why?</p>
+<p>The Quadrature Demodulator is primarily responding to <strong>phase change between samples</strong>, not to the absolute magnitude of those samples.</p>
+<p>If the amplitude changes while the phase trajectory remains intact, the frequency information is still available.</p>
+<p>This is an important property of FM.</p>
+<p>It is also one reason practical FM receivers can use <strong>amplitude limiting</strong> before demodulation. A limiter attempts to remove unwanted amplitude variations while preserving the phase/frequency behavior that carries the information.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Received FM
+    |
+    v
+Amplitude limiter
+    |
+    v
+FM demodulator
+    |
+    v
+Recovered message</code></pre>
+<p>We are not building a limiter in this experiment. The point is simply to understand why such a receiver stage is possible.</p>
+<p>But this experiment can easily lead to an incorrect conclusion:</p>
+<blockquote class="blockquote">
+<p>“If amplitude variations do not matter much, FM must be immune to noise.”</p>
+</blockquote>
+<p>That is not true.</p>
+<p>To see why, we need to disturb the signal in a different way.</p>
+<hr>
+</section>
+<section id="experiment-6-fm-through-an-additive-noise-channel" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-6-fm-through-an-additive-noise-channel">14.13 Experiment 6: FM Through an Additive Noise Channel</h2>
+<p>Instead of multiplying the FM signal by a varying amplitude, we now <strong>add noise directly to the complex FM signal</strong>.</p>
+<p>The received signal becomes:</p>
+<p><span class="math display">\[
+r(t)=s_{\mathrm{FM}}(t)+n(t)
+\]</span></p>
+<p>This is fundamentally different from Experiment 5.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for passing FM through an additive Gaussian noise channel</figcaption>
+</figure>
+</div>
+<section id="main-setup-2" class="level3">
+<h3 class="anchored" data-anchor-id="main-setup-2">Main setup</h3>
+<p>The FM settings remain the same as before:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency</td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="odd">
+<td>Message frequency</td>
+<td style="text-align: right;">500 Hz</td>
+</tr>
+<tr class="even">
+<td>Frequency deviation</td>
+<td style="text-align: right;">2 kHz</td>
+</tr>
+<tr class="odd">
+<td>FM amplitude scale</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>The new QT GUI control changes the additive channel-noise amplitude.</p>
+<p>We monitor three things simultaneously:</p>
+<ol type="1">
+<li>the original and recovered messages,</li>
+<li>the raw Quadrature Demod output,</li>
+<li>the magnitude of the noisy FM signal.</li>
+</ol>
+<p>This three-view arrangement is useful because it lets us watch the disturbance travel through the receiver.</p>
+</section>
+<section id="start-with-a-clean-channel" class="level3">
+<h3 class="anchored" data-anchor-id="start-with-a-clean-channel">Start with a clean channel</h3>
+<p>Set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-000.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission through a clean channel with zero additive noise</figcaption>
+</figure>
+</div>
+<p>The three observations agree with what we already know.</p>
+<p>The received magnitude is essentially constant at 1.</p>
+<p>The raw demodulator output follows the instantaneous frequency cleanly between approximately:</p>
+<p><span class="math display">\[
+8\,000\text{ Hz}
+\]</span></p>
+<p>and:</p>
+<p><span class="math display">\[
+12\,000\text{ Hz}
+\]</span></p>
+<p>The recovered message lies on top of the original message.</p>
+</section>
+<section id="add-moderate-channel-noise" class="level3">
+<h3 class="anchored" data-anchor-id="add-moderate-channel-noise">Add moderate channel noise</h3>
+<p>Now set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0.10</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-010.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission with additive channel-noise amplitude 0.10</figcaption>
+</figure>
+</div>
+<p>The received magnitude now fluctuates around 1.</p>
+<p>More importantly, the raw instantaneous-frequency estimate becomes noisy.</p>
+<p>The recovered message also begins to show noise, although its underlying sinusoidal shape is still clearly recognizable.</p>
+</section>
+<section id="increase-the-noise-further" class="level3">
+<h3 class="anchored" data-anchor-id="increase-the-noise-further">Increase the noise further</h3>
+<p>Finally, set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0.30</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-030.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission with additive channel-noise amplitude 0.30</figcaption>
+</figure>
+</div>
+<p>The difference is now dramatic.</p>
+<p>The received magnitude fluctuates strongly, but that is not the whole problem. The raw demodulator output contains large frequency errors, and the recovered message becomes heavily corrupted.</p>
+<p>Why did Experiment 5 tolerate amplitude disturbance while Experiment 6 does not?</p>
+<p>Because additive noise does more than change magnitude.</p>
+<p>The FM signal is complex. Adding random noise changes its I and Q components:</p>
+<pre class="text"><code>Additive channel noise
+        |
+        v
+I and Q are disturbed
+        |
+        v
+Phase is disturbed
+        |
+        v
+Instantaneous-frequency estimate becomes noisy
+        |
+        v
+Recovered message becomes noisy</code></pre>
+<p>The distinction is worth summarizing.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Disturbance</th>
+<th>Magnitude affected?</th>
+<th>Phase affected?</th>
+<th>Effect on simple FM demodulation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Constant amplitude scaling</td>
+<td>Yes</td>
+<td>No</td>
+<td>Essentially unchanged</td>
+</tr>
+<tr class="even">
+<td>Multiplicative positive amplitude variation</td>
+<td>Yes</td>
+<td>Ideally no</td>
+<td>Largely unchanged</td>
+</tr>
+<tr class="odd">
+<td>Additive channel noise</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Increasingly degraded</td>
+</tr>
+</tbody>
+</table>
+<p>This is the key lesson from the final two experiments.</p>
+<p><strong>FM does not carry its information in amplitude, but that does not make FM immune to noise.</strong></p>
+</section>
+<section id="a-practical-receiver-would-do-more" class="level3">
+<h3 class="anchored" data-anchor-id="a-practical-receiver-would-do-more">A practical receiver would do more</h3>
+<p>Our demodulation chain is intentionally simple because we want to see the underlying behavior clearly.</p>
+<p>A practical FM receiver normally includes additional filtering and receiver stages. The raw demodulator output shown here is deliberately exposed, so the effect of additive noise is easy to observe.</p>
+<p>The experiment should therefore not be interpreted as a complete model of the noise performance of a commercial FM receiver.</p>
+<p>Its purpose is more fundamental: to show why additive noise can corrupt FM even though simple amplitude changes do not directly carry the message.</p>
+<hr>
+</section>
+</section>
+<section id="try-it-yourself-find-the-point-where-the-message-disappears" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself-find-the-point-where-the-message-disappears">14.14 Try It Yourself: Find the Point Where the Message Disappears</h2>
+<p>Return to Experiment 6 and begin with:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0</code></pre>
+<p>Before moving the slider, predict the order in which you expect the three displays to become visibly disturbed.</p>
+<p>Then slowly increase the channel-noise amplitude.</p>
+<p>Watch:</p>
+<pre class="text"><code>Noisy FM magnitude
+        |
+        v
+Raw demodulator output
+        |
+        v
+Recovered message</code></pre>
+<p>Do not focus on finding one universal numerical “failure point.” Instead, notice how degradation develops gradually.</p>
+<p>Try values such as:</p>
+<pre class="text"><code>0.05
+0.10
+0.20
+0.30</code></pre>
+<p>Ask yourself:</p>
+<ul>
+<li>Can I still recognize the 500 Hz pattern in the raw demodulator output?</li>
+<li>Can I still recognize it in the recovered message?</li>
+<li>Does a noisy magnitude automatically mean the message has been lost?</li>
+<li>At what point does phase/frequency noise become the dominant problem?</li>
+</ul>
+<p>This is a useful habit in SDR experiments: do not only ask whether a system works. Watch <strong>how it stops working</strong>.</p>
+<hr>
+</section>
+<section id="putting-the-fm-story-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-the-fm-story-together">14.15 Putting the FM Story Together</h2>
+<p>We began this chapter with a simple idea: instead of changing carrier amplitude, let the message change carrier frequency.</p>
+<p>That idea led us through a surprisingly rich chain of consequences.</p>
+<pre class="text"><code>Message
+   |
+   v
+Controls instantaneous frequency
+   |
+   v
+Carrier speeds up and slows down
+   |
+   v
+FM spectrum develops multiple sidebands
+   |
+   v
+Delta f and fm determine spectral behavior
+   |
+   v
+beta = Delta f / fm describes modulation strength
+   |
+   v
+Bessel functions determine component amplitudes
+   |
+   v
+Practical bandwidth can be estimated
+   |
+   v
+Phase change can be measured at the receiver
+   |
+   v
+Original message can be recovered</code></pre>
+<p>There is another equally important chain on the receiver side:</p>
+<pre class="text"><code>FM information
+   |
+   v
+Stored in phase/frequency evolution
+   |
+   +--&gt; Pure amplitude change: little effect on ideal demodulation
+   |
+   +--&gt; Additive noise: phase can be disturbed
+                         |
+                         v
+                 Frequency estimate becomes noisy
+                         |
+                         v
+                  Message becomes noisy</code></pre>
+<p>These two views together give us a much more useful understanding of FM than simply memorizing its equation.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">14.16 What We Learned</h2>
+<p>In this chapter, we built frequency modulation from the waveform upward.</p>
+<p>The main ideas are:</p>
+<ul>
+<li>In FM, the message controls the <strong>instantaneous frequency</strong> of the carrier.</li>
+<li>The carrier frequency <span class="math inline">\(f_c\)</span> sets the center frequency.</li>
+<li>The message frequency <span class="math inline">\(f_m\)</span> determines how quickly the instantaneous frequency moves and sets the spacing between single-tone FM sidebands.</li>
+<li>The frequency deviation <span class="math inline">\(\Delta f\)</span> tells us how far the instantaneous frequency moves away from <span class="math inline">\(f_c\)</span>.</li>
+<li>For a normalized sinusoidal message:</li>
+</ul>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\cos(2\pi f_mt)
+\]</span></p>
+<ul>
+<li>The single-tone FM signal can be written as:</li>
+</ul>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right)
+\]</span></p>
+<ul>
+<li>The FM modulation index is:</li>
+</ul>
+<p><span class="math display">\[
+\beta=\frac{\Delta f}{f_m}
+\]</span></p>
+<ul>
+<li>Increasing <span class="math inline">\(\beta\)</span> generally causes more sideband orders to become significant.</li>
+<li>Single-tone FM sidebands occur at:</li>
+</ul>
+<p><span class="math display">\[
+f_c\pm nf_m
+\]</span></p>
+<ul>
+<li>Their amplitudes are governed by Bessel functions <span class="math inline">\(J_n(\beta)\)</span>.</li>
+<li>Ideal FM has infinitely many mathematical sidebands, but only a finite number are significant in practice.</li>
+<li>Small <span class="math inline">\(\beta\)</span> produces narrowband FM behavior.</li>
+<li>Carson’s rule gives a useful practical bandwidth estimate:</li>
+</ul>
+<p><span class="math display">\[
+B\approx2(\Delta f+f_m)
+\]</span></p>
+<ul>
+<li>A Quadrature Demodulator recovers FM by measuring phase change from sample to sample.</li>
+<li>Ideal FM has a constant envelope, so its information is not carried in amplitude.</li>
+<li>Multiplicative amplitude changes can leave the recovered message essentially unchanged when the phase trajectory remains intact.</li>
+<li>Additive channel noise is different because it disturbs I and Q and therefore can disturb phase.</li>
+<li>As phase noise increases, the instantaneous-frequency estimate becomes noisy and the recovered message eventually degrades.</li>
+</ul>
+<p>Perhaps the most important conceptual distinction is this:</p>
+<blockquote class="blockquote">
+<p><strong>FM is relatively insensitive to pure amplitude variation, but it is not immune to additive noise.</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="fms-close-relative-phase-modulation" class="level2">
+<h2 class="anchored" data-anchor-id="fms-close-relative-phase-modulation">14.7 FM’s Close Relative: Phase Modulation</h2>
+<p>Before leaving analog modulation, there is one closely related idea worth introducing.</p>
+<p>So far, we have used two properties of a carrier to carry information:</p>
+<pre class="text"><code>Amplitude Modulation
+        |
+        v
+Message changes carrier amplitude
+
+
+Frequency Modulation
+        |
+        v
+Message changes instantaneous frequency</code></pre>
+<p>But a sinusoidal carrier has another important property that can be changed: its <strong>phase</strong>.</p>
+<p>If the message directly changes the phase of the carrier, we obtain <strong>phase modulation</strong>, or <strong>PM</strong>.</p>
+<p>A simple phase-modulated signal can be written as:</p>
+<p><span class="math display">\[
+s_{\mathrm{PM}}(t)=A_c\cos\left(2\pi f_ct+k_pm(t)\right)
+\]</span></p>
+<p>Here, <span class="math inline">\(k_p\)</span> determines how strongly the message changes the carrier phase.</p>
+<p>The important point is that the message <span class="math inline">\(m(t)\)</span> appears directly in the phase term.</p>
+<p>This makes PM look very similar to FM, and that is not an accident. FM and PM are closely related and are often grouped together under the name <strong>angle modulation</strong>.</p>
+<section id="fm-and-pm-what-is-the-difference" class="level3">
+<h3 class="anchored" data-anchor-id="fm-and-pm-what-is-the-difference">FM and PM: What Is the Difference?</h3>
+<p>The easiest way to separate them is to ask what the message controls directly.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Modulation</th>
+<th>What the message directly controls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AM</td>
+<td>Carrier amplitude</td>
+</tr>
+<tr class="even">
+<td>FM</td>
+<td>Instantaneous frequency</td>
+</tr>
+<tr class="odd">
+<td>PM</td>
+<td>Carrier phase</td>
+</tr>
+</tbody>
+</table>
+<p>For PM:</p>
+<p><span class="math display">\[
+\phi_{\mathrm{PM}}(t)\propto m(t)
+\]</span></p>
+<p>The phase deviation follows the message itself.</p>
+<p>For FM:</p>
+<p><span class="math display">\[
+f_i(t)-f_c\propto m(t)
+\]</span></p>
+<p>The instantaneous-frequency deviation follows the message.</p>
+<p>But frequency and phase are related:</p>
+<p><span class="math display">\[
+f_i(t)=\frac{1}{2\pi}\frac{d\phi(t)}{dt}
+\]</span></p>
+<p>This means that changing frequency also changes how phase evolves with time.</p>
+<p>That is exactly what we saw with the VCO in this chapter. The VCO did not somehow jump from one finished sinusoid to another. Its phase kept evolving continuously, but the <strong>rate at which that phase changed</strong> became faster or slower according to the message.</p>
+<p>This gives us a useful way to think about the difference:</p>
+<pre class="text"><code>Phase Modulation
+
+Message
+   |
+   v
+Controls phase deviation directly
+
+
+Frequency Modulation
+
+Message
+   |
+   v
+Controls how quickly phase changes
+   |
+   v
+Controls instantaneous frequency</code></pre>
+<p>There is also a mathematical relationship between the two.</p>
+<p>For FM, the phase contribution depends on the integral of the message:</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+2\pi k_f\int_0^t m(\tau)\,d\tau\right)
+\]</span></p>
+<p>For PM, the message appears directly in the phase:</p>
+<p><span class="math display">\[
+s_{\mathrm{PM}}(t)=A_c\cos\left(2\pi f_ct+k_pm(t)\right)
+\]</span></p>
+<p>We will not build a separate PM experiment here. Our goal in this part of the book was to develop the main ideas of analog carrier modulation, and the FM experiments have already given us the most important connection between frequency and phase.</p>
+<p>However, phase is far from finished.</p>
+<p>In digital communication, instead of allowing an analog message to change phase continuously, we can choose particular phase states to represent information. That idea will eventually lead us to <strong>phase-shift keying (PSK)</strong>.</p>
+<p>So this brief introduction to PM is also a bridge between the analog modulation we have studied here and the digital modulation techniques we will encounter later.</p>
+<hr>
+</section>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">14.18 Connecting to the Next Chapter</h2>
+<p>Over the last three chapters, we have moved from asking why modulation is necessary to building two of the most important forms of analog modulation.</p>
+<p>With AM, the message changed the amplitude of a carrier.</p>
+<p>With FM, the message changed its instantaneous frequency.</p>
+<p>We also briefly saw that information can be carried by directly changing phase.</p>
+<p>We can summarize the possibilities we have encountered so far as:</p>
+<pre class="text"><code>                     Carrier
+                        |
+          +-------------+-------------+
+          |             |             |
+          v             v             v
+      Amplitude      Frequency       Phase
+          |             |             |
+          v             v             v
+          AM            FM            PM</code></pre>
+<p>Until now, however, our message has always been a continuously varying analog signal such as a sinusoid.</p>
+<p>Modern communication systems often begin somewhere very different:</p>
+<pre class="text"><code>0 1 1 0 1 0 0 1 ...</code></pre>
+<p>A radio cannot simply transmit the abstract idea of a <code>0</code> or a <code>1</code>. Those bits must somehow be represented by physical waveforms.</p>
+<p>This raises a new set of questions.</p>
+<p>What exactly is the difference between a <strong>bit</strong> and a <strong>symbol</strong>?</p>
+<p>How can a sequence of bits become a waveform?</p>
+<p>How many bits can one symbol represent?</p>
+<p>What does <strong>symbol rate</strong> mean, and how is it different from bit rate?</p>
+<p>And eventually, how can amplitude, phase, frequency, or combinations of them be used to represent digital information?</p>
+<p>These questions mark an important transition in the book.</p>
+<p>We are moving from <strong>analog communication</strong>, where a continuously varying message continuously changes a carrier, to <strong>digital communication</strong>, where discrete information must first be mapped onto physical signals.</p>
+<p>In the next chapter, we will begin with the foundation:</p>
+<p><strong>bits, symbols, and how digital information becomes a waveform that can actually be transmitted.</strong></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter13.html" class="pagination-link" aria-label="Chapter 13: Amplitude Modulation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter15.html" class="pagination-link" aria-label="Chapter 15: Bits, Symbols and Digital Communication">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

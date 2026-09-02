@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 20: Channel Equalization – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter21.html" rel="next">
+<link href="../book/chapter19.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter19.html">Part VI: The Wireless Channel</a></li><li class="breadcrumb-item"><a href="../book/chapter20.html"><span class="chapter-title">Chapter 20: Channel Equalization</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-channel-memory-to-receiver-correction" id="toc-from-channel-memory-to-receiver-correction" class="nav-link" data-scroll-target="#from-channel-memory-to-receiver-correction">20.1 From Channel Memory to Receiver Correction</a></li>
+  <li><a href="#experiment-20.1-manually-undoing-a-known-channel" id="toc-experiment-20.1-manually-undoing-a-known-channel" class="nav-link" data-scroll-target="#experiment-20.1-manually-undoing-a-known-channel">Experiment 20.1: Manually Undoing a Known Channel</a>
+  <ul class="collapse">
+  <li><a href="#how-did-the-receiver-know-the-channel-was-1-0.5" id="toc-how-did-the-receiver-know-the-channel-was-1-0.5" class="nav-link" data-scroll-target="#how-did-the-receiver-know-the-channel-was-1-0.5">How did the receiver know the channel was <code>[1, 0.5]</code>?</a></li>
+  <li><a href="#channel-taps-are-not-equalizer-taps" id="toc-channel-taps-are-not-equalizer-taps" class="nav-link" data-scroll-target="#channel-taps-are-not-equalizer-taps">Channel taps are not equalizer taps</a></li>
+  <li><a href="#building-the-inverse-one-tap-at-a-time" id="toc-building-the-inverse-one-tap-at-a-time" class="nav-link" data-scroll-target="#building-the-inverse-one-tap-at-a-time">20.2 Building the Inverse One Tap at a Time</a>
+  <ul class="collapse">
+  <li><a href="#why-does-the-inverse-continue-forever" id="toc-why-does-the-inverse-continue-forever" class="nav-link" data-scroll-target="#why-does-the-inverse-continue-forever">Why does the inverse continue forever?</a></li>
+  <li><a href="#zero-forcing-intuition" id="toc-zero-forcing-intuition" class="nav-link" data-scroll-target="#zero-forcing-intuition">Zero-forcing intuition</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#the-real-problem-the-receiver-does-not-know-the-correct-taps" id="toc-the-real-problem-the-receiver-does-not-know-the-correct-taps" class="nav-link" data-scroll-target="#the-real-problem-the-receiver-does-not-know-the-correct-taps">20.3 The Real Problem: The Receiver Does Not Know the Correct Taps</a></li>
+  </ul></li>
+  <li><a href="#experiment-20.2-adaptive-lms-equalization" id="toc-experiment-20.2-adaptive-lms-equalization" class="nav-link" data-scroll-target="#experiment-20.2-adaptive-lms-equalization">Experiment 20.2: Adaptive LMS Equalization</a>
+  <ul class="collapse">
+  <li><a href="#what-does-the-qpsk-constellation-object-actually-do" id="toc-what-does-the-qpsk-constellation-object-actually-do" class="nav-link" data-scroll-target="#what-does-the-qpsk-constellation-object-actually-do">20.4 What Does the QPSK Constellation Object Actually Do?</a>
+  <ul class="collapse">
+  <li><a href="#why-use-0.707-instead-of-1" id="toc-why-use-0.707-instead-of-1" class="nav-link" data-scroll-target="#why-use-0.707-instead-of-1">Why use 0.707 instead of 1?</a></li>
+  </ul></li>
+  <li><a href="#what-does-the-lms-step-size-mean-physically" id="toc-what-does-the-lms-step-size-mean-physically" class="nav-link" data-scroll-target="#what-does-the-lms-step-size-mean-physically">20.5 What Does the LMS Step Size Mean Physically?</a>
+  <ul class="collapse">
+  <li><a href="#a-practical-gnu-radio-note" id="toc-a-practical-gnu-radio-note" class="nav-link" data-scroll-target="#a-practical-gnu-radio-note">A practical GNU Radio note</a></li>
+  </ul></li>
+  <li><a href="#decision-directed-adaptation-has-a-chicken-and-egg-problem" id="toc-decision-directed-adaptation-has-a-chicken-and-egg-problem" class="nav-link" data-scroll-target="#decision-directed-adaptation-has-a-chicken-and-egg-problem">20.6 Decision-Directed Adaptation Has a Chicken-and-Egg Problem</a></li>
+  </ul></li>
+  <li><a href="#experiment-20.3-training-assisted-equalization" id="toc-experiment-20.3-training-assisted-equalization" class="nav-link" data-scroll-target="#experiment-20.3-training-assisted-equalization">Experiment 20.3: Training-Assisted Equalization</a>
+  <ul class="collapse">
+  <li><a href="#constructing-the-frame" id="toc-constructing-the-frame" class="nav-link" data-scroll-target="#constructing-the-frame">Constructing the frame</a></li>
+  <li><a href="#why-does-the-receiver-need-a-correlation-estimator" id="toc-why-does-the-receiver-need-a-correlation-estimator" class="nav-link" data-scroll-target="#why-does-the-receiver-need-a-correlation-estimator">20.7 Why Does the Receiver Need a Correlation Estimator?</a></li>
+  <li><a href="#the-meaning-of-the-correlation-threshold" id="toc-the-meaning-of-the-correlation-threshold" class="nav-link" data-scroll-target="#the-meaning-of-the-correlation-threshold">20.8 The Meaning of the Correlation Threshold</a>
+  <ul class="collapse">
+  <li><a href="#how-is-a-threshold-chosen-in-a-real-receiver" id="toc-how-is-a-threshold-chosen-in-a-real-receiver" class="nav-link" data-scroll-target="#how-is-a-threshold-chosen-in-a-real-receiver">How is a threshold chosen in a real receiver?</a></li>
+  </ul></li>
+  <li><a href="#detection-is-not-the-same-as-alignment" id="toc-detection-is-not-the-same-as-alignment" class="nav-link" data-scroll-target="#detection-is-not-the-same-as-alignment">20.9 Detection Is Not the Same as Alignment</a></li>
+  <li><a href="#what-happens-after-training-ends" id="toc-what-happens-after-training-ends" class="nav-link" data-scroll-target="#what-happens-after-training-ends">20.10 What Happens After Training Ends?</a></li>
+  <li><a href="#what-if-the-training-sequence-is-corrupted-by-noise" id="toc-what-if-the-training-sequence-is-corrupted-by-noise" class="nav-link" data-scroll-target="#what-if-the-training-sequence-is-corrupted-by-noise">20.11 What If the Training Sequence Is Corrupted by Noise?</a></li>
+  <li><a href="#how-long-should-the-training-sequence-be" id="toc-how-long-should-the-training-sequence-be" class="nav-link" data-scroll-target="#how-long-should-the-training-sequence-be">20.12 How Long Should the Training Sequence Be?</a></li>
+  <li><a href="#stronger-echoes-make-equalization-harder" id="toc-stronger-echoes-make-equalization-harder" class="nav-link" data-scroll-target="#stronger-echoes-make-equalization-harder">20.13 Stronger Echoes Make Equalization Harder</a></li>
+  <li><a href="#how-are-receiver-parameters-chosen-in-practice" id="toc-how-are-receiver-parameters-chosen-in-practice" class="nav-link" data-scroll-target="#how-are-receiver-parameters-chosen-in-practice">20.14 How Are Receiver Parameters Chosen in Practice?</a></li>
+  </ul></li>
+  <li><a href="#experiment-20.4-equalization-in-the-presence-of-noise" id="toc-experiment-20.4-equalization-in-the-presence-of-noise" class="nav-link" data-scroll-target="#experiment-20.4-equalization-in-the-presence-of-noise">Experiment 20.4: Equalization in the Presence of Noise</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself-1" id="toc-try-it-yourself-1" class="nav-link" data-scroll-target="#try-it-yourself-1">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#what-equalization-can-and-cannot-fix" id="toc-what-equalization-can-and-cannot-fix" class="nav-link" data-scroll-target="#what-equalization-can-and-cannot-fix">20.15 What Equalization Can and Cannot Fix</a></li>
+  <li><a href="#equalization-without-explicit-channel-estimation" id="toc-equalization-without-explicit-channel-estimation" class="nav-link" data-scroll-target="#equalization-without-explicit-channel-estimation">20.16 Equalization Without Explicit Channel Estimation</a></li>
+  <li><a href="#putting-the-whole-equalization-story-together" id="toc-putting-the-whole-equalization-story-together" class="nav-link" data-scroll-target="#putting-the-whole-equalization-story-together">20.17 Putting the Whole Equalization Story Together</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">20.18 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">20.19 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter19.html">Part VI: The Wireless Channel</a></li><li class="breadcrumb-item"><a href="../book/chapter20.html"><span class="chapter-title">Chapter 20: Channel Equalization</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 20: Channel Equalization</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>If the wireless channel has distorted the received symbols, how can the receiver compensate for that distortion?</strong></p>
+<p>In Chapter 18, we learned how pulse shaping and matched filtering can produce a clean sampled digital link when the timing and channel are ideal.</p>
+<p>In Chapter 19, we deliberately broke that ideal link.</p>
+<p>We attenuated the signal, added noise, introduced carrier-frequency offset, created delayed multipath copies, and changed the receiver sample-rate relationship. One of the most important observations was that a delayed copy of the transmitted waveform can make the current receiver decision depend on previous symbols.</p>
+<p>For the one-symbol echo used in Chapter 19,</p>
+<p><span class="math display">\[
+r[k]=s[k]+0.5s[k-1].
+\]</span></p>
+<p>We already know what this means physically. The current received sample contains the desired current symbol plus part of the previous symbol. That is channel-induced intersymbol interference, or ISI.</p>
+<p>So this chapter does <strong>not</strong> begin by teaching ISI again.</p>
+<p>The new question is:</p>
+<blockquote class="blockquote">
+<p><strong>Now that we can see the channel distortion, what can the receiver do about it?</strong></p>
+</blockquote>
+<p>The answer is <strong>equalization</strong>.</p>
+<p>An equalizer is a receiver filter whose job is to compensate for predictable distortion introduced by the channel. It does not recreate information that has disappeared, and it does not remove every impairment in a radio receiver. Instead, it tries to make the combined effect of the channel and receiver correction closer to the response we actually wanted.</p>
+<p>This chapter will build that idea in stages.</p>
+<p>We will first assume that the channel is known exactly and construct a correction manually. Then we will remove that unrealistic assumption and let an adaptive equalizer learn its coefficients. After that, we will introduce known training symbols, ask how the receiver finds them, and finally test what happens when multipath becomes stronger and when random noise is added.</p>
+<p>The progression is:</p>
+<pre class="text"><code>Known multipath channel
+        |
+        v
+Manual inverse-filter intuition
+        |
+        v
+Adaptive equalization
+        |
+        v
+Training-assisted adaptation
+        |
+        v
+Stronger multipath and noise
+        |
+        v
+What equalization can and cannot fix</code></pre>
+<hr>
+</section>
+<section id="from-channel-memory-to-receiver-correction" class="level2">
+<h2 class="anchored" data-anchor-id="from-channel-memory-to-receiver-correction">20.1 From Channel Memory to Receiver Correction</h2>
+<p>There is a useful connection back to Chapter 10.</p>
+<p>There, an LTI system was described by its impulse response. The output was produced by convolving the input with that impulse response.</p>
+<p>In Chapter 19, multipath gave that idea a physical wireless meaning.</p>
+<p>A direct path plus one delayed path can be described by a short channel impulse response. At the symbol rate, our simplest example is</p>
+<p><span class="math display">\[
+h=[1,0.5].
+\]</span></p>
+<p>The first coefficient represents the direct path. The second coefficient represents an echo delayed by one symbol and arriving with half the direct-path amplitude.</p>
+<p>So the channel performs something like</p>
+<pre class="text"><code>current symbol -------- x 1.0 -----+
+                                   |
+previous symbol ------- x 0.5 -----+--&gt; received symbol</code></pre>
+<p>The receiver now asks a natural question:</p>
+<blockquote class="blockquote">
+<p>If the channel behaves like a filter, can we place another filter after it that approximately undoes the channel?</p>
+</blockquote>
+<p>That second filter is the equalizer.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>Transmitted symbols
+        |
+        v
+Channel h
+        |
+        v
+Distorted symbols
+        |
+        v
+Equalizer g
+        |
+        v
+Recovered symbols</code></pre>
+<p>If the channel impulse response is <span class="math inline">\(h\)</span> and the equalizer impulse response is <span class="math inline">\(g\)</span>, then the combined response is their convolution:</p>
+<p><span class="math display">\[
+h*g.
+\]</span></p>
+<p>Ideally, we would like the combination to behave like an impulse:</p>
+<p><span class="math display">\[
+h*g\approx\delta.
+\]</span></p>
+<p>Why an impulse?</p>
+<p>Because convolution with an impulse leaves the signal unchanged.</p>
+<p>This is the basic intuition behind channel inversion and zero-forcing equalization.</p>
+<hr>
+</section>
+<section id="experiment-20.1-manually-undoing-a-known-channel" class="level1">
+<h1>Experiment 20.1: Manually Undoing a Known Channel</h1>
+<p>Our first experiment deliberately makes the receiver’s job easier than it would be in a real radio.</p>
+<p>We create the channel ourselves, so we know exactly what it is.</p>
+<p>The main parameters are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32000</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1000</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="even">
+<td>RRC span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="odd">
+<td>RRC taps</td>
+<td style="text-align: right;"><code>257</code></td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+</tr>
+<tr class="odd">
+<td>Echo delay</td>
+<td style="text-align: right;"><code>32</code> samples = 1 symbol</td>
+</tr>
+<tr class="even">
+<td>Echo gain</td>
+<td style="text-align: right;"><code>0.5</code></td>
+</tr>
+</tbody>
+</table>
+<p>The channel is built manually from a direct path and one delayed copy, exactly as in Chapter 19.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp1-manual-equalization-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Manual channel equalization flowgraph</figcaption>
+</figure>
+</div>
+<p>After matched filtering and correct symbol-rate sampling, the channel is approximately</p>
+<p><span class="math display">\[
+r[k]=s[k]+0.5s[k-1].
+\]</span></p>
+<p>At the symbol rate, this corresponds to</p>
+<p><span class="math display">\[
+h=[1,0.5].
+\]</span></p>
+<section id="how-did-the-receiver-know-the-channel-was-1-0.5" class="level3">
+<h3 class="anchored" data-anchor-id="how-did-the-receiver-know-the-channel-was-1-0.5">How did the receiver know the channel was <code>[1, 0.5]</code>?</h3>
+<p>It did not discover it.</p>
+<p><strong>We created that channel ourselves.</strong></p>
+<p>The direct path was given gain 1. The delayed path was given gain 0.5 and delayed by exactly one symbol. Therefore, as experiment designers, we know the channel model in advance.</p>
+<p>That is an intentionally unrealistic assumption.</p>
+<p>A real wireless receiver is not normally handed a message saying:</p>
+<pre class="text"><code>Your channel is [1, 0.5].</code></pre>
+<p>It does not initially know how many reflected paths exist, their gains, phases, delays, or whether those values are changing.</p>
+<p>For now, however, knowing the channel lets us isolate one question:</p>
+<blockquote class="blockquote">
+<p>If the channel were known perfectly, what kind of receiver filter would undo it?</p>
+</blockquote>
+</section>
+<section id="channel-taps-are-not-equalizer-taps" class="level3">
+<h3 class="anchored" data-anchor-id="channel-taps-are-not-equalizer-taps">Channel taps are not equalizer taps</h3>
+<p>This distinction is important.</p>
+<p>The channel taps</p>
+<pre class="text"><code>[1, 0.5]</code></pre>
+<p>describe the distortion introduced before the receiver.</p>
+<p>The equalizer taps</p>
+<pre class="text"><code>[1, -0.5, 0.25, -0.125, ...]</code></pre>
+<p>describe the receiver filter trying to compensate for that distortion.</p>
+<p>They have different roles.</p>
+<hr>
+</section>
+<section id="building-the-inverse-one-tap-at-a-time" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-inverse-one-tap-at-a-time">20.2 Building the Inverse One Tap at a Time</h2>
+<p>We could immediately write down an inverse filter, but that would hide the most useful intuition.</p>
+<p>Instead, let us construct the equalizer progressively.</p>
+<p>Start with no useful correction:</p>
+<p><span class="math display">\[
+g=[1].
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+[1,0.5]*[1]=[1,0.5].
+\]</span></p>
+<p>Nothing has changed. The one-symbol echo remains.</p>
+<p>Now try</p>
+<p><span class="math display">\[
+g=[1,-0.5].
+\]</span></p>
+<p>The combined response is</p>
+<p><span class="math display">\[
+[1,0.5]*[1,-0.5]=[1,0,-0.25].
+\]</span></p>
+<p>The original one-symbol contribution has disappeared, but a smaller two-symbol-delayed residual remains.</p>
+<p>At the equalizer output,</p>
+<p><span class="math display">\[
+y[k]=s[k]-0.25s[k-2].
+\]</span></p>
+<p>So the equalizer has improved the channel, but it has not made it perfect.</p>
+<p>Add another tap:</p>
+<p><span class="math display">\[
+g=[1,-0.5,0.25].
+\]</span></p>
+<p>Now</p>
+<p><span class="math display">\[
+[1,0.5]*[1,-0.5,0.25]=[1,0,0,0.125].
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y[k]=s[k]+0.125s[k-3].
+\]</span></p>
+<p>Add one more:</p>
+<p><span class="math display">\[
+[1,0.5]*[1,-0.5,0.25,-0.125]=[1,0,0,0,-0.0625].
+\]</span></p>
+<p>And with five equalizer taps,</p>
+<p><span class="math display">\[
+[1,0.5]*[1,-0.5,0.25,-0.125,0.0625]=[1,0,0,0,0,0.03125].
+\]</span></p>
+<p>The remaining interference has therefore followed the progression</p>
+<p><span class="math display">\[
+0.5\rightarrow0.25\rightarrow0.125\rightarrow0.0625\rightarrow0.03125.
+\]</span></p>
+<p>For this particular channel, every added term halves the magnitude of the remaining contribution and changes its sign.</p>
+<p>That pattern is <strong>not universal</strong>. It occurs because the echo coefficient in our channel is exactly 0.5.</p>
+<p>The GNU Radio result makes the progression visible.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp1-progressive-manual-equalization.png" class="img-fluid figure-img"></p>
+<figcaption>Progressive manual equalization</figcaption>
+</figure>
+</div>
+<p>With only <code>[1]</code>, the equalized result sits on top of the unequalized result because no correction is being applied.</p>
+<p>With <code>[1, -0.5]</code>, the structured constellation moves inward because the strongest one-symbol echo has been cancelled, although a weaker residual remains.</p>
+<p>As more taps are added, the residual channel memory becomes smaller and the red constellation progressively contracts toward four QPSK clusters.</p>
+<p>The five-tap result does not become a set of mathematically perfect points. That is expected. We have truncated an inverse that, in this example, continues indefinitely.</p>
+<section id="why-does-the-inverse-continue-forever" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-the-inverse-continue-forever">Why does the inverse continue forever?</h3>
+<p>The channel transfer function is</p>
+<p><span class="math display">\[
+H(z)=1+0.5z^{-1}.
+\]</span></p>
+<p>The ideal inverse is</p>
+<p><span class="math display">\[
+G(z)=\frac{1}{1+0.5z^{-1}}.
+\]</span></p>
+<p>Expanding it gives</p>
+<p><span class="math display">\[
+G(z)=1-0.5z^{-1}+0.25z^{-2}-0.125z^{-3}+0.0625z^{-4}-\cdots.
+\]</span></p>
+<p>So the exact inverse is not a five-tap FIR filter. We used a finite approximation.</p>
+<p>Five taps were therefore a <strong>design choice</strong>, not a magic number.</p>
+<p>A longer equalizer can approximate the inverse more closely, but more taps also mean more computations, more coefficients to determine, and potentially more difficult adaptation later.</p>
+</section>
+<section id="zero-forcing-intuition" class="level3">
+<h3 class="anchored" data-anchor-id="zero-forcing-intuition">Zero-forcing intuition</h3>
+<p>This experiment gives us a simple form of zero-forcing intuition.</p>
+<p>We are trying to choose an equalizer that forces unwanted channel-memory terms toward zero.</p>
+<p>But a practical zero-forcing equalizer has an important limitation. If the channel strongly suppresses some frequency components, trying to invert those deep reductions can require very large equalizer gain in those regions. That can also amplify noise.</p>
+<p>We will see the broader limitation of equalization when noise is added later in the chapter.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-linear-equalization-begins-with-an-fir-filter" class="anchored">GNU Radio Toolbox: Linear Equalization Begins with an FIR Filter</h3>
+<p>Experiment 20.1 does not yet use GNU Radio’s adaptive Linear Equalizer block.</p>
+<p>We deliberately use an ordinary <strong>Decimating FIR Filter</strong> with <code>Decimation = 1</code> after symbol-rate sampling.</p>
+<p>The block itself is familiar from earlier chapters. What is new is its role: its taps are now chosen to compensate for the channel rather than to perform pulse shaping or matched filtering.</p>
+<p>This manual construction lets us understand what an equalizer is trying to do before we ask GNU Radio to adapt the coefficients automatically.</p>
+</blockquote>
+<hr>
+</section>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<p>Keep the channel fixed at</p>
+<pre class="text"><code>Echo Gain:  0.5
+Echo Delay: 32 samples</code></pre>
+<p>and predict what will happen if the equalizer is shortened back to two taps. Then deliberately use one wrong coefficient, such as replacing <code>-0.5</code> with <code>-0.3</code>.</p>
+<p>The purpose is not to find a better-looking graph by trial and error. It is to see that equalization depends on matching the receiver correction to the channel distortion.</p>
+<hr>
+</section>
+</section>
+<section id="the-real-problem-the-receiver-does-not-know-the-correct-taps" class="level2">
+<h2 class="anchored" data-anchor-id="the-real-problem-the-receiver-does-not-know-the-correct-taps">20.3 The Real Problem: The Receiver Does Not Know the Correct Taps</h2>
+<p>Experiment 20.1 succeeded because we already knew the answer.</p>
+<p>We created</p>
+<p><span class="math display">\[
+h=[1,0.5],
+\]</span></p>
+<p>and then calculated a useful inverse approximation ourselves.</p>
+<p>A practical receiver does not normally have that luxury.</p>
+<p>So the next question is more realistic:</p>
+<blockquote class="blockquote">
+<p><strong>Can the equalizer adjust its own coefficients automatically?</strong></p>
+</blockquote>
+<p>This is the purpose of an <strong>adaptive equalizer</strong>.</p>
+<p>Instead of choosing the taps once and keeping them fixed, the receiver observes an error and repeatedly changes the taps in a direction that should reduce that error.</p>
+<p>A simple conceptual loop is</p>
+<pre class="text"><code>Received symbols
+      |
+      v
+Equalizer
+      |
+      v
+Output y[k]
+      |
+      v
+Compare with desired/decided symbol d[k]
+      |
+      v
+Error e[k]
+      |
+      v
+Update equalizer taps
+      |
+      +---------------------&gt; repeat</code></pre>
+<p>The error is</p>
+<p><span class="math display">\[
+e[k]=d[k]-y[k].
+\]</span></p>
+<p>The important question is where <span class="math inline">\(d[k]\)</span> comes from.</p>
+<p>For now, the receiver does not know the transmitted symbol sequence. It does, however, know which constellation points are valid QPSK symbols. That allows <strong>decision-directed adaptation</strong>.</p>
+<p>The receiver can look at the equalizer output, decide which valid QPSK point is closest, and use that decision as an approximate reference.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-20.2-adaptive-lms-equalization" class="level1">
+<h1>Experiment 20.2: Adaptive LMS Equalization</h1>
+<p>We keep the same one-symbol echo channel but replace the manually designed FIR equalizer with GNU Radio’s <strong>Linear Equalizer</strong> controlled by an <strong>LMS Adaptive Algorithm</strong>.</p>
+<p>The final experiment uses normalized QPSK symbols.</p>
+<p>Let</p>
+<p><span class="math display">\[
+a=\frac{1}{\sqrt{2}}\approx0.70710678.
+\]</span></p>
+<p>The four QPSK points are then</p>
+<p><span class="math display">\[
+(a,-a),\;(-a,a),\;(-a,-a),\;(a,a).
+\]</span></p>
+<p>Equivalently, in complex notation,</p>
+<p><span class="math display">\[
+\left\{a-ja,\;-a+ja,\;-a-ja,\;a+ja\right\}.
+\]</span></p>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Echo gain</td>
+<td style="text-align: right;"><code>0.5</code></td>
+</tr>
+<tr class="even">
+<td>Echo delay</td>
+<td style="text-align: right;"><code>32</code> samples</td>
+</tr>
+<tr class="odd">
+<td>Linear Equalizer taps</td>
+<td style="text-align: right;"><code>5</code></td>
+</tr>
+<tr class="even">
+<td>Input samples per symbol</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td>Adaptive algorithm</td>
+<td style="text-align: right;">LMS</td>
+</tr>
+<tr class="even">
+<td>Training sequence</td>
+<td style="text-align: right;">none</td>
+</tr>
+<tr class="odd">
+<td>QPSK constellation magnitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp2-adaptive-lms-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Adaptive LMS equalization flowgraph</figcaption>
+</figure>
+</div>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-linear-equalizer" class="anchored">GNU Radio Toolbox: Linear Equalizer</h3>
+<p>The <strong>Linear Equalizer</strong> is an FIR equalizer whose coefficients can be adapted while the flowgraph runs.</p>
+<p>Its input is the received symbol stream. Its output is the equalized symbol stream.</p>
+<p>The important settings in this experiment are:</p>
+<pre class="text"><code>Num. Taps:                 5
+Input Samples per Symbol:  1
+Adaptive Algorithm Object: lms
+Training Sequence:         []
+Adapt After Training:      True</code></pre>
+<p>With an empty training sequence, the equalizer operates without an explicit known-symbol training interval.</p>
+<p>The <strong>Linear Equalizer is the filter</strong>. It is not itself the learning rule. The learning rule is supplied separately through the Adaptive Algorithm object.</p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-adaptive-algorithm-lms" class="anchored">GNU Radio Toolbox: Adaptive Algorithm (LMS)</h3>
+<p>The <strong>Adaptive Algorithm</strong> object tells the Linear Equalizer how its coefficients should change.</p>
+<p>In this chapter we use <strong>LMS</strong>, the least-mean-squares adaptation rule.</p>
+<p>The important idea is not the full derivation. LMS repeatedly uses the current error to make a small change to the equalizer coefficients.</p>
+<p>The <strong>Step Size</strong> <span class="math inline">\(\mu\)</span> controls how strongly each error observation changes the taps.</p>
+<pre class="text"><code>μ = 0        -&gt; no adaptation
+small μ      -&gt; cautious, slower adaptation
+larger μ     -&gt; more aggressive, faster adaptation</code></pre>
+<p>An excessively large value can theoretically produce larger residual error or instability, although that behaviour was not observed within the final range used in this experiment.</p>
+</blockquote>
+<hr>
+<section id="what-does-the-qpsk-constellation-object-actually-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-the-qpsk-constellation-object-actually-do">20.4 What Does the QPSK Constellation Object Actually Do?</h2>
+<p>The LMS algorithm needs more than a stream of complex samples. In decision-directed operation, it also needs to know what legitimate decisions look like.</p>
+<p>GNU Radio’s <strong>Constellation Rect. Object</strong> provides that information.</p>
+<p>The object used in the experiment contains</p>
+<pre class="text"><code>Symbol Map:
+[0, 1, 2, 3]
+
+Constellation Points:
+[ 0.707-0.707j,
+ -0.707+0.707j,
+ -0.707-0.707j,
+  0.707+0.707j ]
+
+Rotational Symmetry: 4
+Real Sectors:        2
+Imaginary Sectors:   2</code></pre>
+<p>The most important field is the constellation-point list.</p>
+<p>It tells the adaptive algorithm that valid QPSK decisions lie near</p>
+<p><span class="math display">\[
+(\pm0.707,\pm0.707).
+\]</span></p>
+<p>The receiver can therefore do something conceptually like</p>
+<pre class="text"><code>Equalizer output
+      |
+      v
+Which valid QPSK point is nearest?
+      |
+      v
+Use that decision as d[k]
+      |
+      v
+Compute error
+      |
+      v
+Update taps</code></pre>
+<p>The constellation object is therefore <strong>not merely a plotting aid</strong>.</p>
+<p>It supplies decision information to the adaptive algorithm.</p>
+<section id="why-use-0.707-instead-of-1" class="level3">
+<h3 class="anchored" data-anchor-id="why-use-0.707-instead-of-1">Why use 0.707 instead of 1?</h3>
+<p>Both</p>
+<p><span class="math display">\[
+(\pm1,\pm1)
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+(\pm0.707,\pm0.707)
+\]</span></p>
+<p>have the same QPSK geometry and the same four phases.</p>
+<p>The difference is normalization.</p>
+<p>For the point <span class="math inline">\(1+j\)</span>,</p>
+<p><span class="math display">\[
+|1+j|^2=2.
+\]</span></p>
+<p>For the normalized point</p>
+<p><span class="math display">\[
+\frac{1}{\sqrt{2}}+j\frac{1}{\sqrt{2}},
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+\left|\frac{1}{\sqrt{2}}+j\frac{1}{\sqrt{2}}\right|^2=1.
+\]</span></p>
+<p>So GNU Radio’s chosen points have unit symbol energy.</p>
+<p>For the final adaptive experiments, the transmitter is normalized to the same constellation used by the Adaptive Algorithm. This keeps the transmitted alphabet and the decision reference consistent.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-constellation-rect.-object" class="anchored">GNU Radio Toolbox: Constellation Rect. Object</h3>
+<p><strong>Constellation Rect. Object</strong> defines a rectangular complex-symbol constellation for GNU Radio digital-processing blocks.</p>
+<p>In this experiment it defines the four normalized QPSK decision points used by LMS.</p>
+<p>The <strong>Symbol Map</strong> associates symbol indices with constellation entries. The <strong>Constellation Points</strong> define the actual complex values. The sector settings describe how the complex plane is divided for decisions.</p>
+<p>A common misunderstanding is to treat this object as a display configuration. Here it is part of the receiver algorithm because it tells the adaptive system what valid QPSK symbols look like.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="what-does-the-lms-step-size-mean-physically" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-the-lms-step-size-mean-physically">20.5 What Does the LMS Step Size Mean Physically?</h2>
+<p>The LMS step size is usually written as</p>
+<p><span class="math display">\[
+\mu.
+\]</span></p>
+<p>It scales the coefficient update.</p>
+<p>A simplified LMS update can be written as</p>
+<p><span class="math display">\[
+w_i[k+1]=w_i[k]+\mu e[k]x^*[k-i].
+\]</span></p>
+<p>The exact implementation details are not the main point here. The important physical interpretation is:</p>
+<blockquote class="blockquote">
+<p><strong>How much is the equalizer allowed to change its coefficient after observing an error?</strong></p>
+</blockquote>
+<p>If</p>
+<p><span class="math display">\[
+\mu=0,
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+w_i[k+1]=w_i[k].
+\]</span></p>
+<p>The equalizer cannot learn.</p>
+<p>That is exactly what the experiment shows.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp2-lms-no-adaptation-vs-adaptation.png" class="img-fluid figure-img"></p>
+<figcaption>LMS with adaptation disabled and enabled</figcaption>
+</figure>
+</div>
+<p>With <span class="math inline">\(\mu=0\)</span>, the adaptive output remains at the equalizer’s initial zero-output state.</p>
+<p>With <span class="math inline">\(\mu=0.005\)</span>, adaptation is enabled and the received 16-state multipath structure collapses toward the four normalized QPSK points.</p>
+<p>We also tested several nonzero step sizes. Within the final tested range, the equalizer converged to essentially the same steady-state QPSK constellation. The main observable difference was <strong>convergence speed</strong>: smaller values adapted more slowly, while larger values converged more quickly.</p>
+<p>We should not over-interpret that result. It does not mean arbitrarily large <span class="math inline">\(\mu\)</span> is always safe. Adaptive-filter theory predicts a stability and residual-error trade-off. Our final experiment simply did not reach a value that visibly produced instability.</p>
+<section id="a-practical-gnu-radio-note" class="level3">
+<h3 class="anchored" data-anchor-id="a-practical-gnu-radio-note">A practical GNU Radio note</h3>
+<p>A QT GUI Range was initially considered for changing <span class="math inline">\(\mu\)</span> while the flowgraph was running. In this GNU Radio setup, the Adaptive Algorithm object’s step size did not update reliably through that runtime control.</p>
+<p>Therefore, the tested <span class="math inline">\(\mu\)</span> values were changed manually between runs while the rest of the flowgraph remained unchanged.</p>
+<p>This is a useful distinction between an algorithm parameter that exists mathematically and whether a particular GNU Radio object exposes that parameter for live reconfiguration.</p>
+<hr>
+</section>
+</section>
+<section id="decision-directed-adaptation-has-a-chicken-and-egg-problem" class="level2">
+<h2 class="anchored" data-anchor-id="decision-directed-adaptation-has-a-chicken-and-egg-problem">20.6 Decision-Directed Adaptation Has a Chicken-and-Egg Problem</h2>
+<p>Experiment 20.2 worked under our controlled conditions, but decision-directed adaptation contains an obvious weakness.</p>
+<p>The equalizer is not yet correct when adaptation begins.</p>
+<p>Therefore, its initial output may be distorted.</p>
+<p>If the receiver makes a wrong QPSK decision, then the reference used to calculate the LMS error is also wrong.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>Equalizer not yet converged
+        |
+        v
+Symbol decision may be wrong
+        |
+        v
+Wrong desired symbol d[k]
+        |
+        v
+Misleading adaptation error
+        |
+        v
+Tap update may move in a poor direction</code></pre>
+<p>How can a receiver avoid relying entirely on its own uncertain decisions during acquisition?</p>
+<p>One common answer is a <strong>training sequence</strong>.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-20.3-training-assisted-equalization" class="level1">
+<h1>Experiment 20.3: Training-Assisted Equalization</h1>
+<p>A training sequence is a short, predetermined sequence of symbols known to both transmitter and receiver.</p>
+<p>The receiver does not know the payload data in advance, but it does know what the training symbols were supposed to be.</p>
+<p>During training, the LMS error can therefore use a known desired symbol rather than a guessed one.</p>
+<p>The transmitted frame in our experiment is</p>
+<pre class="text"><code>| 8 known training symbols | 256 payload symbols |
+| 8 known training symbols | 256 payload symbols |
+| 8 known training symbols | 256 payload symbols |
+                 ...</code></pre>
+<p>The frame repeats because the Vector Source uses <code>Repeat = Yes</code>.</p>
+<p>This repeated structure is convenient for a controlled experiment. In a real packet system, training may appear at the beginning of every packet, once during acquisition, periodically during a long transmission, or as pilot symbols distributed through the data.</p>
+<p>There is no universal rule that training is transmitted exactly once.</p>
+<section id="constructing-the-frame" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-the-frame">Constructing the frame</h3>
+<p>Let</p>
+<p><span class="math display">\[
+a=0.70710678.
+\]</span></p>
+<p>The eight-symbol training sequence used in the experiment is</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>training_symbols <span class="op">=</span> [</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This exact pattern was <strong>chosen</strong>, not derived from the channel.</p>
+<p>Its purpose is simply to provide a fixed known QPSK sequence containing all four constellation states.</p>
+<p>Real communication standards often use carefully designed preambles or training sequences with good correlation properties. Designing such sequences is a separate subject and is not the goal of this chapter.</p>
+<p>The payload is a deterministic pseudo-random 256-symbol QPSK sequence. NumPy is used only to create the repeatable symbol list:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> <span class="fl">0.70710678</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>qpsk_points <span class="op">=</span> [a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a, <span class="op">-</span>a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a, <span class="op">-</span>a<span class="op">-</span><span class="ot">1j</span><span class="op">*</span>a, a<span class="op">+</span><span class="ot">1j</span><span class="op">*</span>a]</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>payload_indices <span class="op">=</span> <span class="bu">list</span>(np.random.default_rng(<span class="dv">20</span>).integers(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">256</span>))</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>payload_symbols <span class="op">=</span> [qpsk_points[i] <span class="cf">for</span> i <span class="kw">in</span> payload_indices]</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>frame_symbols <span class="op">=</span> training_symbols <span class="op">+</span> payload_symbols</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The seed <code>20</code> has no communications significance. It simply makes the experiment reproducible.</p>
+<p>The receiver is given <code>training_symbols</code>, but it is <strong>not</strong> given <code>payload_symbols</code> as known data.</p>
+<p>The transmitter is implemented with a Complex Vector Source so that the exact frame structure is under our control.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp3-training-assisted-equalization-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Training-assisted equalization flowgraph</figcaption>
+</figure>
+</div>
+<p>The important receiver chain is</p>
+<pre class="text"><code>RX matched RRC
+      |
+      v
+Keep 1 in N
+      |
+      v
+Correlation Estimator
+      |
+      v
+Linear Equalizer
+      |
+      v
+Equalized constellation</code></pre>
+<hr>
+</section>
+<section id="why-does-the-receiver-need-a-correlation-estimator" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-the-receiver-need-a-correlation-estimator">20.7 Why Does the Receiver Need a Correlation Estimator?</h2>
+<p>Knowing the training pattern is not enough.</p>
+<p>The receiver also needs to know <strong>where that pattern begins</strong> in the received stream.</p>
+<p>That is a separate receiver problem.</p>
+<p>The Correlation Estimator answers:</p>
+<blockquote class="blockquote">
+<p>Where does this known sequence appear?</p>
+</blockquote>
+<p>The Linear Equalizer then answers:</p>
+<blockquote class="blockquote">
+<p>Now that I know which received symbols correspond to the known sequence, how should I update my taps?</p>
+</blockquote>
+<p>The two roles are different:</p>
+<pre class="text"><code>Correlation Estimator
+"Where is the known sequence?"
+        |
+        v
+training-start information
+        |
+        v
+Linear Equalizer
+"Use these known symbols to adapt."</code></pre>
+<p>This connects directly back to Chapter 11, where correlation was introduced as a way to find a known waveform inside a received signal.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-correlation-estimator" class="anchored">GNU Radio Toolbox: Correlation Estimator</h3>
+<p><strong>Correlation Estimator</strong> searches the incoming stream for a known complex-symbol sequence.</p>
+<p>In this experiment it receives <code>training_symbols</code> as the reference sequence.</p>
+<p>Important settings are:</p>
+<pre class="text"><code>Symbols:             training_symbols
+Samples per Symbol:  1
+Tag marking delay:   1
+Threshold:           0.5
+Threshold Method:    Absolute</code></pre>
+<p>The block produces correlation-related tags that downstream processing can use. The Linear Equalizer uses the <code>corr_est</code> tag to identify the training interval.</p>
+<p>The Correlation Estimator does not equalize the channel. It only helps locate the known training sequence.</p>
+</blockquote>
+<hr>
+</section>
+<section id="the-meaning-of-the-correlation-threshold" class="level2">
+<h2 class="anchored" data-anchor-id="the-meaning-of-the-correlation-threshold">20.8 The Meaning of the Correlation Threshold</h2>
+<p>The Correlation Estimator continuously asks how strongly the incoming sequence resembles the known training pattern.</p>
+<p>The threshold answers:</p>
+<blockquote class="blockquote">
+<p><strong>How strong must that similarity be before the receiver declares that the training sequence has been found?</strong></p>
+</blockquote>
+<p>A high threshold is conservative. It demands a very strong match.</p>
+<p>A low threshold is more permissive.</p>
+<p>But both extremes have consequences.</p>
+<pre class="text"><code>Threshold too high
+        |
+        v
+real training sequence may be missed
+
+Threshold too low
+        |
+        v
+ordinary payload/noise may be falsely declared as training</code></pre>
+<p>We first tested</p>
+<pre class="text"><code>Threshold = 0.9</code></pre>
+<p>with the multipath-distorted training sequence.</p>
+<p>The equalizer output remained essentially at the origin because the receiver did not obtain a useful training trigger.</p>
+<p>Reducing the threshold to</p>
+<pre class="text"><code>Threshold = 0.5</code></pre>
+<p>allowed the training process to begin and the equalizer recovered four QPSK regions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20_exp3_correlation_threshold_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Correlation threshold comparison</figcaption>
+</figure>
+</div>
+<p>The conclusion is not that <code>0.5</code> is the correct threshold for QPSK.</p>
+<p>It is correct only to say that <code>0.5</code> worked better for <strong>this training sequence and this channel condition</strong>.</p>
+<section id="how-is-a-threshold-chosen-in-a-real-receiver" class="level3">
+<h3 class="anchored" data-anchor-id="how-is-a-threshold-chosen-in-a-real-receiver">How is a threshold chosen in a real receiver?</h3>
+<p>Engineers do not normally choose it by staring at a constellation and moving a slider until the result looks good.</p>
+<p>A practical design studies the correlation statistic when the training sequence is absent and when it is present.</p>
+<p>The two cases produce different statistical distributions.</p>
+<p>The threshold is then chosen according to system requirements such as acceptable false-alarm probability and desired detection probability.</p>
+<p>This is the same basic trade-off we met in Chapter 11:</p>
+<ul>
+<li>a lower threshold tends to increase sensitivity but can increase false detections,</li>
+<li>a higher threshold reduces false detections but can increase missed detections.</li>
+</ul>
+<p>Our manual sweep is an educational experiment that lets us see what the parameter controls.</p>
+<hr>
+</section>
+</section>
+<section id="detection-is-not-the-same-as-alignment" class="level2">
+<h2 class="anchored" data-anchor-id="detection-is-not-the-same-as-alignment">20.9 Detection Is Not the Same as Alignment</h2>
+<p>Even if the correlation detector has found the correct sequence, the downstream equalizer still needs the tag to line up with the correct training-symbol position.</p>
+<p>This is the purpose of the <strong>Tag marking delay</strong>.</p>
+<p>In our experiment we tested small integer values including 0, 1, 2, and 3.</p>
+<p>Values 1 and 2 gave much better equalizer behaviour than 0 or 3, and we retained</p>
+<pre class="text"><code>Tag marking delay = 1</code></pre>
+<p>for the final configuration.</p>
+<p>The important lesson is not the number 1.</p>
+<p>The important lesson is:</p>
+<blockquote class="blockquote">
+<p><strong>Detection and alignment are separate requirements.</strong></p>
+</blockquote>
+<p>A practical tag offset depends on the receiver architecture, filter delays, correlation convention, sample-rate relationship, and block implementation.</p>
+<p>A production receiver would determine the intended alignment from the system design and then verify it through simulation and measurement. Our small parameter sweep was used to make the effect visible.</p>
+<hr>
+</section>
+<section id="what-happens-after-training-ends" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-after-training-ends">20.10 What Happens After Training Ends?</h2>
+<p>The Linear Equalizer uses</p>
+<pre class="text"><code>Adapt After Training: True</code></pre>
+<p>This setting has an important physical meaning.</p>
+<p>During the training interval, the equalizer can compare its output with symbols that are known to be correct.</p>
+<p>After training finishes, the payload is no longer known in advance.</p>
+<p>The receiver therefore switches to decision-directed adaptation and continues adjusting the equalizer from its own symbol decisions.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>Training interval
+      |
+      v
+Known desired symbols
+      |
+      v
+Reliable initial adaptation
+      |
+      v
+Payload begins
+      |
+      v
+Decision-directed tracking</code></pre>
+<p>This leads to two useful terms.</p>
+<p><strong>Acquisition</strong> is the process of obtaining a useful initial equalizer state.</p>
+<p><strong>Tracking</strong> is the continued adjustment used to follow changes after acquisition.</p>
+<p>This is also why training cannot necessarily be sent once and forgotten forever. If the physical propagation environment changes, previously learned equalizer coefficients may become less appropriate.</p>
+<hr>
+</section>
+<section id="what-if-the-training-sequence-is-corrupted-by-noise" class="level2">
+<h2 class="anchored" data-anchor-id="what-if-the-training-sequence-is-corrupted-by-noise">20.11 What If the Training Sequence Is Corrupted by Noise?</h2>
+<p>It will be.</p>
+<p>A real training sequence travels through the same physical channel as the payload.</p>
+<p>The receiver knows what was transmitted, but it does <strong>not</strong> receive a pristine copy.</p>
+<p>For example, the transmitter may send a known symbol</p>
+<p><span class="math display">\[
+d[k]=0.707+j0.707,
+\]</span></p>
+<p>while the receiver observes a distorted and noisy value.</p>
+<p>That difference is exactly what makes training useful. The receiver knows what should have arrived and can use the difference to adapt.</p>
+<p>Noise still creates a limitation. The equalizer ideally wants to learn the repeatable channel distortion, not the random noise realization. Multiple training symbols provide more observations, helping the adaptive process distinguish systematic behaviour from random variation.</p>
+<p>But sufficiently strong noise can make training less reliable, and it can even make detection of the training sequence itself difficult.</p>
+<p>Training is therefore useful evidence, not perfect information.</p>
+<hr>
+</section>
+<section id="how-long-should-the-training-sequence-be" class="level2">
+<h2 class="anchored" data-anchor-id="how-long-should-the-training-sequence-be">20.12 How Long Should the Training Sequence Be?</h2>
+<p>We initially used 8 training symbols and 256 payload symbols.</p>
+<p>The training overhead is therefore</p>
+<p><span class="math display">\[
+\frac{8}{8+256}\approx3.0\%.
+\]</span></p>
+<p>We also tested 32 training symbols with the same 256-symbol payload.</p>
+<p>The overhead then becomes</p>
+<p><span class="math display">\[
+\frac{32}{32+256}\approx11.1\%.
+\]</span></p>
+<p>Longer training gives the equalizer more known-symbol updates during acquisition, but those symbols do not carry new payload information.</p>
+<p>So there is a trade-off:</p>
+<pre class="text"><code>Longer training
+      |
+      +--&gt; more reliable acquisition opportunity
+      |
+      +--&gt; greater transmission overhead</code></pre>
+<p>In our experiment, increasing the training interval from 8 to 32 symbols did <strong>not</strong> produce a dramatic improvement in the observed steady-state constellation.</p>
+<p>That is an important result.</p>
+<p>Longer training can improve acquisition, but it does not guarantee that the final steady-state constellation will become progressively tighter. With <code>Adapt After Training = True</code>, most of the long payload interval is still processed in decision-directed mode.</p>
+<p>We therefore retained the shorter 8-symbol training sequence for the final experiment.</p>
+<hr>
+</section>
+<section id="stronger-echoes-make-equalization-harder" class="level2">
+<h2 class="anchored" data-anchor-id="stronger-echoes-make-equalization-harder">20.13 Stronger Echoes Make Equalization Harder</h2>
+<p>Training improves the quality of the initial reference information, but it does not make the physical channel disappear.</p>
+<p>To see this, we keep the equalizer configuration fixed and change only the echo gain.</p>
+<p>The one-symbol channel is</p>
+<p><span class="math display">\[
+r[k]=s[k]+a\,s[k-1],
+\]</span></p>
+<p>where <span class="math inline">\(a\)</span> is the echo gain.</p>
+<p>We test</p>
+<p><span class="math display">\[
+a=0.2,\;0.5,\;0.8.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20_exp3_training_assisted_lms_echo_gain_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Training-assisted LMS equalization for increasing echo gain</figcaption>
+</figure>
+</div>
+<p>At <code>echo_gain = 0.2</code>, the delayed path is weak. The equalizer has an easier task and produces compact QPSK regions.</p>
+<p>At <code>echo_gain = 0.5</code>, the previous symbol contributes half the direct-path amplitude. The unequalized 16-state structure is clear, but the adaptive equalizer still provides useful compensation.</p>
+<p>At <code>echo_gain = 0.8</code>, the delayed symbol contributes almost as strongly as the direct path. The equalized constellation still forms four recognizable regions, but the residual spread is much larger.</p>
+<p>This is not increased noise. The stronger echo is a stronger delayed copy of the <strong>same transmitted signal</strong>.</p>
+<p>The experiment shows that equalization does not make channel severity irrelevant.</p>
+<hr>
+</section>
+<section id="how-are-receiver-parameters-chosen-in-practice" class="level2">
+<h2 class="anchored" data-anchor-id="how-are-receiver-parameters-chosen-in-practice">20.14 How Are Receiver Parameters Chosen in Practice?</h2>
+<p>Several parameters in this chapter were changed manually:</p>
+<ul>
+<li>LMS step size,</li>
+<li>equalizer length,</li>
+<li>correlation threshold,</li>
+<li>tag marking delay,</li>
+<li>training length.</li>
+</ul>
+<p>A real receiver is not normally operated by an engineer watching a graph and tuning every value by eye.</p>
+<p>Instead, practical parameter selection combines several sources of information:</p>
+<pre class="text"><code>System requirements
+        |
+        v
+Expected channel conditions
+        |
+        v
+Analytical design
+        |
+        v
+Simulation
+        |
+        v
+Lab measurements
+        |
+        v
+Field testing
+        |
+        v
+Refinement or automatic adaptation</code></pre>
+<p>Some parameters are largely determined by architecture. For example, tag alignment depends on where a detected event should be marked relative to filter and correlator delays.</p>
+<p>Other parameters are statistical. A correlation threshold may be selected from false-alarm and missed-detection requirements.</p>
+<p>Adaptive-filter parameters such as <span class="math inline">\(\mu\)</span> and equalizer length depend on convergence, tracking, residual error, computational complexity, and the expected amount of channel memory.</p>
+<p>The purpose of manually changing these parameters in this book is to make their physical meaning visible before we later encounter receivers that determine or adapt such quantities automatically.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-20.4-equalization-in-the-presence-of-noise" class="level1">
+<h1>Experiment 20.4: Equalization in the Presence of Noise</h1>
+<p>So far, our equalizer has been compensating for structured multipath distortion.</p>
+<p>Now we add something fundamentally different: random Gaussian noise.</p>
+<p>The approximate symbol-rate model becomes</p>
+<p><span class="math display">\[
+r[k]=s[k]+0.5s[k-1]+w[k].
+\]</span></p>
+<p>The first unwanted term,</p>
+<p><span class="math display">\[
+0.5s[k-1],
+\]</span></p>
+<p>has predictable structure. It is caused by channel memory.</p>
+<p>The second unwanted term,</p>
+<p><span class="math display">\[
+w[k],
+\]</span></p>
+<p>is random.</p>
+<p>The equalizer can learn to compensate for the repeatable channel structure. It cannot know the particular random noise sample that was added to every symbol.</p>
+<p>The final flowgraph adds a complex Gaussian Noise Source to the same direct-plus-delayed channel used earlier.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp4-equalization-with-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Adaptive LMS equalization with noise flowgraph</figcaption>
+</figure>
+</div>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Echo gain</td>
+<td style="text-align: right;"><code>0.5</code></td>
+</tr>
+<tr class="even">
+<td>Echo delay</td>
+<td style="text-align: right;"><code>32</code> samples</td>
+</tr>
+<tr class="odd">
+<td>Linear Equalizer taps</td>
+<td style="text-align: right;"><code>5</code></td>
+</tr>
+<tr class="even">
+<td>Input samples per symbol</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td>LMS step size</td>
+<td style="text-align: right;"><code>0.01</code></td>
+</tr>
+<tr class="even">
+<td>Noise amplitudes tested</td>
+<td style="text-align: right;"><code>0</code>, <code>0.3</code>, <code>0.8</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Noise Source amplitude is a controlled relative amplitude parameter. It is <strong>not</strong> directly an SNR value in dB.</p>
+<p>Before running the experiment, we predict:</p>
+<pre class="text"><code>No noise
+    |
+    v
+structured multipath only
+    |
+    v
+equalizer can learn useful compensation
+
+Moderate noise
+    |
+    v
+multipath is still compensable
+but random spread remains
+
+Strong noise
+    |
+    v
+noisy decisions and noisy adaptation
+    |
+    v
+broader recovered clusters</code></pre>
+<p>The results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch20/ch20-exp4-lms-equalization-noise-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of additive Gaussian noise on adaptive LMS equalization</figcaption>
+</figure>
+</div>
+<p>With <code>Noise Amplitude = 0</code>, the blue received constellation shows the familiar structured multipath pattern, and LMS reduces it to four QPSK regions.</p>
+<p>At <code>Noise Amplitude = 0.3</code>, the blue states remain recognizable but become fuzzy. The equalizer still removes much of the structured channel memory, yet the red QPSK regions remain spread because the random noise cannot simply be inverted.</p>
+<p>At <code>Noise Amplitude = 0.8</code>, both the unequalized and equalized constellations are much more dispersed. Four red decision regions are still visible, but the receiver is clearly operating under a much more difficult condition.</p>
+<p>Noise also affects the adaptation process itself. LMS forms its coefficient updates from noisy observations, and decision-directed operation can become less reliable when noise pushes samples toward the wrong decision region.</p>
+<p>The most important conclusion is:</p>
+<blockquote class="blockquote">
+<p><strong>Equalization is not a general-purpose signal cleaner. It compensates predictable channel structure. It cannot simply remove independent random noise.</strong></p>
+</blockquote>
+<hr>
+<section id="try-it-yourself-1" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-1">Try It Yourself</h3>
+<p>Before changing the flowgraph, predict what will happen if the echo gain is reduced to zero while the noise amplitude remains at <code>0.8</code>.</p>
+<p>Then try the opposite experiment: set noise back to zero and restore the one-symbol echo.</p>
+<p>The two cases help separate random noise from deterministic channel memory.</p>
+<hr>
+</section>
+</section>
+<section id="what-equalization-can-and-cannot-fix" class="level1">
+<h1>20.15 What Equalization Can and Cannot Fix</h1>
+<p>By this point, it is useful to separate receiver problems that can look similar on a constellation display.</p>
+<p>Equalization is mainly addressing <strong>channel memory and waveform distortion caused by multipath</strong>.</p>
+<p>It is not automatically solving every impairment introduced in Chapter 19.</p>
+<pre class="text"><code>Multipath / channel memory
+        |
+        v
+Equalization
+
+Carrier-frequency offset
+        |
+        v
+Carrier synchronization
+
+Carrier-phase offset
+        |
+        v
+Carrier / phase recovery
+
+Wrong symbol-sampling instant
+        |
+        v
+Timing recovery
+
+Independent random noise
+        |
+        v
+Cannot simply be inverted</code></pre>
+<p>This distinction is important because practical receivers contain several correction loops and processing stages. Each one exists because it solves a different physical problem.</p>
+<p>A receiver can be well equalized and still have a rotating constellation because of carrier-frequency offset.</p>
+<p>It can have correct carrier phase but still sample at the wrong instant.</p>
+<p>It can have correct timing and equalization but still make errors because the noise is too strong.</p>
+<p>So a successful equalizer is one part of receiver recovery, not the entire receiver.</p>
+<hr>
+</section>
+<section id="equalization-without-explicit-channel-estimation" class="level1">
+<h1>20.16 Equalization Without Explicit Channel Estimation</h1>
+<p>Experiment 20.1 raises an obvious question:</p>
+<blockquote class="blockquote">
+<p>How does the receiver know the channel?</p>
+</blockquote>
+<p>There are two broad possibilities.</p>
+<p>One approach is to estimate the channel explicitly and then design a correction from that estimate.</p>
+<p>Another approach is to adapt the equalizer directly from an error signal without first producing a separate explicit channel estimate.</p>
+<p>Experiments 20.2 and 20.3 follow the second route.</p>
+<p>LMS does not need us to hand it</p>
+<pre class="text"><code>h = [1, 0.5]</code></pre>
+<p>and ask it to calculate the exact inverse. Instead, it changes the equalizer coefficients according to the observed symbol error.</p>
+<p>Training symbols improve the quality of that error during acquisition.</p>
+<p>This distinction is worth keeping clear:</p>
+<blockquote class="blockquote">
+<p><strong>Channel estimation asks what the channel is. Adaptive equalization asks what correction reduces the resulting error.</strong></p>
+</blockquote>
+<p>The two ideas are related, but they are not identical.</p>
+<p>A full treatment of explicit channel estimation can therefore wait until we actually need it.</p>
+<hr>
+</section>
+<section id="putting-the-whole-equalization-story-together" class="level1">
+<h1>20.17 Putting the Whole Equalization Story Together</h1>
+<p>We began with a one-symbol echo that had already been studied in Chapter 19:</p>
+<p><span class="math display">\[
+r[k]=s[k]+0.5s[k-1].
+\]</span></p>
+<p>Instead of asking again why this creates ISI, we asked what the receiver could do about it.</p>
+<p>First, we assumed the channel was known exactly.</p>
+<p>That let us construct an approximate inverse manually:</p>
+<pre class="text"><code>Known channel
+[1, 0.5]
+      |
+      v
+Choose equalizer taps
+[1, -0.5, 0.25, -0.125, ...]
+      |
+      v
+Residual channel memory becomes smaller</code></pre>
+<p>Then we removed the manually chosen inverse and introduced adaptive equalization.</p>
+<pre class="text"><code>Received symbols
+      |
+      v
+Linear Equalizer
+      |
+      v
+Decision error
+      |
+      v
+LMS Adaptive Algorithm
+      |
+      v
+Update taps</code></pre>
+<p>Decision-directed LMS worked because the receiver knew the valid QPSK constellation, even though it did not know the transmitted payload sequence.</p>
+<p>That led to the next problem: initial decisions may be unreliable before the equalizer has converged.</p>
+<p>Training solves this by providing a known reference during acquisition.</p>
+<p>But training introduces another receiver task: the receiver must first find and align the known sequence. That is why the Correlation Estimator, threshold, and training-start tag appeared.</p>
+<p>Finally, we increased the echo strength and added noise.</p>
+<p>Those experiments showed the limits of the idea. Training helps the equalizer learn, but it does not make a severe channel easy. Equalization can compensate for systematic channel memory, but it cannot predict independent random noise.</p>
+<p>The complete learning path is therefore</p>
+<pre class="text"><code>Channel creates memory
+        |
+        v
+Receiver needs compensation
+        |
+        v
+Known channel -&gt; manual equalizer
+        |
+        v
+Unknown taps -&gt; adaptive equalizer
+        |
+        v
+Unreliable initial decisions -&gt; training
+        |
+        v
+Training must be detected and aligned
+        |
+        v
+Stronger multipath and noise reveal limitations</code></pre>
+<hr>
+</section>
+<section id="what-we-learned" class="level1">
+<h1>20.18 What We Learned</h1>
+<p>By developing the receiver experimentally, we discovered several important ideas.</p>
+<ul>
+<li>Equalization is a receiver correction for predictable channel distortion, especially channel memory and ISI caused by multipath.</li>
+<li>Chapter 20 does not need to reteach ISI from the beginning. Chapters 18 and 19 already established what ISI is and how multipath can reintroduce it.</li>
+<li>A simple one-symbol channel can be represented at the symbol rate as <span class="math inline">\(h=[1,0.5]\)</span>.</li>
+<li>In Experiment 20.1, the receiver did not discover that channel. We knew it because we created it ourselves.</li>
+<li>Channel taps and equalizer taps describe different systems.</li>
+<li>If the channel is known, an equalizer can be designed so that the combined channel-plus-equalizer response approaches an impulse.</li>
+<li>For our channel, progressive inverse taps reduced the residual contribution from 0.5 to 0.25, 0.125, 0.0625, and 0.03125.</li>
+<li>The exact inverse of the example channel is infinite, so a finite FIR equalizer is an approximation.</li>
+<li>The Linear Equalizer is the filter whose taps are changing. LMS is the adaptive rule that tells those taps how to change.</li>
+<li>LMS uses an error signal rather than requiring us to manually calculate the inverse-channel coefficients.</li>
+<li>The step size <span class="math inline">\(\mu\)</span> controls how strongly the equalizer coefficients change after an observed error.</li>
+<li>With <span class="math inline">\(\mu=0\)</span>, the equalizer does not learn.</li>
+<li>Within the final nonzero range tested, different <span class="math inline">\(\mu\)</span> values mainly changed convergence speed rather than the final constellation.</li>
+<li>The Constellation Rect. Object supplies the adaptive algorithm with the valid QPSK decision alphabet. It is not merely a display object.</li>
+<li>Normalized QPSK uses coordinates near <span class="math inline">\((\pm0.707,\pm0.707)\)</span> so that each symbol has unit energy.</li>
+<li>Decision-directed adaptation knows the modulation alphabet but does not know the actual payload symbol sequence in advance.</li>
+<li>A training sequence gives the equalizer known correct symbols during acquisition.</li>
+<li>Training can be sent once, once per frame, periodically, or in other system-specific patterns. More training also means more overhead.</li>
+<li>The receiver still has to find the training sequence. Correlation performs that detection task.</li>
+<li>The correlation threshold trades missed detections against false detections. The value <code>0.5</code> was useful for our experiment but is not universal.</li>
+<li>Detecting a training sequence and aligning the training-start position are different tasks.</li>
+<li>Tag marking delay depends on the receiver architecture and should not be treated as a universal constant.</li>
+<li>Increasing the training length from 8 to 32 symbols did not dramatically improve our steady-state result, illustrating that longer training is not automatically better.</li>
+<li>Increasing the echo gain made the equalizer’s task progressively harder because the delayed previous symbol contributed more strongly.</li>
+<li>Gaussian noise is fundamentally different from a deterministic delayed copy. Equalization can learn structured channel distortion but cannot simply invert independent random noise.</li>
+<li>GNU Radio Noise Source amplitude is not itself an SNR value in dB.</li>
+<li>Equalization does not replace carrier recovery, timing recovery, or other receiver synchronization functions.</li>
+</ul>
+<p>Most importantly, an equalizer should no longer look like a mysterious block that somehow “cleans” a constellation.</p>
+<p>It is a filter attempting to compensate for a physical channel, and its success depends on what the receiver knows, what it can learn, how difficult the channel is, and how much random uncertainty remains.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level1">
+<h1>20.19 Connecting to the Next Chapter</h1>
+<p>Chapter 19 deliberately separated <strong>channel impairments</strong> from <strong>receiver corrections</strong>.</p>
+<p>This chapter solved one of those receiver problems: channel memory caused by multipath.</p>
+<p>But one of the most obvious impairments from Chapter 19 is still untouched.</p>
+<p>A carrier-frequency offset caused the QPSK constellation to rotate continuously because the transmitter and receiver oscillators did not agree.</p>
+<p>An equalizer does not solve that problem.</p>
+<p>So the next question is:</p>
+<blockquote class="blockquote">
+<p><strong>How can a receiver lock its own oscillator to the carrier reference hidden inside the received signal?</strong></p>
+</blockquote>
+<p>That leads naturally to <strong>Chapter 21: PLL and Carrier Synchronization</strong>, where we will develop phase error, feedback, phase-locked loops, carrier recovery, acquisition, tracking, and the Costas Loop experimentally.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter19.html" class="pagination-link" aria-label="Chapter 19: The Wireless Channel">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 19: The Wireless Channel</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter21.html" class="pagination-link" aria-label="Chapter 21: PLL and Carrier Synchronization">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 17: BPSK, QPSK and QAM – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter18.html" rel="next">
+<link href="../book/chapter16.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter17.html"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#how-can-i-and-q-carry-digital-information" id="toc-how-can-i-and-q-carry-digital-information" class="nav-link active" data-scroll-target="#how-can-i-and-q-carry-digital-information">How Can I and Q Carry Digital Information?</a></li>
+  <li><a href="#from-one-amplitude-axis-to-the-iq-plane" id="toc-from-one-amplitude-axis-to-the-iq-plane" class="nav-link" data-scroll-target="#from-one-amplitude-axis-to-the-iq-plane">From One Amplitude Axis to the I/Q Plane</a></li>
+  <li><a href="#experiment-17.1-from-2-pam-to-bpsk" id="toc-experiment-17.1-from-2-pam-to-bpsk" class="nav-link" data-scroll-target="#experiment-17.1-from-2-pam-to-bpsk">Experiment 17.1: From 2-PAM to BPSK</a>
+  <ul class="collapse">
+  <li><a href="#why-start-with-pam-again" id="toc-why-start-with-pam-again" class="nav-link" data-scroll-target="#why-start-with-pam-again">Why Start with PAM Again?</a></li>
+  <li><a href="#flowgraph" id="toc-flowgraph" class="nav-link" data-scroll-target="#flowgraph">Flowgraph</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.2-why-bpsk-is-phase-shift-keying" id="toc-experiment-17.2-why-bpsk-is-phase-shift-keying" class="nav-link" data-scroll-target="#experiment-17.2-why-bpsk-is-phase-shift-keying">Experiment 17.2: Why BPSK Is Phase Shift Keying</a>
+  <ul class="collapse">
+  <li><a href="#from-a-baseband-sign-to-a-carrier-phase" id="toc-from-a-baseband-sign-to-a-carrier-phase" class="nav-link" data-scroll-target="#from-a-baseband-sign-to-a-carrier-phase">From a Baseband Sign to a Carrier Phase</a></li>
+  <li><a href="#flowgraph-1" id="toc-flowgraph-1" class="nav-link" data-scroll-target="#flowgraph-1">Flowgraph</a></li>
+  <li><a href="#looking-closely-at-a-phase-transition" id="toc-looking-closely-at-a-phase-transition" class="nav-link" data-scroll-target="#looking-closely-at-a-phase-transition">Looking Closely at a Phase Transition</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#experiment-17.3-bpsk-decision-regions-and-noise" id="toc-experiment-17.3-bpsk-decision-regions-and-noise" class="nav-link" data-scroll-target="#experiment-17.3-bpsk-decision-regions-and-noise">Experiment 17.3: BPSK Decision Regions and Noise</a>
+  <ul class="collapse">
+  <li><a href="#adding-complex-gaussian-noise" id="toc-adding-complex-gaussian-noise" class="nav-link" data-scroll-target="#adding-complex-gaussian-noise">Adding Complex Gaussian Noise</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.4-building-qpsk-from-i-and-q" id="toc-experiment-17.4-building-qpsk-from-i-and-q" class="nav-link" data-scroll-target="#experiment-17.4-building-qpsk-from-i-and-q">Experiment 17.4: Building QPSK from I and Q</a>
+  <ul class="collapse">
+  <li><a href="#constructing-the-two-dimensions-explicitly" id="toc-constructing-the-two-dimensions-explicitly" class="nav-link" data-scroll-target="#constructing-the-two-dimensions-explicitly">Constructing the Two Dimensions Explicitly</a></li>
+  <li><a href="#one-symbol-not-two-separate-transmissions" id="toc-one-symbol-not-two-separate-transmissions" class="nav-link" data-scroll-target="#one-symbol-not-two-separate-transmissions">One Symbol, Not Two Separate Transmissions</a></li>
+  <li><a href="#why-qpsk-carries-two-bits-per-symbol" id="toc-why-qpsk-carries-two-bits-per-symbol" class="nav-link" data-scroll-target="#why-qpsk-carries-two-bits-per-symbol">Why QPSK Carries Two Bits per Symbol</a></li>
+  <li><a href="#why-these-four-points-are-called-qpsk" id="toc-why-these-four-points-are-called-qpsk" class="nav-link" data-scroll-target="#why-these-four-points-are-called-qpsk">Why These Four Points Are Called QPSK</a></li>
+  <li><a href="#iq-and-amplitudephase-are-two-views-of-the-same-symbol" id="toc-iq-and-amplitudephase-are-two-views-of-the-same-symbol" class="nav-link" data-scroll-target="#iq-and-amplitudephase-are-two-views-of-the-same-symbol">I/Q and Amplitude/Phase Are Two Views of the Same Symbol</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.5-qpsk-decision-regions-and-noise" id="toc-experiment-17.5-qpsk-decision-regions-and-noise" class="nav-link" data-scroll-target="#experiment-17.5-qpsk-decision-regions-and-noise">Experiment 17.5: QPSK Decision Regions and Noise</a>
+  <ul class="collapse">
+  <li><a href="#adding-noise" id="toc-adding-noise" class="nav-link" data-scroll-target="#adding-noise">Adding Noise</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.6-breaking-the-qpsk-constellation" id="toc-experiment-17.6-breaking-the-qpsk-constellation" class="nav-link" data-scroll-target="#experiment-17.6-breaking-the-qpsk-constellation">Experiment 17.6: Breaking the QPSK Constellation</a>
+  <ul class="collapse">
+  <li><a href="#part-a-uniform-amplitude-scaling" id="toc-part-a-uniform-amplitude-scaling" class="nav-link" data-scroll-target="#part-a-uniform-amplitude-scaling">Part A: Uniform Amplitude Scaling</a></li>
+  <li><a href="#part-b-phase-rotation" id="toc-part-b-phase-rotation" class="nav-link" data-scroll-target="#part-b-phase-rotation">Part B: Phase Rotation</a>
+  <ul class="collapse">
+  <li><a href="#a-useful-visual-diagnosis" id="toc-a-useful-visual-diagnosis" class="nav-link" data-scroll-target="#a-useful-visual-diagnosis">A Useful Visual Diagnosis</a></li>
+  <li><a href="#try-it-yourself-1" id="toc-try-it-yourself-1" class="nav-link" data-scroll-target="#try-it-yourself-1">Try It Yourself</a></li>
+  </ul></li>
+  <li><a href="#from-qpsk-to-m-psk" id="toc-from-qpsk-to-m-psk" class="nav-link" data-scroll-target="#from-qpsk-to-m-psk">From QPSK to M-PSK</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.7-building-16-qam-from-two-4-pam-axes" id="toc-experiment-17.7-building-16-qam-from-two-4-pam-axes" class="nav-link" data-scroll-target="#experiment-17.7-building-16-qam-from-two-4-pam-axes">Experiment 17.7: Building 16-QAM from Two 4-PAM Axes</a>
+  <ul class="collapse">
+  <li><a href="#visiting-all-16-points-deliberately" id="toc-visiting-all-16-points-deliberately" class="nav-link" data-scroll-target="#visiting-all-16-points-deliberately">Visiting All 16 Points Deliberately</a></li>
+  <li><a href="#four-bits-per-symbol" id="toc-four-bits-per-symbol" class="nav-link" data-scroll-target="#four-bits-per-symbol">Four Bits per Symbol</a></li>
+  <li><a href="#why-qam-is-not-just-amplitude-without-phase" id="toc-why-qam-is-not-just-amplitude-without-phase" class="nav-link" data-scroll-target="#why-qam-is-not-just-amplitude-without-phase">Why QAM Is Not Just “Amplitude Without Phase”</a></li>
+  </ul></li>
+  <li><a href="#experiment-17.8-16-qam-decision-regions-and-noise" id="toc-experiment-17.8-16-qam-decision-regions-and-noise" class="nav-link" data-scroll-target="#experiment-17.8-16-qam-decision-regions-and-noise">Experiment 17.8: 16-QAM Decision Regions and Noise</a>
+  <ul class="collapse">
+  <li><a href="#adding-complex-gaussian-noise-1" id="toc-adding-complex-gaussian-noise-1" class="nav-link" data-scroll-target="#adding-complex-gaussian-noise-1">Adding Complex Gaussian Noise</a></li>
+  <li><a href="#why-gray-coding-helps" id="toc-why-gray-coding-helps" class="nav-link" data-scroll-target="#why-gray-coding-helps">Why Gray Coding Helps</a></li>
+  <li><a href="#constellation-size-energy-and-normalization" id="toc-constellation-size-energy-and-normalization" class="nav-link" data-scroll-target="#constellation-size-energy-and-normalization">Constellation Size, Energy, and Normalization</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#float-to-complex" id="toc-float-to-complex" class="nav-link" data-scroll-target="#float-to-complex">Float to Complex</a></li>
+  <li><a href="#complex-gaussian-noise-source" id="toc-complex-gaussian-noise-source" class="nav-link" data-scroll-target="#complex-gaussian-noise-source">Complex Gaussian Noise Source</a></li>
+  <li><a href="#multiply-const" id="toc-multiply-const" class="nav-link" data-scroll-target="#multiply-const">Multiply Const</a></li>
+  <li><a href="#complex-signal-source-as-a-stationary-phasor" id="toc-complex-signal-source-as-a-stationary-phasor" class="nav-link" data-scroll-target="#complex-signal-source-as-a-stationary-phasor">Complex Signal Source as a Stationary Phasor</a></li>
+  <li><a href="#higher-level-constellation-and-modulation-tools" id="toc-higher-level-constellation-and-modulation-tools" class="nav-link" data-scroll-target="#higher-level-constellation-and-modulation-tools">Higher-Level Constellation and Modulation Tools</a></li>
+  </ul></li>
+  <li><a href="#comparing-bpsk-qpsk-and-16-qam" id="toc-comparing-bpsk-qpsk-and-16-qam" class="nav-link" data-scroll-target="#comparing-bpsk-qpsk-and-16-qam">Comparing BPSK, QPSK, and 16-QAM</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">Connecting to the Next Chapter</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter17.html"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="how-can-i-and-q-carry-digital-information" class="level2">
+<h2 class="anchored" data-anchor-id="how-can-i-and-q-carry-digital-information">How Can I and Q Carry Digital Information?</h2>
+<p>In Chapter 16, we learned how to turn abstract digital symbols into actual signal amplitudes. A 2-PAM symbol could be represented by one of two levels,</p>
+<p><span class="math display">\[
+-1,\quad +1
+\]</span></p>
+<p>and 4-PAM extended the same idea to four levels,</p>
+<p><span class="math display">\[
+-3,\quad -1,\quad +1,\quad +3
+\]</span></p>
+<p>All of those symbols lived on one amplitude axis.</p>
+<p>That leaves an obvious question. Earlier in the book, we spent considerable time developing complex signals and the I/Q representation,</p>
+<p><span class="math display">\[
+x[n]=I[n]+jQ[n]
+\]</span></p>
+<p>If a digital symbol can choose an amplitude on the I axis, can it also choose an amplitude on the Q axis?</p>
+<p>The answer is yes, and that simple step opens the door to most of the constellations used in modern digital communication.</p>
+<p>In this chapter, we will build that idea experimentally. We will begin with BPSK, where only one dimension is needed. Then we will let both I and Q carry information and watch QPSK appear naturally. Finally, we will reuse the 4-PAM levels from Chapter 16 on both axes and construct 16-QAM ourselves.</p>
+<p>We will deliberately avoid beginning with ready-made modulation blocks. The goal is to understand what the symbols actually are before allowing GNU Radio to hide the mapping inside a convenient higher-level tool.</p>
+<hr>
+</section>
+<section id="from-one-amplitude-axis-to-the-iq-plane" class="level2">
+<h2 class="anchored" data-anchor-id="from-one-amplitude-axis-to-the-iq-plane">From One Amplitude Axis to the I/Q Plane</h2>
+<p>A PAM symbol can be pictured as a point on a line. For 2-PAM,</p>
+<pre class="text"><code>              amplitude
+                  →
+
+        -1                  +1
+         ●-------------------●</code></pre>
+<p>A complex symbol gives us a second dimension:</p>
+<pre class="text"><code>                         Q
+                         ↑
+                         |
+                         |
+-------------------------+-------------------------→ I
+                         |
+                         |</code></pre>
+<p>A constellation point is simply a particular pair of coordinates in this plane.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+s=1+j
+\]</span></p>
+<p>means</p>
+<p><span class="math display">\[
+I=1,\quad Q=1
+\]</span></p>
+<p>so the symbol is plotted at the point <span class="math inline">\((1,1)\)</span>.</p>
+<p>This is the central idea of the chapter:</p>
+<blockquote class="blockquote">
+<p>A digital constellation is a set of allowed I/Q coordinate pairs. Each allowed point represents one information symbol.</p>
+</blockquote>
+<p>We will now build those points rather than merely drawing them.</p>
+<hr>
+</section>
+<section id="experiment-17.1-from-2-pam-to-bpsk" class="level1">
+<h1>Experiment 17.1: From 2-PAM to BPSK</h1>
+<section id="why-start-with-pam-again" class="level2">
+<h2 class="anchored" data-anchor-id="why-start-with-pam-again">Why Start with PAM Again?</h2>
+<p>At first glance, BPSK may seem unrelated to the PAM signals from Chapter 16. BPSK stands for <strong>Binary Phase Shift Keying</strong>, while PAM represented information using amplitude.</p>
+<p>But at complex baseband, the connection is surprisingly direct.</p>
+<p>Take the same two levels used for 2-PAM:</p>
+<p><span class="math display">\[
+-1,\quad +1
+\]</span></p>
+<p>and place them on the I axis while keeping Q equal to zero:</p>
+<p><span class="math display">\[
+s\in\{-1+j0,\,+1+j0\}
+\]</span></p>
+<p>The resulting constellation is</p>
+<pre class="text"><code>                         Q
+                         ↑
+                         |
+             ●-----------+-----------●
+          (-1,0)         |         (+1,0)
+                         |
+-------------------------+-------------------------→ I</code></pre>
+<p>This is the complex-baseband representation of BPSK.</p>
+<p>The experiment therefore begins with something already familiar: map binary symbol indices onto <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>, just as we did for 2-PAM. The only new step is to interpret those values as the real part of a complex signal.</p>
+</section>
+<section id="flowgraph" class="level2">
+<h2 class="anchored" data-anchor-id="flowgraph">Flowgraph</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp1-bpsk-from-2pam-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.1 flowgraph: constructing BPSK from the two PAM levels</figcaption>
+</figure>
+</div>
+<p>The symbol mapping remains</p>
+<pre class="text"><code>0 → -1
+1 → +1</code></pre>
+<p>The mapped values are repeated for visualization and used as the I input of <strong>Float to Complex</strong>. The Q input is held at zero.</p>
+<p>Important settings are:</p>
+<pre class="text"><code>Chunks to Symbols
+Output Type: Float
+Symbol Table: [-1, 1]
+Dimension: 1
+
+Float to Complex
+Real input: mapped ±1 symbols
+Imaginary input: 0</code></pre>
+<p>The Constellation Sink then displays the complex output.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp1-bpsk-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.1 result: the two BPSK constellation points on the I axis</figcaption>
+</figure>
+</div>
+<p>The result contains only two points:</p>
+<p><span class="math display">\[
+(-1,0)\quad\text{and}\quad(+1,0)
+\]</span></p>
+<p>So at complex baseband, BPSK looks exactly like 2-PAM placed on the I axis.</p>
+<p>That immediately creates a reasonable doubt:</p>
+<blockquote class="blockquote">
+<p>If the symbols are just <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>, why is this called phase shift keying rather than amplitude modulation?</p>
+</blockquote>
+<p>To answer that, we need to look at what those signs do to a carrier.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.2-why-bpsk-is-phase-shift-keying" class="level1">
+<h1>Experiment 17.2: Why BPSK Is Phase Shift Keying</h1>
+<section id="from-a-baseband-sign-to-a-carrier-phase" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-baseband-sign-to-a-carrier-phase">From a Baseband Sign to a Carrier Phase</h2>
+<p>Let the BPSK symbol be</p>
+<p><span class="math display">\[
+a(t)\in\{-1,+1\}
+\]</span></p>
+<p>and multiply it by a cosine carrier:</p>
+<p><span class="math display">\[
+x(t)=a(t)\cos(2\pi f_ct)
+\]</span></p>
+<p>When the symbol is <span class="math inline">\(+1\)</span>,</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi f_ct)
+\]</span></p>
+<p>The transmitted carrier has the same phase as the reference carrier.</p>
+<p>When the symbol is <span class="math inline">\(-1\)</span>,</p>
+<p><span class="math display">\[
+x(t)=-\cos(2\pi f_ct)
+\]</span></p>
+<p>But</p>
+<p><span class="math display">\[
+-\cos(\theta)=\cos(\theta+\pi)
+\]</span></p>
+<p>so the carrier has been shifted by <span class="math inline">\(180^\circ\)</span>.</p>
+<p>The two baseband signs therefore select two carrier phases.</p>
+</section>
+<section id="flowgraph-1" class="level2">
+<h2 class="anchored" data-anchor-id="flowgraph-1">Flowgraph</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp2-bpsk-phase-shift-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.2 flowgraph: multiplying the BPSK symbol by a carrier</figcaption>
+</figure>
+</div>
+<p>The important parameters are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">32 kS/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;">1 ksymbol/s</td>
+</tr>
+<tr class="odd">
+<td>Carrier frequency</td>
+<td style="text-align: right;">4 kHz</td>
+</tr>
+<tr class="even">
+<td>BPSK levels</td>
+<td style="text-align: right;">-1, +1</td>
+</tr>
+</tbody>
+</table>
+<p>The two GUI displays are titled:</p>
+<pre class="text"><code>BPSK I Component
+BPSK Passband Waveform</code></pre>
+<p>The passband Time Sink contains two traces:</p>
+<pre class="text"><code>Reference Carrier
+BPSK Carrier</code></pre>
+<p>We deliberately chose a 4 kHz carrier and a 1 ksymbol/s symbol rate, giving four carrier cycles per symbol. This makes the phase relationship particularly easy to see.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp2-bpsk-phase-shift.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.2 result: BPSK symbol sequence and passband phase reversal</figcaption>
+</figure>
+</div>
+<p>Read the two plots together. When the lower plot is at <span class="math inline">\(+1\)</span>, the BPSK carrier overlaps the reference carrier. When it is at <span class="math inline">\(-1\)</span>, the two carriers are opposite in polarity.</p>
+<p>The carrier amplitude has not been switched between a large value and a small value. Its magnitude remains the same. What changes is its phase:</p>
+<pre class="text"><code>symbol +1 → 0° carrier phase
+symbol -1 → 180° carrier phase</code></pre>
+<p>This is the missing link between 2-PAM and BPSK.</p>
+</section>
+<section id="looking-closely-at-a-phase-transition" class="level2">
+<h2 class="anchored" data-anchor-id="looking-closely-at-a-phase-transition">Looking Closely at a Phase Transition</h2>
+<p>The zoomed result makes an individual symbol transition easier to inspect.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp2-bpsk-phase-transition-zoom.png" class="img-fluid figure-img"></p>
+<figcaption>Zoomed BPSK waveform around a phase transition</figcaption>
+</figure>
+</div>
+<p>Before the transition, the BPSK carrier is opposite to the reference. After the symbol changes sign, the BPSK carrier becomes aligned with it.</p>
+<p>Notice also that the passband waveform can change abruptly at a symbol boundary. Our symbol waveform is rectangular, so the multiplier changes from <span class="math inline">\(-1\)</span> to <span class="math inline">\(+1\)</span> instantaneously. If the carrier is not zero at that instant, the output can contain a visible discontinuity.</p>
+<p>That is not a mistake in the experiment. It is a consequence of the deliberately simple symbol waveform we are using.</p>
+<p>We will return to the consequences of abrupt symbol transitions in Chapter 18, where pulse shaping becomes the main subject.</p>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<p>Change the carrier frequency while keeping the symbol rate unchanged. Before running the flowgraph, predict whether every symbol transition will still occur at the same point in a carrier cycle.</p>
+<p>The BPSK principle does not depend on having exactly four carrier cycles per symbol. That choice merely made the phase reversal easier to visualize.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="experiment-17.3-bpsk-decision-regions-and-noise" class="level1">
+<h1>Experiment 17.3: BPSK Decision Regions and Noise</h1>
+<p>Chapter 16 showed that a noisy PAM receiver does not require the received amplitude to land exactly on an ideal level. It only needs to decide which valid symbol is most likely.</p>
+<p>For BPSK, the two ideal points are</p>
+<p><span class="math display">\[
+-1+j0\quad\text{and}\quad+1+j0
+\]</span></p>
+<p>The midpoint between them is</p>
+<p><span class="math display">\[
+I=0
+\]</span></p>
+<p>In one-dimensional PAM, this was a decision threshold. In the I/Q plane, it becomes a vertical <strong>decision boundary</strong>:</p>
+<pre class="text"><code>                         Q
+                         ↑
+                         |
+        decide -1       |       decide +1
+                         |
+             ●           |           ●
+                         |
+-------------------------+-------------------------→ I
+                         0</code></pre>
+<p>The receiver’s ideal hard decision is simply</p>
+<p><span class="math display">\[
+I&lt;0\Rightarrow -1
+\]</span></p>
+<p><span class="math display">\[
+I&gt;0\Rightarrow +1
+\]</span></p>
+<section id="adding-complex-gaussian-noise" class="level2">
+<h2 class="anchored" data-anchor-id="adding-complex-gaussian-noise">Adding Complex Gaussian Noise</h2>
+<p>We extend the clean BPSK signal with a complex Gaussian Noise Source and an Add block:</p>
+<pre class="text"><code>BPSK Symbols ───────────┐
+                       ├── Add ──→ Noisy BPSK
+Complex Gaussian Noise ─┘</code></pre>
+<p>The noise amplitude is controlled with a QT GUI Range:</p>
+<pre class="text"><code>ID: noise_amp
+Default: 0.2
+Start: 0
+Stop: 1.5
+Step: 0.05</code></pre>
+<p>The Constellation Sink is titled:</p>
+<pre class="text"><code>BPSK with Gaussian Noise</code></pre>
+<p>and compares:</p>
+<pre class="text"><code>Ideal BPSK
+Noisy BPSK</code></pre>
+<p>Because the noise is complex, received samples move in both I and Q even though the transmitted BPSK symbols themselves have <span class="math inline">\(Q=0\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp3-bpsk-noise-0p2.png" class="img-fluid figure-img"></p>
+<figcaption>BPSK with Gaussian noise amplitude 0.2</figcaption>
+</figure>
+</div>
+<p>At a noise amplitude of 0.2, the two ideal points have become compact clouds. Many samples have nonzero Q components, but the two clouds remain comfortably separated by the <span class="math inline">\(I=0\)</span> boundary.</p>
+<p>This reveals something important. For ideal BPSK detection, a vertical displacement does not by itself change the decision. A received point such as</p>
+<p><span class="math display">\[
+r=0.8+j0.7
+\]</span></p>
+<p>still has positive I and therefore remains in the <span class="math inline">\(+1\)</span> decision region.</p>
+<p>What matters is whether the point crosses the boundary.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp3-bpsk-decision-errors-0p5.png" class="img-fluid figure-img"></p>
+<figcaption>BPSK with stronger Gaussian noise, showing samples crossing the decision boundary</figcaption>
+</figure>
+</div>
+<p>At a noise amplitude of 0.5, the clouds spread far enough that samples can enter the opposite decision region.</p>
+<p>For example, if <span class="math inline">\(+1+j0\)</span> was transmitted but the received point becomes</p>
+<p><span class="math display">\[
+r=-0.1+j0.2
+\]</span></p>
+<p>then the receiver sees <span class="math inline">\(I&lt;0\)</span> and decides <span class="math inline">\(-1\)</span>.</p>
+<p>The important lesson is not simply that “more noise causes more errors.” The geometry is more useful:</p>
+<blockquote class="blockquote">
+<p>A hard-decision error becomes possible when noise pushes a received symbol across a decision boundary.</p>
+</blockquote>
+<p>This geometric way of thinking will become even more valuable when both I and Q carry information.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.4-building-qpsk-from-i-and-q" class="level1">
+<h1>Experiment 17.4: Building QPSK from I and Q</h1>
+<p>BPSK uses the I/Q plane, but only one dimension actually carries information:</p>
+<p><span class="math display">\[
+I\in\{-1,+1\},\qquad Q=0
+\]</span></p>
+<p>The Q dimension is unused.</p>
+<p>So let us use it.</p>
+<p>Suppose both coordinates can independently take the values <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>:</p>
+<p><span class="math display">\[
+I\in\{-1,+1\}
+\]</span></p>
+<p><span class="math display">\[
+Q\in\{-1,+1\}
+\]</span></p>
+<p>There are now</p>
+<p><span class="math display">\[
+2\times2=4
+\]</span></p>
+<p>possible coordinate pairs:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Bit pair</th>
+<th style="text-align: right;">I</th>
+<th style="text-align: right;">Q</th>
+<th>Complex symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>00</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">-1</td>
+<td><span class="math inline">\(-1-j\)</span></td>
+</tr>
+<tr class="even">
+<td>01</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">+1</td>
+<td><span class="math inline">\(-1+j\)</span></td>
+</tr>
+<tr class="odd">
+<td>10</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">-1</td>
+<td><span class="math inline">\(+1-j\)</span></td>
+</tr>
+<tr class="even">
+<td>11</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">+1</td>
+<td><span class="math inline">\(+1+j\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>For this first construction, the first bit selects I, the second selects Q, and each bit uses the familiar mapping</p>
+<pre class="text"><code>0 → -1
+1 → +1</code></pre>
+<section id="constructing-the-two-dimensions-explicitly" class="level2">
+<h2 class="anchored" data-anchor-id="constructing-the-two-dimensions-explicitly">Constructing the Two Dimensions Explicitly</h2>
+<p>We deliberately use controlled sequences so that every combination appears:</p>
+<pre class="text"><code>I bits: 0, 0, 1, 1
+Q bits: 0, 1, 0, 1</code></pre>
+<p>After mapping,</p>
+<pre class="text"><code>I: -1, -1, +1, +1
+Q: -1, +1, -1, +1</code></pre>
+<p>At each symbol interval, one I value and one Q value are taken together.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp4-qpsk-iq-construction-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.4 flowgraph: building QPSK explicitly from separate I and Q symbol streams</figcaption>
+</figure>
+</div>
+<p>The important settings are:</p>
+<pre class="text"><code>I Vector Source
+Output Type: Byte
+Vector: [0, 0, 1, 1]
+Repeat: Yes
+
+Q Vector Source
+Output Type: Byte
+Vector: [0, 1, 0, 1]
+Repeat: Yes
+
+I Chunks to Symbols
+Symbol Table: [-1, 1]
+Output Type: Float
+
+Q Chunks to Symbols
+Symbol Table: [-1, 1]
+Output Type: Float
+
+Float to Complex
+Real input: I symbols
+Imaginary input: Q symbols</code></pre>
+<p>The Time Sink is titled</p>
+<pre class="text"><code>QPSK I and Q Components</code></pre>
+<p>with traces</p>
+<pre class="text"><code>I Symbol
+Q Symbol</code></pre>
+<p>and the Constellation Sink is titled</p>
+<pre class="text"><code>QPSK Constellation</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp4-qpsk-iq-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.4 result: I and Q symbol levels and the resulting four-point QPSK constellation</figcaption>
+</figure>
+</div>
+<p>This figure answers the main question of the chapter directly.</p>
+<p>Both I and Q independently carry a binary coordinate. GNU Radio combines the simultaneous values as</p>
+<p><span class="math display">\[
+s=I+jQ
+\]</span></p>
+<p>and each pair becomes one constellation point.</p>
+<p>We did not ask a ready-made QPSK modulator to create these points. QPSK emerged simply by combining two binary dimensions.</p>
+</section>
+<section id="one-symbol-not-two-separate-transmissions" class="level2">
+<h2 class="anchored" data-anchor-id="one-symbol-not-two-separate-transmissions">One Symbol, Not Two Separate Transmissions</h2>
+<p>It is easy to look at the two Time Sink traces and think that I and Q are two unrelated signals being transmitted separately. That is not the right interpretation.</p>
+<p>At each symbol interval, the pair <span class="math inline">\((I,Q)\)</span> defines <strong>one complex symbol</strong>.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+I=-1,\qquad Q=+1
+\]</span></p>
+<p>means</p>
+<p><span class="math display">\[
+s=-1+j
+\]</span></p>
+<p>and the Constellation Sink plots one point at <span class="math inline">\((-1,+1)\)</span>.</p>
+<p>I and Q are two orthogonal signal dimensions of the same complex representation.</p>
+</section>
+<section id="why-qpsk-carries-two-bits-per-symbol" class="level2">
+<h2 class="anchored" data-anchor-id="why-qpsk-carries-two-bits-per-symbol">Why QPSK Carries Two Bits per Symbol</h2>
+<p>There are four possible constellation points, so</p>
+<p><span class="math display">\[
+k=\log_2(4)=2
+\]</span></p>
+<p>bits can select one symbol.</p>
+<p>This reconnects naturally with the bit-rate and symbol-rate relationship from Chapter 15:</p>
+<p><span class="math display">\[
+R_b=kR_s
+\]</span></p>
+<p>For QPSK,</p>
+<p><span class="math display">\[
+R_b=2R_s
+\]</span></p>
+<p>A 1 ksymbol/s QPSK stream can therefore represent 2 kbit/s before considering coding or other overhead.</p>
+</section>
+<section id="why-these-four-points-are-called-qpsk" class="level2">
+<h2 class="anchored" data-anchor-id="why-these-four-points-are-called-qpsk">Why These Four Points Are Called QPSK</h2>
+<p>All four points have the same magnitude:</p>
+<p><span class="math display">\[
+|s|=\sqrt{I^2+Q^2}=\sqrt{2}
+\]</span></p>
+<p>but they point in four different directions.</p>
+<p>Their phases are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">I</th>
+<th style="text-align: right;">Q</th>
+<th style="text-align: right;">Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;"><span class="math inline">\(45^\circ\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;"><span class="math inline">\(135^\circ\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;"><span class="math inline">\(225^\circ\)</span> or <span class="math inline">\(-135^\circ\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;"><span class="math inline">\(315^\circ\)</span> or <span class="math inline">\(-45^\circ\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>So the four symbols have equal magnitude and four possible phases separated by <span class="math inline">\(90^\circ\)</span>.</p>
+<p>That is Quadrature Phase Shift Keying.</p>
+<hr>
+</section>
+<section id="iq-and-amplitudephase-are-two-views-of-the-same-symbol" class="level2">
+<h2 class="anchored" data-anchor-id="iq-and-amplitudephase-are-two-views-of-the-same-symbol">I/Q and Amplitude/Phase Are Two Views of the Same Symbol</h2>
+<p>This distinction is worth making explicit before going further.</p>
+<p>A complex symbol can be written in Cartesian form as</p>
+<p><span class="math display">\[
+s=I+jQ
+\]</span></p>
+<p>or in polar form as</p>
+<p><span class="math display">\[
+s=Ae^{j\phi}
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+A=\sqrt{I^2+Q^2}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\phi=\operatorname{atan2}(Q,I)
+\]</span></p>
+<p>These are not two different signals. They are two descriptions of the same complex point.</p>
+<p>For example, consider</p>
+<p><span class="math display">\[
+s=3+j
+\]</span></p>
+<p>Its I/Q coordinates are</p>
+<p><span class="math display">\[
+I=3,\qquad Q=1
+\]</span></p>
+<p>while its magnitude and phase are</p>
+<p><span class="math display">\[
+A=\sqrt{10}
+\]</span></p>
+<p><span class="math display">\[
+\phi\approx18.4^\circ
+\]</span></p>
+<p>So we can describe the same symbol either by its I and Q coordinates or by its amplitude and phase.</p>
+<p>This helps separate two ideas that are often confused:</p>
+<ul>
+<li><strong>I/Q is a representation</strong> of a complex signal.</li>
+<li><strong>PSK and QAM are modulation schemes</strong> that choose particular sets of allowed complex points.</li>
+</ul>
+<p>For ideal PSK, the constellation points lie on a circle: their magnitudes are the same and their phases differ.</p>
+<p>Rectangular QAM is usually constructed by choosing amplitude levels independently on I and Q. The resulting symbols generally have <strong>both different magnitudes and different phases</strong>.</p>
+<p>At passband, using the quadrature convention adopted here, the corresponding signal can be written as</p>
+<p><span class="math display">\[
+x(t)=I\cos(2\pi f_ct)-Q\sin(2\pi f_ct)
+\]</span></p>
+<p>The cosine and sine carriers are <span class="math inline">\(90^\circ\)</span> apart. I controls the amplitude of one quadrature component and Q controls the amplitude of the other. When those components combine, the resulting carrier has the amplitude and phase represented by the complex symbol.</p>
+<p>This is why QAM is closely connected to both I/Q and amplitude/phase. The descriptions are not competing explanations; they are different views of the same signal.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.5-qpsk-decision-regions-and-noise" class="level1">
+<h1>Experiment 17.5: QPSK Decision Regions and Noise</h1>
+<p>BPSK needed one decision boundary because only I carried information.</p>
+<p>QPSK uses both coordinates, so the receiver must decide the sign of both I and Q.</p>
+<p>The boundaries are</p>
+<p><span class="math display">\[
+I=0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+Q=0
+\]</span></p>
+<p>which divide the plane into four regions:</p>
+<pre class="text"><code>                         Q
+                         ↑
+                         |
+          I&lt;0,Q&gt;0       |       I&gt;0,Q&gt;0
+                         |
+             ●           |           ●
+                         |
+-------------------------+-------------------------→ I
+                         |
+             ●           |           ●
+                         |
+          I&lt;0,Q&lt;0       |       I&gt;0,Q&lt;0
+                         |</code></pre>
+<p>A QPSK hard detector can therefore be understood as two simultaneous binary decisions:</p>
+<pre class="text"><code>sign of I → I decision
+sign of Q → Q decision</code></pre>
+<section id="adding-noise" class="level2">
+<h2 class="anchored" data-anchor-id="adding-noise">Adding Noise</h2>
+<p>We extend Experiment 17.4 by adding complex Gaussian noise to the complex QPSK stream. The clean and noisy symbols are displayed together.</p>
+<p>The noise control remains:</p>
+<pre class="text"><code>ID: noise_amp
+Default: 0.2
+Start: 0
+Stop: 1.5
+Step: 0.05</code></pre>
+<p>The Constellation Sink is titled</p>
+<pre class="text"><code>QPSK with Gaussian Noise</code></pre>
+<p>with traces</p>
+<pre class="text"><code>Ideal QPSK
+Noisy QPSK</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp5-qpsk-noise-0p2.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK with Gaussian noise amplitude 0.2</figcaption>
+</figure>
+</div>
+<p>At 0.2, the four clouds remain compact and stay inside their respective decision regions.</p>
+<p>Now increase the noise.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp5-qpsk-decision-errors-0p6.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK with stronger Gaussian noise, showing overlap across the I and Q decision boundaries</figcaption>
+</figure>
+</div>
+<p>At 0.6, samples spread across the boundaries.</p>
+<p>A point can cross <span class="math inline">\(I=0\)</span> while keeping the same Q sign, cross <span class="math inline">\(Q=0\)</span> while keeping the same I sign, or, with a sufficiently large disturbance, cross both.</p>
+<p>For example, if</p>
+<p><span class="math display">\[
+s=1+j
+\]</span></p>
+<p>was transmitted but the received point becomes</p>
+<p><span class="math display">\[
+r=-0.2+j0.8
+\]</span></p>
+<p>then the I decision changes while the Q decision remains positive.</p>
+<p>If instead</p>
+<p><span class="math display">\[
+r=0.7-j0.1
+\]</span></p>
+<p>then the Q decision changes.</p>
+<p>If the point reaches</p>
+<p><span class="math display">\[
+r=-0.2-j0.3
+\]</span></p>
+<p>both coordinate decisions have changed.</p>
+<p>The same threshold-crossing idea from Chapter 16 is now operating in two dimensions.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.6-breaking-the-qpsk-constellation" class="level1">
+<h1>Experiment 17.6: Breaking the QPSK Constellation</h1>
+<p>Noise is only one way a received constellation can differ from the ideal one.</p>
+<p>Some impairments affect individual samples randomly. Others distort the whole constellation in a systematic way.</p>
+<p>This experiment compares two simple cases:</p>
+<pre class="text"><code>uniform amplitude scaling
+phase rotation</code></pre>
+<p>The distinction is extremely useful when looking at real SDR constellations.</p>
+<section id="part-a-uniform-amplitude-scaling" class="level2">
+<h2 class="anchored" data-anchor-id="part-a-uniform-amplitude-scaling">Part A: Uniform Amplitude Scaling</h2>
+<p>Multiply every QPSK symbol by a positive real gain <span class="math inline">\(A\)</span>:</p>
+<p><span class="math display">\[
+r=As
+\]</span></p>
+<p>The implementation adds a complex <strong>Multiply Const</strong> block controlled by a QT GUI Range:</p>
+<pre class="text"><code>ID: amp_gain
+Default: 1.0
+Start: 0.2
+Stop: 2.0
+Step: 0.1
+
+Multiply Const
+Constant: amp_gain</code></pre>
+<p>The Constellation Sink compares</p>
+<pre class="text"><code>Ideal QPSK
+Scaled QPSK</code></pre>
+<p>and is titled</p>
+<pre class="text"><code>QPSK Amplitude Scaling</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp6-qpsk-amplitude-scaling-0p5.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation contracted by an amplitude gain of 0.5</figcaption>
+</figure>
+</div>
+<p>At <span class="math inline">\(A=0.5\)</span>,</p>
+<p><span class="math display">\[
+(\pm1,\pm1)\rightarrow(\pm0.5,\pm0.5)
+\]</span></p>
+<p>so the constellation contracts toward the origin.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp6-qpsk-amplitude-scaling-1p5.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation expanded by an amplitude gain of 1.5</figcaption>
+</figure>
+</div>
+<p>At <span class="math inline">\(A=1.5\)</span>, the constellation expands outward.</p>
+<p>The square does not rotate. Each point simply moves along the radial line connecting it to the origin.</p>
+<p>For positive uniform gain, the signs of I and Q do not change, so the points remain in the same ideal QPSK decision regions. Uniform scaling changes the constellation size, but it does not necessarily cause hard-decision errors by itself.</p>
+<p>This experiment uses the same gain on both I and Q. More general amplitude distortions can alter the shape as well, but we do not need them here.</p>
+</section>
+<section id="part-b-phase-rotation" class="level2">
+<h2 class="anchored" data-anchor-id="part-b-phase-rotation">Part B: Phase Rotation</h2>
+<p>Now multiply the complex symbol by a unit-magnitude phasor:</p>
+<p><span class="math display">\[
+r=se^{j\theta}
+\]</span></p>
+<p>The magnitude remains unchanged, but every point rotates by the same angle.</p>
+<p>In GNU Radio, a complex Signal Source at zero frequency provides the stationary phasor. Its phase is controlled by a QT GUI Range:</p>
+<pre class="text"><code>phase_deg
+Default: 0
+Start: -90
+Stop: 90
+Step: 5
+
+Complex Signal Source
+Frequency: 0
+Amplitude: 1
+Initial Phase: phase_deg * math.pi / 180</code></pre>
+<p>The clean QPSK stream and the phasor are multiplied, and the sink compares</p>
+<pre class="text"><code>Ideal QPSK
+Rotated QPSK</code></pre>
+<p>under the title</p>
+<pre class="text"><code>QPSK Phase Rotation</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp6-qpsk-phase-rotation-30deg.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation rotated by 30 degrees</figcaption>
+</figure>
+</div>
+<p>At <span class="math inline">\(30^\circ\)</span>, the entire square rotates rigidly around the origin. The points remain sharp rather than becoming clouds, and their distance from the origin is unchanged.</p>
+<p>This looks completely different from Gaussian noise.</p>
+<p>Now increase the rotation to <span class="math inline">\(45^\circ\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp6-qpsk-phase-rotation-45deg.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation rotated by 45 degrees onto the original decision boundaries</figcaption>
+</figure>
+</div>
+<p>The original QPSK phases were</p>
+<p><span class="math display">\[
+45^\circ,\quad135^\circ,\quad225^\circ,\quad315^\circ
+\]</span></p>
+<p>Adding <span class="math inline">\(45^\circ\)</span> gives</p>
+<p><span class="math display">\[
+90^\circ,\quad180^\circ,\quad270^\circ,\quad360^\circ
+\]</span></p>
+<p>so the rotated points land directly on the original I or Q axes. Those axes are also the receiver’s decision boundaries.</p>
+<p>This leads to an important practical lesson:</p>
+<blockquote class="blockquote">
+<p>A constellation can be perfectly clean and still be difficult to detect if it is rotated relative to the receiver’s assumed decision regions.</p>
+</blockquote>
+<p>A small amount of additional noise around the <span class="math inline">\(45^\circ\)</span> case can easily push a sample to either side of a boundary.</p>
+<section id="a-useful-visual-diagnosis" class="level3">
+<h3 class="anchored" data-anchor-id="a-useful-visual-diagnosis">A Useful Visual Diagnosis</h3>
+<p>The experiments now give us three distinct patterns:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Impairment</th>
+<th>Constellation appearance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gaussian noise</td>
+<td>Individual points scatter into clouds</td>
+</tr>
+<tr class="even">
+<td>Uniform amplitude scaling</td>
+<td>Whole constellation expands or contracts</td>
+</tr>
+<tr class="odd">
+<td>Phase rotation</td>
+<td>Whole constellation rotates</td>
+</tr>
+</tbody>
+</table>
+<p>These visual signatures are one reason constellation displays are so useful in practical SDR work.</p>
+</section>
+<section id="try-it-yourself-1" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself-1">Try It Yourself</h3>
+<p>Set the phase rotation slightly above <span class="math inline">\(45^\circ\)</span>, for example <span class="math inline">\(50^\circ\)</span>. Before running the flowgraph, predict which neighboring decision region each ideal QPSK point will enter.</p>
+<p>Then return the rotation to zero and change only the amplitude gain. Notice how different the two impairments look even though both modify the complex symbols.</p>
+<hr>
+</section>
+</section>
+<section id="from-qpsk-to-m-psk" class="level2">
+<h2 class="anchored" data-anchor-id="from-qpsk-to-m-psk">From QPSK to M-PSK</h2>
+<p>BPSK and QPSK suggest a broader idea.</p>
+<p>BPSK uses two phase states. QPSK uses four. We can continue placing more allowed points around the same circle.</p>
+<p>For M-PSK, a convenient ideal description is</p>
+<p><span class="math display">\[
+s_k=Ae^{j2\pi k/M},\qquad k=0,1,\ldots,M-1
+\]</span></p>
+<p>The geometric idea matters more than memorizing the equation:</p>
+<pre class="text"><code>BPSK      → 2 allowed phases
+QPSK      → 4 allowed phases
+8-PSK     → 8 allowed phases
+M-PSK     → M allowed phases</code></pre>
+<p>For ideal conventional M-PSK, all points have the same magnitude and differ in phase.</p>
+<p>The number of bits represented by one symbol is</p>
+<p><span class="math display">\[
+k=\log_2 M
+\]</span></p>
+<p>for the power-of-two constellations considered here.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Modulation</th>
+<th style="text-align: right;">Number of points</th>
+<th style="text-align: right;">Bits per symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BPSK</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td>QPSK</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td>8-PSK</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td>16-PSK</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p>Adding more points increases the number of bits represented by each symbol, but it also packs the allowed states more closely in angle for a fixed radius. Distinguishing neighboring symbols therefore becomes more demanding in the presence of noise and phase error.</p>
+<p>We will not build a separate 8-PSK experiment here. BPSK and QPSK have already established the underlying geometry.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.7-building-16-qam-from-two-4-pam-axes" class="level1">
+<h1>Experiment 17.7: Building 16-QAM from Two 4-PAM Axes</h1>
+<p>QPSK gave both I and Q two allowed values:</p>
+<p><span class="math display">\[
+I,Q\in\{-1,+1\}
+\]</span></p>
+<p>What if we give each dimension four values instead?</p>
+<p>Chapter 16 already provided exactly the levels we need:</p>
+<p><span class="math display">\[
+-3,\quad-1,\quad+1,\quad+3
+\]</span></p>
+<p>Use them on I and Q:</p>
+<p><span class="math display">\[
+I\in\{-3,-1,+1,+3\}
+\]</span></p>
+<p><span class="math display">\[
+Q\in\{-3,-1,+1,+3\}
+\]</span></p>
+<p>Now there are</p>
+<p><span class="math display">\[
+4\times4=16
+\]</span></p>
+<p>possible coordinate pairs.</p>
+<p>That is rectangular 16-QAM.</p>
+<p>The important conceptual bridge is</p>
+<pre class="text"><code>Chapter 16:
+4-PAM on one amplitude axis
+
+              ↓
+
+Chapter 17:
+4-PAM on I × 4-PAM on Q
+
+              ↓
+
+           16-QAM</code></pre>
+<section id="visiting-all-16-points-deliberately" class="level2">
+<h2 class="anchored" data-anchor-id="visiting-all-16-points-deliberately">Visiting All 16 Points Deliberately</h2>
+<p>We again use controlled symbol-index sequences.</p>
+<p>For I:</p>
+<pre class="text"><code>[0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3]</code></pre>
+<p>For Q:</p>
+<pre class="text"><code>[0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3]</code></pre>
+<p>Both branches use the mapping</p>
+<pre class="text"><code>0 → -3
+1 → -1
+2 → +1
+3 → +3</code></pre>
+<p>so while I remains at one level, Q cycles through all four levels. I then moves to the next level and the process repeats.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp7-16qam-from-4pam-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.7 flowgraph: constructing 16-QAM from two 4-PAM branches</figcaption>
+</figure>
+</div>
+<p>The important settings are:</p>
+<pre class="text"><code>I Chunks to Symbols
+Output Type: Float
+Symbol Table: [-3, -1, 1, 3]
+
+Q Chunks to Symbols
+Output Type: Float
+Symbol Table: [-3, -1, 1, 3]
+
+Float to Complex
+Real input: I 4-PAM levels
+Imaginary input: Q 4-PAM levels</code></pre>
+<p>The Time Sink is titled</p>
+<pre class="text"><code>16-QAM I and Q Components</code></pre>
+<p>with traces</p>
+<pre class="text"><code>I Level
+Q Level</code></pre>
+<p>and the Constellation Sink is titled</p>
+<pre class="text"><code>16-QAM Constellation</code></pre>
+<p>with trace</p>
+<pre class="text"><code>16-QAM Symbols</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp7-16qam-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 17.7 result: four I levels and four Q levels producing the 16-QAM constellation</figcaption>
+</figure>
+</div>
+<p>The upper plot shows that both dimensions now use four amplitudes. The lower plot shows every possible pair.</p>
+<p>The constellation is therefore not a mysterious predefined pattern. It is simply</p>
+<p><span class="math display">\[
+4\text{-PAM on I}\times4\text{-PAM on Q}
+\]</span></p>
+</section>
+<section id="four-bits-per-symbol" class="level2">
+<h2 class="anchored" data-anchor-id="four-bits-per-symbol">Four Bits per Symbol</h2>
+<p>Sixteen possible symbols require four bits to identify:</p>
+<p><span class="math display">\[
+k=\log_2(16)=4
+\]</span></p>
+<p>One intuitive interpretation is</p>
+<pre class="text"><code>2 bits choose one of 4 I levels
+2 bits choose one of 4 Q levels
+
+              ↓
+
+        4 bits per symbol</code></pre>
+</section>
+<section id="why-qam-is-not-just-amplitude-without-phase" class="level2">
+<h2 class="anchored" data-anchor-id="why-qam-is-not-just-amplitude-without-phase">Why QAM Is Not Just “Amplitude Without Phase”</h2>
+<p>The 16-QAM points do not all have the same magnitude.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+|1+j|=\sqrt{2}
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+|3+3j|=3\sqrt{2}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+|3+j|=\sqrt{10}
+\]</span></p>
+<p>Their phases also differ.</p>
+<p>So rectangular QAM uses I/Q amplitude combinations that generally produce <strong>both different magnitudes and different phases</strong>.</p>
+<p>The name Quadrature Amplitude Modulation refers to controlling the amplitudes of the two quadrature components, I and Q. Once those components are combined, the resulting complex symbol naturally has an overall amplitude and phase.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-17.8-16-qam-decision-regions-and-noise" class="level1">
+<h1>Experiment 17.8: 16-QAM Decision Regions and Noise</h1>
+<p>The receiver now has 16 possible symbols to distinguish. Fortunately, Chapter 16 already gave us the solution.</p>
+<p>Each axis is simply 4-PAM.</p>
+<p>For the levels</p>
+<p><span class="math display">\[
+-3,\quad-1,\quad+1,\quad+3
+\]</span></p>
+<p>the decision thresholds are</p>
+<p><span class="math display">\[
+-2,\quad0,\quad+2
+\]</span></p>
+<p>Apply those thresholds independently to I and Q.</p>
+<p>For I:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Received I</th>
+<th style="text-align: right;">Decided I</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(I&lt;-2\)</span></td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(-2&lt;I&lt;0\)</span></td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(0&lt;I&lt;2\)</span></td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(I&gt;2\)</span></td>
+<td style="text-align: right;">+3</td>
+</tr>
+</tbody>
+</table>
+<p>The same four regions apply to Q.</p>
+<p>Three vertical boundaries and three horizontal boundaries divide the plane into 16 decision regions:</p>
+<pre class="text"><code>                 I=-2      I=0       I=+2
+                   |         |         |
+          ●        | ●       | ●       | ●
+                   |         |         |
+Q=+2  -------------+---------+---------+-------------
+          ●        | ●       | ●       | ●
+                   |         |         |
+Q=0   -------------+---------+---------+-------------
+          ●        | ●       | ●       | ●
+                   |         |         |
+Q=-2  -------------+---------+---------+-------------
+          ●        | ●       | ●       | ●
+                   |         |         |</code></pre>
+<p>This gives a very useful receiver interpretation:</p>
+<blockquote class="blockquote">
+<p>A rectangular 16-QAM hard detector can be understood as one 4-PAM detector operating on I and another 4-PAM detector operating on Q.</p>
+</blockquote>
+<section id="adding-complex-gaussian-noise-1" class="level2">
+<h2 class="anchored" data-anchor-id="adding-complex-gaussian-noise-1">Adding Complex Gaussian Noise</h2>
+<p>We extend Experiment 17.7 by adding complex Gaussian noise before the Constellation Sink. The ideal points and noisy received samples are displayed together with the six decision boundaries.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp8-16qam-noise-0p2.png" class="img-fluid figure-img"></p>
+<figcaption>16-QAM with Gaussian noise amplitude 0.2 and the decision regions</figcaption>
+</figure>
+</div>
+<p>At a noise amplitude of 0.2, the 16 clusters remain compact and clearly separated.</p>
+<p>A received point does not have to land exactly on its ideal symbol. It only has to remain in the correct decision region.</p>
+<p>For example, suppose the receiver observes</p>
+<p><span class="math display">\[
+r=2.7+j0.8
+\]</span></p>
+<p>The I coordinate lies above <span class="math inline">\(+2\)</span>, so the I detector chooses <span class="math inline">\(+3\)</span>. The Q coordinate lies between <span class="math inline">\(0\)</span> and <span class="math inline">\(+2\)</span>, so the Q detector chooses <span class="math inline">\(+1\)</span>.</p>
+<p>The detected symbol is therefore</p>
+<p><span class="math display">\[
+\hat{s}=3+j
+\]</span></p>
+<p>Now increase the noise.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch17/ch17-exp8-16qam-noise-0p6.png" class="img-fluid figure-img"></p>
+<figcaption>16-QAM with stronger Gaussian noise amplitude 0.6, showing samples entering neighboring decision regions</figcaption>
+</figure>
+</div>
+<p>At 0.6, the clouds spread across the decision boundaries.</p>
+<p>If <span class="math inline">\(3+j\)</span> was transmitted and the received I value falls from above <span class="math inline">\(+2\)</span> to below <span class="math inline">\(+2\)</span>, the I detector may choose <span class="math inline">\(+1\)</span> instead of <span class="math inline">\(+3\)</span>. The received symbol has crossed into a neighboring region.</p>
+<p>Again, the important question is not “How far did the point move?” but</p>
+<blockquote class="blockquote">
+<p>Which decision region contains the received point?</p>
+</blockquote>
+<p>The progression from Chapter 16 is now complete:</p>
+<pre class="text"><code>4-PAM
+3 thresholds on one axis
+
+        ↓
+
+16-QAM
+3 thresholds on I
++
+3 thresholds on Q
+
+        ↓
+
+16 decision regions</code></pre>
+<hr>
+</section>
+<section id="why-gray-coding-helps" class="level2">
+<h2 class="anchored" data-anchor-id="why-gray-coding-helps">Why Gray Coding Helps</h2>
+<p>The 16-QAM noise experiment gives us one more question.</p>
+<p>Each point represents four bits, but <strong>which four-bit pattern should be attached to each point?</strong></p>
+<p>The geometry does not decide this for us. Symbol labeling is a design choice.</p>
+<p>Start with one 4-PAM axis. A straightforward binary assignment could be</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Amplitude</th>
+<th style="text-align: center;">Binary label</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-3</td>
+<td style="text-align: center;">00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-1</td>
+<td style="text-align: center;">01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">+1</td>
+<td style="text-align: center;">10</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">+3</td>
+<td style="text-align: center;">11</td>
+</tr>
+</tbody>
+</table>
+<p>The problem appears between the two middle levels:</p>
+<pre class="text"><code>-1 → +1
+01 → 10</code></pre>
+<p>Two bits change.</p>
+<p>If noise causes a nearest-neighbor symbol error across the threshold at zero, that one amplitude decision error could therefore produce two bit errors on the axis.</p>
+<p>A Gray-coded ordering instead uses</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Amplitude</th>
+<th style="text-align: center;">Gray label</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-3</td>
+<td style="text-align: center;">00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-1</td>
+<td style="text-align: center;">01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">+1</td>
+<td style="text-align: center;">11</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">+3</td>
+<td style="text-align: center;">10</td>
+</tr>
+</tbody>
+</table>
+<p>Now every neighboring pair differs by only one bit:</p>
+<pre class="text"><code>00 → 01 → 11 → 10</code></pre>
+<p>For rectangular 16-QAM, we can use two Gray-coded bits to select I and another two to select Q.</p>
+<p>One valid convention is therefore:</p>
+<pre class="text"><code>I level:      -3      -1      +1      +3
+I bits:       00      01      11      10
+
+Q level:      -3      -1      +1      +3
+Q bits:       00      01      11      10</code></pre>
+<p>If we write the I bits first and Q bits second, one possible labeling of the constellation is</p>
+<pre class="text"><code>                              Q
+                              ↑
+
+Q=+3 → 10      0010      0110      1110      1010
+                  ●         ●         ●         ●
+
+Q=+1 → 11      0011      0111      1111      1011
+                  ●         ●         ●         ●
+
+Q=-1 → 01      0001      0101      1101      1001
+                  ●         ●         ●         ●
+
+Q=-3 → 00      0000      0100      1100      1000
+                  ●         ●         ●         ●
+
+I bits:          00        01        11        10
+I level:         -3        -1        +1        +3       → I</code></pre>
+<p>The exact labeling convention can vary between systems. The important idea is the nearest-neighbor property.</p>
+<p>Suppose the symbol labeled <code>1111</code> is mistaken for its horizontal neighbor <code>1011</code>. Only one bit differs.</p>
+<p>Gray coding does <strong>not</strong> reduce the physical noise, move the constellation points, or prevent symbol errors. It reduces the number of bit errors that commonly result when a symbol is mistaken for a nearest neighbor.</p>
+<p>A sufficiently large disturbance can still jump across multiple boundaries, so Gray coding does not guarantee that every symbol error produces only one bit error.</p>
+<hr>
+</section>
+<section id="constellation-size-energy-and-normalization" class="level2">
+<h2 class="anchored" data-anchor-id="constellation-size-energy-and-normalization">Constellation Size, Energy, and Normalization</h2>
+<p>The amplitudes used in this chapter were chosen to make the geometry easy to see.</p>
+<p>Our QPSK construction used</p>
+<p><span class="math display">\[
+I,Q\in\{-1,+1\}
+\]</span></p>
+<p>so every symbol has energy proportional to</p>
+<p><span class="math display">\[
+|s|^2=I^2+Q^2=2
+\]</span></p>
+<p>The 16-QAM construction used</p>
+<p><span class="math display">\[
+I,Q\in\{-3,-1,+1,+3\}
+\]</span></p>
+<p>so different symbols have different energies and the average constellation energy is not the same as in our QPSK example.</p>
+<p>That is perfectly acceptable for these visualization experiments.</p>
+<p>In practical communication-system comparisons, constellations are often normalized to a specified average power or average symbol energy. Otherwise, comparing error performance between two modulation schemes could accidentally compare different transmitted powers as well.</p>
+<p>For example, QPSK is often normalized by using coordinates</p>
+<p><span class="math display">\[
+I,Q\in\left\{-\frac{1}{\sqrt{2}},+\frac{1}{\sqrt{2}}\right\}
+\]</span></p>
+<p>so each ideal symbol has unit magnitude.</p>
+<p>We do not need normalization to understand the geometry developed in this chapter, but it becomes important when making fair quantitative performance comparisons.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">GNU Radio Toolbox</h2>
+<section id="float-to-complex" class="level3">
+<h3 class="anchored" data-anchor-id="float-to-complex">Float to Complex</h3>
+<p><strong>Float to Complex</strong> combines two real-valued streams into one complex stream.</p>
+<p>If its real input is <span class="math inline">\(I[n]\)</span> and its imaginary input is <span class="math inline">\(Q[n]\)</span>, the output is</p>
+<p><span class="math display">\[
+x[n]=I[n]+jQ[n]
+\]</span></p>
+<p>We used it first with <span class="math inline">\(Q=0\)</span> to place BPSK on the I axis, then with independently varying I and Q streams to construct QPSK and 16-QAM.</p>
+<p>This block is especially useful pedagogically because it exposes the two coordinates explicitly rather than hiding them inside a modulation block.</p>
+</section>
+<section id="complex-gaussian-noise-source" class="level3">
+<h3 class="anchored" data-anchor-id="complex-gaussian-noise-source">Complex Gaussian Noise Source</h3>
+<p>The Noise Source was used with complex output so that noise could disturb both I and Q.</p>
+<p>This turns ideal constellation points into clouds and lets us observe decision-boundary crossings directly.</p>
+<p>The important settings used in this chapter were:</p>
+<pre class="text"><code>Output Type: Complex
+Noise Type: Gaussian
+Amplitude: noise_amp</code></pre>
+</section>
+<section id="multiply-const" class="level3">
+<h3 class="anchored" data-anchor-id="multiply-const">Multiply Const</h3>
+<p><strong>Multiply Const</strong> multiplies every input sample by a fixed or variable constant.</p>
+<p>For the QPSK amplitude-scaling experiment we used a positive real constant:</p>
+<p><span class="math display">\[
+r=As
+\]</span></p>
+<p>This changed the size of the constellation without rotating it.</p>
+</section>
+<section id="complex-signal-source-as-a-stationary-phasor" class="level3">
+<h3 class="anchored" data-anchor-id="complex-signal-source-as-a-stationary-phasor">Complex Signal Source as a Stationary Phasor</h3>
+<p>A complex Signal Source with zero frequency can act as a constant complex phasor.</p>
+<p>With amplitude 1 and phase <span class="math inline">\(\theta\)</span>, its output is</p>
+<p><span class="math display">\[
+e^{j\theta}
+\]</span></p>
+<p>Multiplying a constellation by this phasor rotates every symbol by the same angle without changing its magnitude.</p>
+<p>The zero-frequency setting is important. A nonzero frequency would make the phasor rotate continuously with time, producing a different impairment associated with frequency offset rather than a fixed phase rotation.</p>
+</section>
+<section id="higher-level-constellation-and-modulation-tools" class="level3">
+<h3 class="anchored" data-anchor-id="higher-level-constellation-and-modulation-tools">Higher-Level Constellation and Modulation Tools</h3>
+<p>GNU Radio also provides higher-level constellation objects and digital modulation facilities that can perform symbol mapping more directly.</p>
+<p>We deliberately did not begin with them in this chapter. By manually constructing BPSK, QPSK, and 16-QAM, we can now understand what those convenient tools are packaging for us:</p>
+<pre class="text"><code>symbol information
+      ↓
+constellation mapping
+      ↓
+complex I/Q symbol</code></pre>
+<p>Higher-level tools save implementation effort. They do not change the underlying meaning of the constellation points we have built here.</p>
+<hr>
+</section>
+</section>
+<section id="comparing-bpsk-qpsk-and-16-qam" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-bpsk-qpsk-and-16-qam">Comparing BPSK, QPSK, and 16-QAM</h2>
+<p>We can now place the three main constellations from this chapter side by side conceptually.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Modulation</th>
+<th>I levels</th>
+<th>Q levels</th>
+<th style="text-align: right;">Constellation points</th>
+<th style="text-align: right;">Bits/symbol</th>
+<th>Ideal magnitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BPSK</td>
+<td>-1, +1</td>
+<td>0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>Constant</td>
+</tr>
+<tr class="even">
+<td>QPSK</td>
+<td>-1, +1</td>
+<td>-1, +1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td>Constant</td>
+</tr>
+<tr class="odd">
+<td>16-QAM</td>
+<td>-3, -1, +1, +3</td>
+<td>-3, -1, +1, +3</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">4</td>
+<td>Multiple values</td>
+</tr>
+</tbody>
+</table>
+<p>The progression is not just a list of modulation names.</p>
+<p>BPSK uses two points on one dimension.</p>
+<p>QPSK activates the second dimension and creates four equal-magnitude points.</p>
+<p>16-QAM increases the number of allowed amplitudes on both dimensions and creates a 4-by-4 grid.</p>
+<p>More constellation points allow more bits to be represented by each symbol, but the receiver must distinguish among more possible states. Noise, phase error, gain error, and other channel impairments therefore become increasingly important as we move toward denser constellations.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">What We Learned</h2>
+<p>In this chapter, we moved from the one-dimensional PAM view of Chapter 16 into the two-dimensional I/Q plane.</p>
+<p>The main ideas are:</p>
+<ul>
+<li>A complex digital symbol can be written as <span class="math inline">\(s=I+jQ\)</span>.</li>
+<li>A constellation point is simply one allowed combination of I and Q.</li>
+<li>BPSK can be represented at complex baseband by the two points <span class="math inline">\(-1+j0\)</span> and <span class="math inline">\(+1+j0\)</span>.</li>
+<li>Multiplying a carrier by the BPSK values <span class="math inline">\(+1\)</span> and <span class="math inline">\(-1\)</span> produces carrier phases separated by <span class="math inline">\(180^\circ\)</span>.</li>
+<li>A BPSK receiver divides the I/Q plane with the decision boundary <span class="math inline">\(I=0\)</span>.</li>
+<li>Complex Gaussian noise moves received symbols in both I and Q, and decision errors become possible when samples cross decision boundaries.</li>
+<li>QPSK is obtained by allowing both I and Q to take the binary values <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>.</li>
+<li>The simultaneous I and Q values define one complex symbol; they are not two unrelated transmissions.</li>
+<li>Four QPSK points represent two bits per symbol.</li>
+<li>QPSK uses the boundaries <span class="math inline">\(I=0\)</span> and <span class="math inline">\(Q=0\)</span>, producing four decision regions.</li>
+<li>Uniform amplitude scaling expands or contracts a constellation, while a fixed phase error rotates it.</li>
+<li>BPSK and QPSK are examples of the broader M-PSK idea, where ideal symbols occupy different phases on a constant-radius circle.</li>
+<li>I/Q and amplitude/phase are two coordinate descriptions of the same complex symbol: <span class="math inline">\(I+jQ=Ae^{j\phi}\)</span>.</li>
+<li>QAM is naturally constructed by choosing amplitude levels independently on the I and Q dimensions.</li>
+<li>Rectangular 16-QAM can be built directly from 4-PAM on I and 4-PAM on Q.</li>
+<li>Sixteen constellation points represent four bits per symbol.</li>
+<li>A rectangular 16-QAM hard detector can be understood as two 4-PAM detectors, one operating on I and one on Q.</li>
+<li>Gray coding labels neighboring constellation points so that common nearest-neighbor symbol errors tend to produce fewer bit errors.</li>
+<li>Practical constellations are often normalized when power or error-performance comparisons need to be fair.</li>
+</ul>
+<p>Most importantly, I/Q is no longer just an abstract way of writing a complex signal. We have now used the two dimensions to carry digital information directly.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">Connecting to the Next Chapter</h2>
+<p>We now know <strong>where</strong> the digital symbols should be in the I/Q plane.</p>
+<p>For BPSK, QPSK, or 16-QAM, we can generate a sequence of complex constellation points and decide which point was most likely received.</p>
+<p>But there is still a major practical question.</p>
+<p>In our experiments, we often repeated each symbol as a rectangular level so that it was easy to visualize. That creates abrupt transitions when one symbol changes to the next. We even saw those abrupt changes directly in the zoomed BPSK passband waveform.</p>
+<p>Can we simply transmit such rectangular symbol waveforms over the air?</p>
+<p>What happens to their bandwidth?</p>
+<p>Can we shape the transitions without destroying the receiver’s ability to distinguish neighboring symbols?</p>
+<p>And if we shape the transmitted pulses, what should the receiver do with them?</p>
+<p>Those questions lead directly to <strong>Chapter 18: Pulse Shaping and Matched Filtering</strong>.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter16.html" class="pagination-link" aria-label="Chapter 16: Linear Modulation and PAM">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter18.html" class="pagination-link" aria-label="Chapter 18: Pulse Shaping and Matched Filtering">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

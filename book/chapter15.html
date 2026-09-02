@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 15: Bits, Symbols and Digital Communication – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter16.html" rel="next">
+<link href="../book/chapter14.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter15.html"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#a-bit-is-information-not-a-voltage" id="toc-a-bit-is-information-not-a-voltage" class="nav-link" data-scroll-target="#a-bit-is-information-not-a-voltage">15.1 A Bit Is Information, Not a Voltage</a></li>
+  <li><a href="#experiment-15.1-bits-as-a-sampled-waveform" id="toc-experiment-15.1-bits-as-a-sampled-waveform" class="nav-link" data-scroll-target="#experiment-15.1-bits-as-a-sampled-waveform">Experiment 15.1: Bits as a Sampled Waveform</a>
+  <ul class="collapse">
+  <li><a href="#bit-rate-and-bit-duration" id="toc-bit-rate-and-bit-duration" class="nav-link" data-scroll-target="#bit-rate-and-bit-duration">15.2 Bit Rate and Bit Duration</a></li>
+  </ul></li>
+  <li><a href="#experiment-15.2-changing-the-bit-rate" id="toc-experiment-15.2-changing-the-bit-rate" class="nav-link" data-scroll-target="#experiment-15.2-changing-the-bit-rate">Experiment 15.2: Changing the Bit Rate</a>
+  <ul class="collapse">
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
+  <li><a href="#do-we-have-to-handle-bits-one-at-a-time" id="toc-do-we-have-to-handle-bits-one-at-a-time" class="nav-link" data-scroll-target="#do-we-have-to-handle-bits-one-at-a-time">15.3 Do We Have to Handle Bits One at a Time?</a></li>
+  </ul></li>
+  <li><a href="#experiment-15.3-from-bits-to-symbols" id="toc-experiment-15.3-from-bits-to-symbols" class="nav-link" data-scroll-target="#experiment-15.3-from-bits-to-symbols">Experiment 15.3: From Bits to Symbols</a>
+  <ul class="collapse">
+  <li><a href="#bits-per-symbol" id="toc-bits-per-symbol" class="nav-link" data-scroll-target="#bits-per-symbol">15.4 Bits per Symbol</a></li>
+  </ul></li>
+  <li><a href="#experiment-15.4-bit-rate-vs-symbol-rate" id="toc-experiment-15.4-bit-rate-vs-symbol-rate" class="nav-link" data-scroll-target="#experiment-15.4-bit-rate-vs-symbol-rate">Experiment 15.4: Bit Rate vs Symbol Rate</a>
+  <ul class="collapse">
+  <li><a href="#bits-and-baud-are-not-always-the-same" id="toc-bits-and-baud-are-not-always-the-same" class="nav-link" data-scroll-target="#bits-and-baud-are-not-always-the-same">Bit/s and baud are not always the same</a></li>
+  <li><a href="#what-does-mapping-mean" id="toc-what-does-mapping-mean" class="nav-link" data-scroll-target="#what-does-mapping-mean">15.5 What Does Mapping Mean?</a></li>
+  </ul></li>
+  <li><a href="#experiment-15.5-mapping-bits-to-symbol-indices" id="toc-experiment-15.5-mapping-bits-to-symbol-indices" class="nav-link" data-scroll-target="#experiment-15.5-mapping-bits-to-symbol-indices">Experiment 15.5: Mapping Bits to Symbol Indices</a>
+  <ul class="collapse">
+  <li><a href="#from-a-teaching-pattern-to-arbitrary-data" id="toc-from-a-teaching-pattern-to-arbitrary-data" class="nav-link" data-scroll-target="#from-a-teaching-pattern-to-arbitrary-data">15.6 From a Teaching Pattern to Arbitrary Data</a></li>
+  </ul></li>
+  <li><a href="#experiment-15.6-random-bits-to-symbols" id="toc-experiment-15.6-random-bits-to-symbols" class="nav-link" data-scroll-target="#experiment-15.6-random-bits-to-symbols">Experiment 15.6: Random Bits to Symbols</a>
+  <ul class="collapse">
+  <li><a href="#bits-bytes-and-gnu-radio-stream-items" id="toc-bits-bytes-and-gnu-radio-stream-items" class="nav-link" data-scroll-target="#bits-bytes-and-gnu-radio-stream-items">15.7 Bits, Bytes, and GNU Radio Stream Items</a></li>
+  <li><a href="#a-symbol-is-still-not-a-radio-waveform" id="toc-a-symbol-is-still-not-a-radio-waveform" class="nav-link" data-scroll-target="#a-symbol-is-still-not-a-radio-waveform">15.8 A Symbol Is Still Not a Radio Waveform</a></li>
+  <li><a href="#why-symbols-are-useful" id="toc-why-symbols-are-useful" class="nav-link" data-scroll-target="#why-symbols-are-useful">15.9 Why Symbols Are Useful</a></li>
+  <li><a href="#putting-the-whole-chain-together" id="toc-putting-the-whole-chain-together" class="nav-link" data-scroll-target="#putting-the-whole-chain-together">15.10 Putting the Whole Chain Together</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">Connecting to the Next Chapter</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter15.html"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>How can zeros and ones eventually become a radio waveform?</strong></p>
+<p>In Chapters 12 through 14, our message signals varied continuously.</p>
+<p>In AM, the message controlled amplitude. In FM, the message controlled instantaneous frequency. Even when we added noise or changed the modulation conditions, the underlying message was still an analog waveform whose value could vary continuously with time.</p>
+<p>Digital communication begins from a different kind of information.</p>
+<p>Instead of asking a transmitter to carry every possible message value directly, we may begin with a sequence such as</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>These zeros and ones are <strong>bits</strong>.</p>
+<p>But there is an immediate problem.</p>
+<p>An antenna cannot radiate an abstract <code>1</code> or <code>0</code>. A radio ultimately has to produce a physical waveform: voltages and currents changing with time, electromagnetic fields propagating through space, and sampled signals inside an SDR.</p>
+<p>So there must be a path from</p>
+<pre class="text"><code>bits
+  |
+  v
+groups of bits
+  |
+  v
+symbols
+  |
+  v
+physical signal states
+  |
+  v
+radio waveform</code></pre>
+<p>This chapter develops the first half of that path.</p>
+<p>We will not yet build BPSK, QPSK, QAM, or even PAM. Those modulation methods deserve their own treatment. For now, our goal is more fundamental: understand what bits and symbols are, how fast they occur, why several bits can be grouped into one symbol, and what <strong>mapping</strong> means before any actual digital modulation takes place.</p>
+<hr>
+</section>
+<section id="a-bit-is-information-not-a-voltage" class="level2">
+<h2 class="anchored" data-anchor-id="a-bit-is-information-not-a-voltage">15.1 A Bit Is Information, Not a Voltage</h2>
+<p>A bit has two possible values:</p>
+<pre class="text"><code>0
+1</code></pre>
+<p>That sounds simple, but it is worth separating the <strong>information</strong> from the <strong>signal used to represent that information</strong>.</p>
+<p>The sequence</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>is information.</p>
+<p>Inside a computer or SDR, those values must be stored and processed using some numerical data type. Later, when the information is transmitted, the bits must influence some physical signal property.</p>
+<p>These are related ideas, but they are not the same thing.</p>
+<p>A beginner can easily fall into the habit of thinking that a bit <code>1</code> literally means one volt and a bit <code>0</code> literally means zero volts. That can be one possible representation, but it is not the definition of a bit. In another system, the same bit may eventually be represented by a phase, a frequency, a complex I/Q point, or something else entirely.</p>
+<p>Before worrying about modulation, let us first make a bit sequence visible in GNU Radio.</p>
+<hr>
+</section>
+<section id="experiment-15.1-bits-as-a-sampled-waveform" class="level1">
+<h1>Experiment 15.1: Bits as a Sampled Waveform</h1>
+<p>We begin with a known sequence rather than random data:</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>Using a known sequence is useful because we can predict exactly what should appear in the Time Sink.</p>
+<p>The flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp1-bit-waveform-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for representing a known bit sequence as a sampled waveform</figcaption>
+</figure>
+</div>
+<p>The important parameters are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32k</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Bit rate</td>
+<td style="text-align: right;"><code>1k</code> bit/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per bit</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="even">
+<td>Vector Source</td>
+<td style="text-align: right;"><code>[1, 0, 1, 1, 0, 0, 1, 0]</code></td>
+</tr>
+<tr class="odd">
+<td>Repeat</td>
+<td style="text-align: right;">Yes</td>
+</tr>
+<tr class="even">
+<td>Time Sink points</td>
+<td style="text-align: right;"><code>512</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Vector Source produces the known sequence as byte values. We deliberately restrict those byte values to <code>0</code> and <code>1</code> because they represent binary information.</p>
+<p>The <strong>UChar to Float</strong> block changes the numerical data type from unsigned byte values to floating-point values. It does not change the information:</p>
+<pre class="text"><code>byte 0  -&gt;  float 0.0
+byte 1  -&gt;  float 1.0</code></pre>
+<p>The most important new operation is <strong>Repeat</strong>.</p>
+<p>If one bit were represented by only one sample, the sequence would simply be a stream of isolated numerical values. But a transmitted bit occupies a finite interval of time. In our sampled SDR representation, we therefore use several samples to describe the signal during one bit interval.</p>
+<p>We chose</p>
+<p><span class="math display">\[
+f_s = 32000\text{ samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+R_b = 1000\text{ bit/s}.
+\]</span></p>
+<p>The number of samples used for each bit is therefore</p>
+<p><span class="math display">\[
+N_{\text{samples/bit}} = \frac{f_s}{R_b} = \frac{32000}{1000} = 32.
+\]</span></p>
+<p>So Repeat holds every bit value for 32 samples.</p>
+<p>Conceptually,</p>
+<pre class="text"><code>Information bits:
+
+1        0        1        1        0
+
+Sampled representation:
+
+111...111 000...000 111...111 111...111 000...000
+&lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt;
+ samples    samples    samples    samples    samples</code></pre>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp1-bit-waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Known binary sequence represented using 32 samples per bit</figcaption>
+</figure>
+</div>
+<p>The waveform repeats the pattern <code>1 0 1 1 0 0 1 0</code>.</p>
+<p>At a bit rate of 1000 bit/s, one bit lasts</p>
+<p><span class="math display">\[
+T_b = \frac{1}{R_b} = \frac{1}{1000} = 1\text{ ms}.
+\]</span></p>
+<p>That is exactly what we see: each individual bit interval is 1 ms wide.</p>
+<p>The Time Sink displays 512 samples. At 32 kS/s, this corresponds to</p>
+<p><span class="math display">\[
+T_{\text{display}} = \frac{512}{32000} = 16\text{ ms}.
+\]</span></p>
+<p>Since each bit lasts 1 ms, the display contains 16 bit intervals, or two repetitions of our eight-bit pattern.</p>
+<p>This experiment gives us an important distinction that will remain useful throughout digital communication:</p>
+<blockquote class="blockquote">
+<p><strong>A bit is a unit of information. A sample is a numerical description of a waveform at one instant. One bit may be represented by many samples.</strong></p>
+</blockquote>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-uchar-to-float" class="anchored">GNU Radio Toolbox: UChar to Float</h3>
+<p><strong>UChar to Float</strong> converts unsigned-character values into floating-point values.</p>
+<p>In this experiment, the input byte values are <code>0</code> and <code>1</code>, so the output becomes <code>0.0</code> and <code>1.0</code>.</p>
+<p>The block does not perform modulation and does not change the information. It only changes the numerical data type so that the values can be treated as a floating-point signal in the following blocks.</p>
+</blockquote>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-repeat" class="anchored">GNU Radio Toolbox: Repeat</h3>
+<p>The <strong>Repeat</strong> block repeats every input item a specified number of times.</p>
+<p>Here, its interpolation value is <code>32</code>, so each input bit value appears for 32 output samples.</p>
+<p>This is useful for making each bit occupy a definite time interval in our sampled representation. Later chapters will introduce more realistic pulse shaping. For now, Repeat gives us a simple rectangular representation that makes bit timing easy to see.</p>
+</blockquote>
+<hr>
+<section id="bit-rate-and-bit-duration" class="level2">
+<h2 class="anchored" data-anchor-id="bit-rate-and-bit-duration">15.2 Bit Rate and Bit Duration</h2>
+<p>Experiment 15.1 used a bit rate of 1000 bit/s. That gave every bit a duration of 1 ms.</p>
+<p>What happens if we transmit the same information faster?</p>
+<p>The relationship is simple:</p>
+<p><span class="math display">\[
+T_b = \frac{1}{R_b}.
+\]</span></p>
+<p>A higher bit rate means a shorter bit duration.</p>
+<p>Rather than accepting that only as an equation, we can watch it happen.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-15.2-changing-the-bit-rate" class="level1">
+<h1>Experiment 15.2: Changing the Bit Rate</h1>
+<p>We keep the sample rate fixed at 32 kS/s and use a QT GUI Range to vary the bit rate from 500 to 4000 bit/s.</p>
+<p>The same known binary sequence is used throughout. Only the speed at which the bits are represented changes.</p>
+<p>The important relationship in the flowgraph is</p>
+<p><span class="math display">\[
+N_{\text{samples/bit}} = \frac{f_s}{R_b}.
+\]</span></p>
+<p>At our fixed sample rate, the following values result:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Bit rate</th>
+<th style="text-align: right;">Bit duration</th>
+<th style="text-align: right;">Samples per bit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500 bit/s</td>
+<td style="text-align: right;">2 ms</td>
+<td style="text-align: right;">64</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000 bit/s</td>
+<td style="text-align: right;">1 ms</td>
+<td style="text-align: right;">32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000 bit/s</td>
+<td style="text-align: right;">0.5 ms</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4000 bit/s</td>
+<td style="text-align: right;">0.25 ms</td>
+<td style="text-align: right;">8</td>
+</tr>
+</tbody>
+</table>
+<p>Before looking at the result, predict what should happen.</p>
+<p>The Time Sink continues to show the same 16 ms interval. If each bit becomes shorter, more bits should fit inside that unchanged window.</p>
+<p>At 500 bit/s, the waveform looks relatively slow and wide.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp2-bit-rate-500.png" class="img-fluid figure-img"></p>
+<figcaption>Binary waveform at 500 bit/s</figcaption>
+</figure>
+</div>
+<p>Each bit lasts 2 ms, so only eight bit intervals fit inside 16 ms.</p>
+<p>Now increase the bit rate to 2000 bit/s.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp2-bit-rate-2000.png" class="img-fluid figure-img"></p>
+<figcaption>Binary waveform at 2000 bit/s</figcaption>
+</figure>
+</div>
+<p>The bits are now much narrower. Each bit lasts only 0.5 ms, so 32 bit intervals fit into the same 16 ms display.</p>
+<p>Nothing about the information alphabet has changed. We still have only zeros and ones, and the source pattern is unchanged. We are simply sending the bits more quickly.</p>
+<p>This is the physical meaning of bit rate:</p>
+<blockquote class="blockquote">
+<p><strong>Bit rate tells us how many information bits pass through the system each second.</strong></p>
+</blockquote>
+<section id="try-it-yourself" class="level3">
+<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
+<p>Move the Bit Rate control through <code>500</code>, <code>1000</code>, <code>2000</code>, and <code>4000</code> bit/s.</p>
+<p>Before moving the control, predict both the bit duration and the number of samples per bit.</p>
+<p>Then watch the waveform. At a fixed sample rate, notice that increasing the bit rate means fewer samples are available to represent each bit.</p>
+<hr>
+</section>
+<section id="do-we-have-to-handle-bits-one-at-a-time" class="level2">
+<h2 class="anchored" data-anchor-id="do-we-have-to-handle-bits-one-at-a-time">15.3 Do We Have to Handle Bits One at a Time?</h2>
+<p>So far, every bit has been treated individually:</p>
+<pre class="text"><code>1 | 0 | 1 | 1 | 0 | 0 | 1 | 0</code></pre>
+<p>But there is no rule saying that a transmitter must always work with one bit at a time.</p>
+<p>Suppose we group the bits in pairs:</p>
+<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
+<p>There are four possible two-bit combinations:</p>
+<pre class="text"><code>00
+01
+10
+11</code></pre>
+<p>We can give each combination a label:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Bit group</th>
+<th style="text-align: right;">Symbol index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>00</code></td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td><code>01</code></td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td><code>10</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td><code>11</code></td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<p>Each two-bit group is now treated as one <strong>symbol</strong>.</p>
+<p>This is the first major step from bits toward digital modulation.</p>
+<p>A symbol is not necessarily one bit. A symbol is one choice from a set of allowed possibilities, and that choice may represent one bit, two bits, four bits, or some other number of bits depending on the system.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-15.3-from-bits-to-symbols" class="level1">
+<h1>Experiment 15.3: From Bits to Symbols</h1>
+<p>We reuse the sequence</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>but now group two bits at a time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp3-bits-to-symbols-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for grouping bits into two-bit symbols</figcaption>
+</figure>
+</div>
+<p>The new block is <strong>Repack Bits</strong>. It is configured to convert one-bit input items into two-bit output items.</p>
+<p>For our known sequence,</p>
+<pre class="text"><code>Bits:
+1 0 | 1 1 | 0 0 | 1 0
+
+Groups:
+ 10 |  11 |  00 |  10
+
+Symbol indices:
+  2 |   3 |   0 |   2</code></pre>
+<p>The resulting symbol indices are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp3-symbol-indices.png" class="img-fluid figure-img"></p>
+<figcaption>Two-bit groups represented as symbol indices</figcaption>
+</figure>
+</div>
+<p>The sequence is</p>
+<pre class="text"><code>2 -&gt; 3 -&gt; 0 -&gt; 2 -&gt; 2 -&gt; 3 -&gt; 0 -&gt; 2 -&gt; ...</code></pre>
+<p>The adjacent <code>2</code> values at the repetition boundary merge visually into a longer flat section. This is expected: the last group of one source period is <code>10</code>, and the first group of the next period is also <code>10</code>.</p>
+<p>There is an important point here.</p>
+<p>The vertical values <code>0</code>, <code>1</code>, <code>2</code>, and <code>3</code> are <strong>symbol indices</strong>. We are plotting them numerically because it is convenient to inspect them.</p>
+<p>They are not yet transmitted amplitudes.</p>
+<p>In particular,</p>
+<pre class="text"><code>symbol index 3</code></pre>
+<p>does not mean</p>
+<pre class="text"><code>3 volts</code></pre>
+<p>or amplitude <code>3</code>, phase <code>3</code>, or frequency <code>3</code>.</p>
+<p>At this stage, the number is only a label identifying which bit group occurred.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-repack-bits" class="anchored">GNU Radio Toolbox: Repack Bits</h3>
+<p><strong>Repack Bits</strong> changes how bits are grouped into stream items.</p>
+<p>In this experiment, the input contains one useful bit per byte and the output contains two useful bits per byte. Therefore, every two input bits become one output value between <code>0</code> and <code>3</code>.</p>
+<p>With the bit ordering used in our experiment:</p>
+<pre class="text"><code>00 -&gt; 0
+01 -&gt; 1
+10 -&gt; 2
+11 -&gt; 3</code></pre>
+<p>Repack Bits does not yet perform modulation. It reorganizes the digital data so that groups of bits can be treated as symbols.</p>
+<p>Bit ordering matters. If the ordering is changed, the numerical index assigned to a particular bit pattern can change even though the underlying bits are the same.</p>
+</blockquote>
+<hr>
+<section id="bits-per-symbol" class="level2">
+<h2 class="anchored" data-anchor-id="bits-per-symbol">15.4 Bits per Symbol</h2>
+<p>The previous experiment used two bits per symbol, giving four possible symbols.</p>
+<p>The pattern generalizes naturally.</p>
+<p>If each symbol contains <span class="math inline">\(k\)</span> bits, then the number of possible bit patterns is</p>
+<p><span class="math display">\[
+M = 2^k.
+\]</span></p>
+<p>For example:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Bits per symbol <span class="math inline">\(k\)</span></th>
+<th style="text-align: right;">Possible symbols <span class="math inline">\(M\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">16</td>
+</tr>
+</tbody>
+</table>
+<p>Conversely,</p>
+<p><span class="math display">\[
+k = \log_2(M).
+\]</span></p>
+<p>This is why digital communication systems often talk about 2, 4, 8, 16, 64, or 256 possible symbol states. Powers of two allow an integer number of bits to be associated with each symbol.</p>
+<p>But grouping more bits into a symbol raises another question.</p>
+<p>If the bit rate remains fixed, how fast do the symbols themselves occur?</p>
+<hr>
+</section>
+</section>
+<section id="experiment-15.4-bit-rate-vs-symbol-rate" class="level1">
+<h1>Experiment 15.4: Bit Rate vs Symbol Rate</h1>
+<p>We keep the bit rate fixed at</p>
+<p><span class="math display">\[
+R_b = 1000\text{ bit/s}
+\]</span></p>
+<p>and compare three ways of grouping the same binary data:</p>
+<pre class="text"><code>1 bit per symbol
+2 bits per symbol
+4 bits per symbol</code></pre>
+<p>The flowgraph creates three parallel branches from the same source.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp4-bit-vs-symbol-rate-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph comparing one, two, and four bits per symbol</figcaption>
+</figure>
+</div>
+<p>The sample rate remains 32 kS/s. Since one bit at 1000 bit/s lasts 1 ms, it occupies 32 samples.</p>
+<p>Therefore:</p>
+<pre class="text"><code>1 bit/symbol  -&gt;  32 samples/symbol
+2 bits/symbol -&gt;  64 samples/symbol
+4 bits/symbol -&gt; 128 samples/symbol</code></pre>
+<p>The three results are displayed over the same 16 ms time window.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp4-bit-vs-symbol-rate.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of bit rate and symbol rate for different numbers of bits per symbol</figcaption>
+</figure>
+</div>
+<p>The top graph treats each bit as one symbol. The middle graph groups two bits per symbol. The bottom graph groups four bits per symbol.</p>
+<p>At a fixed bit rate, increasing the number of bits carried by each symbol means that fewer symbols are needed every second.</p>
+<p>For one bit per symbol,</p>
+<p><span class="math display">\[
+R_s = 1000\text{ symbols/s}.
+\]</span></p>
+<p>For two bits per symbol,</p>
+<p><span class="math display">\[
+R_s = 500\text{ symbols/s}.
+\]</span></p>
+<p>For four bits per symbol,</p>
+<p><span class="math display">\[
+R_s = 250\text{ symbols/s}.
+\]</span></p>
+<p>The general relationship is</p>
+<p><span class="math display">\[
+R_b = kR_s.
+\]</span></p>
+<p>Since <span class="math inline">\(k = \log_2(M)\)</span>, we can also write</p>
+<p><span class="math display">\[
+R_b = R_s\log_2(M).
+\]</span></p>
+<p>Here:</p>
+<ul>
+<li><span class="math inline">\(R_b\)</span> is the bit rate in bit/s,</li>
+<li><span class="math inline">\(R_s\)</span> is the symbol rate in symbols/s,</li>
+<li><span class="math inline">\(k\)</span> is the number of bits carried by each symbol,</li>
+<li><span class="math inline">\(M\)</span> is the number of possible symbols.</li>
+</ul>
+<section id="bits-and-baud-are-not-always-the-same" class="level3">
+<h3 class="anchored" data-anchor-id="bits-and-baud-are-not-always-the-same">Bit/s and baud are not always the same</h3>
+<p>The symbol rate is commonly measured in <strong>baud</strong>.</p>
+<p>One baud means one symbol per second.</p>
+<p>This gives an important distinction:</p>
+<pre class="text"><code>1000 bit/s with 1 bit/symbol -&gt; 1000 baud
+1000 bit/s with 2 bits/symbol -&gt;  500 baud
+1000 bit/s with 4 bits/symbol -&gt;  250 baud</code></pre>
+<p>So bit/s and baud are equal only when each symbol carries exactly one bit.</p>
+<p>This is one of the easiest ideas to confuse when first learning digital communication. Bit rate describes the rate of <strong>information bits</strong>. Symbol rate describes the rate at which the transmitter makes <strong>symbol choices</strong>.</p>
+<hr>
+</section>
+<section id="what-does-mapping-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-mapping-mean">15.5 What Does Mapping Mean?</h2>
+<p>We have already been using a simple rule:</p>
+<pre class="text"><code>00 -&gt; symbol 0
+01 -&gt; symbol 1
+10 -&gt; symbol 2
+11 -&gt; symbol 3</code></pre>
+<p>That rule is a <strong>mapping</strong>.</p>
+<p>Mapping answers the question:</p>
+<blockquote class="blockquote">
+<p>Which symbol should represent this particular group of bits?</p>
+</blockquote>
+<p>The idea sounds almost trivial with four possibilities, but it becomes extremely important later. In QPSK, QAM, and other modulation schemes, the transmitter must associate groups of bits with particular allowed signal states, and the receiver must reverse that association.</p>
+<p>For now, we keep the mapping abstract. We map bits only to symbol indices, not to amplitudes, phases, frequencies, or I/Q points.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-15.5-mapping-bits-to-symbol-indices" class="level1">
+<h1>Experiment 15.5: Mapping Bits to Symbol Indices</h1>
+<p>The previous experiments showed either the bit stream or the symbol stream. Now we display them together over the same time interval.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp5-bit-to-symbol-mapping-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for comparing original bits with mapped symbol indices</figcaption>
+</figure>
+</div>
+<p>The top branch displays the original binary data. The lower branch groups the same bits in pairs using Repack Bits and displays the resulting symbol indices.</p>
+<p>We use 256 display points at 32 kS/s, giving an 8 ms window. At 1000 bit/s, that window contains exactly eight bit intervals.</p>
+<p>The result is especially useful because the two displays can be read together.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp5-bit-to-symbol-mapping.png" class="img-fluid figure-img"></p>
+<figcaption>Original binary data and the corresponding two-bit symbol indices</figcaption>
+</figure>
+</div>
+<p>Over the 8 ms interval,</p>
+<pre class="text"><code>Time:       0        2        4        6        8 ms
+
+Bits:       1 0  |   1 1  |   0 0  |   1 0
+             |         |         |         |
+             v         v         v         v
+Symbols:     2    |    3    |    0    |    2</code></pre>
+<p>Each bit lasts 1 ms, while each two-bit symbol lasts 2 ms.</p>
+<p>The mapping can therefore be read directly from the experiment:</p>
+<pre class="text"><code>10 -&gt; 2
+11 -&gt; 3
+00 -&gt; 0
+10 -&gt; 2</code></pre>
+<p>Again, the values on the symbol graph are labels. We have not yet decided what physical signal state symbol <code>2</code> or symbol <code>3</code> will produce.</p>
+<p>That distinction is deliberate. It keeps two separate operations clear:</p>
+<pre class="text"><code>bit grouping and symbol mapping
+              |
+              v
+        symbol index
+              |
+              v
+physical signal mapping comes later</code></pre>
+<hr>
+<section id="from-a-teaching-pattern-to-arbitrary-data" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-teaching-pattern-to-arbitrary-data">15.6 From a Teaching Pattern to Arbitrary Data</h2>
+<p>Known patterns are excellent for learning because we can predict every result. Real communication systems, however, do not normally transmit the same eight bits forever.</p>
+<p>The information may come from audio, images, sensor measurements, network packets, files, control messages, or many other sources. From the modulator’s point of view, the incoming binary data can appear arbitrary.</p>
+<p>So our final experiment replaces the controlled Vector Source with a Random Source.</p>
+<hr>
+</section>
+</section>
+<section id="experiment-15.6-random-bits-to-symbols" class="level1">
+<h1>Experiment 15.6: Random Bits to Symbols</h1>
+<p>The Random Source is configured to generate binary values only:</p>
+<pre class="text"><code>Minimum: 0
+Maximum: 2</code></pre>
+<p>With the GNU Radio Random Source used here, this produces values <code>0</code> and <code>1</code>.</p>
+<p>The upper branch displays the random binary data. The second branch performs exactly the same two-bit grouping used earlier and displays symbol indices from <code>0</code> to <code>3</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch15/ch15-exp6-random-bits-to-symbols.png" class="img-fluid figure-img"></p>
+<figcaption>Random binary data and the resulting two-bit symbol indices</figcaption>
+</figure>
+</div>
+<p>Unlike our repeating Vector Source, the random data continually changes, so the Time Sink display also continually updates. That is expected. The exact pattern is no longer the important part.</p>
+<p>What matters is that the processing rule has not changed:</p>
+<pre class="text"><code>random binary data
+        |
+        v
+group two bits
+        |
+        v
+00, 01, 10, or 11
+        |
+        v
+symbol index 0, 1, 2, or 3</code></pre>
+<p>There is also a practical visualization detail worth remembering. Two separate QT GUI Time Sinks may capture different positions in a continuously running random stream, so a static screenshot is not the best place to verify every visible bit pair against every visible symbol. Experiment 15.5 already gave us that controlled, sample-by-sample comparison.</p>
+<p>The purpose of this experiment is different: it shows that the same grouping process works for an ongoing stream of arbitrary binary data.</p>
+<hr>
+<blockquote class="blockquote">
+<h3 id="gnu-radio-toolbox-random-source" class="anchored">GNU Radio Toolbox: Random Source</h3>
+<p>The <strong>Random Source</strong> generates pseudo-random numerical values.</p>
+<p>In this chapter, we configure it so that the generated values are only <code>0</code> and <code>1</code>, giving us a convenient test source for binary data.</p>
+<p>A Random Source is useful when we no longer need a hand-picked pattern and want to exercise a digital processing chain with changing data.</p>
+</blockquote>
+<hr>
+<section id="bits-bytes-and-gnu-radio-stream-items" class="level2">
+<h2 class="anchored" data-anchor-id="bits-bytes-and-gnu-radio-stream-items">15.7 Bits, Bytes, and GNU Radio Stream Items</h2>
+<p>Our experiments reveal a subtle distinction that becomes increasingly important as GNU Radio flowgraphs become more digital.</p>
+<p>When we say that a stream contains bits, we are describing the <strong>information</strong> carried by the stream.</p>
+<p>But GNU Radio still has to store each stream item using a data type.</p>
+<p>For example, our Vector Source and Random Source used byte-sized items whose numerical values happened to be only <code>0</code> and <code>1</code>.</p>
+<p>So conceptually we had</p>
+<pre class="text"><code>information:
+1 0 1 1 0 0 1 0</code></pre>
+<p>while GNU Radio carried those values inside byte stream items.</p>
+<p>After Repack Bits changed the grouping to two bits per item, the possible numerical values became</p>
+<pre class="text"><code>0, 1, 2, 3</code></pre>
+<p>but the stream items were still byte-sized containers.</p>
+<p>This is why it is useful to keep three questions separate:</p>
+<ol type="1">
+<li>How many information bits are represented?</li>
+<li>How are those bits grouped into symbols?</li>
+<li>What GNU Radio data type is carrying the numerical values?</li>
+</ol>
+<p>They are not the same question.</p>
+<hr>
+</section>
+<section id="a-symbol-is-still-not-a-radio-waveform" class="level2">
+<h2 class="anchored" data-anchor-id="a-symbol-is-still-not-a-radio-waveform">15.8 A Symbol Is Still Not a Radio Waveform</h2>
+<p>At this point, we have come a long way from our original bit stream.</p>
+<p>We can take</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>group it as</p>
+<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
+<p>and label the groups as</p>
+<pre class="text"><code>2 | 3 | 0 | 2</code></pre>
+<p>But we still have not transmitted anything.</p>
+<p>The symbol indices are still abstract numerical labels inside the transmitter.</p>
+<p>Eventually, the transmitter needs to associate each allowed symbol with a distinguishable <strong>physical signal state</strong>.</p>
+<p>This is where the analog ideas from the previous chapters become useful again.</p>
+<p>A sinusoidal carrier has properties we already know how to manipulate:</p>
+<pre class="text"><code>                         Carrier
+                            |
+             +--------------+--------------+
+             |              |              |
+             v              v              v
+         Amplitude       Frequency        Phase</code></pre>
+<p>Digital communication can choose among discrete values of these properties.</p>
+<p>For example, a system might distinguish symbols using different amplitudes, different frequencies, different phases, or combinations of signal dimensions.</p>
+<p>This leads to familiar modulation families such as ASK, FSK, PSK, and QAM. Later chapters will develop the important schemes experimentally.</p>
+<p>The key conceptual change from analog modulation is this:</p>
+<blockquote class="blockquote">
+<p>In analog modulation, a signal property can follow a continuously varying message. In digital modulation, the transmitter chooses from a discrete set of allowed signal states according to the current symbol.</p>
+</blockquote>
+<p>That is the bridge from the analog communication chapters to the digital communication chapters.</p>
+<hr>
+</section>
+<section id="why-symbols-are-useful" class="level2">
+<h2 class="anchored" data-anchor-id="why-symbols-are-useful">15.9 Why Symbols Are Useful</h2>
+<p>It may seem simpler to transmit one bit at a time forever. Why bother grouping bits into symbols?</p>
+<p>One reason is that a larger set of distinguishable signal states can allow each transmitted symbol to carry more information.</p>
+<p>If there are only two possible symbols, each symbol can identify one of two possibilities and therefore carry one bit.</p>
+<p>If there are four possible symbols, one symbol can identify one of four possibilities and therefore carry two bits.</p>
+<p>If there are sixteen possible symbols, one symbol can identify one of sixteen possibilities and therefore carry four bits.</p>
+<p>This does not mean that increasing the number of symbols is free. As the allowed states become more numerous, the receiver generally has to distinguish between more possibilities, and noise or distortion can make that harder.</p>
+<p>We will see that tradeoff much more clearly when the symbols become actual amplitude levels and constellation points.</p>
+<p>For now, the important idea is simply:</p>
+<blockquote class="blockquote">
+<p><strong>A symbol is a transmitted choice, and one symbol can represent several bits of information.</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="putting-the-whole-chain-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-the-whole-chain-together">15.10 Putting the Whole Chain Together</h2>
+<p>We can now describe the transmitter-side logic without referring to any particular digital modulation scheme.</p>
+<p>Suppose the incoming information is</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
+<p>Choose two bits per symbol:</p>
+<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
+<p>Map those groups to symbol indices:</p>
+<pre class="text"><code> 2 |  3 |  0 |  2</code></pre>
+<p>The remaining step is still unanswered:</p>
+<pre class="text"><code>Bits
+  |
+  v
+Bit groups
+  |
+  v
+Symbol indices
+  |
+  v
+??? physical signal states ???
+  |
+  v
+Waveform</code></pre>
+<p>That question mark is exactly where the next part of digital modulation begins.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">What We Learned</h2>
+<p>In this chapter, we made the transition from continuously varying analog messages to discrete digital information.</p>
+<p>The most important ideas are:</p>
+<ul>
+<li>A <strong>bit</strong> is a unit of binary information with two possible values, <code>0</code> and <code>1</code>.</li>
+<li>A bit is not the same thing as a sample, voltage, byte, or waveform level.</li>
+<li>The <strong>bit rate</strong> <span class="math inline">\(R_b\)</span> tells us how many information bits are carried per second.</li>
+<li>The bit duration is</li>
+</ul>
+<p><span class="math display">\[
+T_b = \frac{1}{R_b}.
+\]</span></p>
+<ul>
+<li>In an SDR, one bit may be represented by many waveform samples.</li>
+<li>Several bits can be grouped and treated as one <strong>symbol</strong>.</li>
+<li>If a symbol contains <span class="math inline">\(k\)</span> bits, the number of possible symbols is</li>
+</ul>
+<p><span class="math display">\[
+M = 2^k.
+\]</span></p>
+<ul>
+<li>The relationship between bit rate and symbol rate is</li>
+</ul>
+<p><span class="math display">\[
+R_b = kR_s = R_s\log_2(M).
+\]</span></p>
+<ul>
+<li>Symbol rate is measured in <strong>baud</strong>. Baud and bit/s are equal only when there is one bit per symbol.</li>
+<li><strong>Mapping</strong> defines which symbol corresponds to each possible group of bits.</li>
+<li>A symbol index such as <code>0</code>, <code>1</code>, <code>2</code>, or <code>3</code> is only a label until we associate it with a physical signal state.</li>
+<li>GNU Radio’s byte stream items, information bits, symbol indices, and waveform samples are related but distinct concepts.</li>
+<li>The same bit-to-symbol process works for known teaching sequences and for continuously changing binary data.</li>
+</ul>
+<p>The central mental model to carry forward is:</p>
+<pre class="text"><code>bits -&gt; bit groups -&gt; symbols -&gt; physical signal states -&gt; waveform</code></pre>
+<p>In this chapter, we reached the symbols.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">Connecting to the Next Chapter</h2>
+<p>We now know how to take binary information, group the bits, and produce symbol indices.</p>
+<p>But the radio still needs something physical to transmit.</p>
+<p>The simplest possibility is to let different symbols correspond to different signal amplitudes.</p>
+<p>For example, instead of treating <code>0</code> and <code>1</code> only as abstract labels, we could assign them two actual signal levels. With more symbols, we could choose from four or more allowed levels.</p>
+<p>That leads directly to <strong>Pulse Amplitude Modulation (PAM)</strong>.</p>
+<p>In the next chapter, we will turn our abstract symbols into amplitude levels, add noise, and discover a new receiver problem:</p>
+<blockquote class="blockquote">
+<p><strong>If the received value does not land exactly on an ideal symbol level, how does the receiver decide which symbol was transmitted?</strong></p>
+</blockquote>
+<p>That question will introduce symbol decisions, decision thresholds, and the first real digital modulation scheme in our progression.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter14.html" class="pagination-link" aria-label="Chapter 14: Frequency Modulation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 14: Frequency Modulation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter16.html" class="pagination-link" aria-label="Chapter 16: Linear Modulation and PAM">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

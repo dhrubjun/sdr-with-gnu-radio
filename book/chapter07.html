@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 7: Noise, Noise Floor, and SNR – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter08.html" rel="next">
+<link href="../book/chapter06.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter06.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/chapter07.html"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#real-signals-are-never-completely-clean" id="toc-real-signals-are-never-completely-clean" class="nav-link" data-scroll-target="#real-signals-are-never-completely-clean">7.1 Real Signals Are Never Completely Clean</a></li>
+  <li><a href="#what-do-we-mean-by-noise" id="toc-what-do-we-mean-by-noise" class="nav-link" data-scroll-target="#what-do-we-mean-by-noise">7.2 What Do We Mean by Noise?</a></li>
+  <li><a href="#gaussian-noise-and-white-noise" id="toc-gaussian-noise-and-white-noise" class="nav-link" data-scroll-target="#gaussian-noise-and-white-noise">7.3 Gaussian Noise and White Noise</a></li>
+  <li><a href="#building-the-first-noise-experiment" id="toc-building-the-first-noise-experiment" class="nav-link" data-scroll-target="#building-the-first-noise-experiment">7.4 Building the First Noise Experiment</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings" id="toc-gnu-radio-settings" class="nav-link" data-scroll-target="#gnu-radio-settings">GNU Radio Settings</a></li>
+  <li><a href="#before-running-the-flowgraph" id="toc-before-running-the-flowgraph" class="nav-link" data-scroll-target="#before-running-the-flowgraph">Before Running the Flowgraph</a></li>
+  <li><a href="#noise-in-the-time-domain" id="toc-noise-in-the-time-domain" class="nav-link" data-scroll-target="#noise-in-the-time-domain">Noise in the Time Domain</a></li>
+  <li><a href="#noise-in-the-frequency-domain" id="toc-noise-in-the-frequency-domain" class="nav-link" data-scroll-target="#noise-in-the-frequency-domain">Noise in the Frequency Domain</a></li>
+  </ul></li>
+  <li><a href="#why-does-white-noise-not-look-perfectly-flat" id="toc-why-does-white-noise-not-look-perfectly-flat" class="nav-link" data-scroll-target="#why-does-white-noise-not-look-perfectly-flat">7.5 Why Does White Noise Not Look Perfectly Flat?</a></li>
+  <li><a href="#fft-averaging-what-is-actually-happening" id="toc-fft-averaging-what-is-actually-happening" class="nav-link" data-scroll-target="#fft-averaging-what-is-actually-happening">7.6 FFT Averaging: What Is Actually Happening?</a>
+  <ul class="collapse">
+  <li><a href="#turning-averaging-on" id="toc-turning-averaging-on" class="nav-link" data-scroll-target="#turning-averaging-on">Turning Averaging On</a></li>
+  <li><a href="#why-does-the-spectrum-become-smoother" id="toc-why-does-the-spectrum-become-smoother" class="nav-link" data-scroll-target="#why-does-the-spectrum-become-smoother">Why Does the Spectrum Become Smoother?</a></li>
+  <li><a href="#the-cost-of-averaging" id="toc-the-cost-of-averaging" class="nav-link" data-scroll-target="#the-cost-of-averaging">The Cost of Averaging</a></li>
+  </ul></li>
+  <li><a href="#can-we-still-find-a-signal-when-noise-is-present" id="toc-can-we-still-find-a-signal-when-noise-is-present" class="nav-link" data-scroll-target="#can-we-still-find-a-signal-when-noise-is-present">7.7 Can We Still Find a Signal When Noise Is Present?</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings-1" id="toc-gnu-radio-settings-1" class="nav-link" data-scroll-target="#gnu-radio-settings-1">GNU Radio Settings</a></li>
+  <li><a href="#noise-amplitude-0.1" id="toc-noise-amplitude-0.1" class="nav-link" data-scroll-target="#noise-amplitude-0.1">Noise Amplitude = 0.1</a></li>
+  <li><a href="#noise-amplitude-0.5" id="toc-noise-amplitude-0.5" class="nav-link" data-scroll-target="#noise-amplitude-0.5">Noise Amplitude = 0.5</a></li>
+  <li><a href="#noise-amplitude-1.0" id="toc-noise-amplitude-1.0" class="nav-link" data-scroll-target="#noise-amplitude-1.0">Noise Amplitude = 1.0</a></li>
+  <li><a href="#noise-amplitude-2.0" id="toc-noise-amplitude-2.0" class="nav-link" data-scroll-target="#noise-amplitude-2.0">Noise Amplitude = 2.0</a></li>
+  </ul></li>
+  <li><a href="#what-is-the-noise-floor" id="toc-what-is-the-noise-floor" class="nav-link" data-scroll-target="#what-is-the-noise-floor">7.8 What Is the Noise Floor?</a></li>
+  <li><a href="#now-turn-on-fft-averaging" id="toc-now-turn-on-fft-averaging" class="nav-link" data-scroll-target="#now-turn-on-fft-averaging">7.9 Now Turn On FFT Averaging</a></li>
+  <li><a href="#from-noisy-to-a-number" id="toc-from-noisy-to-a-number" class="nav-link" data-scroll-target="#from-noisy-to-a-number">7.10 From “Noisy” to a Number</a></li>
+  <li><a href="#measuring-the-power-of-the-cosine" id="toc-measuring-the-power-of-the-cosine" class="nav-link" data-scroll-target="#measuring-the-power-of-the-cosine">7.11 Measuring the Power of the Cosine</a>
+  <ul class="collapse">
+  <li><a href="#squaring-a-real-signal-in-gnu-radio" id="toc-squaring-a-real-signal-in-gnu-radio" class="nav-link" data-scroll-target="#squaring-a-real-signal-in-gnu-radio">Squaring a Real Signal in GNU Radio</a></li>
+  </ul></li>
+  <li><a href="#what-is-the-moving-average-block-actually-doing" id="toc-what-is-the-moving-average-block-actually-doing" class="nav-link" data-scroll-target="#what-is-the-moving-average-block-actually-doing">7.12 What Is the Moving Average Block Actually Doing?</a></li>
+  <li><a href="#a-note-about-real-and-complex-power" id="toc-a-note-about-real-and-complex-power" class="nav-link" data-scroll-target="#a-note-about-real-and-complex-power">7.13 A Note About Real and Complex Power</a></li>
+  <li><a href="#measuring-gaussian-noise-power" id="toc-measuring-gaussian-noise-power" class="nav-link" data-scroll-target="#measuring-gaussian-noise-power">7.14 Measuring Gaussian-Noise Power</a></li>
+  <li><a href="#building-the-snr-calculation" id="toc-building-the-snr-calculation" class="nav-link" data-scroll-target="#building-the-snr-calculation">7.15 Building the SNR Calculation</a></li>
+  <li><a href="#gnu-radio-flowgraph-for-measuring-snr" id="toc-gnu-radio-flowgraph-for-measuring-snr" class="nav-link" data-scroll-target="#gnu-radio-flowgraph-for-measuring-snr">7.16 GNU Radio Flowgraph for Measuring SNR</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-settings-2" id="toc-gnu-radio-settings-2" class="nav-link" data-scroll-target="#gnu-radio-settings-2">GNU Radio Settings</a></li>
+  </ul></li>
+  <li><a href="#comparing-different-noise-levels" id="toc-comparing-different-noise-levels" class="nav-link" data-scroll-target="#comparing-different-noise-levels">7.17 Comparing Different Noise Levels</a></li>
+  <li><a href="#comparing-theory-with-measurement" id="toc-comparing-theory-with-measurement" class="nav-link" data-scroll-target="#comparing-theory-with-measurement">7.18 Comparing Theory with Measurement</a></li>
+  <li><a href="#why-does-the-measurement-fluctuate" id="toc-why-does-the-measurement-fluctuate" class="nav-link" data-scroll-target="#why-does-the-measurement-fluctuate">7.19 Why Does the Measurement Fluctuate?</a></li>
+  <li><a href="#what-does-a-negative-snr-mean" id="toc-what-does-a-negative-snr-mean" class="nav-link" data-scroll-target="#what-does-a-negative-snr-mean">7.20 What Does a Negative SNR Mean?</a></li>
+  <li><a href="#one-useful-6-db-observation" id="toc-one-useful-6-db-observation" class="nav-link" data-scroll-target="#one-useful-6-db-observation">7.21 One Useful 6 dB Observation</a></li>
+  <li><a href="#one-more-question-what-determines-the-noise-power" id="toc-one-more-question-what-determines-the-noise-power" class="nav-link" data-scroll-target="#one-more-question-what-determines-the-noise-power">7.22 One More Question: What Determines the Noise Power?</a></li>
+  <li><a href="#the-basic-idea" id="toc-the-basic-idea" class="nav-link" data-scroll-target="#the-basic-idea">7.23 The Basic Idea</a></li>
+  <li><a href="#building-the-experiment-in-gnu-radio" id="toc-building-the-experiment-in-gnu-radio" class="nav-link" data-scroll-target="#building-the-experiment-in-gnu-radio">7.24 Building the Experiment in GNU Radio</a></li>
+  <li><a href="#gnu-radio-settings-for-experiment-4" id="toc-gnu-radio-settings-for-experiment-4" class="nav-link" data-scroll-target="#gnu-radio-settings-for-experiment-4">7.25 GNU Radio Settings for Experiment 4</a></li>
+  <li><a href="#measuring-the-noise-power" id="toc-measuring-the-noise-power" class="nav-link" data-scroll-target="#measuring-the-noise-power">7.26 Measuring the Noise Power</a></li>
+  <li><a href="#why-measure-the-input-noise-power-too" id="toc-why-measure-the-input-noise-power-too" class="nav-link" data-scroll-target="#why-measure-the-input-noise-power-too">7.27 Why Measure the Input Noise Power Too?</a></li>
+  <li><a href="#changing-the-accepted-noise-bandwidth" id="toc-changing-the-accepted-noise-bandwidth" class="nav-link" data-scroll-target="#changing-the-accepted-noise-bandwidth">7.28 Changing the Accepted Noise Bandwidth</a></li>
+  <li><a href="#what-do-we-expect-to-see" id="toc-what-do-we-expect-to-see" class="nav-link" data-scroll-target="#what-do-we-expect-to-see">7.29 What Do We Expect to See?</a></li>
+  <li><a href="#experimental-results" id="toc-experimental-results" class="nav-link" data-scroll-target="#experimental-results">7.30 Experimental Results</a></li>
+  <li><a href="#looking-at-the-spectrum" id="toc-looking-at-the-spectrum" class="nav-link" data-scroll-target="#looking-at-the-spectrum">7.31 Looking at the Spectrum</a></li>
+  <li><a href="#comparing-500-hz-and-1-khz" id="toc-comparing-500-hz-and-1-khz" class="nav-link" data-scroll-target="#comparing-500-hz-and-1-khz">7.32 Comparing 500 Hz and 1 kHz</a></li>
+  <li><a href="#continuing-to-wider-bandwidths" id="toc-continuing-to-wider-bandwidths" class="nav-link" data-scroll-target="#continuing-to-wider-bandwidths">7.33 Continuing to Wider Bandwidths</a></li>
+  <li><a href="#what-happens-in-decibels" id="toc-what-happens-in-decibels" class="nav-link" data-scroll-target="#what-happens-in-decibels">7.34 What Happens in Decibels?</a></li>
+  <li><a href="#why-are-the-measurements-not-perfectly-proportional" id="toc-why-are-the-measurements-not-perfectly-proportional" class="nav-link" data-scroll-target="#why-are-the-measurements-not-perfectly-proportional">7.35 Why Are the Measurements Not Perfectly Proportional?</a>
+  <ul class="collapse">
+  <li><a href="#random-noise-is-still-random" id="toc-random-noise-is-still-random" class="nav-link" data-scroll-target="#random-noise-is-still-random">Random Noise Is Still Random</a></li>
+  <li><a href="#our-filter-is-not-ideal" id="toc-our-filter-is-not-ideal" class="nav-link" data-scroll-target="#our-filter-is-not-ideal">Our Filter Is Not Ideal</a></li>
+  </ul></li>
+  <li><a href="#cutoff-frequency-and-effective-noise-bandwidth-are-not-exactly-the-same-thing" id="toc-cutoff-frequency-and-effective-noise-bandwidth-are-not-exactly-the-same-thing" class="nav-link" data-scroll-target="#cutoff-frequency-and-effective-noise-bandwidth-are-not-exactly-the-same-thing">7.36 Cutoff Frequency and Effective Noise Bandwidth Are Not Exactly the Same Thing</a></li>
+  <li><a href="#why-this-matters-in-an-sdr-receiver" id="toc-why-this-matters-in-an-sdr-receiver" class="nav-link" data-scroll-target="#why-this-matters-in-an-sdr-receiver">7.37 Why This Matters in an SDR Receiver</a></li>
+  <li><a href="#why-can-we-not-keep-reducing-the-bandwidth-forever" id="toc-why-can-we-not-keep-reducing-the-bandwidth-forever" class="nav-link" data-scroll-target="#why-can-we-not-keep-reducing-the-bandwidth-forever">7.38 Why Can We Not Keep Reducing the Bandwidth Forever?</a></li>
+  <li><a href="#connecting-bandwidth-back-to-snr" id="toc-connecting-bandwidth-back-to-snr" class="nav-link" data-scroll-target="#connecting-bandwidth-back-to-snr">7.39 Connecting Bandwidth Back to SNR</a></li>
+  <li><a href="#a-simple-way-to-visualise-bandwidth-and-noise" id="toc-a-simple-way-to-visualise-bandwidth-and-noise" class="nav-link" data-scroll-target="#a-simple-way-to-visualise-bandwidth-and-noise">7.40 A Simple Way to Visualise Bandwidth and Noise</a></li>
+  <li><a href="#what-experiment-4-taught-us" id="toc-what-experiment-4-taught-us" class="nav-link" data-scroll-target="#what-experiment-4-taught-us">7.41 What Experiment 4 Taught Us</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">7.42 GNU Radio Toolbox</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">7.43 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">7.44 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter06.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/chapter07.html"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p>How weak can a signal become before it disappears into the noise?</p>
+<hr>
+</section>
+<section id="real-signals-are-never-completely-clean" class="level2">
+<h2 class="anchored" data-anchor-id="real-signals-are-never-completely-clean">7.1 Real Signals Are Never Completely Clean</h2>
+<p>Most of the signals we have worked with so far have been unusually clean.</p>
+<p>We generated sine waves, cosine waves, and complex tones with exact frequencies and amplitudes. When we looked at them in the frequency domain, their spectral components were easy to identify.</p>
+<p>Real receivers are not usually that friendly.</p>
+<p>Connect an antenna to a receiver and look at the spectrum. Even when no obvious transmission is present, the display does not become completely empty. There is always some background activity.</p>
+<p>Some of it comes from the receiver electronics themselves. Some comes from the environment. Nearby electronic equipment may contribute interference. Even the thermal motion of electrons inside electronic components contributes noise.</p>
+<p>So a useful signal rarely arrives by itself.</p>
+<p>A more realistic picture is</p>
+<p><span class="math display">\[
+\boxed{ \text{Received signal} = \text{wanted signal} \+ \text{noise} \+ \text{other unwanted signals} }
+\]</span></p>
+<p>In this chapter, we will begin with the simplest part of that problem: ****noise****.</p>
+<p>We will first look at noise by itself. Then we will add noise to a known signal and gradually make the noise stronger.</p>
+<p>After that, instead of simply saying that a signal “looks noisy,” we will put a number on it.</p>
+<p>That number is the ****signal-to-noise ratio****, or ****SNR****.</p>
+<p>Finally, we will investigate something that becomes very important in a real receiver: how the amount of noise we collect depends on bandwidth.</p>
+<hr>
+</section>
+<section id="what-do-we-mean-by-noise" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-mean-by-noise">7.2 What Do We Mean by Noise?</h2>
+<p>In signal processing, noise is an unwanted random component that interferes with the signal we are interested in.</p>
+<p>Unlike the sinusoidal signals we used earlier, noise does not repeat in a simple, predictable pattern.</p>
+<p>Consider a cosine:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi f_0t)
+\]</span></p>
+<p>Once we know its amplitude, frequency, and phase, we can predict what it will do next.</p>
+<p>Noise is different.</p>
+<p>If we know the present value of a random noise sample, we generally cannot use that value alone to predict the exact value of the next sample.</p>
+<p>That does not mean noise cannot be described.</p>
+<p>We simply describe it differently.</p>
+<p>Instead of trying to predict every individual sample, we use statistical properties.</p>
+<p>For example, we can ask:</p>
+<ul>
+<li><p>What is its average value?</p></li>
+<li><p>How widely do its samples vary?</p></li>
+<li><p>How much power does it contain?</p></li>
+<li><p>How is that power distributed across frequency?</p></li>
+</ul>
+<p>These questions are much more useful than trying to predict the exact value of the next noise sample.</p>
+<hr>
+</section>
+<section id="gaussian-noise-and-white-noise" class="level2">
+<h2 class="anchored" data-anchor-id="gaussian-noise-and-white-noise">7.3 Gaussian Noise and White Noise</h2>
+<p>For our first experiments, we will use ****Gaussian noise****.</p>
+<p>The word <strong>Gaussian</strong> describes the statistical distribution of the sample values.</p>
+<p>If we collect a large number of Gaussian-noise samples and plot a histogram, values near the mean occur more frequently, while very large positive or negative values occur less frequently.</p>
+<p>For zero-mean Gaussian noise, the distribution is centred around zero.</p>
+<p>This is why setting the GNU Radio Gaussian Noise Source amplitude to 1 does ****not**** mean that the generated samples are restricted to</p>
+<p><span class="math display">\[
+-1\leq x[n]\leq1
+\]</span></p>
+<p>Samples greater than <span class="math inline">\(+1\)</span> or smaller than <span class="math inline">\(-1\)</span> are perfectly possible.</p>
+<p>We will also work with ****white noise****.</p>
+<p>The word <strong>white</strong> describes how noise power is distributed across frequency.</p>
+<p>Ideally, white noise has a constant power spectral density:</p>
+<p><span class="math display">\[
+S_n(f)=\text{constant}
+\]</span></p>
+<p>In simple terms:</p>
+<blockquote class="blockquote">
+<p>****White noise does not favour one frequency over another within the bandwidth being considered.****</p>
+</blockquote>
+<p>The name comes from an analogy with white light, which contains many optical frequencies rather than a single colour.</p>
+<p>Gaussian and white therefore describe two different properties.</p>
+<div class="line-block">Term | What it describes |</div>
+<p>|—|—|</p>
+<div class="line-block">Gaussian | Statistical distribution of the sample amplitudes |</div>
+<div class="line-block">White | Distribution of noise power across frequency |</div>
+<p>Noise can be Gaussian without necessarily being white, and it can be white without necessarily having a Gaussian amplitude distribution.</p>
+<p>In our GNU Radio experiments, we will use Gaussian noise that is approximately white across the frequency range represented by our sampled system.</p>
+<p>This last point matters.</p>
+<p>Ideal mathematical white noise is often described as extending over unlimited bandwidth. A real sampled system does not have unlimited bandwidth.</p>
+<p>If our sample rate is</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>the discrete-time spectrum we observe is limited to the Nyquist interval</p>
+<p><span class="math display">\[
+-\frac{f_s}{2} \leq f &lt; +\frac{f_s}{2}
+\]</span></p>
+<p>which, in our case, is approximately</p>
+<p><span class="math display">\[
+-16\text{ kHz} \leq f &lt; +16\text{ kHz}
+\]</span></p>
+<p>So when we call the GNU Radio noise “white,” we are interested in its approximately uniform spectral behaviour over this finite frequency range.</p>
+<hr>
+</section>
+<section id="building-the-first-noise-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-first-noise-experiment">7.4 Building the First Noise Experiment</h2>
+<p>Before adding noise to a useful signal, let us look at noise by itself.</p>
+<p>The flowgraph is deliberately simple.</p>
+<p>A ****Noise Source**** generates Gaussian noise. The same stream is observed in both the time and frequency domains.</p>
+<p>Because this is a software-only simulation and there is no hardware controlling the rate at which samples are produced, we also use a ****Throttle**** block.</p>
+<p>The processing chain is:</p>
+<pre class="text"><code>                         ┌──→ QT GUI Time Sink
+
+                         │
+
+Noise Source → Throttle ─┤
+
+                         │
+
+                         └──→ QT GUI Frequency Sink</code></pre>
+<p>We use</p>
+<p><span class="math display">\[
+f_s=32\\,000\text{ samples/s}
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>The Noise Source amplitude is initially set to 1.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp1-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing Gaussian noise in the time and frequency domains.</figcaption>
+</figure>
+</div>
+<section id="gnu-radio-settings" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings">GNU Radio Settings</h3>
+<p>Create a variable:</p>
+<div class="line-block">Parameter | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block">Variable ID | <code>samp_rate</code> |</div>
+<div class="line-block">Value | <code>32e3</code> |</div>
+<p>Configure the main blocks as follows.</p>
+<div class="line-block">Block | Parameter | Setting |</div>
+<p>|—|—|—|</p>
+<div class="line-block">Noise Source | Output Type | Float |</div>
+<div class="line-block">Noise Source | Noise Type | Gaussian |</div>
+<div class="line-block">Noise Source | Amplitude | <code>1</code> |</div>
+<div class="line-block">Noise Source | Seed | <code>0</code> |</div>
+<div class="line-block">Throttle | Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">QT GUI Time Sink | Type | Float |</div>
+<div class="line-block">QT GUI Time Sink | Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">QT GUI Frequency Sink | Type | Float |</div>
+<div class="line-block">QT GUI Frequency Sink | FFT Size | <code>1024</code> |</div>
+<div class="line-block">QT GUI Frequency Sink | Center Frequency | <code>0</code> |</div>
+<div class="line-block">QT GUI Frequency Sink | Bandwidth | <code>samp_rate</code> |</div>
+<p>For the first observation, leave frequency-sink averaging disabled.</p>
+</section>
+<section id="before-running-the-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="before-running-the-flowgraph">Before Running the Flowgraph</h3>
+<p>We already know what a sinusoid looks like in the time domain.</p>
+<p>It has a clear repeating pattern.</p>
+<p>But what should noise look like?</p>
+<p>And if the time-domain waveform is random, what should we expect in the frequency domain?</p>
+<p>Let us run the flowgraph.</p>
+</section>
+<section id="noise-in-the-time-domain" class="level3">
+<h3 class="anchored" data-anchor-id="noise-in-the-time-domain">Noise in the Time Domain</h3>
+<p>The Time Sink immediately looks very different from the clean signals we used earlier.</p>
+<p>There is no obvious repeating waveform.</p>
+<p>The samples jump irregularly above and below zero.</p>
+<p>This is our first useful observation:</p>
+<blockquote class="blockquote">
+<p>****Noise can look completely irregular in the time domain.****</p>
+</blockquote>
+<p>The Gaussian Noise Source amplitude is set to 1, but we can still see individual samples whose magnitudes are greater than 1.</p>
+<p>That is expected.</p>
+<p>The amplitude parameter controls the scale of the Gaussian distribution. It is not a hard upper and lower limit on the generated samples.</p>
+</section>
+<section id="noise-in-the-frequency-domain" class="level3">
+<h3 class="anchored" data-anchor-id="noise-in-the-frequency-domain">Noise in the Frequency Domain</h3>
+<p>The Frequency Sink tells a different part of the story.</p>
+<p>With</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>the displayed frequency range extends approximately from</p>
+<p><span class="math display">\[
+-\frac{f_s}{2}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
++\frac{f_s}{2}
+\]</span></p>
+<p>which gives approximately</p>
+<p><span class="math display">\[
+-16\text{ kHz} \quad\text{to}\quad +16\text{ kHz}
+\]</span></p>
+<p>Unlike a sinusoid, the noise does not produce one narrow spectral peak.</p>
+<p>Instead, spectral energy appears across the full displayed frequency range.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp1-noise-no-averaging.png" class="img-fluid figure-img"></p>
+<figcaption>Gaussian noise in the time and frequency domains without FFT averaging.</figcaption>
+</figure>
+</div>
+<p>This is what we expect from approximately white noise.</p>
+<p>But there is something that may initially seem strange.</p>
+<p>The spectrum is not perfectly flat.</p>
+<p>It jumps up and down from one frequency bin to another.</p>
+<p>If white noise has a flat power spectral density, why does the FFT look so jagged?</p>
+<hr>
+</section>
+</section>
+<section id="why-does-white-noise-not-look-perfectly-flat" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-white-noise-not-look-perfectly-flat">7.5 Why Does White Noise Not Look Perfectly Flat?</h2>
+<p>The statement</p>
+<blockquote class="blockquote">
+<p>****White noise has a flat power spectral density****</p>
+</blockquote>
+<p>does not mean that every FFT of every finite block of white noise will produce a perfectly horizontal line.</p>
+<p>Remember what we learned in Chapter 6.</p>
+<p>The FFT does not analyse an infinitely long signal. It operates on a finite block of samples.</p>
+<p>For example, if</p>
+<p><span class="math display">\[
+N=1024
+\]</span></p>
+<p>GNU Radio analyses a finite group of 1024 noise samples.</p>
+<p>A short time later, it analyses another group.</p>
+<p>Then another.</p>
+<p>Noise is random.</p>
+<p>One particular block may happen to contain slightly more energy in one FFT bin and slightly less in another.</p>
+<p>The next block will be different.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>FFT frame 1 → noisy spectral estimate
+
+FFT frame 2 → slightly different estimate
+
+FFT frame 3 → another different estimate
+
+FFT frame 4 → another different estimate
+
+...</code></pre>
+<p>The underlying statistical behaviour can be flat even though each individual finite spectral estimate fluctuates.</p>
+<p>This is not an error in the FFT.</p>
+<p>It is a consequence of estimating the spectrum of a random process using a finite amount of data.</p>
+<p>GNU Radio gives us a useful way to see this directly.</p>
+<hr>
+</section>
+<section id="fft-averaging-what-is-actually-happening" class="level2">
+<h2 class="anchored" data-anchor-id="fft-averaging-what-is-actually-happening">7.6 FFT Averaging: What Is Actually Happening?</h2>
+<p>Noise gives us a very good reason to understand the ****Averaging**** option in the QT GUI Frequency Sink.</p>
+<p>Suppose GNU Radio calculates one spectral estimate:</p>
+<p><span class="math display">\[
+S_1[k]
+\]</span></p>
+<p>A short time later, it calculates another:</p>
+<p><span class="math display">\[
+S_2[k]
+\]</span></p>
+<p>Then another:</p>
+<p><span class="math display">\[
+S_3[k]
+\]</span></p>
+<p>and so on.</p>
+<p>Without averaging, the displayed spectrum follows these changing estimates closely.</p>
+<p>Since the noise is random, the displayed trace fluctuates.</p>
+<p>A simple way to understand spectral averaging is to imagine combining several spectral estimates:</p>
+<p><span class="math display">\[
+\overline{S}[k] \approx \frac{ S_1[k]+S_2[k]+\cdots+S_M[k] }{M}
+\]</span></p>
+<p>If one FFT happens to produce an unusually high value in a particular bin and another produces a lower value there, averaging reduces some of that frame-to-frame variation.</p>
+<p>The exact implementation used by the display does not need to be identical to the simple arithmetic average above for us to understand the main idea.</p>
+<p>The important idea is:</p>
+<blockquote class="blockquote">
+<p>****Do not rely entirely on one noisy spectral estimate. Combine information from successive estimates.****</p>
+</blockquote>
+<section id="turning-averaging-on" class="level3">
+<h3 class="anchored" data-anchor-id="turning-averaging-on">Turning Averaging On</h3>
+<p>Open the ****QT GUI Frequency Sink****.</p>
+<p>Enable its averaging option while leaving the Noise Source, sample rate, FFT size, and the rest of the flowgraph unchanged.</p>
+<p>Use the same averaging configuration that we used when capturing the experiment figure.</p>
+<p>Then run the flowgraph again.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp1-noise-with-averaging.png" class="img-fluid figure-img"></p>
+<figcaption>Gaussian noise spectrum with FFT averaging enabled.</figcaption>
+</figure>
+</div>
+<p>The difference is immediately visible.</p>
+<p>The time-domain waveform is still random.</p>
+<p>But the frequency-domain trace becomes much smoother.</p>
+<p>This reveals something important:</p>
+<blockquote class="blockquote">
+<p>****FFT averaging did not remove noise from the actual signal.****</p>
+</blockquote>
+<p>The samples flowing through the system are still noisy.</p>
+<p>Only the displayed spectral estimate has been averaged.</p>
+<p>FFT averaging is therefore not the same thing as filtering the original time-domain signal.</p>
+</section>
+<section id="why-does-the-spectrum-become-smoother" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-the-spectrum-become-smoother">Why Does the Spectrum Become Smoother?</h3>
+<p>The random spectral fluctuations change from one FFT frame to another.</p>
+<p>Averaging reduces these fluctuations.</p>
+<p>The underlying broadband character of the white noise remains.</p>
+<p>After averaging, it becomes much easier to see that the noise occupies the entire displayed frequency range.</p>
+</section>
+<section id="the-cost-of-averaging" class="level3">
+<h3 class="anchored" data-anchor-id="the-cost-of-averaging">The Cost of Averaging</h3>
+<p>Averaging is useful, but it comes with a trade-off.</p>
+<p>Suppose the signal suddenly changes.</p>
+<p>If the display depends strongly on previous spectral estimates, information from those previous estimates does not disappear immediately.</p>
+<p>So:</p>
+<p><span class="math display">\[
+\boxed{ \text{More averaging} \longleftrightarrow \text{Smoother display but slower response} }
+\]</span></p>
+<p>This is why averaging settings matter on spectrum analysers and SDR displays.</p>
+<p>A stable signal buried in noise may benefit from more averaging.</p>
+<p>A short or rapidly changing signal may require a faster response.</p>
+<hr>
+</section>
+</section>
+<section id="can-we-still-find-a-signal-when-noise-is-present" class="level2">
+<h2 class="anchored" data-anchor-id="can-we-still-find-a-signal-when-noise-is-present">7.7 Can We Still Find a Signal When Noise Is Present?</h2>
+<p>Noise by itself is useful to study, but in a receiver we are normally interested in something else:</p>
+<blockquote class="blockquote">
+<p>****Can we still find the signal when noise is present?****</p>
+</blockquote>
+<p>To investigate this, we return to a familiar signal:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi1000t)
+\]</span></p>
+<p>It is a real 1 kHz cosine with amplitude 1.</p>
+<p>We generate Gaussian noise and add the two signals together.</p>
+<p>The received signal in our simulation is therefore</p>
+<p><span class="math display">\[
+r(t)=x(t)+n(t)
+\]</span></p>
+<p>The flowgraph is:</p>
+<pre class="text"><code>Signal Source ──┐
+
+                │
+
+                ├──→ Add → Throttle ──┬──→ QT GUI Time Sink
+
+                │                     │
+
+Noise Source ───┘                     └──→ QT GUI Frequency Sink</code></pre>
+<p>A ****QT GUI Range**** controls the noise amplitude while the flowgraph is running.</p>
+<p>This allows us to change the amount of noise without stopping and rebuilding the experiment.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-plus-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for adding Gaussian noise to a 1 kHz cosine.</figcaption>
+</figure>
+</div>
+<section id="gnu-radio-settings-1" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings-1">GNU Radio Settings</h3>
+<p>Keep</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>and create a variable for the noise amplitude if required by the QT GUI Range.</p>
+<p>The important settings are:</p>
+<div class="line-block">Block | Parameter | Setting |</div>
+<p>|—|—|—|</p>
+<div class="line-block">Signal Source | Output Type | Float |</div>
+<div class="line-block">Signal Source | Waveform | Cosine |</div>
+<div class="line-block">Signal Source | Frequency | <code>1e3</code> |</div>
+<div class="line-block">Signal Source | Amplitude | <code>1</code> |</div>
+<div class="line-block">Signal Source | Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">Noise Source | Output Type | Float |</div>
+<div class="line-block">Noise Source | Noise Type | Gaussian |</div>
+<div class="line-block">Noise Source | Amplitude | controlled by QT GUI Range |</div>
+<div class="line-block">Add | Type | Float |</div>
+<div class="line-block">Throttle | Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">QT GUI Time Sink | Type | Float |</div>
+<div class="line-block">QT GUI Frequency Sink | Type | Float |</div>
+<div class="line-block">QT GUI Frequency Sink | FFT Size | <code>1024</code> |</div>
+<div class="line-block">QT GUI Frequency Sink | Bandwidth | <code>samp_rate</code> |</div>
+<p>For the first comparison, keep FFT averaging ****off****.</p>
+<p>We deliberately use ****Float**** streams here because both the cosine and the noise are real-valued.</p>
+<p>Complex IQ signals will return when we begin working with frequency translation and receivers.</p>
+<p>We test four noise amplitudes:</p>
+<p><span class="math display">\[
+A_n=0.1,\quad0.5,\quad1.0,\quad2.0
+\]</span></p>
+</section>
+<section id="noise-amplitude-0.1" class="level3">
+<h3 class="anchored" data-anchor-id="noise-amplitude-0.1">Noise Amplitude = 0.1</h3>
+<p>At a noise amplitude of 0.1, the cosine is still very easy to recognize in the time domain.</p>
+<p>The waveform is no longer perfectly smooth, but its periodic structure is obvious.</p>
+<p>The frequency-domain view is even clearer.</p>
+<p>Because the signal is a real cosine, we see spectral components near</p>
+<p><span class="math display">\[
+-1\text{ kHz} \quad\text{and}\quad +1\text{ kHz}
+\]</span></p>
+<p>The noise produces a broadband background underneath them.</p>
+<p>The two spectral peaks stand well above that background.</p>
+</section>
+<section id="noise-amplitude-0.5" class="level3">
+<h3 class="anchored" data-anchor-id="noise-amplitude-0.5">Noise Amplitude = 0.5</h3>
+<p>Increasing the noise amplitude to 0.5 makes the time-domain waveform noticeably rougher.</p>
+<p>The cosine is still visible, but the noise is now difficult to ignore.</p>
+<p>In the frequency domain, however, the two spectral components near</p>
+<p><span class="math display">\[
+\pm1\text{ kHz}
+\]</span></p>
+<p>remain easy to identify.</p>
+</section>
+<section id="noise-amplitude-1.0" class="level3">
+<h3 class="anchored" data-anchor-id="noise-amplitude-1.0">Noise Amplitude = 1.0</h3>
+<p>Now the noise becomes comparable in scale to the signal.</p>
+<p>The time-domain waveform looks heavily corrupted.</p>
+<p>If we were shown only a short section of the Time Sink without knowing what signal had been transmitted, identifying a 1 kHz cosine by eye would be much harder.</p>
+<p>But the frequency-domain plot still tells us something useful.</p>
+<p>The peaks near</p>
+<p><span class="math display">\[
+-1\text{ kHz} \quad\text{and}\quad +1\text{ kHz}
+\]</span></p>
+<p>are still present.</p>
+</section>
+<section id="noise-amplitude-2.0" class="level3">
+<h3 class="anchored" data-anchor-id="noise-amplitude-2.0">Noise Amplitude = 2.0</h3>
+<p>Finally, we increase the noise amplitude to 2.</p>
+<p>The time-domain waveform is now dominated by random fluctuations.</p>
+<p>The sinusoidal structure is difficult to recognize by eye.</p>
+<p>Yet the Frequency Sink can still show evidence of the 1 kHz signal.</p>
+<p>The four cases are shown together below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-noise-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of increasing Gaussian noise on a 1 kHz cosine for noise amplitudes 0.1, 0.5, 1.0, and 2.0.</figcaption>
+</figure>
+</div>
+<p>This experiment gives us one of the most useful lessons in this chapter:</p>
+<blockquote class="blockquote">
+<p>****A signal that is difficult to recognize in the time domain may still be identifiable in the frequency domain.****</p>
+</blockquote>
+<p>The persistent sinusoidal component is concentrated around particular frequencies, while the white-noise energy is spread much more broadly.</p>
+<p>This is one reason spectrum analysis is so useful in SDR.</p>
+<hr>
+</section>
+</section>
+<section id="what-is-the-noise-floor" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-noise-floor">7.8 What Is the Noise Floor?</h2>
+<p>Look again at the frequency-domain plots from Experiment 2.</p>
+<p>The noise does not appear as one isolated spectral line.</p>
+<p>Instead, it creates a broad background across the spectrum.</p>
+<p>This background is commonly referred to as the ****noise floor****.</p>
+<p>A useful way to picture it is:</p>
+<pre class="text"><code>Magnitude
+
+   ↑
+
+   │                    signal
+
+   │                      │
+
+   │                      │
+
+   │       \~\~\~\~\~\~\~\~       │       \~\~\~\~\~\~\~\~
+
+   │   \~\~\~\~\~\~\~\~\~\~\~\~\~\~\~    │   \~\~\~\~\~\~\~\~\~\~\~\~\~\~\~
+
+   │\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~\~
+
+   └──────────────────────────────────────────→ Frequency
+
+                    noise floor</code></pre>
+<p>A strong signal rises clearly above the surrounding noise.</p>
+<p>As the signal becomes weaker, or the noise becomes stronger, the spectral peak moves closer to that background.</p>
+<p>Eventually, detecting the signal becomes more difficult.</p>
+<p>There is an important distinction here.</p>
+<p>The ****total noise power**** in a signal and the ****height of the displayed FFT noise floor**** are related, but they are not exactly the same quantity.</p>
+<p>The level shown by a spectrum display can depend on things such as:</p>
+<ul>
+<li><p>FFT size;</p></li>
+<li><p>window type;</p></li>
+<li><p>normalization;</p></li>
+<li><p>averaging;</p></li>
+<li><p>receiver bandwidth;</p></li>
+<li><p>gain;</p></li>
+<li><p>display configuration.</p></li>
+</ul>
+<p>For this reason, we should not automatically treat the height shown on an uncalibrated GNU Radio Frequency Sink as an absolute physical noise-power measurement.</p>
+<p>For now, the important idea is:</p>
+<blockquote class="blockquote">
+<p>****The noise floor is the background spectral level against which we try to identify useful spectral components.****</p>
+</blockquote>
+<p>Later in this chapter, we will measure noise power directly from the samples rather than trying to infer it from the height of the FFT display.</p>
+<hr>
+</section>
+<section id="now-turn-on-fft-averaging" class="level2">
+<h2 class="anchored" data-anchor-id="now-turn-on-fft-averaging">7.9 Now Turn On FFT Averaging</h2>
+<p>Experiment 1 showed that averaging makes a noisy spectral estimate smoother.</p>
+<p>Now we can ask a more practical question:</p>
+<blockquote class="blockquote">
+<p>****Can averaging help us see a persistent signal inside noise?****</p>
+</blockquote>
+<p>Keep the Experiment 2 flowgraph unchanged.</p>
+<p>The signal remains a 1 kHz cosine.</p>
+<p>The Gaussian noise remains exactly the same kind of noise.</p>
+<p>The only thing we change is the averaging setting of the ****QT GUI Frequency Sink****.</p>
+<p>Enable FFT averaging and repeat the four noise-amplitude cases:</p>
+<p><span class="math display">\[
+0.1,\quad0.5,\quad1.0,\quad2.0
+\]</span></p>
+<p>The results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-noise-averaged-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Signal and Gaussian noise observed with FFT averaging enabled for noise amplitudes 0.1, 0.5, 1.0, and 2.0.</figcaption>
+</figure>
+</div>
+<p>The spectrum is now much smoother.</p>
+<p>But why do the signal peaks remain?</p>
+<p>Our cosine always has the same frequency:</p>
+<p><span class="math display">\[
+f_0=1\text{ kHz}
+\]</span></p>
+<p>So successive FFT frames repeatedly contain spectral energy near</p>
+<p><span class="math display">\[
+-f_0 \quad\text{and}\quad +f_0
+\]</span></p>
+<p>Those components consistently appear at the same frequencies.</p>
+<p>The random noise behaves differently.</p>
+<p>Its instantaneous FFT values fluctuate from frame to frame.</p>
+<p>Averaging reduces some of that random frame-to-frame variation.</p>
+<p>Conceptually:</p>
+<p><span class="math display">\[
+\boxed{ \text{Persistent spectral components remain at consistent frequencies} }
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\boxed{ \text{Random spectral fluctuations become smoother with averaging} }
+\]</span></p>
+<p>This can make a stable tone easier to distinguish from a noisy spectral background.</p>
+<p>But the most important point is what averaging ****did not**** do.</p>
+<p>It did not clean the received time-domain signal.</p>
+<p>The noisy samples themselves are unchanged.</p>
+<p>We only changed the way successive spectral estimates are displayed.</p>
+<hr>
+</section>
+<section id="from-noisy-to-a-number" class="level2">
+<h2 class="anchored" data-anchor-id="from-noisy-to-a-number">7.10 From “Noisy” to a Number</h2>
+<p>So far, we have described the signal mostly by looking at it.</p>
+<p>At low noise amplitude we said:</p>
+<blockquote class="blockquote">
+<p>The signal is easy to see.</p>
+</blockquote>
+<p>At higher noise amplitude we said:</p>
+<blockquote class="blockquote">
+<p>The signal is becoming difficult to recognize.</p>
+</blockquote>
+<p>That is useful while learning, but engineers need something more precise.</p>
+<p>Suppose two receivers produce different-looking noisy signals.</p>
+<p>Which one has the better signal relative to its noise?</p>
+<p>Suppose we change the receiver gain.</p>
+<p>Did the signal improve relative to the noise, or did both simply increase together?</p>
+<p>To answer questions like these, we need to compare ****signal power**** with ****noise power****.</p>
+<p>That comparison is called the ****signal-to-noise ratio****:</p>
+<p><span class="math display">\[
+\boxed{ \mathrm{SNR} = \frac{P_s}{P_n} }
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+P_s=\text{signal power}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+P_n=\text{noise power}
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+P_s&gt;P_n
+\]</span></p>
+<p>the linear SNR is greater than 1.</p>
+<p>If</p>
+<p><span class="math display">\[
+P_s=P_n
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+\mathrm{SNR}=1
+\]</span></p>
+<p>And if</p>
+<p><span class="math display">\[
+P_s\&lt;P_n
+\]</span></p>
+<p>the linear SNR is less than 1.</p>
+<p>SNR is usually expressed in decibels:</p>
+<p><span class="math display">\[
+\boxed{ \mathrm{SNR}_{\mathrm{dB}} = 10\log_{10} \left( \frac{P_s}{P_n} \right) }
+\]</span></p>
+<p>This gives us a much better language for describing what we saw in Experiment 2.</p>
+<p>Instead of saying only</p>
+<blockquote class="blockquote">
+<p>“The noise amplitude is 1,”</p>
+</blockquote>
+<p>we can say something like</p>
+<blockquote class="blockquote">
+<p>“The measured SNR is approximately -3 dB.”</p>
+</blockquote>
+<p>But before using that number, we should understand where it comes from.</p>
+<p>So instead of asking GNU Radio to hide the calculation from us, we are going to build the SNR calculation ourselves.</p>
+<hr>
+</section>
+<section id="measuring-the-power-of-the-cosine" class="level2">
+<h2 class="anchored" data-anchor-id="measuring-the-power-of-the-cosine">7.11 Measuring the Power of the Cosine</h2>
+<p>Our signal is</p>
+<p><span class="math display">\[
+x[n] = A\cos \left( 2\pi f_0\frac{n}{f_s} \right)
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+A=1
+\]</span></p>
+<p><span class="math display">\[
+f_0=1\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>For a real sinusoid with peak amplitude <span class="math inline">\(A\)</span>, the average power is</p>
+<p><span class="math display">\[
+P_s=\frac{A^2}{2}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+P_s = \frac{1^2}{2} = 0.5
+\]</span></p>
+<p>We could simply calculate this on paper and move on.</p>
+<p>But it is much more useful to make GNU Radio measure the power from the actual samples.</p>
+<p>For a real discrete-time signal, average power can be estimated using</p>
+<p><span class="math display">\[
+P_s \approx \frac{1}{N} \sum_{n=0}^{N-1} x^2[n]
+\]</span></p>
+<p>This equation tells us exactly what we need to build.</p>
+<p>First, square every sample.</p>
+<p>Then average the squared values.</p>
+<section id="squaring-a-real-signal-in-gnu-radio" class="level3">
+<h3 class="anchored" data-anchor-id="squaring-a-real-signal-in-gnu-radio">Squaring a Real Signal in GNU Radio</h3>
+<p>The Signal Source is configured as ****Float****, so its output is a real-valued sample stream:</p>
+<p><span class="math display">\[
+x[0],x[1],x[2],\ldots
+\]</span></p>
+<p>We connect the same signal to both inputs of a ****Multiply**** block.</p>
+<p>The block therefore calculates</p>
+<p><span class="math display">\[
+x[n]\times x[n] = x^2[n]
+\]</span></p>
+<p>The output becomes</p>
+<p><span class="math display">\[
+x^2[0],x^2[1],x^2[2],\ldots
+\]</span></p>
+<p>These are squared sample values.</p>
+<p>They are not yet the average power.</p>
+<p>For that, we need another block.</p>
+<hr>
+</section>
+</section>
+<section id="what-is-the-moving-average-block-actually-doing" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-moving-average-block-actually-doing">7.12 What Is the Moving Average Block Actually Doing?</h2>
+<p>We now use a ****Moving Average**** block.</p>
+<p>This block is worth understanding because moving averages appear in many signal-processing applications.</p>
+<p>Suppose the averaging length is <span class="math inline">\(N\)</span>.</p>
+<p>A moving average can be written as</p>
+<p><span class="math display">\[
+y[n] = \frac{1}{N} \sum_{k=0}^{N-1} x[n-k]
+\]</span></p>
+<p>In our power-measurement branch, however, the input to the Moving Average block is already <span class="math inline">\(x^2[n]\)</span>.</p>
+<p>So the block calculates</p>
+<p><span class="math display">\[
+P_s[n] \approx \frac{1}{N} \sum_{k=0}^{N-1} x^2[n-k]
+\]</span></p>
+<p>We use</p>
+<p><span class="math display">\[
+N=1000
+\]</span></p>
+<p>so each power estimate is based on 1000 consecutive squared samples.</p>
+<p>Imagine that the current window contains</p>
+<pre class="text"><code>x²[0], x²[1], x²[2], ... , x²[999]</code></pre>
+<p>The block averages them.</p>
+<p>When another sample arrives, the window moves forward:</p>
+<pre class="text"><code>x²[1], x²[2], x²[3], ... , x²[1000]</code></pre>
+<p>Then again:</p>
+<pre class="text"><code>x²[2], x²[3], x²[4], ... , x²[1001]</code></pre>
+<p>and so on.</p>
+<p>That is why it is called a ****moving average****.</p>
+<p>In GNU Radio, configure it using</p>
+<pre class="text"><code>Length = 1000
+
+Scale  = 1/1000</code></pre>
+<p>GNU Radio may display the scale as</p>
+<pre class="text"><code>1m</code></pre>
+<p>because <code>m</code> means milli:</p>
+<p><span class="math display">\[
+1\text{m}=10^{-3}=0.001
+\]</span></p>
+<p>The Moving Average block first forms the running sum and then applies the scale.</p>
+<p>The scale</p>
+<p><span class="math display">\[
+\frac{1}{1000}
+\]</span></p>
+<p>turns that running sum into an average.</p>
+<p>For our amplitude-1 cosine, the measured value settles close to</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<p>which agrees with the theoretical result.</p>
+<hr>
+</section>
+<section id="a-note-about-real-and-complex-power" class="level2">
+<h2 class="anchored" data-anchor-id="a-note-about-real-and-complex-power">7.13 A Note About Real and Complex Power</h2>
+<p>The method we are using here works because our signal is ****real-valued****.</p>
+<p>For a real sample <span class="math inline">\(x[n]\)</span>,</p>
+<p><span class="math display">\[
+x^2[n]
+\]</span></p>
+<p>is the quantity we need when calculating average power.</p>
+<p>Later, we will work extensively with complex IQ signals.</p>
+<p>Suppose</p>
+<p><span class="math display">\[
+z[n]=I[n]+jQ[n]
+\]</span></p>
+<p>For a complex signal, we do not normally calculate power by simply multiplying</p>
+<p><span class="math display">\[
+z[n]\times z[n]
+\]</span></p>
+<p>Instead, we use magnitude squared:</p>
+<p><span class="math display">\[
+|z[n]|^2 = z[n]z^*[n]
+\]</span></p>
+<p>which gives</p>
+<p><span class="math display">\[
+|z[n]|^2 = I^2[n]+Q^2[n]
+\]</span></p>
+<p>GNU Radio provides blocks such as ****Complex to Mag²**** for exactly this kind of calculation.</p>
+<p>We do not need that block in this experiment because our cosine and noise streams are Float.</p>
+<p>But this distinction will become important once we return to complex IQ signals.</p>
+<hr>
+</section>
+<section id="measuring-gaussian-noise-power" class="level2">
+<h2 class="anchored" data-anchor-id="measuring-gaussian-noise-power">7.14 Measuring Gaussian-Noise Power</h2>
+<p>Now repeat the same process for the Noise Source.</p>
+<p>Let the noise samples be</p>
+<p><span class="math display">\[
+w[n]
+\]</span></p>
+<p>First square them:</p>
+<p><span class="math display">\[
+w^2[n]
+\]</span></p>
+<p>Then calculate their moving average:</p>
+<p><span class="math display">\[
+P_n \approx \frac{1}{N} \sum_{n=0}^{N-1} w^2[n]
+\]</span></p>
+<p>This gives us an estimate of the average noise power.</p>
+<p>For zero-mean Gaussian noise with standard deviation <span class="math inline">\(\sigma\)</span>,</p>
+<p><span class="math display">\[
+P_n = E\\{w^2[n]\\} = \sigma^2
+\]</span></p>
+<p>For the Gaussian Noise Source used in our experiment, the amplitude setting scales the generated Gaussian samples. With the configuration we used, the expected noise power is approximately</p>
+<p><span class="math display">\[
+P_n\approx A_n^2
+\]</span></p>
+<p>where <span class="math inline">\(A_n\)</span> is the Noise Source amplitude.</p>
+<p>Therefore, if</p>
+<p><span class="math display">\[
+A_n=0.1
+\]</span></p>
+<p>we expect approximately</p>
+<p><span class="math display">\[
+P_n=0.01
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+A_n=0.5
+\]</span></p>
+<p>we expect approximately</p>
+<p><span class="math display">\[
+P_n=0.25
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+A_n=1
+\]</span></p>
+<p>we expect approximately</p>
+<p><span class="math display">\[
+P_n=1
+\]</span></p>
+<p>and if</p>
+<p><span class="math display">\[
+A_n=2
+\]</span></p>
+<p>we expect approximately</p>
+<p><span class="math display">\[
+P_n=4
+\]</span></p>
+<p>This gives us an important relationship:</p>
+<p><span class="math display">\[
+\boxed{ P_n\propto A_n^2 }
+\]</span></p>
+<p>So doubling the noise amplitude does ****not**** double the noise power.</p>
+<p>It increases the expected noise power by a factor of four.</p>
+<hr>
+</section>
+<section id="building-the-snr-calculation" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-snr-calculation">7.15 Building the SNR Calculation</h2>
+<p>Once we have <span class="math inline">\(P_s\)</span> and <span class="math inline">\(P_n\)</span>, the rest is straightforward.</p>
+<p>First calculate the linear SNR:</p>
+<p><span class="math display">\[
+\mathrm{SNR} = \frac{P_s}{P_n}
+\]</span></p>
+<p>Then convert it to decibels:</p>
+<p><span class="math display">\[
+\boxed{ \mathrm{SNR}_{\mathrm{dB}} = 10\log_{10} \left( \frac{P_s}{P_n} \right) }
+\]</span></p>
+<p>Notice that we use</p>
+<p><span class="math display">\[
+10\log_{10}
+\]</span></p>
+<p>rather than</p>
+<p><span class="math display">\[
+20\log_{10}
+\]</span></p>
+<p>because we are taking the ratio of ****powers****.</p>
+<p>We implement the equation directly in GNU Radio:</p>
+<pre class="text"><code>Signal Power ───────┐
+
+                    │
+
+                    ├──→ Divide → Log10 → Multiply Const → SNR (dB)
+
+                    │
+
+Noise Power ────────┘</code></pre>
+<p>The ****Divide**** block calculates</p>
+<p><span class="math display">\[
+\frac{P_s}{P_n}
+\]</span></p>
+<p>The ****Log10**** block calculates</p>
+<p><span class="math display">\[
+\log_{10} \left( \frac{P_s}{P_n} \right)
+\]</span></p>
+<p>The ****Multiply Const**** block uses a constant of 10, giving</p>
+<p><span class="math display">\[
+10\log_{10} \left( \frac{P_s}{P_n} \right)
+\]</span></p>
+<p>Finally, a ****QT GUI Number Sink**** displays the result.</p>
+<p>So there is no mysterious SNR calculation hidden from us.</p>
+<p>We have built the equation ourselves.</p>
+<hr>
+</section>
+<section id="gnu-radio-flowgraph-for-measuring-snr" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-flowgraph-for-measuring-snr">7.16 GNU Radio Flowgraph for Measuring SNR</h2>
+<p>The complete flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07_exp3_power_snr_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for measuring signal power, noise power, and SNR.</figcaption>
+</figure>
+</div>
+<p>The signal branch calculates</p>
+<p><span class="math display">\[
+x[n] \rightarrow x^2[n] \rightarrow \text{average} \rightarrow P_s
+\]</span></p>
+<p>The noise branch calculates</p>
+<p><span class="math display">\[
+w[n] \rightarrow w^2[n] \rightarrow \text{average} \rightarrow P_n
+\]</span></p>
+<p>The two power estimates are then combined:</p>
+<p><span class="math display">\[
+P_s,P_n \rightarrow \frac{P_s}{P_n} \rightarrow 10\log_{10}(\cdot) \rightarrow \mathrm{SNR}_{\mathrm{dB}}
+\]</span></p>
+<section id="gnu-radio-settings-2" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-settings-2">GNU Radio Settings</h3>
+<p>Create the following variables:</p>
+<div class="line-block">Variable | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block"><code>samp_rate</code> | <code>32e3</code> |</div>
+<div class="line-block"><code>avg_len</code> | <code>1000</code> |</div>
+<p>Configure the signal branch:</p>
+<div class="line-block">Block | Parameter | Setting |</div>
+<p>|—|—|—|</p>
+<div class="line-block">Signal Source | Output Type | Float |</div>
+<div class="line-block">Signal Source | Waveform | Cosine |</div>
+<div class="line-block">Signal Source | Frequency | <code>1e3</code> |</div>
+<div class="line-block">Signal Source | Amplitude | <code>1</code> |</div>
+<div class="line-block">Multiply | Type | Float |</div>
+<div class="line-block">Moving Average | Length | <code>avg_len</code> |</div>
+<div class="line-block">Moving Average | Scale | <code>1.0/avg_len</code> |</div>
+<div class="line-block">QT GUI Number Sink | Name | Signal Power |</div>
+<p>Configure the noise branch:</p>
+<div class="line-block">Block | Parameter | Setting |</div>
+<p>|—|—|—|</p>
+<div class="line-block">Noise Source | Output Type | Float |</div>
+<div class="line-block">Noise Source | Noise Type | Gaussian |</div>
+<div class="line-block">Noise Source | Amplitude | controlled by the noise-amplitude variable |</div>
+<div class="line-block">Multiply | Type | Float |</div>
+<div class="line-block">Moving Average | Length | <code>avg_len</code> |</div>
+<div class="line-block">Moving Average | Scale | <code>1.0/avg_len</code> |</div>
+<div class="line-block">QT GUI Number Sink | Name | Noise Power |</div>
+<p>Configure the SNR branch:</p>
+<div class="line-block">Block | Important Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Divide | Float |</div>
+<div class="line-block">Log10 | <code>n = 1</code>, <code>k = 0</code> |</div>
+<div class="line-block">Multiply Const | Constant = <code>10</code> |</div>
+<div class="line-block">QT GUI Number Sink | Name = <code>SNR (dB)</code> |</div>
+<p>The important blocks and their roles are:</p>
+<div class="line-block">GNU Radio block | What it does |</div>
+<p>|—|—|</p>
+<div class="line-block">Signal Source | Generates the 1 kHz real cosine |</div>
+<div class="line-block">Noise Source | Generates Gaussian noise |</div>
+<div class="line-block">Multiply | Squares the real-valued samples |</div>
+<div class="line-block">Moving Average | Estimates average power over a finite window |</div>
+<div class="line-block">Divide | Calculates <span class="math inline">\(P_s/P_n\)</span> |</div>
+<div class="line-block">Log10 | Calculates the base-10 logarithm |</div>
+<div class="line-block">Multiply Const | Multiplies the logarithmic result by 10 |</div>
+<div class="line-block">QT GUI Number Sink | Displays signal power, noise power, and SNR |</div>
+<hr>
+</section>
+</section>
+<section id="comparing-different-noise-levels" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-different-noise-levels">7.17 Comparing Different Noise Levels</h2>
+<p>We now repeat the measurement using the same four noise amplitudes from Experiment 2:</p>
+<p><span class="math display">\[
+A_n = 0.1,\quad0.5,\quad1.0,\quad2.0
+\]</span></p>
+<p>The signal does not change.</p>
+<p>Its amplitude remains</p>
+<p><span class="math display">\[
+A_s=1
+\]</span></p>
+<p>so its expected power remains</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<p>Only the noise amplitude changes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07_exp3_snr_vs_noise_amplitude.png" class="img-fluid figure-img"></p>
+<figcaption>Measured signal power, noise power, and SNR for different Gaussian-noise amplitudes.</figcaption>
+</figure>
+</div>
+<p>The values measured during our experiment were approximately:</p>
+<div class="line-block">Noise amplitude | Signal power | Noise power | Measured SNR |</div>
+<p>|—:|—:|—:|—:|</p>
+<div class="line-block">0.1 | 0.5005 | 0.0090 | +17.43 dB |</div>
+<div class="line-block">0.5 | 0.5005 | 0.2285 | +3.40 dB |</div>
+<div class="line-block">1.0 | 0.4995 | 1.0298 | -3.13 dB |</div>
+<div class="line-block">2.0 | 0.5005 | 4.0843 | -9.13 dB |</div>
+<p>The first thing to notice is the signal power.</p>
+<p>It remains close to</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<p>in every measurement.</p>
+<p>That is exactly what we should expect because the signal itself was never changed.</p>
+<p>The noise power behaves very differently.</p>
+<p>As the noise amplitude increases,</p>
+<p><span class="math display">\[
+0.1 \rightarrow 0.5 \rightarrow 1 \rightarrow 2
+\]</span></p>
+<p>the expected noise power follows approximately</p>
+<p><span class="math display">\[
+0.01 \rightarrow 0.25 \rightarrow 1 \rightarrow 4
+\]</span></p>
+<p>Our measured values are close to those predictions.</p>
+<hr>
+</section>
+<section id="comparing-theory-with-measurement" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-theory-with-measurement">7.18 Comparing Theory with Measurement</h2>
+<p>Because</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<p>and approximately</p>
+<p><span class="math display">\[
+P_n=A_n^2
+\]</span></p>
+<p>we can predict the SNR before running GNU Radio:</p>
+<p><span class="math display">\[
+\mathrm{SNR}_{\mathrm{dB}} = 10\log_{10} \left( \frac{0.5}{A_n^2} \right)
+\]</span></p>
+<p>This gives:</p>
+<div class="line-block">Noise amplitude | Theoretical SNR | Measured SNR |</div>
+<p>|—:|—:|—:|</p>
+<div class="line-block">0.1 | +16.99 dB | +17.43 dB |</div>
+<div class="line-block">0.5 | +3.01 dB | +3.40 dB |</div>
+<div class="line-block">1.0 | -3.01 dB | -3.13 dB |</div>
+<div class="line-block">2.0 | -9.03 dB | -9.13 dB |</div>
+<p>The agreement is quite good.</p>
+<p>The values are not exactly identical, and we should not expect them to be.</p>
+<p>Gaussian noise is random.</p>
+<p>Our noise-power measurement uses a finite number of samples at any instant.</p>
+<p>One averaging window may contain slightly more power than expected.</p>
+<p>Another may contain slightly less.</p>
+<p>As the Moving Average window continues to slide, the displayed noise power and SNR fluctuate slightly.</p>
+<p>That is normal.</p>
+<hr>
+</section>
+<section id="why-does-the-measurement-fluctuate" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-the-measurement-fluctuate">7.19 Why Does the Measurement Fluctuate?</h2>
+<p>Suppose the theoretical noise power is</p>
+<p><span class="math display">\[
+P_n=1
+\]</span></p>
+<p>That does not mean every group of 1000 random samples will have a measured power of exactly 1.</p>
+<p>One group might produce</p>
+<p><span class="math display">\[
+P_n=0.97
+\]</span></p>
+<p>Another might produce</p>
+<p><span class="math display">\[
+P_n=1.03
+\]</span></p>
+<p>Another might give</p>
+<p><span class="math display">\[
+P_n=1.01
+\]</span></p>
+<p>Over a sufficiently large amount of data, the estimate tends toward the expected statistical value.</p>
+<p>Increasing the Moving Average length generally makes the displayed estimate more stable because more samples contribute to each measurement.</p>
+<p>But again, there is a trade-off.</p>
+<p>A longer averaging window responds more slowly when the signal or noise changes.</p>
+<p>So we encounter a principle similar to the one we saw with FFT averaging:</p>
+<p><span class="math display">\[
+\boxed{ \text{Longer averaging} \longleftrightarrow \text{More stable estimate but slower response} }
+\]</span></p>
+<p>The calculations are different, but the practical trade-off is similar.</p>
+<p>It is also important not to confuse the two kinds of averaging.</p>
+<p>The ****QT GUI Frequency Sink averaging**** changes the way successive spectra are displayed.</p>
+<p>The ****Moving Average block**** is operating on the actual stream of squared samples to produce our power estimate.</p>
+<p>They serve different purposes.</p>
+<hr>
+</section>
+<section id="what-does-a-negative-snr-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-a-negative-snr-mean">7.20 What Does a Negative SNR Mean?</h2>
+<p>One result from this experiment deserves special attention.</p>
+<p>For noise amplitude 1, we measured approximately</p>
+<p><span class="math display">\[
+\mathrm{SNR}\approx-3\text{ dB}
+\]</span></p>
+<p>For noise amplitude 2, we measured approximately</p>
+<p><span class="math display">\[
+\mathrm{SNR}\approx-9\text{ dB}
+\]</span></p>
+<p>At first, a negative SNR may sound strange.</p>
+<p>It does ****not**** mean that the signal power is negative.</p>
+<p>Power is still positive.</p>
+<p>A negative SNR in dB simply means</p>
+<p><span class="math display">\[
+P_s\&lt;P_n
+\]</span></p>
+<p>For example, suppose</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+P_n=1
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\frac{P_s}{P_n}=0.5
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+10\log_{10}(0.5) \approx -3.01\text{ dB}
+\]</span></p>
+<p>So:</p>
+<p><span class="math display">\[
+\boxed{ \mathrm{SNR}&lt;0\text{ dB} \quad\Rightarrow\quad P_s\&lt;P_n }
+\]</span></p>
+<p>This does ****not**** automatically mean that the signal is undetectable.</p>
+<p>That is exactly what we observed in Experiment 2.</p>
+<p>Even when the time-domain waveform looked dominated by noise, the persistent 1 kHz component could still be visible in the frequency domain.</p>
+<p>Whether a signal can actually be detected depends on more than total SNR alone.</p>
+<p>Bandwidth, observation time, filtering, modulation, processing gain, and the detection method can all matter.</p>
+<hr>
+</section>
+<section id="one-useful-6-db-observation" class="level2">
+<h2 class="anchored" data-anchor-id="one-useful-6-db-observation">7.21 One Useful 6 dB Observation</h2>
+<p>Compare the last two measurements.</p>
+<p>The noise amplitude changes from</p>
+<p><span class="math display">\[
+1
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+2
+\]</span></p>
+<p>So the amplitude doubles.</p>
+<p>But the expected noise power changes from approximately</p>
+<p><span class="math display">\[
+1
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+4
+\]</span></p>
+<p>That is a fourfold increase in power.</p>
+<p>The SNR correspondingly changes from approximately</p>
+<p><span class="math display">\[
+-3\text{ dB}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+-9\text{ dB}
+\]</span></p>
+<p>The difference is about</p>
+<p><span class="math display">\[
+6\text{ dB}
+\]</span></p>
+<p>This is not a coincidence.</p>
+<p>Because power is proportional to amplitude squared, doubling an amplitude corresponds to a factor of four in power.</p>
+<p>In decibels,</p>
+<p><span class="math display">\[
+10\log_{10}(4) \approx 6.02\text{ dB}
+\]</span></p>
+<p>Equivalently,</p>
+<p><span class="math display">\[
+20\log_{10}(2) \approx 6.02\text{ dB}
+\]</span></p>
+<p>So, with the signal held constant:</p>
+<blockquote class="blockquote">
+<p>****Doubling the Gaussian-noise amplitude reduces the SNR by approximately 6 dB.****</p>
+</blockquote>
+<p>We did not just calculate this on paper.</p>
+<p>We observed essentially the same behaviour in our GNU Radio measurements.</p>
+<hr>
+</section>
+<section id="one-more-question-what-determines-the-noise-power" class="level2">
+<h2 class="anchored" data-anchor-id="one-more-question-what-determines-the-noise-power">7.22 One More Question: What Determines the Noise Power?</h2>
+<p>Experiment 3 gave us</p>
+<p><span class="math display">\[
+\mathrm{SNR} = \frac{P_s}{P_n}
+\]</span></p>
+<p>We now know how to measure both <span class="math inline">\(P_s\)</span> and <span class="math inline">\(P_n\)</span> directly from the samples.</p>
+<p>But this raises another question.</p>
+<p>What determines how much noise power reaches a receiver in the first place?</p>
+<p>One important answer is ****bandwidth****.</p>
+<p>Until now, we have mostly treated noise as a broadband background.</p>
+<p>But if that noise is spread across frequency, then the amount of frequency range we allow into our receiver should matter.</p>
+<p>A narrow receiver accepts noise from a relatively small frequency range.</p>
+<p>A wider receiver accepts noise from a larger frequency range.</p>
+<p>So what happens to the total measured noise power when we change that bandwidth?</p>
+<p>That is the purpose of our final experiment in this chapter.</p>
+<hr>
+</section>
+<section id="the-basic-idea" class="level2">
+<h2 class="anchored" data-anchor-id="the-basic-idea">7.23 The Basic Idea</h2>
+<p>Consider noise whose power spectral density is approximately uniform over the frequency range we are interested in.</p>
+<p>That is the behaviour we expect from white noise.</p>
+<p>If we collect that noise over a narrow frequency range, we collect some noise power.</p>
+<p>If we collect it over a wider frequency range, we collect more.</p>
+<p>The important relationship for this experiment is</p>
+<p><span class="math display">\[
+\boxed{ P_n\propto B }
+\]</span></p>
+<p>where <span class="math inline">\(B\)</span> represents the effective noise bandwidth being accepted.</p>
+<p>In simple words:</p>
+<blockquote class="blockquote">
+<p>****More accepted bandwidth means more total noise power.****</p>
+</blockquote>
+<p>If the effective bandwidth doubles, we therefore expect the total noise power to approximately double:</p>
+<p><span class="math display">\[
+B\rightarrow2B
+\]</span></p>
+<p>should approximately produce</p>
+<p><span class="math display">\[
+P_n\rightarrow2P_n
+\]</span></p>
+<p>There are different one-sided and two-sided conventions for writing noise power spectral density equations.</p>
+<p>We do not need to introduce those conventions yet.</p>
+<p>For this experiment, the important result is simply the proportional relationship:</p>
+<p><span class="math display">\[
+P_n\propto B
+\]</span></p>
+<p>We can test that directly.</p>
+<hr>
+</section>
+<section id="building-the-experiment-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-experiment-in-gnu-radio">7.24 Building the Experiment in GNU Radio</h2>
+<p>The GNU Radio flowgraph used for this experiment is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp4-noise-power-bandwidth-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for measuring noise power as a function of bandwidth.</figcaption>
+</figure>
+</div>
+<p>The experiment begins with a Gaussian Noise Source.</p>
+<p>The noise then splits into two branches.</p>
+<p>The first branch measures the power of the original noise before filtering.</p>
+<p>The second branch sends the noise through a ****Low Pass Filter**** and then measures the power remaining after the filter.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>                         ┌──→ Square → Moving Average → Input Noise Power
+
+                         │
+
+Noise Source → Throttle ─┤
+
+                         │
+
+                         └──→ Low Pass Filter
+
+                                      │
+
+                                      ├──→ QT GUI Frequency Sink
+
+                                      │
+
+                                      └──→ Square
+
+                                             │
+
+                                             ↓
+
+                                      Moving Average
+
+                                             │
+
+                                             ↓
+
+                                      Filtered Noise Power</code></pre>
+<p>This gives us two useful measurements:</p>
+<ul>
+<li><p>****Input Noise Power****</p></li>
+<li><p>****Filtered Noise Power****</p></li>
+</ul>
+<p>The input measurement acts as a reference.</p>
+<p>The filtered measurement tells us how much noise remains after we restrict the accepted frequency range.</p>
+<hr>
+</section>
+<section id="gnu-radio-settings-for-experiment-4" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-settings-for-experiment-4">7.25 GNU Radio Settings for Experiment 4</h2>
+<p>We continue using</p>
+<p><span class="math display">\[
+f_s=32\text{ kHz}
+\]</span></p>
+<p>Create the following variables:</p>
+<div class="line-block">Variable | Value |</div>
+<p>|—|—:|</p>
+<div class="line-block"><code>samp_rate</code> | <code>32e3</code> |</div>
+<div class="line-block"><code>avg_len</code> | <code>10000</code> |</div>
+<div class="line-block"><code>cutoff</code> | initially <code>1000</code> |</div>
+<p>Configure the Noise Source:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Output Type | Float |</div>
+<div class="line-block">Noise Type | Gaussian |</div>
+<div class="line-block">Amplitude | <code>1</code> |</div>
+<div class="line-block">Seed | <code>0</code> |</div>
+<p>Configure the Throttle:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Sample Rate | <code>samp_rate</code> |</div>
+<p>Configure the Low Pass Filter:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Decimation | <code>1</code> |</div>
+<div class="line-block">Gain | <code>1</code> |</div>
+<div class="line-block">Sample Rate | <code>samp_rate</code> |</div>
+<div class="line-block">Cutoff Frequency | <code>cutoff</code> |</div>
+<div class="line-block">Transition Width | <code>500</code> Hz |</div>
+<div class="line-block">Window | Hamming |</div>
+<p>Configure the QT GUI Range controlling <code>cutoff</code>:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—:|</p>
+<div class="line-block">Label | LPF Cutoff Frequency |</div>
+<div class="line-block">Start | <code>500</code> Hz |</div>
+<div class="line-block">Stop | <code>4000</code> Hz |</div>
+<div class="line-block">Step | <code>500</code> Hz |</div>
+<div class="line-block">Default | <code>1000</code> Hz |</div>
+<p>For both power-measurement branches:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Multiply Type | Float |</div>
+<div class="line-block">Moving Average Length | <code>avg_len</code> |</div>
+<div class="line-block">Moving Average Scale | <code>1.0/avg_len</code> |</div>
+<p>Since</p>
+<p><span class="math display">\[
+\frac{1}{10000}=0.0001
+\]</span></p>
+<p>GNU Radio may display this scale as</p>
+<pre class="text"><code>100u</code></pre>
+<p>because</p>
+<p><span class="math display">\[
+100\\,\mu=100\times10^{-6}=10^{-4}
+\]</span></p>
+<p>Configure the Frequency Sink with:</p>
+<div class="line-block">Parameter | Setting |</div>
+<p>|—|—|</p>
+<div class="line-block">Type | Float |</div>
+<div class="line-block">FFT Size | <code>1024</code> |</div>
+<div class="line-block">Center Frequency | <code>0</code> |</div>
+<div class="line-block">Bandwidth | <code>samp_rate</code> |</div>
+<p>The Frequency Sink is connected ****after the Low Pass Filter****, so the spectrum displayed there is the spectrum of the filtered noise.</p>
+<hr>
+</section>
+<section id="measuring-the-noise-power" class="level2">
+<h2 class="anchored" data-anchor-id="measuring-the-noise-power">7.26 Measuring the Noise Power</h2>
+<p>The power calculation follows exactly the same idea we used in Experiment 3.</p>
+<p>For a real-valued signal <span class="math inline">\(x[n]\)</span>, average power can be estimated from</p>
+<p><span class="math display">\[
+P \approx \frac{1}{N} \sum_{n=0}^{N-1} x^2[n]
+\]</span></p>
+<p>The signal is first multiplied by itself:</p>
+<p><span class="math display">\[
+x[n]\times x[n] = x^2[n]
+\]</span></p>
+<p>The Moving Average block then averages the squared samples.</p>
+<p>For the original noise,</p>
+<p><span class="math display">\[
+P_{\text{input}} \approx \text{average}\left(x^2[n]\right)
+\]</span></p>
+<p>After the low-pass filter, let the filtered samples be <span class="math inline">\(y[n]\)</span>.</p>
+<p>Then</p>
+<p><span class="math display">\[
+P_{\text{filtered}} \approx \text{average}\left(y^2[n]\right)
+\]</span></p>
+<p>We use an averaging length of</p>
+<p><span class="math display">\[
+N=10000
+\]</span></p>
+<p>A longer averaging interval is useful here because instantaneous noise-power estimates fluctuate continuously.</p>
+<p>The longer average gives us a more stable number, making the effect of changing the filter easier to see.</p>
+<hr>
+</section>
+<section id="why-measure-the-input-noise-power-too" class="level2">
+<h2 class="anchored" data-anchor-id="why-measure-the-input-noise-power-too">7.27 Why Measure the Input Noise Power Too?</h2>
+<p>At first, measuring the input noise power may seem unnecessary.</p>
+<p>After all, our main interest is the filtered noise.</p>
+<p>But the input measurement gives us an important reference.</p>
+<p>With the Gaussian Noise Source amplitude set to 1, the measured input power remains close to</p>
+<p><span class="math display">\[
+P_{\text{input}}\approx1
+\]</span></p>
+<p>It does not stay exactly equal to 1 because the signal is random.</p>
+<p>But with sufficient averaging, it remains reasonably close.</p>
+<p>Now suppose we move the LPF cutoff slider.</p>
+<p>If the input noise power stays around 1 while the filtered noise power changes, we know that the Noise Source itself has not changed.</p>
+<p>The thing we intentionally changed was the frequency range allowed through the filter.</p>
+<p>That makes the experiment much easier to interpret.</p>
+<hr>
+</section>
+<section id="changing-the-accepted-noise-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="changing-the-accepted-noise-bandwidth">7.28 Changing the Accepted Noise Bandwidth</h2>
+<p>We tested four low-pass-filter cutoff frequencies:</p>
+<div class="line-block">LPF Cutoff Frequency | Description |</div>
+<p>|—:|—|</p>
+<div class="line-block">500 Hz | Narrowest setting |</div>
+<div class="line-block">1 kHz | Wider |</div>
+<div class="line-block">2 kHz | Wider again |</div>
+<div class="line-block">4 kHz | Widest setting tested |</div>
+<p>The transition width remains</p>
+<p><span class="math display">\[
+500\text{ Hz}
+\]</span></p>
+<p>throughout the experiment.</p>
+<p>Nothing about the Noise Source is changed between these measurements.</p>
+<p>Only the filter cutoff changes.</p>
+<p>There is one detail we should be careful about here.</p>
+<p>Our real low-pass filter is centred around DC.</p>
+<p>So a cutoff frequency <span class="math inline">\(f_c\)</span> corresponds roughly to a passband extending on both sides of zero:</p>
+<p><span class="math display">\[
+-f_c \quad\text{to}\quad +f_c
+\]</span></p>
+<p>For example, a 1 kHz cutoff produces an approximately two-sided pass region around</p>
+<p><span class="math display">\[
+-1\text{ kHz} \quad\text{to}\quad +1\text{ kHz}
+\]</span></p>
+<p>before accounting for the transition region.</p>
+<p>For this reason, we should not simply say</p>
+<p><span class="math display">\[
+B=f_c
+\]</span></p>
+<p>without first defining exactly what bandwidth convention we are using.</p>
+<p>Fortunately, we do not need to do that to understand this experiment.</p>
+<p>When we double <span class="math inline">\(f_c\)</span>, the width of the accepted frequency region also approximately doubles.</p>
+<p>So if the noise is approximately white, the total passed noise power should also approximately double.</p>
+<hr>
+</section>
+<section id="what-do-we-expect-to-see" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-expect-to-see">7.29 What Do We Expect to See?</h2>
+<p>Before looking at the results, let us make a prediction.</p>
+<p>For approximately white noise,</p>
+<p><span class="math display">\[
+P_n\propto B
+\]</span></p>
+<p>Therefore, if the accepted frequency range doubles,</p>
+<p><span class="math display">\[
+B\rightarrow2B
+\]</span></p>
+<p>we expect approximately</p>
+<p><span class="math display">\[
+P_n\rightarrow2P_n
+\]</span></p>
+<p>So increasing the cutoff from 500 Hz to 1 kHz should increase the measured filtered-noise power.</p>
+<p>Increasing it again to 2 kHz should increase the power further.</p>
+<p>The same should happen when going from 2 kHz to 4 kHz.</p>
+<p>The relationship will not be perfectly exact.</p>
+<p>We are using a practical FIR low-pass filter rather than an ideal rectangular filter, and our noise-power estimate is calculated from random samples.</p>
+<p>But the overall trend should be clear.</p>
+<hr>
+</section>
+<section id="experimental-results" class="level2">
+<h2 class="anchored" data-anchor-id="experimental-results">7.30 Experimental Results</h2>
+<p>The following figure combines the four measurements obtained using cutoff frequencies of 500 Hz, 1 kHz, 2 kHz, and 4 kHz.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp4-noise-power-vs-bandwidth.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of low-pass filter bandwidth on measured Gaussian-noise power.</figcaption>
+</figure>
+</div>
+<p>The measured values were approximately:</p>
+<div class="line-block">LPF Cutoff | Input Noise Power | Filtered Noise Power |</div>
+<p>|—:|—:|—:|</p>
+<div class="line-block">500 Hz | 0.996 | 0.025 |</div>
+<div class="line-block">1 kHz | 0.977 | 0.055 |</div>
+<div class="line-block">2 kHz | 0.999 | 0.122 |</div>
+<div class="line-block">4 kHz | 0.992 | 0.242 |</div>
+<p>The exact numbers move slightly from run to run because the input is random noise.</p>
+<p>What matters here is the overall pattern.</p>
+<p>The input noise power remains approximately constant:</p>
+<p><span class="math display">\[
+P_{\text{input}}\approx1
+\]</span></p>
+<p>At the same time, the filtered noise power increases as we widen the filter.</p>
+<p>That is exactly the behaviour we expected.</p>
+<hr>
+</section>
+<section id="looking-at-the-spectrum" class="level2">
+<h2 class="anchored" data-anchor-id="looking-at-the-spectrum">7.31 Looking at the Spectrum</h2>
+<p>The Frequency Sink makes the result much easier to understand visually.</p>
+<p>At a cutoff frequency of 500 Hz, only a relatively narrow region around 0 Hz passes through the low-pass filter.</p>
+<p>When the cutoff is increased to 1 kHz, the visible passed-noise spectrum becomes wider.</p>
+<p>At 2 kHz, an even larger portion of the noise spectrum passes.</p>
+<p>Finally, at 4 kHz, the passed noise occupies a much wider frequency region.</p>
+<p>The important point is that the noise at each individual frequency has not suddenly become much stronger simply because we moved the cutoff slider.</p>
+<p>Instead, we are allowing noise from ****more frequencies**** to reach the output.</p>
+<p>All of those frequencies contribute to the total noise power.</p>
+<p>That is why the measured power increases.</p>
+<hr>
+</section>
+<section id="comparing-500-hz-and-1-khz" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-500-hz-and-1-khz">7.32 Comparing 500 Hz and 1 kHz</h2>
+<p>Let us compare the first two measurements.</p>
+<p>At a 500 Hz cutoff, we measured approximately</p>
+<p><span class="math display">\[
+P_{500}\approx0.025
+\]</span></p>
+<p>At a 1 kHz cutoff,</p>
+<p><span class="math display">\[
+P_{1000}\approx0.055
+\]</span></p>
+<p>The cutoff frequency doubled:</p>
+<p><span class="math display">\[
+500 \rightarrow 1000\text{ Hz}
+\]</span></p>
+<p>and the measured noise power increased by roughly a factor of two.</p>
+<p>The ratio is</p>
+<p><span class="math display">\[
+\frac{P_{1000}}{P_{500}} = \frac{0.055}{0.025} \approx2.2
+\]</span></p>
+<p>It is not exactly 2, but the expected trend is clear.</p>
+<hr>
+</section>
+<section id="continuing-to-wider-bandwidths" class="level2">
+<h2 class="anchored" data-anchor-id="continuing-to-wider-bandwidths">7.33 Continuing to Wider Bandwidths</h2>
+<p>The same behaviour continues as the cutoff is increased.</p>
+<p>At approximately 2 kHz,</p>
+<p><span class="math display">\[
+P_{2000}\approx0.122
+\]</span></p>
+<p>and at approximately 4 kHz,</p>
+<p><span class="math display">\[
+P_{4000}\approx0.242
+\]</span></p>
+<p>The ratio between these two measurements is</p>
+<p><span class="math display">\[
+\frac{P_{4000}}{P_{2000}} = \frac{0.242}{0.122} \approx1.98
+\]</span></p>
+<p>This is very close to 2.</p>
+<p>So in this part of the experiment,</p>
+<p><span class="math display">\[
+\boxed{ \text{Accepted bandwidth}\times2 \quad\Rightarrow\quad \text{Noise power}\times2 }
+\]</span></p>
+<p>approximately.</p>
+<p>That is exactly the trend we expect for white noise.</p>
+<hr>
+</section>
+<section id="what-happens-in-decibels" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-in-decibels">7.34 What Happens in Decibels?</h2>
+<p>There is another useful way to look at the same result.</p>
+<p>Power ratios are often expressed in decibels.</p>
+<p>For two power values,</p>
+<p><span class="math display">\[
+\Delta P_{\text{dB}} = 10\log_{10} \left( \frac{P_2}{P_1} \right)
+\]</span></p>
+<p>If the accepted noise bandwidth doubles and the total noise power also doubles, then</p>
+<p><span class="math display">\[
+\Delta P_{\text{dB}} = 10\log_{10}(2)
+\]</span></p>
+<p>which gives approximately</p>
+<p><span class="math display">\[
+\Delta P_{\text{dB}} \approx3.01\text{ dB}
+\]</span></p>
+<p>This gives us a very useful engineering rule:</p>
+<blockquote class="blockquote">
+<p>****Doubling the noise bandwidth increases the total noise power by approximately 3 dB.****</p>
+</blockquote>
+<p>Likewise, halving the noise bandwidth reduces the total noise power by approximately 3 dB, provided the noise power spectral density is approximately constant over that frequency range.</p>
+<p>This simple rule appears repeatedly in communication systems, RF receivers, radar systems, and SDR.</p>
+<hr>
+</section>
+<section id="why-are-the-measurements-not-perfectly-proportional" class="level2">
+<h2 class="anchored" data-anchor-id="why-are-the-measurements-not-perfectly-proportional">7.35 Why Are the Measurements Not Perfectly Proportional?</h2>
+<p>Our measured values do not follow the theoretical relationship perfectly.</p>
+<p>For example, doubling the cutoff from 500 Hz to 1 kHz did not produce exactly twice the measured noise power.</p>
+<p>There are two main reasons.</p>
+<section id="random-noise-is-still-random" class="level3">
+<h3 class="anchored" data-anchor-id="random-noise-is-still-random">Random Noise Is Still Random</h3>
+<p>Even with a moving average, the measured noise power fluctuates.</p>
+<p>One measurement may be slightly above the expected value.</p>
+<p>Another may be slightly below it.</p>
+<p>A longer averaging window reduces these fluctuations, but it does not turn a random process into a perfectly constant one.</p>
+</section>
+<section id="our-filter-is-not-ideal" class="level3">
+<h3 class="anchored" data-anchor-id="our-filter-is-not-ideal">Our Filter Is Not Ideal</h3>
+<p>An ideal low-pass filter would have a perfectly rectangular frequency response.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>Passband          Transition          Stopband
+
+───────────────│                 │────────────────
+
+passes fully       changes            strongly attenuated</code></pre>
+<p>An ideal filter would change from full transmission to complete rejection instantly.</p>
+<p>A practical FIR filter cannot do that.</p>
+<p>Our GNU Radio filter uses a transition width of</p>
+<p><span class="math display">\[
+500\text{ Hz}
+\]</span></p>
+<p>so there is a finite frequency region between the passband and stopband.</p>
+<p>Noise inside this transition region is partially attenuated rather than being either completely passed or completely removed.</p>
+<p>That affects the total amount of noise reaching the output.</p>
+<hr>
+</section>
+</section>
+<section id="cutoff-frequency-and-effective-noise-bandwidth-are-not-exactly-the-same-thing" class="level2">
+<h2 class="anchored" data-anchor-id="cutoff-frequency-and-effective-noise-bandwidth-are-not-exactly-the-same-thing">7.36 Cutoff Frequency and Effective Noise Bandwidth Are Not Exactly the Same Thing</h2>
+<p>This distinction is worth remembering.</p>
+<p>Suppose we enter</p>
+<pre class="text"><code>Cutoff Frequency = 1 kHz</code></pre>
+<p>into the Low Pass Filter.</p>
+<p>That does not mean we have created a perfectly rectangular frequency window with an exact boundary at 1 kHz.</p>
+<p>The actual filter has a frequency response.</p>
+<p>Some frequencies pass with very little attenuation.</p>
+<p>Frequencies in the transition region are increasingly attenuated.</p>
+<p>Frequencies sufficiently far into the stopband are strongly suppressed.</p>
+<p>The total amount of noise passed by the filter therefore depends on the ****complete shape of the filter response****, not only the number entered in the cutoff-frequency box.</p>
+<p>Later, when we study filters in detail, this leads naturally to the idea of ****equivalent noise bandwidth****.</p>
+<p>We do not need that calculation yet.</p>
+<p>For now, remember:</p>
+<blockquote class="blockquote">
+<p>****The cutoff frequency controls the accepted frequency range, but a practical filter does not have an infinitely sharp boundary.****</p>
+</blockquote>
+<hr>
+</section>
+<section id="why-this-matters-in-an-sdr-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-matters-in-an-sdr-receiver">7.37 Why This Matters in an SDR Receiver</h2>
+<p>This experiment is directly related to how a practical SDR receiver operates.</p>
+<p>Imagine that we want to receive a signal occupying only a small region of spectrum.</p>
+<p>Suppose the useful signal occupies approximately</p>
+<p><span class="math display">\[
+B_{\text{signal}}=20\text{ kHz}
+\]</span></p>
+<p>but our receiver initially processes</p>
+<p><span class="math display">\[
+B_{\text{receiver}}=2\text{ MHz}
+\]</span></p>
+<p>The receiver is then accepting far more spectrum than the desired signal actually occupies.</p>
+<p>That additional spectrum contains additional noise.</p>
+<p>If we apply an appropriate filter around the desired signal, we can reject much of the noise outside the signal’s occupied bandwidth.</p>
+<p>If the filter preserves essentially all of the desired signal while removing out-of-band noise, the signal power remains nearly unchanged while the accepted noise power decreases.</p>
+<p>Under those conditions, the SNR improves.</p>
+<p>This is one of the fundamental reasons filtering is so important in receivers.</p>
+<hr>
+</section>
+<section id="why-can-we-not-keep-reducing-the-bandwidth-forever" class="level2">
+<h2 class="anchored" data-anchor-id="why-can-we-not-keep-reducing-the-bandwidth-forever">7.38 Why Can We Not Keep Reducing the Bandwidth Forever?</h2>
+<p>At this point, it might seem that the solution to noise is simply to make the filter as narrow as possible.</p>
+<p>Unfortunately, that does not work.</p>
+<p>A real communication signal occupies a finite bandwidth.</p>
+<p>If the receiver filter becomes narrower than the signal itself, part of the desired signal is also removed or distorted.</p>
+<p>Then we are no longer removing only unwanted noise.</p>
+<p>We are damaging the signal we are trying to receive.</p>
+<p>So there is a trade-off.</p>
+<p>We want the receiver bandwidth to be:</p>
+<blockquote class="blockquote">
+<p>****Wide enough to preserve the desired signal, but not unnecessarily wide.****</p>
+</blockquote>
+<p>That is a much more useful way to think about receiver bandwidth than simply saying that “narrower is always better.”</p>
+<hr>
+</section>
+<section id="connecting-bandwidth-back-to-snr" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-bandwidth-back-to-snr">7.39 Connecting Bandwidth Back to SNR</h2>
+<p>Experiment 3 introduced</p>
+<p><span class="math display">\[
+\mathrm{SNR} = \frac{P_s}{P_n}
+\]</span></p>
+<p>Experiment 4 has now shown that the noise power depends on the bandwidth over which noise is accepted:</p>
+<p><span class="math display">\[
+P_n\propto B
+\]</span></p>
+<p>So if the desired signal power remains essentially unchanged while the accepted noise bandwidth increases, then</p>
+<p><span class="math display">\[
+P_n\uparrow
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+\mathrm{SNR}\downarrow
+\]</span></p>
+<p>Likewise, if we remove unnecessary bandwidth while preserving the desired signal,</p>
+<p><span class="math display">\[
+P_n\downarrow
+\]</span></p>
+<p>and the SNR can improve.</p>
+<p>We can now connect several ideas from this chapter:</p>
+<pre class="text"><code>Bandwidth
+    ↓
+Noise power
+    ↓
+SNR</code></pre>
+<p>This is an important connection.</p>
+<p>Filtering is not only about making a spectrum look cleaner.</p>
+<p>The bandwidth we accept directly affects how much noise power enters our measurement or receiver.</p>
+<hr>
+</section>
+<section id="a-simple-way-to-visualise-bandwidth-and-noise" class="level2">
+<h2 class="anchored" data-anchor-id="a-simple-way-to-visualise-bandwidth-and-noise">7.40 A Simple Way to Visualise Bandwidth and Noise</h2>
+<p>One way to picture white noise is to imagine a long, shallow layer of sand spread across the frequency axis.</p>
+<p>The height of the sand represents the noise power density.</p>
+<p>Now imagine placing a window over part of that strip.</p>
+<p>A narrow window collects only a small amount of sand.</p>
+<p>A wider window collects more.</p>
+<p>The height of the sand did not need to increase.</p>
+<p>We simply collected it over a wider region.</p>
+<p>That is essentially what happened in Experiment 4.</p>
+<p>The Low Pass Filter controlled how much of the frequency axis we accepted.</p>
+<p>Increasing that range allowed more noise through.</p>
+<p>The total measured noise power therefore increased.</p>
+<hr>
+</section>
+<section id="what-experiment-4-taught-us" class="level2">
+<h2 class="anchored" data-anchor-id="what-experiment-4-taught-us">7.41 What Experiment 4 Taught Us</h2>
+<p>Experiment 4 demonstrated something that is difficult to appreciate by looking only at a noisy time-domain waveform:</p>
+<blockquote class="blockquote">
+<p>****Noise power depends on the bandwidth over which we collect it.****</p>
+</blockquote>
+<p>For approximately white noise,</p>
+<p><span class="math display">\[
+P_n\propto B
+\]</span></p>
+<p>In our GNU Radio experiment, increasing the low-pass-filter cutoff from</p>
+<p><span class="math display">\[
+500\text{ Hz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+1\text{ kHz}
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+2\text{ kHz}
+\]</span></p>
+<p>and finally</p>
+<p><span class="math display">\[
+4\text{ kHz}
+\]</span></p>
+<p>progressively increased the measured filtered-noise power.</p>
+<p>At the same time, the original input-noise power remained close to 1.</p>
+<p>So the Noise Source was not becoming stronger.</p>
+<p>We were simply allowing a larger portion of its spectrum through the filter.</p>
+<p>We also observed an important practical rule:</p>
+<p><span class="math display">\[
+\boxed{ \text{Doubling noise bandwidth} \Rightarrow \text{approximately }3\text{ dB more noise power} }
+\]</span></p>
+<p>This gives us an important lesson for SDR receivers:</p>
+<blockquote class="blockquote">
+<p>****Every unnecessary piece of bandwidth we accept can bring additional noise with it.****</p>
+</blockquote>
+<hr>
+<hr>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">7.42 GNU Radio Toolbox</h2>
+<p>This chapter introduced the Noise Source, Moving Average, Divide, Log10, Multiply Const, and QT GUI Number Sink as important new tools. It also reused several familiar blocks in new measurement roles.</p>
+<p>It is worth collecting the relevant blocks in one place before moving on.</p>
+<div class="line-block">GNU Radio Block | What We Used It For |</div>
+<p>|—|—|</p>
+<div class="line-block">Noise Source | Generated Gaussian noise for our experiments |</div>
+<div class="line-block">Add | Combined the cosine and noise into one signal |</div>
+<div class="line-block">Multiply | Multiplied a real signal by itself to obtain (x^2[n]) for power measurement |</div>
+<div class="line-block">Moving Average | Averaged the squared samples to estimate signal or noise power |</div>
+<div class="line-block">Divide | Calculated the power ratio (P_s/P_n) |</div>
+<div class="line-block">Log10 | Took the base-10 logarithm of the power ratio |</div>
+<div class="line-block">Multiply Const | Multiplied the logarithmic result by 10 to obtain SNR in dB |</div>
+<div class="line-block">QT GUI Number Sink | Displayed measured signal power, noise power, and SNR |</div>
+<div class="line-block">QT GUI Range | Allowed parameters such as noise amplitude or filter cutoff to be changed while the flowgraph was running |</div>
+<div class="line-block">Low Pass Filter | Restricted the noise bandwidth in Experiment 4 |</div>
+<p>A few of these blocks are simple mathematically, but together they show something important about GNU Radio.</p>
+<p>We are no longer using GNU Radio only to generate signals and look at them.</p>
+<p>We are beginning to ****measure and process signals inside the flowgraph itself****.</p>
+<p>For example, our SNR measurement was built directly from ordinary processing blocks:</p>
+<p><span class="math display">\[
+\boxed{ x[n] \rightarrow x^2[n] \rightarrow \text{Average} \rightarrow P }
+\]</span></p>
+<p>and then</p>
+<p><span class="math display">\[
+\boxed{ P_s,P_n \rightarrow \text{Divide} \rightarrow \log_{10} \rightarrow \times 10 \rightarrow \mathrm{SNR}_{\mathrm{dB}} }
+\]</span></p>
+<p>This way of thinking will become increasingly useful in the next chapters.</p>
+<p>Instead of looking for one block that performs an entire task, we can often build the operation ourselves from smaller blocks.</p>
+<hr>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">7.43 What We Learned</h2>
+<p>We started this chapter with a simple question:</p>
+<blockquote class="blockquote">
+<p>****How weak can a signal become before it disappears into the noise?****</p>
+</blockquote>
+<p>We cannot give one universal number as the answer.</p>
+<p>But we now understand many of the ideas needed to answer that question in a real receiver.</p>
+<p>We began with noise by itself.</p>
+<p>Gaussian noise looked irregular in the time domain, but the Frequency Sink showed that white noise occupies a broad range of frequencies.</p>
+<p>We also discovered why a single FFT of random noise does not look perfectly flat.</p>
+<p>Each FFT is based on a finite set of random samples, so its spectral estimate fluctuates.</p>
+<p>FFT averaging makes that display smoother, but it does not remove noise from the underlying signal.</p>
+<p>Then we added a 1 kHz cosine to the noise.</p>
+<p>As the noise amplitude increased, the cosine became progressively harder to recognize in the time domain.</p>
+<p>But its spectral components near</p>
+<p><span class="math display">\[
+\pm1\text{ kHz}
+\]</span></p>
+<p>could remain visible in the frequency domain.</p>
+<p>That introduced the idea of the ****noise floor****.</p>
+<p>Next, we stopped describing the signal only as “clean” or “noisy.”</p>
+<p>We measured its power.</p>
+<p>For our real amplitude-1 cosine,</p>
+<p><span class="math display">\[
+P_s\approx0.5
+\]</span></p>
+<p>For the Gaussian Noise Source configuration used in our experiment,</p>
+<p><span class="math display">\[
+P_n\approx A_n^2
+\]</span></p>
+<p>We then built the SNR calculation ourselves:</p>
+<p><span class="math display">\[
+\boxed{ \text{Samples} \rightarrow \text{Square} \rightarrow \text{Average} \rightarrow \text{Power} }
+\]</span></p>
+<p>followed by</p>
+<p><span class="math display">\[
+\boxed{ P_s,P_n \rightarrow \frac{P_s}{P_n} \rightarrow 10\log_{10}(\cdot) \rightarrow \mathrm{SNR}_{\mathrm{dB}} }
+\]</span></p>
+<p>This allowed us to understand what a negative SNR actually means.</p>
+<p>It does not mean negative power.</p>
+<p>It simply means</p>
+<p><span class="math display">\[
+P_s\&lt;P_n
+\]</span></p>
+<p>We also saw two useful decibel relationships.</p>
+<p>Doubling the ****noise amplitude**** increases its expected power by a factor of four:</p>
+<p><span class="math display">\[
+A_n\times2 \Rightarrow P_n\times4
+\]</span></p>
+<p>which changes the SNR by approximately</p>
+<p><span class="math display">\[
+6\text{ dB}
+\]</span></p>
+<p>when the signal power remains constant.</p>
+<p>On the other hand, doubling the ****accepted noise bandwidth**** approximately doubles the noise power:</p>
+<p><span class="math display">\[
+B\times2 \Rightarrow P_n\times2
+\]</span></p>
+<p>which corresponds to approximately</p>
+<p><span class="math display">\[
+3\text{ dB}
+\]</span></p>
+<p>more noise power.</p>
+<p>These are two different effects, and it is useful not to confuse them:</p>
+<p><span class="math display">\[
+\boxed{ \text{Amplitude}\times2 \Rightarrow \text{Power}\times4 \Rightarrow 6\text{ dB} }
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\boxed{ \text{Noise bandwidth}\times2 \Rightarrow \text{Noise power}\times2 \Rightarrow 3\text{ dB} }
+\]</span></p>
+<p>The complete path through this chapter has therefore been:</p>
+<pre class="text"><code>Noise
+  ↓
+Spectrum
+  ↓
+Noise floor
+  ↓
+Power
+  ↓
+SNR
+  ↓
+Bandwidth</code></pre>
+<p>We now have a much better picture of what happens when a useful signal competes with noise.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">7.44 Connecting to the Next Chapter</h2>
+<p>Throughout this chapter, our useful signal was already sitting at the frequency where we wanted to observe it.</p>
+<p>A real radio often has to do something else first.</p>
+<p>It may receive a signal at one frequency and move it to another frequency where it is easier to process.</p>
+<p>Or it may take a baseband signal and move it upward in frequency for transmission.</p>
+<p>How does it do that?</p>
+<p>By ****mixing****.</p>
+<p>That is where we go next.</p>
+<hr>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter06.html" class="pagination-link" aria-label="Chapter 6: From Time Domain to Frequency Domain">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter08.html" class="pagination-link" aria-label="Chapter 8: Mixing and Frequency Translation">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

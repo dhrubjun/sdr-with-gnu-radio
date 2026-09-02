@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 9: Filters and Channel Selection – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter10.html" rel="next">
+<link href="../book/chapter08.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter09.html"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#why-do-we-need-filters" id="toc-why-do-we-need-filters" class="nav-link active" data-scroll-target="#why-do-we-need-filters">9.1 Why Do We Need Filters?</a></li>
+  <li><a href="#our-test-signal" id="toc-our-test-signal" class="nav-link" data-scroll-target="#our-test-signal">9.2 Our Test Signal</a></li>
+  <li><a href="#experiment-1-building-a-multi-frequency-signal" id="toc-experiment-1-building-a-multi-frequency-signal" class="nav-link" data-scroll-target="#experiment-1-building-a-multi-frequency-signal">Experiment 1: Building a Multi-Frequency Signal</a></li>
+  <li><a href="#building-the-test-signal-in-gnu-radio" id="toc-building-the-test-signal-in-gnu-radio" class="nav-link" data-scroll-target="#building-the-test-signal-in-gnu-radio">9.3 Building the Test Signal in GNU Radio</a>
+  <ul class="collapse">
+  <li><a href="#signal-source-1" id="toc-signal-source-1" class="nav-link" data-scroll-target="#signal-source-1">Signal Source 1</a></li>
+  <li><a href="#signal-source-2" id="toc-signal-source-2" class="nav-link" data-scroll-target="#signal-source-2">Signal Source 2</a></li>
+  <li><a href="#signal-source-3" id="toc-signal-source-3" class="nav-link" data-scroll-target="#signal-source-3">Signal Source 3</a></li>
+  </ul></li>
+  <li><a href="#what-do-we-see" id="toc-what-do-we-see" class="nav-link" data-scroll-target="#what-do-we-see">9.4 What Do We See?</a></li>
+  <li><a href="#what-does-a-filter-actually-do" id="toc-what-does-a-filter-actually-do" class="nav-link" data-scroll-target="#what-does-a-filter-actually-do">9.5 What Does a Filter Actually Do?</a></li>
+  <li><a href="#experiment-2-low-pass-filtering" id="toc-experiment-2-low-pass-filtering" class="nav-link" data-scroll-target="#experiment-2-low-pass-filtering">Experiment 2: Low-Pass Filtering</a></li>
+  <li><a href="#keeping-the-lowest-frequency-component" id="toc-keeping-the-lowest-frequency-component" class="nav-link" data-scroll-target="#keeping-the-lowest-frequency-component">9.6 Keeping the Lowest-Frequency Component</a></li>
+  <li><a href="#gnu-radio-setup" id="toc-gnu-radio-setup" class="nav-link" data-scroll-target="#gnu-radio-setup">9.7 GNU Radio Setup</a></li>
+  <li><a href="#low-pass-filter-settings-that-matter-here" id="toc-low-pass-filter-settings-that-matter-here" class="nav-link" data-scroll-target="#low-pass-filter-settings-that-matter-here">9.8 Low Pass Filter Settings That Matter Here</a>
+  <ul class="collapse">
+  <li><a href="#fir-type" id="toc-fir-type" class="nav-link" data-scroll-target="#fir-type">FIR Type</a></li>
+  <li><a href="#decimation" id="toc-decimation" class="nav-link" data-scroll-target="#decimation">Decimation</a></li>
+  <li><a href="#gain" id="toc-gain" class="nav-link" data-scroll-target="#gain">Gain</a></li>
+  <li><a href="#sample-rate" id="toc-sample-rate" class="nav-link" data-scroll-target="#sample-rate">Sample Rate</a></li>
+  <li><a href="#cutoff-frequency" id="toc-cutoff-frequency" class="nav-link" data-scroll-target="#cutoff-frequency">Cutoff Frequency</a></li>
+  <li><a href="#transition-width" id="toc-transition-width" class="nav-link" data-scroll-target="#transition-width">Transition Width</a></li>
+  <li><a href="#window" id="toc-window" class="nav-link" data-scroll-target="#window">Window</a></li>
+  </ul></li>
+  <li><a href="#low-pass-filter-result" id="toc-low-pass-filter-result" class="nav-link" data-scroll-target="#low-pass-filter-result">9.9 Low-Pass Filter Result</a></li>
+  <li><a href="#experiment-3-high-pass-filtering" id="toc-experiment-3-high-pass-filtering" class="nav-link" data-scroll-target="#experiment-3-high-pass-filtering">Experiment 3: High-Pass Filtering</a></li>
+  <li><a href="#keeping-the-highest-frequency-component" id="toc-keeping-the-highest-frequency-component" class="nav-link" data-scroll-target="#keeping-the-highest-frequency-component">9.10 Keeping the Highest-Frequency Component</a></li>
+  <li><a href="#experiment-4-band-pass-filtering-and-channel-selection" id="toc-experiment-4-band-pass-filtering-and-channel-selection" class="nav-link" data-scroll-target="#experiment-4-band-pass-filtering-and-channel-selection">Experiment 4: Band-Pass Filtering and Channel Selection</a></li>
+  <li><a href="#what-if-the-desired-signal-is-in-the-middle" id="toc-what-if-the-desired-signal-is-in-the-middle" class="nav-link" data-scroll-target="#what-if-the-desired-signal-is-in-the-middle">9.11 What If the Desired Signal Is in the Middle?</a></li>
+  <li><a href="#channel-selection-in-a-receiver" id="toc-channel-selection-in-a-receiver" class="nav-link" data-scroll-target="#channel-selection-in-a-receiver">9.12 Channel Selection in a Receiver</a></li>
+  <li><a href="#experiment-5-band-reject-filtering" id="toc-experiment-5-band-reject-filtering" class="nav-link" data-scroll-target="#experiment-5-band-reject-filtering">Experiment 5: Band-Reject Filtering</a></li>
+  <li><a href="#removing-one-frequency-region-instead" id="toc-removing-one-frequency-region-instead" class="nav-link" data-scroll-target="#removing-one-frequency-region-instead">9.13 Removing One Frequency Region Instead</a></li>
+  <li><a href="#four-filters-one-basic-idea" id="toc-four-filters-one-basic-idea" class="nav-link" data-scroll-target="#four-filters-one-basic-idea">9.14 Four Filters, One Basic Idea</a></li>
+  <li><a href="#experiment-6-understanding-transition-width" id="toc-experiment-6-understanding-transition-width" class="nav-link" data-scroll-target="#experiment-6-understanding-transition-width">Experiment 6: Understanding Transition Width</a></li>
+  <li><a href="#real-filters-are-not-brick-walls" id="toc-real-filters-are-not-brick-walls" class="nav-link" data-scroll-target="#real-filters-are-not-brick-walls">9.15 Real Filters Are Not Brick Walls</a></li>
+  <li><a href="#making-the-transition-width-visible" id="toc-making-the-transition-width-visible" class="nav-link" data-scroll-target="#making-the-transition-width-visible">9.16 Making the Transition Width Visible</a></li>
+  <li><a href="#why-not-always-use-an-extremely-narrow-transition" id="toc-why-not-always-use-an-extremely-narrow-transition" class="nav-link" data-scroll-target="#why-not-always-use-an-extremely-narrow-transition">9.17 Why Not Always Use an Extremely Narrow Transition?</a></li>
+  <li><a href="#experiment-7-filter-taps-and-fir-complexity" id="toc-experiment-7-filter-taps-and-fir-complexity" class="nav-link" data-scroll-target="#experiment-7-filter-taps-and-fir-complexity">Experiment 7: Filter Taps and FIR Complexity</a></li>
+  <li><a href="#what-is-an-fir-filter" id="toc-what-is-an-fir-filter" class="nav-link" data-scroll-target="#what-is-an-fir-filter">9.18 What Is an FIR Filter?</a></li>
+  <li><a href="#exposing-the-filter-taps-in-gnu-radio" id="toc-exposing-the-filter-taps-in-gnu-radio" class="nav-link" data-scroll-target="#exposing-the-filter-taps-in-gnu-radio">9.19 Exposing the Filter Taps in GNU Radio</a></li>
+  <li><a href="#gnu-radio-toolbox-low-pass-filter-taps" id="toc-gnu-radio-toolbox-low-pass-filter-taps" class="nav-link" data-scroll-target="#gnu-radio-toolbox-low-pass-filter-taps">9.20 GNU Radio Toolbox: Low-pass Filter Taps</a>
+  <ul class="collapse">
+  <li><a href="#gain-1" id="toc-gain-1" class="nav-link" data-scroll-target="#gain-1">Gain</a></li>
+  <li><a href="#sample-rate-1" id="toc-sample-rate-1" class="nav-link" data-scroll-target="#sample-rate-1">Sample Rate</a></li>
+  <li><a href="#cutoff-frequency-1" id="toc-cutoff-frequency-1" class="nav-link" data-scroll-target="#cutoff-frequency-1">Cutoff Frequency</a></li>
+  <li><a href="#transition-width-1" id="toc-transition-width-1" class="nav-link" data-scroll-target="#transition-width-1">Transition Width</a></li>
+  <li><a href="#window-1" id="toc-window-1" class="nav-link" data-scroll-target="#window-1">Window</a></li>
+  </ul></li>
+  <li><a href="#where-does-num_taps-come-from" id="toc-where-does-num_taps-come-from" class="nav-link" data-scroll-target="#where-does-num_taps-come-from">9.21 Where Does <code>num_taps</code> Come From?</a></li>
+  <li><a href="#transition-width-versus-number-of-taps" id="toc-transition-width-versus-number-of-taps" class="nav-link" data-scroll-target="#transition-width-versus-number-of-taps">9.22 Transition Width Versus Number of Taps</a></li>
+  <li><a href="#what-does-the-window-change" id="toc-what-does-the-window-change" class="nav-link" data-scroll-target="#what-does-the-window-change">9.23 What Does the Window Change?</a></li>
+  <li><a href="#filtering-has-a-computational-cost" id="toc-filtering-has-a-computational-cost" class="nav-link" data-scroll-target="#filtering-has-a-computational-cost">9.24 Filtering Has a Computational Cost</a></li>
+  <li><a href="#experiment-8-filtering-and-decimation" id="toc-experiment-8-filtering-and-decimation" class="nav-link" data-scroll-target="#experiment-8-filtering-and-decimation">Experiment 8: Filtering and Decimation</a></li>
+  <li><a href="#why-reduce-the-sample-rate" id="toc-why-reduce-the-sample-rate" class="nav-link" data-scroll-target="#why-reduce-the-sample-rate">9.25 Why Reduce the Sample Rate?</a></li>
+  <li><a href="#gnu-radio-setup-1" id="toc-gnu-radio-setup-1" class="nav-link" data-scroll-target="#gnu-radio-setup-1">9.26 GNU Radio Setup</a></li>
+  <li><a href="#gnu-radio-toolbox-decimating-fir-filter" id="toc-gnu-radio-toolbox-decimating-fir-filter" class="nav-link" data-scroll-target="#gnu-radio-toolbox-decimating-fir-filter">9.27 GNU Radio Toolbox: Decimating FIR Filter</a>
+  <ul class="collapse">
+  <li><a href="#type" id="toc-type" class="nav-link" data-scroll-target="#type">Type</a></li>
+  <li><a href="#decimation-1" id="toc-decimation-1" class="nav-link" data-scroll-target="#decimation-1">Decimation</a></li>
+  <li><a href="#taps" id="toc-taps" class="nav-link" data-scroll-target="#taps">Taps</a></li>
+  <li><a href="#sample-delay" id="toc-sample-delay" class="nav-link" data-scroll-target="#sample-delay">Sample Delay</a></li>
+  </ul></li>
+  <li><a href="#what-happens-as-decimation-increases" id="toc-what-happens-as-decimation-increases" class="nav-link" data-scroll-target="#what-happens-as-decimation-increases">9.28 What Happens as Decimation Increases?</a></li>
+  <li><a href="#the-nyquist-limit-after-decimation" id="toc-the-nyquist-limit-after-decimation" class="nav-link" data-scroll-target="#the-nyquist-limit-after-decimation">9.29 The Nyquist Limit After Decimation</a></li>
+  <li><a href="#experiment-8a-what-happens-if-we-decimate-without-filtering" id="toc-experiment-8a-what-happens-if-we-decimate-without-filtering" class="nav-link" data-scroll-target="#experiment-8a-what-happens-if-we-decimate-without-filtering">Experiment 8a: What Happens If We Decimate Without Filtering?</a></li>
+  <li><a href="#breaking-the-correct-decimation-process" id="toc-breaking-the-correct-decimation-process" class="nav-link" data-scroll-target="#breaking-the-correct-decimation-process">9.30 Breaking the Correct Decimation Process</a></li>
+  <li><a href="#predict-the-aliasing-before-running-it" id="toc-predict-the-aliasing-before-running-it" class="nav-link" data-scroll-target="#predict-the-aliasing-before-running-it">9.31 Predict the Aliasing Before Running It</a></li>
+  <li><a href="#filter-before-decimation-versus-direct-downsampling" id="toc-filter-before-decimation-versus-direct-downsampling" class="nav-link" data-scroll-target="#filter-before-decimation-versus-direct-downsampling">9.32 Filter Before Decimation Versus Direct Downsampling</a></li>
+  <li><a href="#gnu-radio-toolbox-keep-1-in-n" id="toc-gnu-radio-toolbox-keep-1-in-n" class="nav-link" data-scroll-target="#gnu-radio-toolbox-keep-1-in-n">9.33 GNU Radio Toolbox: Keep 1 in N</a></li>
+  <li><a href="#why-the-frequency-sink-bandwidth-must-change" id="toc-why-the-frequency-sink-bandwidth-must-change" class="nav-link" data-scroll-target="#why-the-frequency-sink-bandwidth-must-change">9.34 Why the Frequency Sink Bandwidth Must Change</a></li>
+  <li><a href="#be-careful-when-comparing-different-sample-rates" id="toc-be-careful-when-comparing-different-sample-rates" class="nav-link" data-scroll-target="#be-careful-when-comparing-different-sample-rates">9.35 Be Careful When Comparing Different Sample Rates</a></li>
+  <li><a href="#common-filter-mistakes-in-gnu-radio" id="toc-common-filter-mistakes-in-gnu-radio" class="nav-link" data-scroll-target="#common-filter-mistakes-in-gnu-radio">9.36 Common Filter Mistakes in GNU Radio</a>
+  <ul class="collapse">
+  <li><a href="#wrong-sample-rate" id="toc-wrong-sample-rate" class="nav-link" data-scroll-target="#wrong-sample-rate">Wrong Sample Rate</a></li>
+  <li><a href="#wrong-cutoff-frequency" id="toc-wrong-cutoff-frequency" class="nav-link" data-scroll-target="#wrong-cutoff-frequency">Wrong Cutoff Frequency</a></li>
+  <li><a href="#unrealistically-narrow-transition-width" id="toc-unrealistically-narrow-transition-width" class="nav-link" data-scroll-target="#unrealistically-narrow-transition-width">Unrealistically Narrow Transition Width</a></li>
+  <li><a href="#changing-decimation-without-updating-gui-blocks" id="toc-changing-decimation-without-updating-gui-blocks" class="nav-link" data-scroll-target="#changing-decimation-without-updating-gui-blocks">Changing Decimation Without Updating GUI Blocks</a></li>
+  <li><a href="#downsampling-without-anti-alias-filtering" id="toc-downsampling-without-anti-alias-filtering" class="nav-link" data-scroll-target="#downsampling-without-anti-alias-filtering">Downsampling Without Anti-Alias Filtering</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">9.37 What We Learned</a></li>
+  <li><a href="#the-bigger-sdr-picture" id="toc-the-bigger-sdr-picture" class="nav-link" data-scroll-target="#the-bigger-sdr-picture">9.38 The Bigger SDR Picture</a></li>
+  <li><a href="#gnu-radio-toolbox-summary" id="toc-gnu-radio-toolbox-summary" class="nav-link" data-scroll-target="#gnu-radio-toolbox-summary">9.39 GNU Radio Toolbox Summary</a>
+  <ul class="collapse">
+  <li><a href="#low-pass-filter" id="toc-low-pass-filter" class="nav-link" data-scroll-target="#low-pass-filter">Low Pass Filter</a></li>
+  <li><a href="#high-pass-filter" id="toc-high-pass-filter" class="nav-link" data-scroll-target="#high-pass-filter">High Pass Filter</a></li>
+  <li><a href="#band-pass-filter" id="toc-band-pass-filter" class="nav-link" data-scroll-target="#band-pass-filter">Band Pass Filter</a></li>
+  <li><a href="#band-reject-filter" id="toc-band-reject-filter" class="nav-link" data-scroll-target="#band-reject-filter">Band Reject Filter</a></li>
+  <li><a href="#low-pass-filter-taps" id="toc-low-pass-filter-taps" class="nav-link" data-scroll-target="#low-pass-filter-taps">Low-pass Filter Taps</a></li>
+  <li><a href="#decimating-fir-filter" id="toc-decimating-fir-filter" class="nav-link" data-scroll-target="#decimating-fir-filter">Decimating FIR Filter</a></li>
+  <li><a href="#keep-1-in-n" id="toc-keep-1-in-n" class="nav-link" data-scroll-target="#keep-1-in-n">Keep 1 in N</a></li>
+  <li><a href="#qt-gui-range" id="toc-qt-gui-range" class="nav-link" data-scroll-target="#qt-gui-range">QT GUI Range</a></li>
+  </ul></li>
+  <li><a href="#key-design-takeaway" id="toc-key-design-takeaway" class="nav-link" data-scroll-target="#key-design-takeaway">9.40 Key Design Takeaway</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">9.41 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter08.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter09.html"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="why-do-we-need-filters" class="level2">
+<h2 class="anchored" data-anchor-id="why-do-we-need-filters">9.1 Why Do We Need Filters?</h2>
+<p>So far, we have spent a lot of time learning how signals look in the time domain and frequency domain. We have generated tones, added signals together, looked at FFTs, changed sample rates, and moved signals around the spectrum.</p>
+<p>But a receiver has another problem.</p>
+<p>It usually receives much more than the signal we actually want.</p>
+<p>Imagine that our receiver contains three signals:</p>
+<ul>
+<li><p>one at 2 kHz,</p></li>
+<li><p>one at 5 kHz,</p></li>
+<li><p>one at 9 kHz.</p></li>
+</ul>
+<p>Suppose we are interested only in the 2 kHz signal.</p>
+<p>How do we keep it while rejecting the others?</p>
+<p>Or suppose we want only the 5 kHz signal.</p>
+<p>Or perhaps the 5 kHz signal is interference and we want everything except that signal.</p>
+<p>This is where filters become useful.</p>
+<p>A filter is not simply something that “removes noise.” That description is too limited.</p>
+<p>A better way to think about a filter is:</p>
+<blockquote class="blockquote">
+<p>****A filter treats different parts of the frequency spectrum differently.****</p>
+</blockquote>
+<p>Some frequencies are allowed through almost unchanged. Others are reduced, sometimes very strongly.</p>
+<p>In this chapter, we will build a multi-frequency signal in GNU Radio and gradually learn how to control its spectrum.</p>
+<p>We will work with:</p>
+<ul>
+<li><p>low-pass filters,</p></li>
+<li><p>high-pass filters,</p></li>
+<li><p>band-pass filters,</p></li>
+<li><p>band-reject filters,</p></li>
+<li><p>cutoff frequencies,</p></li>
+<li><p>passbands and stopbands,</p></li>
+<li><p>transition width,</p></li>
+<li><p>FIR filter taps,</p></li>
+<li><p>filter windows,</p></li>
+<li><p>decimation,</p></li>
+<li><p>anti-alias filtering.</p></li>
+</ul>
+<p>Most importantly, we will not study these ideas only as equations.</p>
+<p>We will watch them happen.</p>
+<hr>
+</section>
+<section id="our-test-signal" class="level2">
+<h2 class="anchored" data-anchor-id="our-test-signal">9.2 Our Test Signal</h2>
+<p>We need a signal containing several frequencies so that there is actually something for our filters to separate.</p>
+<p>For most of this chapter, we will use three cosine signals:</p>
+<p><span class="math display">\[
+x_1(t)=\cos(2\pi 2000t)
+\]</span></p>
+<p><span class="math display">\[
+x_2(t)=\cos(2\pi 5000t)
+\]</span></p>
+<p><span class="math display">\[
+x_3(t)=\cos(2\pi 9000t)
+\]</span></p>
+<p>and add them together:</p>
+<p><span class="math display">\[
+x(t)=x_1(t)+x_2(t)+x_3(t)
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+x(t) = \cos(2\pi 2000t) \+ \cos(2\pi 5000t) \+ \cos(2\pi 9000t)
+\]</span></p>
+<p>We will use a sample rate of</p>
+<p><span class="math display">\[
+f_s=32\\,000\text{ samples/s}
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<p>The Nyquist frequency is therefore</p>
+<p><span class="math display">\[
+f_N=\frac{f_s}{2}=16\text{ kHz}
+\]</span></p>
+<p>All three signals are below 16 kHz, so they can be represented correctly at this sample rate.</p>
+<hr>
+</section>
+<section id="experiment-1-building-a-multi-frequency-signal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-building-a-multi-frequency-signal">Experiment 1: Building a Multi-Frequency Signal</h2>
+</section>
+<section id="building-the-test-signal-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="building-the-test-signal-in-gnu-radio">9.3 Building the Test Signal in GNU Radio</h2>
+<p>Before filtering anything, let us first see what happens when several sinusoidal signals are added together.</p>
+<p>Build the flowgraph using:</p>
+<ul>
+<li><p>three ****Signal Source**** blocks,</p></li>
+<li><p>one ****Add**** block,</p></li>
+<li><p>one ****Throttle**** block,</p></li>
+<li><p>one ****QT GUI Time Sink****,</p></li>
+<li><p>one ****QT GUI Frequency Sink****.</p></li>
+</ul>
+<p>Use the following global sample rate:</p>
+<pre class="text"><code>samp_rate = 32k</code></pre>
+<p>Configure the three Signal Source blocks as follows.</p>
+<section id="signal-source-1" class="level3">
+<h3 class="anchored" data-anchor-id="signal-source-1">Signal Source 1</h3>
+<pre class="text"><code>Sample Rate:    samp_rate
+
+Waveform:       Cosine
+
+Frequency:      2k
+
+Amplitude:      1
+
+Offset:         0
+
+Initial Phase:  0</code></pre>
+</section>
+<section id="signal-source-2" class="level3">
+<h3 class="anchored" data-anchor-id="signal-source-2">Signal Source 2</h3>
+<pre class="text"><code>Sample Rate:    samp_rate
+
+Waveform:       Cosine
+
+Frequency:      5k
+
+Amplitude:      1
+
+Offset:         0
+
+Initial Phase:  0</code></pre>
+</section>
+<section id="signal-source-3" class="level3">
+<h3 class="anchored" data-anchor-id="signal-source-3">Signal Source 3</h3>
+<pre class="text"><code>Sample Rate:    samp_rate
+
+Waveform:       Cosine
+
+Frequency:      9k
+
+Amplitude:      1
+
+Offset:         0
+
+Initial Phase:  0</code></pre>
+<p>Connect all three Signal Sources to the Add block.</p>
+<p>Then connect the combined signal to the Time Sink and Frequency Sink.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp1-multifrequency-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for the three-tone test signal</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="what-do-we-see" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-see">9.4 What Do We See?</h2>
+<p>The time-domain waveform does not look like a simple sine wave anymore.</p>
+<p>That is expected.</p>
+<p>We are looking at three sinusoids added together. At some instants they reinforce each other, while at other instants they partially cancel.</p>
+<p>The frequency-domain view is much easier to interpret.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp1-multifrequency-spectrum.png" class="img-fluid figure-img"></p>
+<figcaption>Spectrum of the multi-frequency signal</figcaption>
+</figure>
+</div>
+<p>We see spectral components at approximately</p>
+<p><span class="math display">\[
+\pm2\text{ kHz},\quad \pm5\text{ kHz},\quad \pm9\text{ kHz}
+\]</span></p>
+<p>Why do we see both positive and negative frequencies?</p>
+<p>Because these are real cosine signals. As we saw earlier, a real cosine contains two complex exponential components:</p>
+<p><span class="math display">\[
+\cos(2\pi f_0t) = \frac{1}{2}e^{j2\pi f_0t} \+ \frac{1}{2}e^{-j2\pi f_0t}
+\]</span></p>
+<p>So each cosine produces a pair of spectral components at</p>
+<p><span class="math display">\[
++f_0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-f_0
+\]</span></p>
+<p>Our job now is to selectively keep or reject some of these frequency components.</p>
+<hr>
+</section>
+<section id="what-does-a-filter-actually-do" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-a-filter-actually-do">9.5 What Does a Filter Actually Do?</h2>
+<p>Suppose our input signal is represented in the frequency domain as</p>
+<p><span class="math display">\[
+X(f)
+\]</span></p>
+<p>A filter has its own frequency response,</p>
+<p><span class="math display">\[
+H(f)
+\]</span></p>
+<p>The output spectrum is</p>
+<p><span class="math display">\[
+Y(f)=X(f)H(f)
+\]</span></p>
+<p>This equation captures the main idea of filtering.</p>
+<p>The filter multiplies different parts of the input spectrum by different amounts.</p>
+<p>If</p>
+<p><span class="math display">\[
+|H(f)|\approx1
+\]</span></p>
+<p>that frequency passes through almost unchanged.</p>
+<p>If</p>
+<p><span class="math display">\[
+|H(f)|\approx0
+\]</span></p>
+<p>that frequency is strongly suppressed.</p>
+<p>The region that is allowed through is called the ****passband****.</p>
+<p>The region that is strongly attenuated is called the ****stopband****.</p>
+<p>Between them lies the ****transition band****.</p>
+<p>Real filters do not normally change from perfect transmission to perfect rejection at one infinitely sharp frequency. There is always some transition.</p>
+<p>We will see this directly in GNU Radio.</p>
+<hr>
+</section>
+<section id="experiment-2-low-pass-filtering" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-low-pass-filtering">Experiment 2: Low-Pass Filtering</h2>
+</section>
+<section id="keeping-the-lowest-frequency-component" class="level2">
+<h2 class="anchored" data-anchor-id="keeping-the-lowest-frequency-component">9.6 Keeping the Lowest-Frequency Component</h2>
+<p>Suppose we want to keep the lowest-frequency signal and reject the higher-frequency components.</p>
+<p>That is exactly what a low-pass filter is designed to do.</p>
+<p>A low-pass filter passes low frequencies and attenuates frequencies above its cutoff region.</p>
+<p>For this experiment, use a cutoff frequency of</p>
+<p><span class="math display">\[
+f_c=3\text{ kHz}
+\]</span></p>
+<p>Our signals are at</p>
+<p><span class="math display">\[
+2,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<p>Therefore, we expect the 2 kHz component to survive while the 5 kHz and 9 kHz components are strongly attenuated.</p>
+</section>
+<section id="gnu-radio-setup" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-setup">9.7 GNU Radio Setup</h2>
+<p>Add a ****Low Pass Filter**** block after the combined signal.</p>
+<p>Use:</p>
+<pre class="text"><code>FIR Type:          Float -&gt; Float (Decimating)
+
+Decimation:        1
+
+Gain:              1
+
+Sample Rate:       samp_rate
+
+Cutoff Freq:       3000
+
+Transition Width:  500
+
+Window:            Hamming</code></pre>
+<p>Compare the signal before and after the filter using both the Time Sink and Frequency Sink.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp2-lowpass-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio low-pass filter flowgraph</figcaption>
+</figure>
+</div>
+<hr>
+</section>
+<section id="low-pass-filter-settings-that-matter-here" class="level2">
+<h2 class="anchored" data-anchor-id="low-pass-filter-settings-that-matter-here">9.8 Low Pass Filter Settings That Matter Here</h2>
+<p>We have already used the Low Pass Filter in earlier chapters. Here, for the first time, its design parameters themselves become part of what we are trying to understand.</p>
+<section id="fir-type" class="level3">
+<h3 class="anchored" data-anchor-id="fir-type">FIR Type</h3>
+<p>This determines the input and output sample types and the way the filter operates.</p>
+<p>For our real-valued cosine signals, we use:</p>
+<pre class="text"><code>Float -&gt; Float</code></pre>
+</section>
+<section id="decimation" class="level3">
+<h3 class="anchored" data-anchor-id="decimation">Decimation</h3>
+<p>Decimation reduces the output sample rate.</p>
+<p>For now:</p>
+<pre class="text"><code>Decimation = 1</code></pre>
+<p>so the sample rate does not change.</p>
+<p>Later in this chapter, we will deliberately change this value.</p>
+</section>
+<section id="gain" class="level3">
+<h3 class="anchored" data-anchor-id="gain">Gain</h3>
+<p>Gain scales the filter output.</p>
+<p>We use:</p>
+<pre class="text"><code>Gain = 1</code></pre>
+<p>so the filter does not intentionally amplify or reduce the passband signal.</p>
+</section>
+<section id="sample-rate" class="level3">
+<h3 class="anchored" data-anchor-id="sample-rate">Sample Rate</h3>
+<p>This tells GNU Radio the sampling frequency used to design the filter.</p>
+<p>For our experiment:</p>
+<pre class="text"><code>Sample Rate = samp_rate</code></pre>
+<p>where</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+</section>
+<section id="cutoff-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="cutoff-frequency">Cutoff Frequency</h3>
+<p>The cutoff frequency defines the approximate edge of the low-pass region.</p>
+<p>We use:</p>
+<pre class="text"><code>Cutoff Freq = 3000</code></pre>
+<p>or</p>
+<p><span class="math display">\[
+f_c=3\text{ kHz}
+\]</span></p>
+<p>The 2 kHz signal therefore lies inside the passband.</p>
+<p>The 5 kHz and 9 kHz signals lie beyond it.</p>
+</section>
+<section id="transition-width" class="level3">
+<h3 class="anchored" data-anchor-id="transition-width">Transition Width</h3>
+<p>We use:</p>
+<pre class="text"><code>Transition Width = 500</code></pre>
+<p>or</p>
+<p><span class="math display">\[
+\Delta f=500\text{ Hz}
+\]</span></p>
+<p>The transition width tells the filter how quickly it must move from the passband toward the stopband.</p>
+<p>A smaller transition width requires a sharper filter.</p>
+<p>We will investigate this properly later.</p>
+</section>
+<section id="window" class="level3">
+<h3 class="anchored" data-anchor-id="window">Window</h3>
+<p>We use:</p>
+<pre class="text"><code>Window = Hamming</code></pre>
+<p>The window affects the FIR filter design, including its transition behaviour, stopband attenuation, and number of taps.</p>
+<p>We will return to this later.</p>
+<hr>
+</section>
+</section>
+<section id="low-pass-filter-result" class="level2">
+<h2 class="anchored" data-anchor-id="low-pass-filter-result">9.9 Low-Pass Filter Result</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp2-lowpass-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Low-pass filtering before and after comparison</figcaption>
+</figure>
+</div>
+<p>The result is much easier to understand in the frequency domain.</p>
+<p>Before filtering, the spectrum contains</p>
+<p><span class="math display">\[
+\pm2,\quad\pm5,\quad\pm9\text{ kHz}
+\]</span></p>
+<p>After the low-pass filter, the 2 kHz component remains while the 5 kHz and 9 kHz components are heavily attenuated.</p>
+<p>The time-domain waveform also becomes much simpler.</p>
+<p>Instead of the complicated three-tone waveform, the output now resembles a single 2 kHz sinusoid.</p>
+<p>This gives us an important observation:</p>
+<blockquote class="blockquote">
+<p>****Filtering is often easier to understand in the frequency domain than in the time domain.****</p>
+</blockquote>
+<p>Also notice that the unwanted components do not necessarily disappear completely.</p>
+<p>They are attenuated.</p>
+<p>That distinction matters.</p>
+<p>A practical filter changes different frequencies by different amounts rather than simply deleting them.</p>
+<hr>
+</section>
+<section id="experiment-3-high-pass-filtering" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-high-pass-filtering">Experiment 3: High-Pass Filtering</h2>
+</section>
+<section id="keeping-the-highest-frequency-component" class="level2">
+<h2 class="anchored" data-anchor-id="keeping-the-highest-frequency-component">9.10 Keeping the Highest-Frequency Component</h2>
+<p>Now let us do the opposite.</p>
+<p>Instead of keeping the low-frequency signal, suppose we want to keep the high-frequency part of the spectrum.</p>
+<p>A ****high-pass filter**** attenuates frequencies below its cutoff region and passes frequencies above it.</p>
+<p>For our three-tone signal, we choose the filter so that the 9 kHz component remains while the 2 kHz and 5 kHz components are strongly reduced.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp3-highpass-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio high-pass filter flowgraph</figcaption>
+</figure>
+</div>
+<p>The before-and-after result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp3-highpass-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>High-pass filtering comparison</figcaption>
+</figure>
+</div>
+<p>The lower-frequency components are strongly attenuated while the 9 kHz component remains.</p>
+<p>The time-domain result also changes.</p>
+<p>Since the surviving sinusoid is at a much higher frequency than the 2 kHz signal from the previous experiment, many more cycles appear inside the same time window.</p>
+<p>The low-pass and high-pass filters are not fundamentally different mathematical operations.</p>
+<p>Both are FIR filters.</p>
+<p>What changes is their frequency response.</p>
+<p>For a low-pass filter,</p>
+<p><span class="math display">\[
+|H(f)|
+\]</span></p>
+<p>is large at low frequencies and small at high frequencies.</p>
+<p>For a high-pass filter, the opposite is true.</p>
+<hr>
+</section>
+<section id="experiment-4-band-pass-filtering-and-channel-selection" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-band-pass-filtering-and-channel-selection">Experiment 4: Band-Pass Filtering and Channel Selection</h2>
+</section>
+<section id="what-if-the-desired-signal-is-in-the-middle" class="level2">
+<h2 class="anchored" data-anchor-id="what-if-the-desired-signal-is-in-the-middle">9.11 What If the Desired Signal Is in the Middle?</h2>
+<p>Low-pass and high-pass filters are convenient when the signal we want lies near one side of the spectrum.</p>
+<p>But what if the signal we want lies in the middle?</p>
+<p>Suppose our desired signal is the 5 kHz tone.</p>
+<p>Our spectrum contains</p>
+<p><span class="math display">\[
+2,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<p>A low-pass filter would keep the 2 kHz component as well.</p>
+<p>A high-pass filter would tend to keep the 9 kHz component.</p>
+<p>What we want is a filter that passes only a selected range around 5 kHz.</p>
+<p>That is a ****band-pass filter****.</p>
+<p>A band-pass filter passes frequencies between two frequency boundaries.</p>
+<p>We can think of its desired passband as</p>
+<p><span class="math display">\[
+f_L &lt; |f| &lt; f_H
+\]</span></p>
+<p>where</p>
+<ul>
+<li><p><span class="math inline">\(f_L\)</span> is the lower cutoff frequency,</p></li>
+<li><p><span class="math inline">\(f_H\)</span> is the upper cutoff frequency.</p></li>
+</ul>
+<p>For this experiment, we choose the passband so that the 5 kHz signal lies inside it while the 2 kHz and 9 kHz signals lie outside.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp4-channel-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio channel-selection flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp4-channel-selection.png" class="img-fluid figure-img"></p>
+<figcaption>Band-pass filtering and channel selection</figcaption>
+</figure>
+</div>
+<p>The filter has isolated the middle-frequency component.</p>
+<p>The spectrum after filtering contains the real-signal pair around</p>
+<p><span class="math display">\[
+\pm5\text{ kHz}
+\]</span></p>
+<p>while the 2 kHz and 9 kHz components are strongly attenuated.</p>
+<p>This is our first clear example of ****channel selection****.</p>
+<hr>
+</section>
+<section id="channel-selection-in-a-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="channel-selection-in-a-receiver">9.12 Channel Selection in a Receiver</h2>
+<p>Imagine several radio channels occupying different frequency regions.</p>
+<p>The antenna may receive all of them at once.</p>
+<p>The receiver does not magically receive only the station we selected.</p>
+<p>Instead, the receiver performs operations such as:</p>
+<p>1. frequency translation,</p>
+<p>2. filtering,</p>
+<p>3. sample-rate reduction,</p>
+<p>4. demodulation.</p>
+<p>The mixing experiments from the previous chapter and the filtering experiments in this chapter therefore fit together.</p>
+<p>A signal can first be translated to a convenient frequency and then filtered so that only the desired channel remains.</p>
+<p>Conceptually:</p>
+<pre class="text"><code>RF spectrum
+    ↓
+Frequency translation
+    ↓
+Channel filter
+    ↓
+Desired signal</code></pre>
+<p>This is one of the central ideas behind software-defined radio.</p>
+<hr>
+</section>
+<section id="experiment-5-band-reject-filtering" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-band-reject-filtering">Experiment 5: Band-Reject Filtering</h2>
+</section>
+<section id="removing-one-frequency-region-instead" class="level2">
+<h2 class="anchored" data-anchor-id="removing-one-frequency-region-instead">9.13 Removing One Frequency Region Instead</h2>
+<p>Sometimes the problem is reversed.</p>
+<p>We do not want to keep one particular band.</p>
+<p>We want to remove it.</p>
+<p>Suppose the 5 kHz component is interference and we want to retain the 2 kHz and 9 kHz components.</p>
+<p>A ****band-reject filter****, also called a ****band-stop filter****, suppresses frequencies within a selected range while allowing frequencies outside that range to remain.</p>
+<p>If the rejected band is very narrow, the filter is often called a ****notch filter****.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp5-bandreject-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio band-reject filter flowgraph</figcaption>
+</figure>
+</div>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp5-bandreject-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Band-reject filtering comparison</figcaption>
+</figure>
+</div>
+<p>The 5 kHz component is strongly attenuated, while the 2 kHz and 9 kHz components remain.</p>
+<p>The time-domain waveform is still relatively complicated because more than one frequency component survives.</p>
+<p>This is a useful reminder that frequency-domain plots often reveal the action of a filter more clearly than the time-domain waveform.</p>
+<hr>
+</section>
+<section id="four-filters-one-basic-idea" class="level2">
+<h2 class="anchored" data-anchor-id="four-filters-one-basic-idea">9.14 Four Filters, One Basic Idea</h2>
+<p>At this point we have used four common filter types.</p>
+<div class="line-block">Filter | What it does |</div>
+<p>|—|—|</p>
+<div class="line-block">Low-pass | Keeps lower-frequency components |</div>
+<div class="line-block">High-pass | Keeps higher-frequency components |</div>
+<div class="line-block">Band-pass | Keeps a selected frequency band |</div>
+<div class="line-block">Band-reject | Rejects a selected frequency band |</div>
+<p>Their shapes are different, but the underlying idea is the same:</p>
+<p><span class="math display">\[
+Y(f)=X(f)H(f)
+\]</span></p>
+<p>The filter determines which parts of the input spectrum survive.</p>
+<p>But we have been hiding an important detail.</p>
+<p>How sharp can the boundary between passband and stopband actually be?</p>
+<hr>
+</section>
+<section id="experiment-6-understanding-transition-width" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-6-understanding-transition-width">Experiment 6: Understanding Transition Width</h2>
+</section>
+<section id="real-filters-are-not-brick-walls" class="level2">
+<h2 class="anchored" data-anchor-id="real-filters-are-not-brick-walls">9.15 Real Filters Are Not Brick Walls</h2>
+<p>An ideal low-pass filter might be written as</p>
+<p>An ideal low-pass filter would have</p>
+<p><span class="math display">\[
+H(f)=1 \quad    ext{for } |f|\leq f_c
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+H(f)=0 \quad    ext{for } |f|&gt;f_c
+\]</span></p>
+<p>This describes an infinitely sharp boundary.</p>
+<p>Everything below the cutoff passes.</p>
+<p>Everything above it disappears immediately.</p>
+<p>A practical finite-length FIR filter cannot behave exactly like this.</p>
+<p>Instead, the response changes gradually between the passband and stopband.</p>
+<p>That region is the ****transition band****.</p>
+<p>The width of this region is called the ****transition width****.</p>
+<p>We can write it conceptually as</p>
+<p><span class="math display">\[
+\Delta f=f_{\text{stop}}-f_{\text{pass}}
+\]</span></p>
+<p>A narrow transition width means the filter must change rapidly.</p>
+<p>A wide transition width allows the change to happen more gradually.</p>
+<hr>
+</section>
+<section id="making-the-transition-width-visible" class="level2">
+<h2 class="anchored" data-anchor-id="making-the-transition-width-visible">9.16 Making the Transition Width Visible</h2>
+<p>For this experiment, we return to the low-pass filter.</p>
+<p>To make the effect easier to see, we move one of our tones closer to the cutoff.</p>
+<p>Instead of the original 2 kHz tone, we use a 3.5 kHz tone.</p>
+<p>The test frequencies therefore become approximately</p>
+<p><span class="math display">\[
+3.5,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<p>while the low-pass cutoff remains</p>
+<p><span class="math display">\[
+f_c=3\text{ kHz}
+\]</span></p>
+<p>This places the 3.5 kHz component close to the filter edge, where the transition width matters.</p>
+<p>We keep:</p>
+<pre class="text"><code>Sample Rate:       32k
+
+Cutoff Frequency:  3k
+
+Window:            Hamming</code></pre>
+<p>and make the transition width adjustable using a ****QT GUI Range****.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp6-transition-width-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio transition-width experiment flowgraph</figcaption>
+</figure>
+</div>
+<p>We tested values including:</p>
+<pre class="text"><code>100 Hz
+
+500 Hz
+
+1000 Hz
+
+2000 Hz</code></pre>
+<p>The comparison between narrow and wide transition widths is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp6-transition-width-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of transition width</figcaption>
+</figure>
+</div>
+<p>With a narrow transition width, the 3.5 kHz component is already well into the rejected region and is strongly attenuated.</p>
+<p>With a much wider transition width, the 3.5 kHz component lies inside the broader transition region and is attenuated less strongly.</p>
+<p>This gives us a much better mental picture of what transition width means.</p>
+<p>It is not simply another number in the GNU Radio properties window.</p>
+<p>It controls how quickly the filter moves from passing frequencies to rejecting them.</p>
+<hr>
+</section>
+<section id="why-not-always-use-an-extremely-narrow-transition" class="level2">
+<h2 class="anchored" data-anchor-id="why-not-always-use-an-extremely-narrow-transition">9.17 Why Not Always Use an Extremely Narrow Transition?</h2>
+<p>A natural question now appears.</p>
+<p>If a narrow transition gives us a sharper filter, why not always make the transition width extremely small?</p>
+<p>The answer is that sharper filtering has a cost.</p>
+<p>To understand that cost, we need to look inside the FIR filter.</p>
+<hr>
+</section>
+<section id="experiment-7-filter-taps-and-fir-complexity" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-7-filter-taps-and-fir-complexity">Experiment 7: Filter Taps and FIR Complexity</h2>
+</section>
+<section id="what-is-an-fir-filter" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-an-fir-filter">9.18 What Is an FIR Filter?</h2>
+<p>The filters we have been using are FIR filters.</p>
+<p>FIR means ****Finite Impulse Response****.</p>
+<p>An FIR filter calculates each output sample from a weighted combination of input samples.</p>
+<p>A simple FIR filter can be written as</p>
+<p><span class="math display">\[
+y[n] = h[0]x[n] \+ h[1]x[n-1] \+ h[2]x[n-2] +\cdots+ h[N-1]x[n-(N-1)]
+\]</span></p>
+<p>More compactly,</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
+\]</span></p>
+<p>The values</p>
+<p><span class="math display">\[
+h[0],h[1],\ldots,h[N-1]
+\]</span></p>
+<p>are the ****filter coefficients****, usually called ****filter taps****.</p>
+<p>So if a filter contains 155 taps, GNU Radio is using 155 coefficients in the FIR calculation.</p>
+<p>This is convolution.</p>
+<p>The FIR filter performs</p>
+<p><span class="math display">\[
+y[n]=x[n]*h[n]
+\]</span></p>
+<p>where <span class="math inline">\(h[n]\)</span> is the filter impulse response.</p>
+<p>Its Fourier transform gives the filter frequency response:</p>
+<p><span class="math display">\[
+H(f)=\mathcal{F}\\{h[n]\\}
+\]</span></p>
+<p>This connects the time-domain idea of convolution directly to the frequency-domain shape of the filter.</p>
+<hr>
+</section>
+<section id="exposing-the-filter-taps-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="exposing-the-filter-taps-in-gnu-radio">9.19 Exposing the Filter Taps in GNU Radio</h2>
+<p>Until now, the convenient ****Low Pass Filter**** block created and applied the coefficients internally.</p>
+<p>For this experiment, we separate those two jobs.</p>
+<p>We use:</p>
+<ul>
+<li><p>****Low-pass Filter Taps****</p></li>
+<li><p>****Decimating FIR Filter****</p></li>
+</ul>
+<p>The Low-pass Filter Taps block creates the coefficient vector.</p>
+<p>The Decimating FIR Filter applies those coefficients to the signal.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp7-filter-taps-flowgr.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio filter taps flowgraph</figcaption>
+</figure>
+</div>
+<p>The Low-pass Filter Taps block is configured with:</p>
+<pre class="text"><code>ID:                lpf_taps
+
+Gain:              1
+
+Sample Rate:       samp_rate
+
+Cutoff Frequency:  3k
+
+Transition Width:  500
+
+Window:            Hamming</code></pre>
+<p>The Decimating FIR Filter then uses:</p>
+<pre class="text"><code>Type:          Float -&gt; Float (Real Taps)
+
+Decimation:    1
+
+Taps:          lpf_taps
+
+Sample Delay:  0</code></pre>
+<p>There is no signal wire between the Low-pass Filter Taps block and the Decimating FIR Filter.</p>
+<p><code>lpf_taps</code> is a variable containing the coefficient vector.</p>
+<p>The FIR filter references that vector through its ****Taps**** field.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-low-pass-filter-taps" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-low-pass-filter-taps">9.20 GNU Radio Toolbox: Low-pass Filter Taps</h2>
+<section id="gain-1" class="level3">
+<h3 class="anchored" data-anchor-id="gain-1">Gain</h3>
+<p>Sets the overall filter gain.</p>
+<pre class="text"><code>Gain = 1</code></pre>
+</section>
+<section id="sample-rate-1" class="level3">
+<h3 class="anchored" data-anchor-id="sample-rate-1">Sample Rate</h3>
+<p>Defines the sampling frequency used during filter design.</p>
+<pre class="text"><code>Sample Rate = samp_rate</code></pre>
+</section>
+<section id="cutoff-frequency-1" class="level3">
+<h3 class="anchored" data-anchor-id="cutoff-frequency-1">Cutoff Frequency</h3>
+<p>Defines the low-pass cutoff.</p>
+<pre class="text"><code>Cutoff Frequency = 3k</code></pre>
+</section>
+<section id="transition-width-1" class="level3">
+<h3 class="anchored" data-anchor-id="transition-width-1">Transition Width</h3>
+<p>Controls how sharply the response changes from passband toward stopband.</p>
+<pre class="text"><code>Transition Width = 500</code></pre>
+</section>
+<section id="window-1" class="level3">
+<h3 class="anchored" data-anchor-id="window-1">Window</h3>
+<p>Controls how the finite-length FIR impulse response is shaped.</p>
+<p>For this experiment:</p>
+<pre class="text"><code>Window = Hamming</code></pre>
+<hr>
+</section>
+</section>
+<section id="where-does-num_taps-come-from" class="level2">
+<h2 class="anchored" data-anchor-id="where-does-num_taps-come-from">9.21 Where Does <code>num_taps</code> Come From?</h2>
+<p>This is an important detail.</p>
+<p>We do not manually choose the tap count in this experiment.</p>
+<p>The Low-pass Filter Taps block generates a coefficient vector called</p>
+<pre class="text"><code>lpf_taps</code></pre>
+<p>If the vector contains <span class="math inline">\(N\)</span> coefficients, then the number of taps is simply</p>
+<p><span class="math display">\[
+N=\operatorname{len}(lpf_taps)
+\]</span></p>
+<p>In GNU Radio, we created another variable:</p>
+<pre class="text"><code>ID:     num_taps
+
+Value:  len(lpf_taps)</code></pre>
+<p>The value shown in <code>num_taps</code> is therefore not an arbitrary number.</p>
+<p>It is the actual length of the coefficient vector generated by GNU Radio.</p>
+<p>For example, with:</p>
+<pre class="text"><code>Sample Rate:       32k
+
+Cutoff Frequency:  3k
+
+Transition Width:  500
+
+Window:            Hamming</code></pre>
+<p>GNU Radio generated approximately</p>
+<pre class="text"><code>num_taps = 155</code></pre>
+<p>That means</p>
+<p><span class="math display">\[
+N=155
+\]</span></p>
+<p>and therefore the FIR filter contains 155 coefficients.</p>
+<p>When we temporarily used a Blackman window with similar filter specifications, we observed a larger tap count of approximately</p>
+<pre class="text"><code>num_taps = 215</code></pre>
+<p>This shows that the required number of taps depends not only on transition width, but also on the chosen window.</p>
+<hr>
+</section>
+<section id="transition-width-versus-number-of-taps" class="level2">
+<h2 class="anchored" data-anchor-id="transition-width-versus-number-of-taps">9.22 Transition Width Versus Number of Taps</h2>
+<p>We then varied the transition width while keeping the Hamming window.</p>
+<p>The measured values were:</p>
+<div class="line-block">Transition Width | Number of Taps |</div>
+<p>|—:|—:|</p>
+<div class="line-block">2000 Hz | 39 |</div>
+<div class="line-block">1000 Hz | 77 |</div>
+<div class="line-block">500 Hz | 155 |</div>
+<div class="line-block">200 Hz | 385 |</div>
+<div class="line-block">100 Hz | 771 |</div>
+<p>The trend is very clear.</p>
+<p>As the transition width becomes smaller, the number of taps becomes larger.</p>
+<p>Approximately,</p>
+<p><span class="math display">\[
+N\propto\frac{f_s}{\Delta f}
+\]</span></p>
+<p>The exact value depends on the design method and window, but the trend is what matters.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+\Delta f=1000\text{ Hz} \Rightarrow N\approx77
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\Delta f=500\text{ Hz} \Rightarrow N\approx155
+\]</span></p>
+<p>Halving the transition width roughly doubles the number of taps.</p>
+<p>At the extreme we tested,</p>
+<p><span class="math display">\[
+\Delta f=100\text{ Hz} \Rightarrow N\approx771
+\]</span></p>
+<p>This gives us one of the most important engineering trade-offs in filter design:</p>
+<pre class="text"><code>Narrower transition
+        ↓
+More taps
+        ↓
+More computation</code></pre>
+<p>A sharper filter is useful, but it is not free.</p>
+<hr>
+</section>
+<section id="what-does-the-window-change" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-the-window-change">9.23 What Does the Window Change?</h2>
+<p>The window also affects FIR filter design.</p>
+<p>Common windows include:</p>
+<ul>
+<li><p>Rectangular,</p></li>
+<li><p>Hann,</p></li>
+<li><p>Hamming,</p></li>
+<li><p>Blackman,</p></li>
+<li><p>Kaiser.</p></li>
+</ul>
+<p>Different windows trade transition sharpness, stopband attenuation, and filter length differently.</p>
+<p>We already explored and compared windows earlier, so there is no need to repeat the complete window discussion here.</p>
+<p>However, it is useful to keep the result in mind:</p>
+<blockquote class="blockquote">
+<p>****The window is part of the filter design, not a cosmetic setting.****</p>
+</blockquote>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp7-filter-windows-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of FIR filter windows</figcaption>
+</figure>
+</div>
+<p>For the same general filter requirement, changing the window can change both the shape of the response and the required number of taps.</p>
+<p>This is why the Blackman design we tested produced a different tap count from the Hamming design.</p>
+<hr>
+</section>
+<section id="filtering-has-a-computational-cost" class="level2">
+<h2 class="anchored" data-anchor-id="filtering-has-a-computational-cost">9.24 Filtering Has a Computational Cost</h2>
+<p>Each output sample of an FIR filter requires calculations involving its taps.</p>
+<p>For an <span class="math inline">\(N\)</span>-tap filter,</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
+\]</span></p>
+<p>so increasing <span class="math inline">\(N\)</span> increases the number of multiply-and-add operations.</p>
+<p>This means that asking for an unnecessarily narrow transition width can make a filter much more expensive than necessary.</p>
+<p>A practical SDR designer therefore does not simply ask:</p>
+<blockquote class="blockquote">
+<p>What is the sharpest filter I can build?</p>
+</blockquote>
+<p>A better question is:</p>
+<blockquote class="blockquote">
+<p>****How sharp does this filter actually need to be?****</p>
+</blockquote>
+<hr>
+</section>
+<section id="experiment-8-filtering-and-decimation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-8-filtering-and-decimation">Experiment 8: Filtering and Decimation</h2>
+</section>
+<section id="why-reduce-the-sample-rate" class="level2">
+<h2 class="anchored" data-anchor-id="why-reduce-the-sample-rate">9.25 Why Reduce the Sample Rate?</h2>
+<p>So far, our filters have mainly changed the spectrum.</p>
+<p>Now we will use the filter together with another important SDR operation:</p>
+<p>****decimation****.</p>
+<p>Decimation reduces the sample rate.</p>
+<p>If the input sample rate is <span class="math inline">\(f_s\)</span> and the decimation factor is <span class="math inline">\(D\)</span>, then</p>
+<p><span class="math display">\[
+f_{s,\text{out}} = \frac{f_s}{D}
+\]</span></p>
+<p>For our original sample rate,</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+D=2
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+f_{s,\text{out}}=16\text{ kS/s}
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+D=4
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+f_{s,\text{out}}=8\text{ kS/s}
+\]</span></p>
+<p>If</p>
+<p><span class="math display">\[
+D=8
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+f_{s,\text{out}}=4\text{ kS/s}
+\]</span></p>
+<hr>
+</section>
+<section id="gnu-radio-setup-1" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-setup-1">9.26 GNU Radio Setup</h2>
+<p>For this experiment, we use:</p>
+<ul>
+<li><p>the three Signal Sources,</p></li>
+<li><p>Add,</p></li>
+<li><p>Throttle,</p></li>
+<li><p>Low-pass Filter Taps,</p></li>
+<li><p>Decimating FIR Filter,</p></li>
+<li><p>QT GUI Range,</p></li>
+<li><p>QT GUI Time Sink,</p></li>
+<li><p>QT GUI Frequency Sink.</p></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp8-decimation-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio decimation flowgraph</figcaption>
+</figure>
+</div>
+<p>The decimation factor is controlled with a QT GUI Range.</p>
+<p>For example:</p>
+<pre class="text"><code>ID:             decimation
+
+Label:          Decimation
+
+Default Value:  1
+
+Start:          1
+
+Stop:           10
+
+Step:           1</code></pre>
+<p>Inside the Decimating FIR Filter, use:</p>
+<pre class="text"><code>Decimation: decimation</code></pre>
+<p>The downstream GUI sinks must also know the new sample rate.</p>
+<p>For the QT GUI Time Sink:</p>
+<pre class="text"><code>Sample Rate: samp_rate/decimation</code></pre>
+<p>For the QT GUI Frequency Sink:</p>
+<pre class="text"><code>Bandwidth: samp_rate/decimation</code></pre>
+<p>This is important.</p>
+<p>Once the sample rate changes, any downstream block that interprets time or frequency must use the new rate.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-decimating-fir-filter" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-decimating-fir-filter">9.27 GNU Radio Toolbox: Decimating FIR Filter</h2>
+<section id="type" class="level3">
+<h3 class="anchored" data-anchor-id="type">Type</h3>
+<p>For our real-valued signal and real taps:</p>
+<pre class="text"><code>Float -&gt; Float (Real Taps)</code></pre>
+</section>
+<section id="decimation-1" class="level3">
+<h3 class="anchored" data-anchor-id="decimation-1">Decimation</h3>
+<p>This controls how much the sample rate is reduced.</p>
+<p>If</p>
+<pre class="text"><code>Decimation = 4</code></pre>
+<p>then</p>
+<p><span class="math display">\[
+f_{s,\text{out}} = \frac{f_{s,\text{in}}}{4}
+\]</span></p>
+</section>
+<section id="taps" class="level3">
+<h3 class="anchored" data-anchor-id="taps">Taps</h3>
+<p>We use:</p>
+<pre class="text"><code>lpf_taps</code></pre>
+<p>These are the coefficients produced by the Low-pass Filter Taps block.</p>
+</section>
+<section id="sample-delay" class="level3">
+<h3 class="anchored" data-anchor-id="sample-delay">Sample Delay</h3>
+<p>For this experiment:</p>
+<pre class="text"><code>Sample Delay = 0</code></pre>
+<p>No additional sample offset is intentionally introduced.</p>
+<hr>
+</section>
+</section>
+<section id="what-happens-as-decimation-increases" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-as-decimation-increases">9.28 What Happens as Decimation Increases?</h2>
+<p>We tested</p>
+<p><span class="math display">\[
+D=1,\quad2,\quad4,\quad8
+\]</span></p>
+<p>The comparison is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp8-decimation-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of increasing the decimation factor</figcaption>
+</figure>
+</div>
+<p>For</p>
+<p><span class="math display">\[
+D=1
+\]</span></p>
+<p>the sample rate remains</p>
+<p><span class="math display">\[
+32\text{ kS/s}
+\]</span></p>
+<p>and the Nyquist frequency is</p>
+<p><span class="math display">\[
+16\text{ kHz}
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+D=2
+\]</span></p>
+<p>the output sample rate becomes</p>
+<p><span class="math display">\[
+16\text{ kS/s}
+\]</span></p>
+<p>and the Nyquist frequency becomes</p>
+<p><span class="math display">\[
+8\text{ kHz}
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+D=4
+\]</span></p>
+<p>the output sample rate becomes</p>
+<p><span class="math display">\[
+8\text{ kS/s}
+\]</span></p>
+<p>and the Nyquist frequency becomes</p>
+<p><span class="math display">\[
+4\text{ kHz}
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+D=8
+\]</span></p>
+<p>the output sample rate becomes</p>
+<p><span class="math display">\[
+4\text{ kS/s}
+\]</span></p>
+<p>and the Nyquist frequency becomes</p>
+<p><span class="math display">\[
+2\text{ kHz}
+\]</span></p>
+<p>The relationship is summarized below.</p>
+<div class="line-block">Decimation <span class="math inline">\(D\)</span> | Output Sample Rate | Nyquist Frequency |</div>
+<p>|—:|—:|—:|</p>
+<div class="line-block">1 | 32 kS/s | 16 kHz |</div>
+<div class="line-block">2 | 16 kS/s | 8 kHz |</div>
+<div class="line-block">4 | 8 kS/s | 4 kHz |</div>
+<div class="line-block">8 | 4 kS/s | 2 kHz |</div>
+<p>The same number of samples also covers more time as the sample rate becomes lower.</p>
+<p>That is why the Time Sink shows approximately:</p>
+<p><span class="math display">\[
+4\text{ ms} \rightarrow 8\text{ ms} \rightarrow 16\text{ ms} \rightarrow 32\text{ ms}
+\]</span></p>
+<p>for the same displayed number of points.</p>
+<p>Decimation changes the sample density, not the physical frequency of the correctly preserved signal.</p>
+<hr>
+</section>
+<section id="the-nyquist-limit-after-decimation" class="level2">
+<h2 class="anchored" data-anchor-id="the-nyquist-limit-after-decimation">9.29 The Nyquist Limit After Decimation</h2>
+<p>The important issue is not merely that the sample rate becomes lower.</p>
+<p>The allowable frequency range becomes smaller too.</p>
+<p>After decimation,</p>
+<p><span class="math display">\[
+f_N' = \frac{f_s'}{2}
+\]</span></p>
+<p>For example, with</p>
+<p><span class="math display">\[
+D=4
+\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[
+f_s'=8\text{ kS/s}
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+f_N'=4\text{ kHz}
+\]</span></p>
+<p>A 2 kHz desired component can still be represented safely because</p>
+<p><span class="math display">\[
+2&lt;4\text{ kHz}
+\]</span></p>
+<p>But the original 5 kHz and 9 kHz components cannot be represented correctly at the new sample rate.</p>
+<p>Something must happen to them before downsampling.</p>
+<p>That is where filtering becomes essential.</p>
+<hr>
+</section>
+<section id="experiment-8a-what-happens-if-we-decimate-without-filtering" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-8a-what-happens-if-we-decimate-without-filtering">Experiment 8a: What Happens If We Decimate Without Filtering?</h2>
+</section>
+<section id="breaking-the-correct-decimation-process" class="level2">
+<h2 class="anchored" data-anchor-id="breaking-the-correct-decimation-process">9.30 Breaking the Correct Decimation Process</h2>
+<p>Now we deliberately do it incorrectly.</p>
+<p>This experiment compares two paths.</p>
+<p>The first uses the correct method:</p>
+<pre class="text"><code>Combined Signal
+
+    ↓
+
+Decimating FIR Filter
+
+    ↓
+
+Filtered and Decimated Output</code></pre>
+<p>The second simply discards samples:</p>
+<pre class="text"><code>Combined Signal
+
+    ↓
+
+Keep 1 in N
+
+    ↓
+
+Directly Decimated Output</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp8a-decimation-without-filtering-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph comparing filtered and unfiltered decimation</figcaption>
+</figure>
+</div>
+<p>Both paths use the same decimation factor.</p>
+<p>For the comparison, we use:</p>
+<pre class="text"><code>Decimation = 4</code></pre>
+<p>The new sample rate is therefore</p>
+<p><span class="math display">\[
+f_s' = \frac{32}{4} = 8\text{ kS/s}
+\]</span></p>
+<p>and the new Nyquist frequency is</p>
+<p><span class="math display">\[
+f_N'=4\text{ kHz}
+\]</span></p>
+<hr>
+</section>
+<section id="predict-the-aliasing-before-running-it" class="level2">
+<h2 class="anchored" data-anchor-id="predict-the-aliasing-before-running-it">9.31 Predict the Aliasing Before Running It</h2>
+<p>Our original signal contains</p>
+<p><span class="math display">\[
+2,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<p>The 2 kHz component lies inside the new Nyquist range.</p>
+<p>The 5 kHz and 9 kHz components do not.</p>
+<p>If we simply downsample without filtering, those frequencies fold back into the allowed range.</p>
+<p>The 5 kHz component aliases to</p>
+<p><span class="math display">\[
+|5-8| = 3\text{ kHz}
+\]</span></p>
+<p>The 9 kHz component aliases to</p>
+<p><span class="math display">\[
+|9-8| = 1\text{ kHz}
+\]</span></p>
+<p>So after direct downsampling, we expect components around</p>
+<p><span class="math display">\[
+\pm1,\quad \pm2,\quad \pm3\text{ kHz}
+\]</span></p>
+<p>even though our original Signal Sources were at</p>
+<p><span class="math display">\[
+2,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<hr>
+</section>
+<section id="filter-before-decimation-versus-direct-downsampling" class="level2">
+<h2 class="anchored" data-anchor-id="filter-before-decimation-versus-direct-downsampling">9.32 Filter Before Decimation Versus Direct Downsampling</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch09/ch09-exp8a-filter-before-decimation-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of filtering before decimation and direct downsampling</figcaption>
+</figure>
+</div>
+<p>Look first at the ****Keep 1 in N output****.</p>
+<p>We see components around</p>
+<p><span class="math display">\[
+\pm1,\quad \pm2,\quad \pm3\text{ kHz}
+\]</span></p>
+<p>The 1 kHz and 3 kHz components were not present in the original signal.</p>
+<p>They are aliases.</p>
+<p>The original 9 kHz signal has folded to approximately 1 kHz.</p>
+<p>The original 5 kHz signal has folded to approximately 3 kHz.</p>
+<p>Now look at the ****Decimating FIR Filter output****.</p>
+<p>Before discarding samples, the FIR filter suppresses the high-frequency components that would violate the new Nyquist limit.</p>
+<p>As a result, aliasing is strongly reduced.</p>
+<p>Small residual components may still be visible because a finite FIR filter does not provide infinite attenuation.</p>
+<p>The important difference between the two outputs is clear.</p>
+<p>Direct downsampling gives us:</p>
+<p><span class="math display">\[
+\text{aliasing}
+\]</span></p>
+<p>while filtering first gives us:</p>
+<p><span class="math display">\[
+\text{strong alias suppression}
+\]</span></p>
+<p>This leads to one of the most important rules in digital signal processing:</p>
+<blockquote class="blockquote">
+<p><strong>Filter first. Decimate second.</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-keep-1-in-n" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-keep-1-in-n">9.33 GNU Radio Toolbox: Keep 1 in N</h2>
+<p>The ****Keep 1 in N**** block performs a simple form of downsampling.</p>
+<p>If</p>
+<pre class="text"><code>N = 4</code></pre>
+<p>then it keeps one sample out of every four input samples.</p>
+<p>The sample rate therefore becomes</p>
+<p><span class="math display">\[
+f_s' = \frac{f_s}{4}
+\]</span></p>
+<p>But the block does not automatically perform the anti-alias filtering needed before reducing the sample rate.</p>
+<p>That is why it is useful in this experiment.</p>
+<p>It lets us deliberately see what goes wrong when samples are discarded without first limiting the bandwidth.</p>
+<hr>
+</section>
+<section id="why-the-frequency-sink-bandwidth-must-change" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-frequency-sink-bandwidth-must-change">9.34 Why the Frequency Sink Bandwidth Must Change</h2>
+<p>If the signal has been decimated, the QT GUI Frequency Sink must know the new sample rate.</p>
+<p>For a decimation factor <span class="math inline">\(D\)</span>, set:</p>
+<pre class="text"><code>Bandwidth: samp_rate/decimation</code></pre>
+<p>not:</p>
+<pre class="text"><code>Bandwidth: samp_rate</code></pre>
+<p>For example, with</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+D=4
+\]</span></p>
+<p>the Frequency Sink bandwidth must be</p>
+<p><span class="math display">\[
+\frac{32}{4}=8\text{ kHz}
+\]</span></p>
+<p>The visible two-sided frequency range then extends approximately from</p>
+<p><span class="math display">\[
+-4\text{ kHz}
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
++4\text{ kHz}
+\]</span></p>
+<p>If the sink is left at 32 kHz, the samples will still be plotted, but the frequency-axis labels will no longer correspond to the real output sample rate.</p>
+<p>This is an important GNU Radio habit:</p>
+<blockquote class="blockquote">
+<p>****Whenever the sample rate changes, check every downstream block that depends on the sample rate.****</p>
+</blockquote>
+<hr>
+</section>
+<section id="be-careful-when-comparing-different-sample-rates" class="level2">
+<h2 class="anchored" data-anchor-id="be-careful-when-comparing-different-sample-rates">9.35 Be Careful When Comparing Different Sample Rates</h2>
+<p>Suppose the original signal is sampled at</p>
+<p><span class="math display">\[
+32\text{ kS/s}
+\]</span></p>
+<p>while a decimated signal is sampled at</p>
+<p><span class="math display">\[
+8\text{ kS/s}
+\]</span></p>
+<p>It may be tempting to feed both signals into two inputs of the same Frequency Sink.</p>
+<p>That can be misleading.</p>
+<p>A single Frequency Sink has one bandwidth setting.</p>
+<p>But the two signals have different sample rates.</p>
+<p>For this reason, separate Frequency Sinks are often clearer when comparing signals before and after decimation.</p>
+<p>Each sink can then use the correct bandwidth for its own signal.</p>
+<hr>
+</section>
+<section id="common-filter-mistakes-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="common-filter-mistakes-in-gnu-radio">9.36 Common Filter Mistakes in GNU Radio</h2>
+<p>By now, we have encountered several ways a filtering flowgraph can go wrong.</p>
+<section id="wrong-sample-rate" class="level3">
+<h3 class="anchored" data-anchor-id="wrong-sample-rate">Wrong Sample Rate</h3>
+<p>The filter-design block must know the actual sample rate.</p>
+<p>If the real sample rate is</p>
+<p><span class="math display">\[
+32\text{ kS/s}
+\]</span></p>
+<p>but the filter is designed with some other value, the cutoff and transition frequencies will not correspond to what we intended.</p>
+</section>
+<section id="wrong-cutoff-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="wrong-cutoff-frequency">Wrong Cutoff Frequency</h3>
+<p>Suppose the desired signal is at 5 kHz but our low-pass cutoff is 3 kHz.</p>
+<p>The filter is doing exactly what we told it to do.</p>
+<p>The problem is our specification.</p>
+</section>
+<section id="unrealistically-narrow-transition-width" class="level3">
+<h3 class="anchored" data-anchor-id="unrealistically-narrow-transition-width">Unrealistically Narrow Transition Width</h3>
+<p>A very narrow transition width can dramatically increase the number of taps.</p>
+<p>For our Hamming-window experiment:</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz} \Rightarrow N\approx39
+\]</span></p>
+<p>while</p>
+<p><span class="math display">\[
+\Delta f=100\text{ Hz} \Rightarrow N\approx771
+\]</span></p>
+<p>That is a large increase in computation.</p>
+</section>
+<section id="changing-decimation-without-updating-gui-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="changing-decimation-without-updating-gui-blocks">Changing Decimation Without Updating GUI Blocks</h3>
+<p>If</p>
+<p><span class="math display">\[
+D
+\]</span></p>
+<p>changes, then</p>
+<p><span class="math display">\[
+f_s'=\frac{f_s}{D}
+\]</span></p>
+<p>also changes.</p>
+<p>The downstream Time Sink and Frequency Sink must use the new rate.</p>
+</section>
+<section id="downsampling-without-anti-alias-filtering" class="level3">
+<h3 class="anchored" data-anchor-id="downsampling-without-anti-alias-filtering">Downsampling Without Anti-Alias Filtering</h3>
+<p>Experiment 8a demonstrated this directly.</p>
+<p>Components above the new Nyquist frequency fold into the retained spectrum.</p>
+<p>Once that aliasing has occurred, the aliased components are no longer distinguishable from genuine signals at those frequencies.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">9.37 What We Learned</h2>
+<p>We started this chapter with three simple tones:</p>
+<p><span class="math display">\[
+2,\quad5,\quad9\text{ kHz}
+\]</span></p>
+<p>At first, all three existed together in the same signal.</p>
+<p>Then we learned how to manipulate the spectrum.</p>
+<p>A low-pass filter allowed us to keep the lowest-frequency component.</p>
+<p>A high-pass filter allowed us to keep the highest-frequency component.</p>
+<p>A band-pass filter allowed us to isolate the middle component.</p>
+<p>A band-reject filter allowed us to remove the middle component.</p>
+<p>Then we looked deeper.</p>
+<p>We discovered that practical filters need a transition band.</p>
+<p>A narrower transition width gives us a sharper filter, but it requires more FIR taps.</p>
+<p>Those taps are the coefficients of the convolution</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=0}^{N-1}h[k]x[n-k]
+\]</span></p>
+<p>The window used during filter design affects the response and the number of taps.</p>
+<p>Finally, we connected filtering to decimation.</p>
+<p>That showed us something fundamental about SDR processing.</p>
+<p>When the sample rate is reduced, the allowable spectrum becomes smaller.</p>
+<p>The signal must therefore be filtered before downsampling so that frequencies outside the new Nyquist region do not fold back as aliases.</p>
+<hr>
+</section>
+<section id="the-bigger-sdr-picture" class="level2">
+<h2 class="anchored" data-anchor-id="the-bigger-sdr-picture">9.38 The Bigger SDR Picture</h2>
+<p>We can now connect several chapters together.</p>
+<p>A practical SDR receiver may perform something like</p>
+<pre class="text"><code>Sample
+  ↓
+Frequency Translate
+  ↓
+Filter
+  ↓
+Decimate
+  ↓
+Demodulate</code></pre>
+<p>Each step solves a different problem.</p>
+<p>Sampling converts the physical signal into digital samples.</p>
+<p>Frequency translation moves the desired channel to a convenient location.</p>
+<p>Filtering removes unwanted parts of the spectrum.</p>
+<p>Decimation reduces the sample rate once the required bandwidth has become smaller.</p>
+<p>Later processing can then work with fewer samples.</p>
+<p>This is why filtering is not an isolated DSP topic.</p>
+<p>It sits at the heart of a software-defined receiver.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox-summary" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox-summary">9.39 GNU Radio Toolbox Summary</h2>
+<p>This chapter introduced several filter-design and decimation blocks, while also reusing familiar GNU Radio blocks in more advanced roles.</p>
+<section id="low-pass-filter" class="level3">
+<h3 class="anchored" data-anchor-id="low-pass-filter">Low Pass Filter</h3>
+<p>Use it when lower-frequency components should pass while higher-frequency components are attenuated.</p>
+<p>Important parameters include:</p>
+<pre class="text"><code>Decimation
+
+Gain
+
+Sample Rate
+
+Cutoff Frequency
+
+Transition Width
+
+Window</code></pre>
+</section>
+<section id="high-pass-filter" class="level3">
+<h3 class="anchored" data-anchor-id="high-pass-filter">High Pass Filter</h3>
+<p>Use it when higher-frequency components should pass while lower-frequency components are attenuated.</p>
+</section>
+<section id="band-pass-filter" class="level3">
+<h3 class="anchored" data-anchor-id="band-pass-filter">Band Pass Filter</h3>
+<p>Use it when only a selected frequency band should survive.</p>
+<p>Important parameters include the lower and upper band edges.</p>
+</section>
+<section id="band-reject-filter" class="level3">
+<h3 class="anchored" data-anchor-id="band-reject-filter">Band Reject Filter</h3>
+<p>Use it when a selected frequency band should be suppressed.</p>
+</section>
+<section id="low-pass-filter-taps" class="level3">
+<h3 class="anchored" data-anchor-id="low-pass-filter-taps">Low-pass Filter Taps</h3>
+<p>Generates an FIR coefficient vector explicitly.</p>
+<p>This is useful when we want to inspect, reuse, or separately apply the designed filter taps.</p>
+</section>
+<section id="decimating-fir-filter" class="level3">
+<h3 class="anchored" data-anchor-id="decimating-fir-filter">Decimating FIR Filter</h3>
+<p>Applies FIR filtering and downsampling together.</p>
+<p>Conceptually:</p>
+<p><span class="math display">\[
+\text{FIR filtering} \rightarrow \text{keep every }D\text{th sample}
+\]</span></p>
+</section>
+<section id="keep-1-in-n" class="level3">
+<h3 class="anchored" data-anchor-id="keep-1-in-n">Keep 1 in N</h3>
+<p>Keeps one sample out of every <span class="math inline">\(N\)</span> input samples.</p>
+<p>It is useful for demonstrating direct downsampling, but it does not automatically provide anti-alias filtering.</p>
+</section>
+<section id="qt-gui-range" class="level3">
+<h3 class="anchored" data-anchor-id="qt-gui-range">QT GUI Range</h3>
+<p>Allows parameters such as transition width or decimation factor to be changed while the flowgraph is running.</p>
+<p>This is especially useful in experiments because we can immediately see the effect of changing a parameter.</p>
+<hr>
+</section>
+</section>
+<section id="key-design-takeaway" class="level2">
+<h2 class="anchored" data-anchor-id="key-design-takeaway">9.40 Key Design Takeaway</h2>
+<p>If there is one idea to carry forward from this chapter, it is this:</p>
+<blockquote class="blockquote">
+<p>****A filter is a way of deciding which parts of a signal’s spectrum matter.****</p>
+</blockquote>
+<p>But useful filter design involves more than choosing “low-pass” or “high-pass.”</p>
+<p>We also have to think about:</p>
+<ul>
+<li><p>where the passband should end,</p></li>
+<li><p>where the stopband should begin,</p></li>
+<li><p>how wide the transition region can be,</p></li>
+<li><p>how many taps are reasonable,</p></li>
+<li><p>which window is appropriate,</p></li>
+<li><p>what the sample rate is,</p></li>
+<li><p>whether that sample rate will change afterward.</p></li>
+</ul>
+<p>Those choices are connected.</p>
+<p>A narrower transition usually means more taps.</p>
+<p>More taps mean more computation.</p>
+<p>A lower output sample rate means a smaller Nyquist region.</p>
+<p>A smaller Nyquist region means we must remove more spectrum before downsampling.</p>
+<p>Once these relationships become intuitive, GNU Radio filter blocks stop looking like collections of mysterious parameters.</p>
+<p>Each setting has a mathematical and practical reason for being there.</p>
+<p>That is the real goal of this chapter.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">9.41 Connecting to the Next Chapter</h2>
+<p>By the end of this chapter, we have learned how to shape a spectrum deliberately.</p>
+<p>We can:</p>
+<ul>
+<li><p>keep low-frequency components,</p></li>
+<li><p>keep high-frequency components,</p></li>
+<li><p>isolate a selected band,</p></li>
+<li><p>reject an unwanted band,</p></li>
+<li><p>control the transition region,</p></li>
+<li><p>inspect FIR filter taps,</p></li>
+<li><p>and reduce the sample rate safely after filtering.</p></li>
+</ul>
+<p>We also saw that an FIR filter can be written as</p>
+<p><span class="math display">\[
+y[n] = \sum_{k=0}^{N-1} h[k]x[n-k]
+\]</span></p>
+<p>and that the values</p>
+<p><span class="math display">\[
+h[0],h[1],\ldots,h[N-1]
+\]</span></p>
+<p>are the filter taps.</p>
+<p>But we have not yet really explained why this sum works.</p>
+<p>Why should multiplying delayed input samples by these coefficients produce the filtered output?</p>
+<p>And why do the taps describe the behaviour of the system?</p>
+<p>To answer that, we need to look at filters from a different point of view.</p>
+<p>Instead of starting with frequency response, we will start with the simplest possible input:</p>
+<blockquote class="blockquote">
+<p>****an impulse.****</p>
+</blockquote>
+<p>If we send an impulse into a system and observe what comes out, we obtain the system’s ****impulse response****.</p>
+<p>For an FIR filter, that impulse response is closely connected to the taps we have already been using.</p>
+<p>Then something powerful happens.</p>
+<p>A more complicated signal can be thought of as a collection of shifted and scaled impulses. If we know how the system responds to one impulse, we can build the response to the entire input.</p>
+<p>That operation is called ****convolution****.</p>
+<p>So the next question is:</p>
+<blockquote class="blockquote">
+<p>****If we know how a system responds to one impulse, can we predict how it responds to any signal?****</p>
+</blockquote>
+<p>That takes us to:</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/chapter08.html" class="pagination-link" aria-label="Chapter 8: Mixing and Frequency Translation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter10.html" class="pagination-link" aria-label="Chapter 10: Impulse Response and Convolution">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 2: Understanding Signals – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/chapter03.html" rel="next">
+<link href="../book/01-what-is-software-defined-radio.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-631496449bf32ff9b0bb69a6bfd9195d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter02.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">SDR with GNU Radio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter02.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/chapter25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#a-signal-is-something-that-changes" id="toc-a-signal-is-something-that-changes" class="nav-link active" data-scroll-target="#a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</a></li>
+  <li><a href="#amplitude-how-large-is-the-signal" id="toc-amplitude-how-large-is-the-signal" class="nav-link" data-scroll-target="#amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-comparing-amplitudes" id="toc-gnu-radio-experiment-comparing-amplitudes" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</a></li>
+  <li><a href="#a-small-gnu-radio-detail" id="toc-a-small-gnu-radio-detail" class="nav-link" data-scroll-target="#a-small-gnu-radio-detail">A Small GNU Radio Detail</a></li>
+  </ul></li>
+  <li><a href="#frequency-how-fast-does-the-signal-repeat" id="toc-frequency-how-fast-does-the-signal-repeat" class="nav-link" data-scroll-target="#frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</a></li>
+  <li><a href="#period-how-long-does-one-cycle-take" id="toc-period-how-long-does-one-cycle-take" class="nav-link" data-scroll-target="#period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-frequency-and-period" id="toc-gnu-radio-experiment-frequency-and-period" class="nav-link" data-scroll-target="#gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</a></li>
+  <li><a href="#gnu-radio-toolbox-number-of-points" id="toc-gnu-radio-toolbox-number-of-points" class="nav-link" data-scroll-target="#gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</a></li>
+  </ul></li>
+  <li><a href="#phase-where-is-the-signal-in-its-cycle" id="toc-phase-where-is-the-signal-in-its-cycle" class="nav-link" data-scroll-target="#phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-comparing-phase" id="toc-gnu-radio-experiment-comparing-phase" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</a></li>
+  </ul></li>
+  <li><a href="#dc-offset-moving-the-whole-signal-up-or-down" id="toc-dc-offset-moving-the-whole-signal-up-or-down" class="nav-link" data-scroll-target="#dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-comparing-offset" id="toc-gnu-radio-experiment-comparing-offset" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</a></li>
+  </ul></li>
+  <li><a href="#waveform-shape" id="toc-waveform-shape" class="nav-link" data-scroll-target="#waveform-shape">2.7 Waveform Shape</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-comparing-waveforms" id="toc-gnu-radio-experiment-comparing-waveforms" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</a></li>
+  <li><a href="#a-note-about-the-square-wave-settings" id="toc-a-note-about-the-square-wave-settings" class="nav-link" data-scroll-target="#a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</a></li>
+  <li><a href="#a-question-for-later" id="toc-a-question-for-later" class="nav-link" data-scroll-target="#a-question-for-later">A Question for Later</a></li>
+  </ul></li>
+  <li><a href="#what-happens-when-signals-meet" id="toc-what-happens-when-signals-meet" class="nav-link" data-scroll-target="#what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</a></li>
+  <li><a href="#adding-two-signals" id="toc-adding-two-signals" class="nav-link" data-scroll-target="#adding-two-signals">2.9 Adding Two Signals</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-the-add-block" id="toc-gnu-radio-experiment-the-add-block" class="nav-link" data-scroll-target="#gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</a></li>
+  <li><a href="#gnu-radio-toolbox-branching-a-stream" id="toc-gnu-radio-toolbox-branching-a-stream" class="nav-link" data-scroll-target="#gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</a></li>
+  </ul></li>
+  <li><a href="#phase-changes-the-result-of-addition" id="toc-phase-changes-the-result-of-addition" class="nav-link" data-scroll-target="#phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</a>
+  <ul class="collapse">
+  <li><a href="#case-1-phase-difference-0" id="toc-case-1-phase-difference-0" class="nav-link" data-scroll-target="#case-1-phase-difference-0">Case 1: Phase Difference = 0°</a></li>
+  <li><a href="#case-2-phase-difference-90" id="toc-case-2-phase-difference-90" class="nav-link" data-scroll-target="#case-2-phase-difference-90">Case 2: Phase Difference = 90°</a></li>
+  <li><a href="#case-3-phase-difference-180" id="toc-case-3-phase-difference-180" class="nav-link" data-scroll-target="#case-3-phase-difference-180">Case 3: Phase Difference = 180°</a></li>
+  <li><a href="#the-bigger-lesson" id="toc-the-bigger-lesson" class="nav-link" data-scroll-target="#the-bigger-lesson">The Bigger Lesson</a></li>
+  </ul></li>
+  <li><a href="#beats-when-frequencies-are-almost-the-same" id="toc-beats-when-frequencies-are-almost-the-same" class="nav-link" data-scroll-target="#beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-beats" id="toc-gnu-radio-experiment-beats" class="nav-link" data-scroll-target="#gnu-radio-experiment-beats">GNU Radio Experiment: Beats</a></li>
+  <li><a href="#beats-are-really-a-phase-story" id="toc-beats-are-really-a-phase-story" class="nav-link" data-scroll-target="#beats-are-really-a-phase-story">Beats Are Really a Phase Story</a></li>
+  </ul></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">2.12 What We Learned</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">2.13 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#multiple-time-sink-inputs" id="toc-multiple-time-sink-inputs" class="nav-link" data-scroll-target="#multiple-time-sink-inputs">Multiple Time Sink Inputs</a></li>
+  <li><a href="#number-of-points" id="toc-number-of-points" class="nav-link" data-scroll-target="#number-of-points">Number of Points</a></li>
+  <li><a href="#variables" id="toc-variables" class="nav-link" data-scroll-target="#variables">Variables</a></li>
+  <li><a href="#expressions-in-block-properties" id="toc-expressions-in-block-properties" class="nav-link" data-scroll-target="#expressions-in-block-properties">Expressions in Block Properties</a></li>
+  <li><a href="#multiple-inputs" id="toc-multiple-inputs" class="nav-link" data-scroll-target="#multiple-inputs">Multiple Inputs</a></li>
+  <li><a href="#branching" id="toc-branching" class="nav-link" data-scroll-target="#branching">Branching</a></li>
+  <li><a href="#reusing-a-flowgraph" id="toc-reusing-a-flowgraph" class="nav-link" data-scroll-target="#reusing-a-flowgraph">Reusing a Flowgraph</a></li>
+  </ul></li>
+  <li><a href="#experiments-from-this-chapter" id="toc-experiments-from-this-chapter" class="nav-link" data-scroll-target="#experiments-from-this-chapter">2.14 Experiments from This Chapter</a></li>
+  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">2.15 Try It Yourself</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">2.16 Connecting to the Next Chapter</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/chapter02.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 2: Understanding Signals</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In Chapter 1, we generated our first signal in GNU Radio.</p>
+<p>It was a simple cosine wave, but even that simple waveform had several properties: amplitude, frequency, period, phase, offset, and waveform shape.</p>
+<p>These words appear everywhere in signal processing and communication systems. Before going deeper into SDR, we need to develop a good feel for what they actually mean.</p>
+<p>We will not start by memorising equations. Instead, we will change one property at a time, watch what happens, and use GNU Radio as our signal laboratory.</p>
+<p>By the end of this chapter, we will go one step further. We will combine signals and see how surprisingly interesting behaviour can emerge from very simple waveforms.</p>
+<hr>
+<section id="a-signal-is-something-that-changes" class="level2">
+<h2 class="anchored" data-anchor-id="a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</h2>
+<p>Think about a microphone. As you speak, the voltage produced by the microphone changes with time.</p>
+<p>A temperature sensor may produce a slowly changing voltage. A radio antenna receives rapidly changing electromagnetic signals.</p>
+<p>In all of these cases, some quantity is changing with time.</p>
+<p>A signal is a way of representing that change.</p>
+<p>For much of this chapter, we will use a cosine wave because it is simple, predictable, and extremely important in communication systems.</p>
+<p>A cosine signal can be written as</p>
+<p><span class="math display">\[
+x(t)=A\cos(2\pi ft+\phi)+C
+\]</span></p>
+<p>At first sight, this equation may look like it contains a lot of information. But each part controls something we can actually see.</p>
+<p>Here:</p>
+<ul>
+<li><p><span class="math inline">\(A\)</span> controls the amplitude</p></li>
+<li><p><span class="math inline">\(f\)</span> controls the frequency</p></li>
+<li><p><span class="math inline">\(\phi\)</span> controls the phase</p></li>
+<li><p><span class="math inline">\(C\)</span> controls the DC offset</p></li>
+</ul>
+<p>Instead of trying to understand all of them at once, we will change them one by one.</p>
+<hr>
+</section>
+<section id="amplitude-how-large-is-the-signal" class="level2">
+<h2 class="anchored" data-anchor-id="amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</h2>
+<p>Imagine turning the volume knob on a speaker. The sound becomes louder or quieter, but the song does not suddenly play faster.</p>
+<p>That is a useful way to think about amplitude.</p>
+<p>Amplitude describes how far a signal moves away from its centre value.</p>
+<p>For a cosine wave centred around zero,</p>
+<p><span class="math display">\[
+x(t)=A\cos(2\pi ft)
+\]</span></p>
+<p>the value <span class="math inline">\(A\)</span> is its amplitude.</p>
+<p>If</p>
+<p><span class="math display">\[
+A=1
+\]</span></p>
+<p>the signal reaches approximately +1 and -1.</p>
+<p>If</p>
+<p><span class="math display">\[
+A=2
+\]</span></p>
+<p>it reaches approximately +2 and -2.</p>
+<p>The waveform becomes taller, but it does not oscillate any faster.</p>
+<section id="gnu-radio-experiment-comparing-amplitudes" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</h3>
+<p>Let’s see this directly.</p>
+<p>We will generate three cosine waves with the same frequency, phase, and offset, but different amplitudes.</p>
+<div class="line-block">Signal | Frequency | Amplitude | Phase | Offset |</div>
+<p>|—|—:|—:|—:|—:|</p>
+<div class="line-block">Signal 1 | 1 kHz | 0.5 | 0 | 0 |</div>
+<div class="line-block">Signal 2 | 1 kHz | 1 | 0 | 0 |</div>
+<div class="line-block">Signal 3 | 1 kHz | 2 | 0 | 0 |</div>
+<p>Our sample rate remains</p>
+<p><span class="math display">\[
+f_s=32\,000\text{ samples/s}
+\]</span></p>
+<p>There is one important rule in this experiment:</p>
+<blockquote class="blockquote">
+<p>Change only one property at a time.</p>
+</blockquote>
+<p>Because frequency, phase, and offset are identical, any difference we see must come from amplitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/amplitude-comparison-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for comparing three signal amplitudes.</figcaption>
+</figure>
+</div>
+<p>The three signals can be connected to the same QT GUI Time Sink by setting ****Number of Inputs**** to <code>3</code>.</p>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/amplitude-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Three 1 kHz cosine signals with different amplitudes.</figcaption>
+</figure>
+</div>
+<p>Notice that the peaks and zero crossings occur at the same times. The signals are therefore oscillating at the same rate.</p>
+<p>Only their vertical size changes.</p>
+<p>That vertical size is the amplitude.</p>
+</section>
+<section id="a-small-gnu-radio-detail" class="level3">
+<h3 class="anchored" data-anchor-id="a-small-gnu-radio-detail">A Small GNU Radio Detail</h3>
+<p>You may notice that GNU Radio displays an amplitude of <code>0.5</code> as:</p>
+<pre class="text"><code>
+500m
+</code></pre>
+<p>Here, <code>m</code> means <strong>milli</strong>.</p>
+<p>So:</p>
+<p><span class="math display">\[
+500m=500\times10^{-3}=0.5
+\]</span></p>
+<p>GNU Radio frequently uses engineering notation such as <code>k</code>, <code>M</code>, and <code>m</code>. You will see this notation often as our flowgraphs become more complicated.</p>
+<hr>
+</section>
+</section>
+<section id="frequency-how-fast-does-the-signal-repeat" class="level2">
+<h2 class="anchored" data-anchor-id="frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</h2>
+<p>Imagine two blinking lights.</p>
+<p>One flashes once every second. Another flashes ten times every second.</p>
+<p>Both repeat, but the second one repeats much faster.</p>
+<p>Frequency tells us how many complete cycles occur every second. Its unit is hertz (Hz).</p>
+<p>A frequency of</p>
+<p><span class="math display">\[
+f=1\text{ Hz}
+\]</span></p>
+<p>means one cycle per second.</p>
+<p>Similarly,</p>
+<p><span class="math display">\[
+f=1000\text{ Hz}
+\]</span></p>
+<p>means 1000 cycles per second.</p>
+<p>We often write:</p>
+<p><span class="math display">\[
+1000\text{ Hz}=1\text{ kHz}
+\]</span></p>
+<p>The higher the frequency, the more cycles the signal completes in the same amount of time.</p>
+<hr>
+</section>
+<section id="period-how-long-does-one-cycle-take" class="level2">
+<h2 class="anchored" data-anchor-id="period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</h2>
+<p>Frequency asks:</p>
+<blockquote class="blockquote">
+<p>How many cycles happen in one second?</p>
+</blockquote>
+<p>Period asks the opposite question:</p>
+<blockquote class="blockquote">
+<p>How long does one cycle take?</p>
+</blockquote>
+<p>The period is represented by <span class="math inline">\(T\)</span>.</p>
+<p>Frequency and period are related by</p>
+<p><span class="math display">\[
+T=\frac{1}{f}
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+f=\frac{1}{T}
+\]</span></p>
+<p>For a 1 kHz signal,</p>
+<p><span class="math display">\[
+T=\frac{1}{1000}
+\]</span></p>
+<p><span class="math display">\[
+T=0.001\text{ s}=1\text{ ms}
+\]</span></p>
+<p>So every cycle takes 1 ms.</p>
+<section id="gnu-radio-experiment-frequency-and-period" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</h3>
+<p>We can reuse the same three-signal flowgraph from the amplitude experiment.</p>
+<p>This time, set all amplitudes to <code>1</code> and change only the frequencies:</p>
+<div class="line-block">Signal | Frequency | Amplitude |</div>
+<p>|—|—:|—:|</p>
+<div class="line-block">Signal 1 | 500 Hz | 1 |</div>
+<div class="line-block">Signal 2 | 1000 Hz | 1 |</div>
+<div class="line-block">Signal 3 | 2000 Hz | 1 |</div>
+<p>Keep the phase and offset at zero.</p>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/frequency-period-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of 500 Hz, 1 kHz, and 2 kHz cosine signals.</figcaption>
+</figure>
+</div>
+<p>Look at the horizontal axis.</p>
+<p>In 4 ms:</p>
+<ul>
+<li><p>the 500 Hz signal completes 2 cycles</p></li>
+<li><p>the 1 kHz signal completes 4 cycles</p></li>
+<li><p>the 2 kHz signal completes 8 cycles</p></li>
+</ul>
+<p>Their periods are:</p>
+<div class="line-block">Frequency | Period |</div>
+<p>|—:|—:|</p>
+<div class="line-block">500 Hz | 2 ms |</div>
+<div class="line-block">1000 Hz | 1 ms |</div>
+<div class="line-block">2000 Hz | 0.5 ms |</div>
+<p>Notice what happens when frequency doubles: the period becomes half as large.</p>
+<p>This is exactly what</p>
+<p><span class="math display">\[
+T=\frac{1}{f}
+\]</span></p>
+<p>tells us.</p>
+</section>
+<section id="gnu-radio-toolbox-number-of-points" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</h3>
+<p>There is another useful lesson hidden inside this experiment.</p>
+<p>In Chapter 1, our QT GUI Time Sink used:</p>
+<pre class="text"><code>
+Number of Points = 1024
+
+Sample Rate = 32000
+</code></pre>
+<p>That means the Time Sink displayed</p>
+<p><span class="math display">\[
+\frac{1024}{32000}=0.032\text{ s}
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+32\text{ ms}
+\]</span></p>
+<p>of data.</p>
+<p>For some of our Chapter 2 experiments, that was unnecessarily long. We wanted to look more closely at just a few cycles.</p>
+<p>For example, with</p>
+<pre class="text"><code>
+Number of Points = 128
+</code></pre>
+<p>the displayed duration becomes</p>
+<p><span class="math display">\[
+\frac{128}{32000}=0.004\text{ s}
+\]</span></p>
+<p>or</p>
+<p><span class="math display">\[
+4\text{ ms}
+\]</span></p>
+<p>So the horizontal time window of the Time Sink is determined by both the number of samples being displayed and the sample rate.</p>
+<p>A useful relationship is</p>
+<p><span class="math display">\[
+\text{Displayed time}=\frac{\text{Number of Points}}{\text{Sample Rate}}
+\]</span></p>
+<p>We will use this relationship repeatedly.</p>
+<hr>
+</section>
+</section>
+<section id="phase-where-is-the-signal-in-its-cycle" class="level2">
+<h2 class="anchored" data-anchor-id="phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</h2>
+<p>Two signals can have exactly the same amplitude and frequency and still not line up.</p>
+<p>One may reach its peak slightly earlier than the other.</p>
+<p>This difference is described by ****phase****.</p>
+<p>Think of two people running around the same circular track at exactly the same speed. If they start side by side, they remain together. If one starts a quarter of the track ahead, they still run at the same speed, but their positions around the track are different.</p>
+<p>That is similar to phase.</p>
+<p>A complete cycle corresponds to</p>
+<p><span class="math display">\[
+360^\circ=2\pi\text{ radians}
+\]</span></p>
+<p>Some useful phase values are:</p>
+<div class="line-block">Degrees | Radians |</div>
+<p>|—:|—:|</p>
+<div class="line-block">0° | <span class="math inline">\(0\)</span> |</div>
+<div class="line-block">90° | <span class="math inline">\(\pi/2\)</span> |</div>
+<div class="line-block">180° | <span class="math inline">\(\pi\)</span> |</div>
+<div class="line-block">270° | <span class="math inline">\(3\pi/2\)</span> |</div>
+<div class="line-block">360° | <span class="math inline">\(2\pi\)</span> |</div>
+<p>GNU Radio’s Signal Source specifies its initial phase in ****radians****.</p>
+<p>One point is worth remembering: phase becomes especially useful when we compare one signal with another. Saying that two signals are 90° apart tells us how their cycles are positioned relative to each other.</p>
+<section id="gnu-radio-experiment-comparing-phase" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</h3>
+<p>For this experiment, keep:</p>
+<pre class="text"><code>
+Frequency = 1 kHz
+
+Amplitude = 1
+
+Offset = 0
+</code></pre>
+<p>and use three initial phases:</p>
+<pre class="text"><code>
+Signal 1: 0
+
+Signal 2: pi/2
+
+Signal 3: pi
+</code></pre>
+<p>To make <code>pi</code> available in our flowgraph, we used a Variable block:</p>
+<pre class="text"><code>
+ID: pi
+
+Value: 3.14159
+</code></pre>
+<p>GNU Radio can then evaluate expressions such as:</p>
+<pre class="text"><code>
+pi/2
+</code></pre>
+<p>This is useful because block properties do not always have to contain fixed numbers. They can also use variables and expressions.</p>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Three equal-frequency signals with different initial phases.</figcaption>
+</figure>
+</div>
+<p>At <span class="math inline">\(t=0\)</span>:</p>
+<ul>
+<li><p>the 0° cosine starts at +1</p></li>
+<li><p>the 90° cosine starts at 0</p></li>
+<li><p>the 180° cosine starts at -1</p></li>
+</ul>
+<p>Their amplitudes are the same. Their frequencies are the same.</p>
+<p>Only their positions within the cycle are different.</p>
+<p>That is the effect of phase.</p>
+<hr>
+</section>
+</section>
+<section id="dc-offset-moving-the-whole-signal-up-or-down" class="level2">
+<h2 class="anchored" data-anchor-id="dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</h2>
+<p>Until now, our signals have been centred around zero.</p>
+<p>For example, a cosine wave with amplitude 1 moves between</p>
+<p><span class="math display">\[
+-1\text{ and }+1
+\]</span></p>
+<p>But a signal does not have to be centred at zero.</p>
+<p>Suppose we add 1 to every point:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi ft)+1
+\]</span></p>
+<p>Now the waveform moves between</p>
+<p><span class="math display">\[
+0\text{ and }2
+\]</span></p>
+<p>The shape has not changed. The frequency has not changed. The amplitude is still 1.</p>
+<p>The entire waveform has simply moved upward.</p>
+<p>That shift is called a ****DC offset****.</p>
+<section id="gnu-radio-experiment-comparing-offset" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</h3>
+<p>Again, reuse the same three-signal structure.</p>
+<p>Keep:</p>
+<pre class="text"><code>
+Frequency = 1 kHz
+
+Amplitude = 1
+
+Phase = 0
+</code></pre>
+<p>and use:</p>
+<pre class="text"><code>
+Signal 1: Offset = 0
+
+Signal 2: Offset = +1
+
+Signal 3: Offset = -1
+</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/dc-offset-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Cosine signals with different DC offsets.</figcaption>
+</figure>
+</div>
+<p>The first waveform is centred at 0.</p>
+<p>The second is centred at +1.</p>
+<p>The third is centred at -1.</p>
+<p>There is an important detail here.</p>
+<p>The signal with offset +1 reaches a maximum value of +2, but its amplitude is ****not 2****. It oscillates between 0 and 2, so its centre is +1 and its amplitude is still 1.</p>
+<p>Amplitude describes the distance from the centre of the waveform, not necessarily the distance from zero.</p>
+<hr>
+</section>
+</section>
+<section id="waveform-shape" class="level2">
+<h2 class="anchored" data-anchor-id="waveform-shape">2.7 Waveform Shape</h2>
+<p>Frequency tells us how often a signal repeats.</p>
+<p>But frequency alone does not tell us what happens during one cycle.</p>
+<p>Consider three signals that all repeat 1000 times per second. One can be smooth. Another can switch abruptly between two levels. Another can rise and fall in straight lines.</p>
+<p>They all have the same repetition rate, but they do not have the same shape.</p>
+<section id="gnu-radio-experiment-comparing-waveforms" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</h3>
+<p>Generate:</p>
+<ul>
+<li><p>a cosine wave</p></li>
+<li><p>a square wave</p></li>
+<li><p>a triangle wave</p></li>
+</ul>
+<p>with a repetition frequency of 1 kHz.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/waveform-shape-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of cosine, square, and triangle waveforms.</figcaption>
+</figure>
+</div>
+<p>The cosine changes smoothly.</p>
+<p>The square wave switches abruptly between its two levels.</p>
+<p>The triangle wave changes linearly between its minimum and maximum.</p>
+<p>You may wonder why we did not include both sine and cosine. A sine and cosine have the same basic shape; one can be obtained from the other by a phase shift. We have already seen what phase does.</p>
+</section>
+<section id="a-note-about-the-square-wave-settings" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</h3>
+<p>For our comparison, we wanted the square wave to switch between approximately -1 and +1.</p>
+<p>With the GNU Radio Signal Source used in our experiment, we set:</p>
+<pre class="text"><code>
+Amplitude = 2
+
+Offset = -1
+</code></pre>
+<p>to obtain the desired bipolar levels.</p>
+<p>This keeps the vertical range comparable with the cosine and triangle signals.</p>
+</section>
+<section id="a-question-for-later" class="level3">
+<h3 class="anchored" data-anchor-id="a-question-for-later">A Question for Later</h3>
+<p>All three signals repeat at 1 kHz.</p>
+<p>Yet they clearly have different shapes.</p>
+<p>Why?</p>
+<p>There is a deeper reason for this, and it becomes much clearer when we start looking at signals in the ****frequency domain****.</p>
+<p>For now, keep this observation in mind. We will return to it later.</p>
+<hr>
+</section>
+</section>
+<section id="what-happens-when-signals-meet" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</h2>
+<p>So far, we have mostly looked at one signal at a time.</p>
+<p>Real systems are rarely that simple.</p>
+<p>An antenna may receive signals from several transmitters. Noise gets added to useful signals. Reflections create additional copies of transmitted signals. Interference may combine with the signal we actually want.</p>
+<p>So we need to understand what happens when signals are added.</p>
+<hr>
+</section>
+<section id="adding-two-signals" class="level2">
+<h2 class="anchored" data-anchor-id="adding-two-signals">2.9 Adding Two Signals</h2>
+<p>Suppose we have two signals:</p>
+<p><span class="math display">\[
+x_1(t)
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+x_2(t)
+\]</span></p>
+<p>If they are added, the result is</p>
+<p><span class="math display">\[
+y(t)=x_1(t)+x_2(t)
+\]</span></p>
+<p>This means that at every instant, we simply add their values.</p>
+<p>If at some instant</p>
+<p><span class="math display">\[
+x_1=1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+x_2=0.5
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+y=1.5
+\]</span></p>
+<p>If instead</p>
+<p><span class="math display">\[
+x_1=-1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+x_2=0.5
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+y=-0.5
+\]</span></p>
+<p>GNU Radio lets us see this directly.</p>
+<section id="gnu-radio-experiment-the-add-block" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</h3>
+<p>For the first addition experiment, generate:</p>
+<pre class="text"><code>
+x1:
+
+Frequency = 1 kHz
+
+Amplitude = 1
+
+x2:
+
+Frequency = 2 kHz
+
+Amplitude = 0.5
+</code></pre>
+<p>Then introduce a new block:</p>
+<p>****Add****</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/signal-addition-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph showing two signals being added.</figcaption>
+</figure>
+</div>
+<p>The Add block performs sample-by-sample addition:</p>
+<p><span class="math display">\[
+y[n]=x_1[n]+x_2[n]
+\]</span></p>
+<p>We also branch each original signal to the QT GUI Time Sink so that we can see:</p>
+<ul>
+<li><p><span class="math inline">\(x_1\)</span></p></li>
+<li><p><span class="math inline">\(x_2\)</span></p></li>
+<li><p><span class="math inline">\(x_1+x_2\)</span></p></li>
+</ul>
+<p>at the same time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/signal-addition.png" class="img-fluid figure-img"></p>
+<figcaption>Two cosine signals and their sum.</figcaption>
+</figure>
+</div>
+<p>The result no longer looks like either of the original cosine waves.</p>
+<p>A more complicated-looking signal has appeared simply by adding two simple signals together.</p>
+<p>This simple idea will become extremely important later.</p>
+</section>
+<section id="gnu-radio-toolbox-branching-a-stream" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</h3>
+<p>Notice something new in the flowgraph.</p>
+<p>The output of each Throttle is connected to two destinations. One branch goes directly to the Time Sink, while the other goes to the Add block.</p>
+<p>GNU Radio does not require a special splitter block for this.</p>
+<p>A stream can simply be connected to multiple downstream blocks.</p>
+<p>Also, branching a stream does ****not**** divide its amplitude. Each downstream block receives the same stream.</p>
+<hr>
+</section>
+</section>
+<section id="phase-changes-the-result-of-addition" class="level2">
+<h2 class="anchored" data-anchor-id="phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</h2>
+<p>Now we can connect two ideas we have already learned: ****phase**** and ****addition****.</p>
+<p>Suppose two cosine signals have:</p>
+<ul>
+<li><p>the same frequency</p></li>
+<li><p>the same amplitude</p></li>
+<li><p>different phases</p></li>
+</ul>
+<p>What happens when we add them?</p>
+<p>Let’s find out.</p>
+<p>Use two 1 kHz cosine signals, each with amplitude 1.</p>
+<p>Keep the first signal at:</p>
+<pre class="text"><code>
+Phase = 0
+</code></pre>
+<p>For the second signal, we will test three different phase values. We stop the flowgraph, change its initial phase, and run the experiment again for each case.</p>
+<p>This gives us three controlled comparisons while keeping everything else unchanged.</p>
+<section id="case-1-phase-difference-0" class="level3">
+<h3 class="anchored" data-anchor-id="case-1-phase-difference-0">Case 1: Phase Difference = 0°</h3>
+<p>The two signals are perfectly aligned.</p>
+<p>When one reaches +1, the other reaches +1:</p>
+<p><span class="math display">\[
+1+1=2
+\]</span></p>
+<p>When one reaches -1, the other also reaches -1:</p>
+<p><span class="math display">\[
+-1+(-1)=-2
+\]</span></p>
+<p>The signals reinforce one another.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-addition-0deg.png" class="img-fluid figure-img"></p>
+<figcaption>Addition of two equal signals with 0 degree phase difference.</figcaption>
+</figure>
+</div>
+<p>The resulting signal has an amplitude of approximately 2.</p>
+<p>This is complete constructive addition.</p>
+</section>
+<section id="case-2-phase-difference-90" class="level3">
+<h3 class="anchored" data-anchor-id="case-2-phase-difference-90">Case 2: Phase Difference = 90°</h3>
+<p>Now shift the second signal by</p>
+<p><span class="math display">\[
+90^\circ=\frac{\pi}{2}
+\]</span></p>
+<p>The signals still have the same amplitude and frequency, but their peaks no longer occur at the same time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-addition-90deg.png" class="img-fluid figure-img"></p>
+<figcaption>Addition of two signals with a 90 degree phase difference.</figcaption>
+</figure>
+</div>
+<p>The resulting signal is still sinusoidal, but its amplitude is now approximately</p>
+<p><span class="math display">\[
+\sqrt{2}\approx1.414
+\]</span></p>
+<p>The two signals still reinforce each other, but not as strongly as they did at 0°.</p>
+<p>Notice something else: the resulting signal is also shifted in phase. Adding equal-frequency sinusoids can therefore change both the amplitude and phase of the result.</p>
+</section>
+<section id="case-3-phase-difference-180" class="level3">
+<h3 class="anchored" data-anchor-id="case-3-phase-difference-180">Case 3: Phase Difference = 180°</h3>
+<p>Finally, shift the second signal by</p>
+<p><span class="math display">\[
+180^\circ=\pi
+\]</span></p>
+<p>Now, whenever the first signal is positive, the second is equally negative.</p>
+<p>So</p>
+<p><span class="math display">\[
+x_2(t)=-x_1(t)
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+x_1(t)+x_2(t)=0
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-addition-180deg.png" class="img-fluid figure-img"></p>
+<figcaption>Addition of two signals with a 180 degree phase difference.</figcaption>
+</figure>
+</div>
+<p>The summed signal becomes a straight line at zero.</p>
+<p>Both input signals are still present, but their sum cancels completely.</p>
+<p>This is complete destructive cancellation.</p>
+</section>
+<section id="the-bigger-lesson" class="level3">
+<h3 class="anchored" data-anchor-id="the-bigger-lesson">The Bigger Lesson</h3>
+<p>The result of adding signals depends not only on their amplitudes and frequencies. Their ****relative phase**** matters too.</p>
+<p>For two equal-amplitude sinusoids of the same frequency, the amplitude of the sum depends on their phase difference.</p>
+<p>For equal amplitudes <span class="math inline">\(A\)</span>,</p>
+<p><span class="math display">\[
+A_{\text{sum}}=2A\left|\cos\left(\frac{\Delta\phi}{2}\right)\right|
+\]</span></p>
+<p>You do not need to memorise this equation yet.</p>
+<p>The important idea is already visible in GNU Radio:</p>
+<ul>
+<li><p>0° gives maximum reinforcement</p></li>
+<li><p>90° gives partial reinforcement</p></li>
+<li><p>180° gives complete cancellation</p></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="beats-when-frequencies-are-almost-the-same" class="level2">
+<h2 class="anchored" data-anchor-id="beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</h2>
+<p>Now for an interesting question.</p>
+<p>What happens if two signals have almost the same frequency?</p>
+<p>Consider</p>
+<p><span class="math display">\[
+f_1=1000\text{ Hz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_2=1050\text{ Hz}
+\]</span></p>
+<p>At the beginning, their peaks may line up. But the 1050 Hz signal completes its cycles slightly faster than the 1000 Hz signal.</p>
+<p>So their relative phase does not stay fixed.</p>
+<p>They gradually move out of alignment, become nearly opposite, and later line up again.</p>
+<p>This repeated movement in and out of alignment produces ****beats****.</p>
+<section id="gnu-radio-experiment-beats" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-beats">GNU Radio Experiment: Beats</h3>
+<p>Reuse the addition flowgraph.</p>
+<p>Set:</p>
+<pre class="text"><code>
+Signal 1:
+
+Frequency = 1000 Hz
+
+Amplitude = 1
+
+Signal 2:
+
+Frequency = 1050 Hz
+
+Amplitude = 1
+</code></pre>
+<p>To see the slow variation clearly, increase the Time Sink display window to approximately 40 ms.</p>
+<p>With</p>
+<p><span class="math display">\[
+f_s=32000\text{ samples/s}
+\]</span></p>
+<p>we need</p>
+<p><span class="math display">\[
+N=32000\times0.04=1280
+\]</span></p>
+<p>samples.</p>
+<p>So set:</p>
+<pre class="text"><code>
+Number of Points = 1280
+</code></pre>
+<p>The result is:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/beats.png" class="img-fluid figure-img"></p>
+<figcaption>Beat pattern produced by adding 1000 Hz and 1050 Hz signals.</figcaption>
+</figure>
+</div>
+<p>Look at the summed signal.</p>
+<p>Its amplitude grows, becomes very small, grows again, and continues repeating.</p>
+<p>Around 0 ms, the signals are approximately aligned and reinforce each other strongly.</p>
+<p>Around 10 ms, they are approximately 180° apart and nearly cancel.</p>
+<p>Around 20 ms, they are aligned again.</p>
+<p>The pattern then repeats.</p>
+<p>The difference between the two frequencies is</p>
+<p><span class="math display">\[
+\Delta f=|1050-1000|=50\text{ Hz}
+\]</span></p>
+<p>The beat frequency is</p>
+<p><span class="math display">\[
+f_{\text{beat}}=|f_2-f_1|
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+f_{\text{beat}}=50\text{ Hz}
+\]</span></p>
+<p>The corresponding beat period is</p>
+<p><span class="math display">\[
+T_{\text{beat}}=\frac{1}{50}
+\]</span></p>
+<p><span class="math display">\[
+T_{\text{beat}}=20\text{ ms}
+\]</span></p>
+<p>That is exactly the repetition interval we observe in GNU Radio.</p>
+</section>
+<section id="beats-are-really-a-phase-story" class="level3">
+<h3 class="anchored" data-anchor-id="beats-are-really-a-phase-story">Beats Are Really a Phase Story</h3>
+<p>Beats may initially look like a completely new phenomenon, but they are closely connected to our previous phase-addition experiment.</p>
+<p>When the two signals are aligned, they reinforce each other.</p>
+<p>As their relative phase changes, the amount of reinforcement decreases.</p>
+<p>When they become approximately 180° apart, they nearly cancel.</p>
+<p>Because their frequencies are slightly different, their relative phase keeps changing with time. Eventually they line up again, and the process repeats.</p>
+<p>So beats connect several ideas from this chapter:</p>
+<p>****frequency → changing relative phase → addition → reinforcement and cancellation****</p>
+<p>That connection is more important than simply remembering the beat-frequency formula.</p>
+<hr>
+</section>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">2.12 What We Learned</h2>
+<p>We started this chapter with a single cosine wave.</p>
+<p>By changing one property at a time, we found that:</p>
+<ul>
+<li><p>****amplitude**** controls the vertical size of a signal</p></li>
+<li><p>****frequency**** tells us how many cycles occur per second</p></li>
+<li><p>****period**** tells us how long one cycle takes</p></li>
+<li><p>****phase**** describes a signal’s position within its cycle relative to a reference</p></li>
+<li><p>****DC offset**** moves the centre of a waveform up or down</p></li>
+<li><p>****waveform shape**** describes how the signal changes during each cycle</p></li>
+</ul>
+<p>Then we allowed signals to interact.</p>
+<p>We saw that:</p>
+<ul>
+<li><p>signals can be added sample by sample</p></li>
+<li><p>simple signals can combine into more complicated waveforms</p></li>
+<li><p>phase affects whether signals reinforce or cancel</p></li>
+<li><p>equal signals separated by 180° can cancel completely</p></li>
+<li><p>slightly different frequencies produce beats</p></li>
+</ul>
+<p>These are not isolated ideas.</p>
+<p>They will appear again and again throughout SDR.</p>
+<hr>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">2.13 GNU Radio Toolbox</h2>
+<p>This chapter also introduced several useful GNU Radio concepts.</p>
+<section id="multiple-time-sink-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-time-sink-inputs">Multiple Time Sink Inputs</h3>
+<p>A single QT GUI Time Sink can display several signals simultaneously by increasing ****Number of Inputs****.</p>
+<p>This allowed us to compare signals directly.</p>
+</section>
+<section id="number-of-points" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-points">Number of Points</h3>
+<p>The displayed duration of a Time Sink depends on both its sample rate and Number of Points:</p>
+<p><span class="math display">\[
+T_{\text{display}}=\frac{N}{f_s}
+\]</span></p>
+<p>We used this to choose suitable viewing windows for different experiments.</p>
+</section>
+<section id="variables" class="level3">
+<h3 class="anchored" data-anchor-id="variables">Variables</h3>
+<p>We already used:</p>
+<pre class="text"><code>
+samp_rate
+</code></pre>
+<p>and introduced another variable:</p>
+<pre class="text"><code>
+pi
+</code></pre>
+<p>Variables make a flowgraph easier to understand and modify.</p>
+</section>
+<section id="expressions-in-block-properties" class="level3">
+<h3 class="anchored" data-anchor-id="expressions-in-block-properties">Expressions in Block Properties</h3>
+<p>GNU Radio properties can use expressions such as:</p>
+<pre class="text"><code>
+pi/2
+</code></pre>
+<p>rather than requiring us to calculate and type every decimal value manually.</p>
+</section>
+<section id="multiple-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-inputs">Multiple Inputs</h3>
+<p>The ****Add**** block accepts multiple input streams and produces their sample-by-sample sum.</p>
+</section>
+<section id="branching" class="level3">
+<h3 class="anchored" data-anchor-id="branching">Branching</h3>
+<p>One output stream can feed more than one downstream block.</p>
+<p>This allowed us to send a signal both to the Add block and directly to the Time Sink.</p>
+</section>
+<section id="reusing-a-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="reusing-a-flowgraph">Reusing a Flowgraph</h3>
+<p>Not every experiment needs a completely new flowgraph.</p>
+<p>Many of our comparisons used the same basic structure while changing only one parameter.</p>
+<p>This is often a better way to experiment: keep everything else fixed and change only the property you want to understand.</p>
+<hr>
+</section>
+</section>
+<section id="experiments-from-this-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="experiments-from-this-chapter">2.14 Experiments from This Chapter</h2>
+<p>The GNU Radio Companion files for this chapter are stored in:</p>
+<pre class="text"><code>
+experiments/chapter02/
+</code></pre>
+<p>The experiments developed in this chapter include:</p>
+<pre class="text"><code>
+amplitude-comparison.grc
+
+frequency-period-comparison.grc
+
+phase-comparison.grc
+
+dc-offset-comparison.grc
+
+waveform-shape-comparison.grc
+
+signal-addition.grc
+
+phase-addition.grc
+
+beats.grc
+</code></pre>
+<p>You can open any of these files in GNU Radio Companion and reproduce the corresponding experiment.</p>
+<hr>
+</section>
+<section id="try-it-yourself" class="level2">
+<h2 class="anchored" data-anchor-id="try-it-yourself">2.15 Try It Yourself</h2>
+<p>Before moving on, try changing a few things yourself.</p>
+<ol type="1">
+<li><p>Change the amplitude comparison from <code>0.5, 1, 2</code> to <code>1, 2, 3</code>. What changes, and what stays exactly the same?</p></li>
+<li><p>Change the frequency comparison to <code>250 Hz, 500 Hz, 1 kHz</code>. Before running it, predict how many cycles of each signal you will see in the same time window.</p></li>
+<li><p>Try a phase difference of 45°:</p></li>
+</ol>
+<p><span class="math display">\[
+45^\circ=\frac{\pi}{4}
+\]</span></p>
+<p>What happens when the two signals are added? Will the resulting amplitude be closer to 2, closer to 0, or somewhere in between?</p>
+<ol start="4" type="1">
+<li>Change the beat experiment from</li>
+</ol>
+<pre class="text"><code>
+1000 Hz + 1050 Hz
+</code></pre>
+<p>to</p>
+<pre class="text"><code>
+1000 Hz + 1010 Hz
+</code></pre>
+<p>Before running it, predict whether the beat pattern will become faster or slower.</p>
+<ol start="5" type="1">
+<li>Then try</li>
+</ol>
+<pre class="text"><code>
+1000 Hz + 1100 Hz
+</code></pre>
+<p>and compare the result.</p>
+<p>Do not just look at the output.</p>
+<p>Try to predict what you expect first, and then use GNU Radio to test your prediction.</p>
+<p>That habit will become increasingly useful as our flowgraphs become more complicated.</p>
+<hr>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">2.16 Connecting to the Next Chapter</h2>
+<p>So far, we have treated these signals as though they already exist inside the computer.</p>
+<p>But an SDR works with ****samples****.</p>
+<p>A real-world signal must somehow be converted into a sequence of numbers before software can process it.</p>
+<p>That raises several important questions.</p>
+<p>How often should we measure the signal?</p>
+<p>What happens if we do not take enough samples?</p>
+<p>Can two completely different analog frequencies produce the same digital samples?</p>
+<p>And why did changing the sample rate in GNU Radio sometimes make a smooth sinusoid look triangular, distorted, or even like a straight line?</p>
+<p>Those questions take us to one of the most important ideas in digital signal processing:</p>
+<p>****sampling and aliasing.****</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/01-what-is-software-defined-radio.html" class="pagination-link" aria-label="Chapter 1: What Is Software Defined Radio?">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/chapter03.html" class="pagination-link" aria-label="Chapter 3: Sampling and Aliasing">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
