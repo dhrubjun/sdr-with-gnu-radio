@@ -3,8 +3,17 @@ project:
 
 book:
   title: "SDR with GNU Radio"
+  subtitle: "A Practical, Experiment-Driven Introduction to Software Defined Radio"
+  author: "Dhrubjun Nath Saikia"
+
+  repo-url: https://github.com/dhrubjun/sdr-with-gnu-radio
+  repo-actions: [source]
+
+  search: true
+
   chapters:
-    - index.md
+    - text: "Home"
+      file: index.md
 
     - part: "Part I: Learning to Think in Signals"
       chapters:
@@ -55,8 +64,27 @@ book:
       chapters:
         - book/chapter25.md
 
+  page-footer:
+    left: |
+      SDR with GNU Radio · Dhrubjun Nath Saikia
+    right: |
+      Built with [Quarto](https://quarto.org/)
+
 format:
   html:
-    theme: cosmo
+    theme:
+      light: cosmo
+      dark: darkly
+
+    css: styles.css
+
     toc: true
+    toc-depth: 3
+
     number-sections: false
+
+    grid:
+      sidebar-width: 270px
+      body-width: 860px
+      margin-width: 250px
+      gutter-width: 1.5rem
