@@ -4,9 +4,9 @@
     "href": "index.html",
     "title": "SDR with GNU Radio",
     "section": "",
-    "text": "SDR with GNU Radio\nA beginner-friendly, experiment-driven introduction to Software Defined Radio and GNU Radio.\nThis book develops SDR concepts progressively using intuition, GNU Radio experiments, visual observations, and supporting mathematics.\nUse the chapter navigation to begin reading.",
+    "text": "Learn Software Defined Radio by Building, Observing, and Experimenting\nSDR with GNU Radio is an experiment-driven introduction to Software Defined Radio, digital signal processing, and communication systems.\nThe book develops the ideas progressively through intuition, GNU Radio experiments, visual observation, and supporting mathematics. The goal is not only to learn how GNU Radio works, but to understand why real communication systems behave the way they do.",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>SDR with GNU Radio</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
     ]
   },
   {
@@ -6893,6 +6893,66 @@
     "crumbs": [
       "Part VIII: OFDM and Multicarrier Communication",
       "<span class='chapter-number'>26</span>  <span class='chapter-title'>Chapter 25: Why OFDM?</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#learn-software-defined-radio-by-building-observing-and-experimenting",
+    "href": "index.html#learn-software-defined-radio-by-building-observing-and-experimenting",
+    "title": "SDR with GNU Radio",
+    "section": "Learn Software Defined Radio by Building, Observing, and Experimenting",
+    "text": "Learn Software Defined Radio by Building, Observing, and Experimenting\nSDR with GNU Radio is a beginner-friendly, experiment-driven introduction to Software Defined Radio, digital signal processing, and modern communication systems.\nInstead of beginning with long mathematical derivations, this book develops the ideas progressively through:\n\nintuition and physical interpretation\nGNU Radio flowgraphs\nvisual experiments\ntime-domain and frequency-domain observations\nconstellation and eye diagrams\npractical receiver-building exercises\nsupporting mathematics introduced when it becomes useful\n\nThe goal is not only to learn how to use GNU Radio, but to understand why communication systems behave the way they do.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>SDR with GNU Radio</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#what-you-will-learn",
+    "href": "index.html#what-you-will-learn",
+    "title": "SDR with GNU Radio",
+    "section": "What You Will Learn",
+    "text": "What You Will Learn\nThe book progresses from signals, sampling, IQ representation, FFTs, filtering, and modulation to wireless-channel effects, equalization, synchronization, complete digital receivers, OFDM, and practical SDR hardware.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#how-this-book-is-taught",
+    "href": "index.html#how-this-book-is-taught",
+    "title": "SDR with GNU Radio",
+    "section": "How This Book Is Taught",
+    "text": "How This Book Is Taught\nMost topics follow the same learning pattern:\nIdea\n  ↓\nPrediction\n  ↓\nGNU Radio Experiment\n  ↓\nObservation\n  ↓\nExplanation\n  ↓\nMathematics\n  ↓\nEngineering Interpretation\nThis makes the experiments part of the explanation rather than just demonstrations added after the theory.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-the-book",
+    "href": "index.html#about-the-book",
+    "title": "SDR with GNU Radio",
+    "section": "About the Book",
+    "text": "About the Book\nThis book follows a practical learning path from basic signals to complete communication systems.\nRather than introducing every concept through mathematics first, most chapters begin with an engineering question, build a GNU Radio experiment, observe what happens, and then explain the theory behind the result.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#source-code-and-experiments",
+    "href": "index.html#source-code-and-experiments",
+    "title": "SDR with GNU Radio",
+    "section": "Source Code and Experiments",
+    "text": "Source Code and Experiments\nThe GNU Radio flowgraphs, supporting scripts, figures, and Markdown source are available in the project repository.\nView the project on GitHub",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-the-author",
+    "href": "index.html#about-the-author",
+    "title": "SDR with GNU Radio",
+    "section": "About the Author",
+    "text": "About the Author\nDhrubjun Nath Saikia is the author of SDR with GNU Radio. The book is developed as a practical, experiment-driven guide to Software Defined Radio, digital signal processing, and communication systems.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Home</span>"
     ]
   }
 ]

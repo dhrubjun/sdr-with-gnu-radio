@@ -1,0 +1,204 @@
+/* =========================================================
+   SDR with GNU Radio
+   Quarto Book Styling
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   Page background
+   --------------------------------------------------------- */
+
+/* Light mode */
+
+body.quarto-light {
+  --bs-body-bg: #f6f8fb;
+}
+
+body.quarto-light,
+body.quarto-light #quarto-content,
+body.quarto-light .page-columns {
+  background-color: #f6f8fb !important;
+}
+
+body.quarto-light .sidebar {
+  background-color: #f2f5f8 !important;
+}
+
+
+/* Dark mode */
+
+body.quarto-dark,
+body.quarto-dark #quarto-content,
+body.quarto-dark .page-columns {
+  background-color: var(--bs-body-bg) !important;
+}
+
+body.quarto-dark .sidebar {
+  background-color: var(--bs-body-bg) !important;
+}
+
+main.content {
+  background-color: transparent;
+}
+
+
+/* ---------------------------------------------------------
+   Overall typography
+   --------------------------------------------------------- */
+
+body {
+  line-height: 1.65;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+
+/* ---------------------------------------------------------
+   Headings
+   --------------------------------------------------------- */
+
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+h2 {
+  margin-top: 2.25rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+h3 {
+  margin-top: 1.75rem;
+  font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------- */
+
+.sidebar-title {
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.sidebar-navigation {
+  font-size: 0.94rem;
+}
+
+.sidebar-item-text {
+  line-height: 1.28;
+}
+
+
+/* ---------------------------------------------------------
+   Right-side table of contents
+   --------------------------------------------------------- */
+
+#TOC {
+  font-size: 0.9rem;
+}
+
+
+/* ---------------------------------------------------------
+   Figures
+   --------------------------------------------------------- */
+
+.quarto-figure {
+  margin-top: 1.75rem;
+  margin-bottom: 2rem;
+}
+
+.quarto-figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.figure-caption,
+figcaption {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+
+/* ---------------------------------------------------------
+   Code
+   --------------------------------------------------------- */
+
+pre {
+  border-radius: 0.35rem;
+}
+
+code {
+  font-size: 0.92em;
+}
+
+
+/* ---------------------------------------------------------
+   Tables
+   --------------------------------------------------------- */
+
+table {
+  font-size: 0.95rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* ---------------------------------------------------------
+   Horizontal separators
+   --------------------------------------------------------- */
+
+hr {
+  margin-top: 2.25rem;
+  margin-bottom: 2.25rem;
+  opacity: 0.25;
+}
+
+
+/* ---------------------------------------------------------
+   Title block
+   --------------------------------------------------------- */
+
+#title-block-header {
+  margin-bottom: 2.5rem;
+}
+
+
+/* ---------------------------------------------------------
+   Quarto callouts
+   --------------------------------------------------------- */
+
+.callout {
+  margin-top: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+
+/* ---------------------------------------------------------
+   Homepage three-column visual
+   --------------------------------------------------------- */
+
+.columns h3 {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.columns img {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+}
+
+.columns .column > p:last-child {
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
