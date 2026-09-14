@@ -18,7 +18,7 @@ book:
     - part: "Part I: Learning to Think in Signals"
       chapters:
         - book/01-what-is-software-defined-radio.md
-        - book/chapter02.md
+        - book/02-understanding-signals.md
         - book/chapter03.md
         - book/chapter04.md
         - book/chapter05.md
