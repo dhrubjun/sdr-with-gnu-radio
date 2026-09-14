@@ -2,45 +2,21 @@
 
 ## 1.1 What Does a Radio Actually Do?
 
-Before talking about Software Defined Radio, let's forget the word **software** for a moment and start with a simpler question:
+Before talking about Software Defined Radio, let us forget the word **software** for a moment and start with a simpler question:
 
 > What does a radio actually do?
 
-Suppose you want to listen to an FM radio station. The antenna on your radio is not receiving only that station. Many electromagnetic signals may be reaching it at the same time: other FM stations, mobile networks, Wi-Fi, Bluetooth, satellite signals and much more.
+Suppose we want to listen to an FM radio station. The antenna is not receiving only that station. Many electromagnetic signals may be reaching it at the same time: other FM stations, mobile networks, Wi-Fi, Bluetooth, satellite signals and more.
 
-Yet when you tune the radio, you hear the station you selected.
+Yet when we tune the radio, we hear the station we selected.
 
-Somewhere inside the receiver, a sequence of operations is separating the signal you want from everything else and recovering the information carried by it.
+Somewhere inside the receiver, a sequence of operations separates the signal we want from everything else and recovers the information carried by it.
 
-At a very high level, we can picture the process like this:
+At a high level, the process is simple: receive the signal, select the part we want, suppress what we do not want, and recover the information.
 
-```text
-Signal in the air
+A real receiver is more complicated than this, but even this simple picture tells us something important: a radio is essentially a chain of operations performed on a signal.
 
-        ↓
-
-Receive the signal
-
-        ↓
-
-Select the signal we want
-
-        ↓
-
-Remove what we do not want
-
-        ↓
-
-Recover the information
-
-        ↓
-
-Audio / Data / Image / Something useful
-```
-
-Of course, a real receiver is more complicated than this. But this simple picture already tells us something useful: a radio is essentially a chain of operations performed on a signal.
-
-What changes with Software Defined Radio is not necessarily **what** we need to do to the signal. The interesting change is **where and how we perform those operations**.
+With Software Defined Radio, many of those operations are still needed. What changes is **where and how we perform them**.
 
 ---
 
@@ -50,93 +26,43 @@ Traditionally, many radio operations have been carried out using dedicated elect
 
 A receiver might contain amplifiers, filters, mixers, oscillators and demodulators, with each part designed to perform a particular job.
 
-A very simplified receiver could look something like this:
+A very simplified receiver chain might look like this:
 
-```text
-Antenna
-
-   ↓
-
-RF Amplifier
-
-   ↓
-
-Analog Filter
-
-   ↓
-
-Mixer
-
-   ↓
-
-Another Filter
-
-   ↓
-
-Demodulator
-
-   ↓
-
-Audio
-```
+**Antenna → RF Amplifier → Analog Filter → Mixer → Another Filter → Demodulator → Audio**
 
 There is nothing inherently wrong with this approach. In fact, as we will soon see, SDR does not make analog hardware disappear.
 
-The difference is flexibility.
+The important difference is flexibility.
 
-Imagine that a particular part of a radio has been built specifically to process one kind of signal. If we later want the radio to behave differently, we may need to modify or replace some of that hardware.
+If part of a radio has been built specifically to process one kind of signal, changing the radio's behaviour may require modifying or replacing some of that hardware.
 
-Now imagine moving some of those operations into software.
+Now imagine moving some of those operations into digital processing controlled by software.
 
-Instead of changing a circuit, we could change an algorithm.
+Instead of changing a circuit, we may be able to change an algorithm or a set of parameters.
 
-That is the idea that makes Software Defined Radio so interesting.
+That is the central idea behind Software Defined Radio.
 
 ---
 
 ## 1.3 So What Is Software Defined Radio?
 
-A **Software Defined Radio**, usually shortened to **SDR**, is a radio in which many of the signal-processing operations are performed digitally in software rather than being fixed entirely in dedicated hardware.
+A **Software Defined Radio**, usually shortened to **SDR**, is a radio in which many signal-processing functions that could otherwise be implemented in dedicated hardware are performed digitally and controlled through software.
 
-A simplified SDR receiver can be thought of as:
+A simplified SDR receiver can be described by the following signal path:
 
-```text
-Antenna
-
-   ↓
-
-RF Front End
-
-   ↓
-
-ADC
-
-   ↓
-
-Digital Samples
-
-   ↓
-
-Software Processing
-
-   ↓
-
-Information
-```
+**Antenna → RF Front End → ADC → Digital Samples → Software Processing → Information**
 
 The **ADC**, or **Analog-to-Digital Converter**, marks an important boundary.
 
-Before the ADC, we are dealing with an analog electrical signal.
+Before the ADC, the receiver is working with an analog electrical signal. Depending on the radio architecture, the RF front end may already have amplified, filtered or frequency-translated that signal.
 
 After the ADC, the signal is represented by a sequence of numbers called **samples**.
 
-Once we have numbers, we can process them digitally.
+Once the signal is represented numerically, we can process it digitally. That processing can include filtering, frequency translation, demodulation, synchronization, decoding and signal detection.
 
-That digital processing can eventually include things such as filtering, frequency translation, demodulation, synchronization, decoding and signal detection.
+We will encounter all of these later in the book. For now, the main idea is simpler:
 
-We are going to encounter all of these later in the book. For now, the important idea is much simpler:
-
-> In SDR, much of what the radio does to a signal can be controlled through digital processing and software.
+> In SDR, much of what the radio does to a signal can be implemented or controlled through digital processing and software.
 
 ---
 
@@ -146,7 +72,7 @@ No. An SDR is still a physical radio system, and it still needs hardware.
 
 We cannot connect an antenna directly to a Python program and expect the computer to receive a 2.4 GHz Wi-Fi signal.
 
-The signal arriving at an antenna is a physical electromagnetic signal. Before our software can do anything useful with it, some hardware has to receive it, condition it and convert it into digital samples.
+The signal arriving at an antenna is a physical electromagnetic signal. Before software can process it, hardware must receive it, condition it and convert it into digital samples.
 
 The basic idea is shown below.
 
@@ -154,13 +80,13 @@ The basic idea is shown below.
 
 Notice the boundary between the analog and digital sides.
 
-The antenna and RF front end are on the analog side. The **RF front end** may contain amplifiers, filters, mixers, oscillators and gain-control circuits, depending on the radio.
+The antenna and RF front end are on the analog side. Depending on the radio, the **RF front end** may contain amplifiers, filters, mixers, oscillators and gain-control circuits.
 
-The ADC then converts the received analog signal into digital samples. From that point onward, a large amount of processing can be done digitally.
+The ADC then converts the conditioned analog signal into digital samples. From that point onward, much of the remaining processing can be performed digitally.
 
 Later in the book, we will connect actual SDR hardware and see this boundary for ourselves.
 
-For now, however, we don't need an antenna or an SDR device at all. GNU Radio can generate signals directly inside the computer, which gives us a controlled environment in which to learn what happens to them.
+For now, however, we do not need an antenna or an SDR device at all. GNU Radio can generate signals directly inside the computer, giving us a controlled environment in which to learn what happens to them.
 
 ---
 
@@ -168,51 +94,20 @@ For now, however, we don't need an antenna or an SDR device at all. GNU Radio ca
 
 So far we have looked at a receiver, but the same idea works in the other direction.
 
-A simplified SDR transmitter might look like this:
+A simplified SDR transmitter can be described as:
 
-```text
-Information
-
-    ↓
-
-Digital Signal Processing
-
-    ↓
-
-Digital Samples
-
-    ↓
-
-DAC
-
-    ↓
-
-RF Front End
-
-    ↓
-
-Antenna
-```
+**Information → Digital Signal Processing → Digital Samples → DAC → RF Front End → Antenna**
 
 Here, **DAC** means **Digital-to-Analog Converter**.
 
-The DAC takes digitally generated samples and converts them into an analog electrical signal. The RF hardware can then condition that signal and prepare it for transmission.
+The DAC converts digitally generated samples into an analog electrical signal. The RF hardware can then filter, amplify or frequency-translate that signal as needed before transmission.
 
-A useful way to remember the two directions is:
+A compact way to remember the two directions is:
 
-```text
-RECEIVER
+- **Receiver:** Analog Signal → ADC → Digital Samples → Software
+- **Transmitter:** Software → Digital Samples → DAC → Analog Signal
 
-Analog Signal → ADC → Digital Samples → Software
-
-
-
-TRANSMITTER
-
-Software → Digital Samples → DAC → Analog Signal
-```
-
-We will spend a large part of this book working on the digital portion in the middle. But it is worth remembering that those numbers ultimately represent real signals entering or leaving real hardware.
+We will spend a large part of this book working on the digital portion in the middle. It is worth remembering, however, that those numbers ultimately represent real signals entering or leaving real hardware.
 
 ---
 
@@ -222,7 +117,7 @@ The attraction of SDR becomes clearer when we think about flexibility.
 
 Suppose we want to experiment with FM today, a digital modulation scheme tomorrow and a packet receiver next week. If every signal-processing operation were permanently fixed in hardware, making those changes could be difficult.
 
-With SDR, much of the behaviour of the radio can be changed in software.
+With SDR, much of the radio's behaviour can be changed in software.
 
 The same general SDR platform can therefore be used for many different purposes, including:
 
@@ -234,39 +129,31 @@ The same general SDR platform can therefore be used for many different purposes,
 - radar experiments
 - wireless research
 
-This does not mean that software can do absolutely anything. The hardware still determines practical limits such as the frequencies we can receive or transmit, the available bandwidth and the achievable dynamic range.
+This does not mean that software can do anything we want. The hardware still sets practical limits such as the frequencies we can receive or transmit, the instantaneous bandwidth available to us and the system's dynamic range.
 
-But within those limits, SDR gives us an enormous amount of flexibility.
+Within those limits, however, SDR gives us considerable flexibility.
 
-For learning, there is another advantage that is just as important. We don't have to read about a filter and simply trust that it behaves a certain way. We can build one, send a signal through it, change its settings and immediately see what happens.
+For learning, there is another advantage. We do not have to read about a filter and simply trust that it behaves a certain way. We can build one, send a signal through it, change its settings and observe the result immediately.
 
-That is how we are going to approach SDR throughout this book.
+That experimental approach will guide the rest of this book.
 
 ---
 
 ## 1.7 Where Does GNU Radio Fit?
 
-This is where **GNU Radio** enters the picture.
+**GNU Radio** is a signal-processing framework that lets us build systems by connecting processing blocks together.
 
-GNU Radio is a signal-processing framework that lets us build systems by connecting processing blocks together.
+Using **GNU Radio Companion**, or **GRC**, we can build these systems graphically. The resulting diagram is called a **flowgraph**.
 
-Using **GNU Radio Companion**, or **GRC**, we can build these systems graphically. The result is called a **flowgraph**.
+For our first experiment, the signal path is very simple:
 
-For our first experiment, the entire flowgraph will contain only three processing blocks:
+**Signal Source → Throttle → QT GUI Time Sink**
 
-```text
-Signal Source → Throttle → QT GUI Time Sink
-```
+The Signal Source will generate a signal. Throttle will limit the rate at which samples are processed in this software-only flowgraph. The QT GUI Time Sink will display those samples against time.
 
-The Signal Source will create a signal.
+The connections between the blocks show the direction in which the sample stream travels.
 
-Throttle will control how quickly the software processes the samples.
-
-The QT GUI Time Sink will let us see those samples plotted against time.
-
-The connections between the blocks show the direction in which the data travels.
-
-One habit will help us throughout the book. Whenever you see a GNU Radio block, ask yourself two questions:
+One habit will help us throughout the book. Whenever we look at a GNU Radio block, we should ask two questions:
 
 > What does the signal look like before this block?
 
@@ -274,9 +161,7 @@ and
 
 > What has this block changed?
 
-If you can answer those two questions, a complicated flowgraph starts to become much easier to understand.
-
-Let's build our first one.
+If we can answer those questions, even a complicated flowgraph becomes much easier to understand.
 
 ---
 
@@ -290,29 +175,28 @@ $$
 x(t)=A\cos(2\pi ft+\phi)
 $$
 
-If that equation looks unfamiliar, don't worry. We are not going to derive anything from it yet.
+If that equation looks unfamiliar, do not worry. We are not going to derive anything from it yet.
 
-For the moment, there are only a few things worth noticing:
+For the moment, notice only a few things:
 
 - **amplitude** tells us how large the signal is,
 - **frequency** tells us how quickly it repeats,
 - **phase** tells us where the signal is within its cycle.
 
-Here, **t represents time**. We will unpack the rest of the equation properly in the next chapter.
+Here, **t** represents time. We will unpack the rest of the equation properly in the next chapter.
 
 For our first experiment, we will use:
 
 ```text
 Amplitude = 1
-
 Frequency = 1 kHz
 ```
 
-Our goal is simple: ask GNU Radio to generate this signal and then display it.
+Our goal is simple: ask GNU Radio to generate this signal and display it.
 
 ---
 
-## 1.9 Experiment 1: Build Your First GNU Radio Flowgraph
+## 1.9 Experiment 1: Build Our First GNU Radio Flowgraph
 
 Open **GNU Radio Companion** and create a new flowgraph.
 
@@ -326,17 +210,12 @@ Set:
 
 ```text
 ID: samp_rate
-
 Value: 32000
 ```
 
-You will see `32000` displayed as `32k` on the flowgraph. GNU Radio is simply using a shorter engineering-style notation.
+GNU Radio will display `32000` as `32k` on the flowgraph. It is simply using compact engineering notation.
 
-You may be wondering why we chose 32,000, or even what a sample rate really means.
-
-For now, just use the value.
-
-We will spend an entire chapter answering those questions when we study sampling.
+We may naturally wonder why we chose 32,000, or what a sample rate means in the first place. For now, we only need the value. We will study sampling properly in a later chapter.
 
 ### Add the Signal Source
 
@@ -348,15 +227,15 @@ Open its properties and configure it as shown below.
 
 We have asked the block to generate a cosine with a frequency of `1000` Hz and an amplitude of `1`.
 
-Notice that we haven't typed `32000` into the Sample Rate field. Instead, we use:
+Notice that we have not typed `32000` directly into the Sample Rate field. Instead, we use:
 
 ```text
 samp_rate
 ```
 
-That refers to the variable we created earlier. If we later change the value of `samp_rate`, every block using that variable can follow the same change.
+This refers to the variable we created earlier. If we later change `samp_rate`, every block that uses the same variable can follow that change.
 
-There are other settings in the window, such as Offset, Initial Phase and Show Msg Ports. We don't need to explore all of them now. We will introduce those options when they become useful.
+There are other settings in the window, such as Offset, Initial Phase and Show Msg Ports. We do not need them yet. We will introduce those options when they become useful.
 
 ### Add the Throttle
 
@@ -368,47 +247,37 @@ Set its type to `Float` and its sample rate to `samp_rate`, as shown below.
 
 Leave the remaining settings as shown.
 
-At first, the purpose of Throttle may not be obvious. Why do we need to control the rate of a signal that exists entirely inside the computer?
+The purpose of Throttle may not be obvious at first. Why should a signal that exists only inside the computer need a rate limit?
 
-We will answer that after we get the experiment running.
+We will answer that after the flowgraph is running.
 
 ### Add the QT GUI Time Sink
 
-Finally, add a **QT GUI Time Sink**.
-
-Configure it as shown below.
+Finally, add a **QT GUI Time Sink** and configure it as shown below.
 
 ![QT GUI Time Sink settings used in the first experiment.](../figures/ch01/qt-gui-time-sink-properties.png)
 
-For this experiment, the settings we care about most are:
+For this experiment, the settings that matter most are:
 
 ```text
 Type: Float
-
 Number of Points: 1024
-
 Sample Rate: samp_rate
 ```
 
-The Time Sink contains many other options: Grid, Autoscale, Trigger, Update Period, GUI Hint and several more.
-
-Ignore them for now.
-
-There is no advantage in learning a property before we have a reason to use it. We will return to these settings gradually as our experiments become more interesting.
+The Time Sink contains many other options, including Grid, Autoscale, Trigger, Update Period and GUI Hint. We can ignore them for now. We will return to those settings when we have a reason to use them.
 
 ### Connect the Blocks
 
-Now connect the three processing blocks:
+Connect the three processing blocks in this order:
 
-```text
-Signal Source → Throttle → QT GUI Time Sink
-```
+**Signal Source → Throttle → QT GUI Time Sink**
 
 The completed flowgraph should look like this:
 
 ![Our first GNU Radio flowgraph.](../figures/ch01/complete-gnu-radio-flowgraph.png)
 
-Take a moment to look at the flowgraph before running it.
+Take a moment to read the flowgraph before running it.
 
 The Signal Source shows `Frequency: 1k`.
 
@@ -416,75 +285,54 @@ The Variable shows `Value: 32k`.
 
 The Time Sink shows `Number of Points: 1.024k`.
 
-GNU Radio often uses prefixes such as `k` to keep values compact. So `1k` means 1000 and `32k` means 32000.
+GNU Radio often uses prefixes such as `k` to keep values compact. Here, `1k` means 1000 and `32k` means 32000.
 
-More importantly, try to read the flowgraph from left to right:
+More importantly, we should start reading the flowgraph from left to right. In this case, the chain is doing three things: generating a cosine, controlling the processing rate and displaying the samples.
 
-```text
-Generate a cosine
-
-        ↓
-
-Control the processing rate
-
-        ↓
-
-Display the samples
-```
-
-That is the beginning of learning to read GNU Radio flowgraphs as signal-processing systems rather than collections of blocks.
+This is the beginning of learning to read GNU Radio flowgraphs as signal-processing systems rather than as collections of blocks.
 
 ---
 
-## 1.10 Before You Press Run
+## 1.10 Before We Press Run
 
-Before running the flowgraph, make a prediction.
+Before running the flowgraph, let us make a prediction.
 
-We told GNU Radio to generate a cosine.
+We told GNU Radio to generate a cosine with an amplitude of 1 and a frequency of 1 kHz.
 
-We set its amplitude to 1.
+What should we expect the Time Sink to show?
 
-We set its frequency to 1 kHz.
-
-What do you expect the Time Sink to show?
-
-You don't need to calculate anything. Just form a picture in your mind.
-
-Now run the flowgraph.
+We do not need to calculate anything yet. It is enough to form a picture in our minds, then run the flowgraph.
 
 ---
 
 ## 1.11 Observing the Result
 
-You should see something like this:
+We should see something like this:
 
 ![The 1 kHz cosine displayed in the QT GUI Time Sink.](../figures/ch01/first-cosine-result.png)
 
 There is our first signal.
 
-The waveform moves between approximately +1 and -1, which agrees with the amplitude we entered in the Signal Source. It also repeats regularly across the time axis.
+The waveform moves between approximately +1 and -1, which agrees with the amplitude entered in the Signal Source. It also repeats regularly across the time axis.
 
-We could already ask several interesting questions about this plot.
+Even this simple plot raises several useful questions:
 
-How long does one cycle take?
+- How long does one cycle take?
+- How many cycles occur in one second?
+- Why does the curve look smooth if GNU Radio is processing individual samples?
+- How many samples are used to represent each cycle?
 
-How many cycles occur in one second?
+We do not need to answer all of them yet. The point is simply to notice that a simple cosine already gives us several things to investigate.
 
-Why does the curve look smooth if GNU Radio is actually processing individual samples?
-
-How many samples are being used to represent each cycle?
-
-Don't try to answer all of these questions yet. Just notice that a simple-looking cosine has already given us several things to investigate.
-
-For now, notice what we have actually done. We started with the mathematical description
+What have we actually done? We started with the mathematical description
 
 $$
 x(t)=A\cos(2\pi ft+\phi)
 $$
 
-then asked GNU Radio to generate numerical samples representing that signal, and finally displayed those samples in the time domain.
+and asked GNU Radio to generate numerical samples representing that signal. The Time Sink then displayed those samples in the time domain.
 
-This simple experiment is going to become the starting point for much more complicated systems.
+That same basic idea, generate or receive samples, process them and observe the result, will remain with us as the systems become more complicated.
 
 ---
 
@@ -492,53 +340,45 @@ This simple experiment is going to become the starting point for much more compl
 
 Throughout this book, we will keep a running **GNU Radio Toolbox**.
 
-The idea is not to list every property of every GNU Radio block. Instead, whenever we meet a useful block or feature, we will learn the part of it that matters for the experiment we are doing.
-
-As the same blocks appear again, we will gradually learn more about them.
+The goal is not to list every property of every GNU Radio block. When we meet a useful block or feature, we will learn the part that matters for the experiment at hand. As the same blocks appear again, we will gradually learn more about them.
 
 ### Signal Source
 
-The **Signal Source** generates a known signal inside GNU Radio.
+The **Signal Source** generates a known sequence of samples inside GNU Radio.
 
-For our first experiment, it generates a 1 kHz cosine. Later, we will change its frequency, amplitude, phase and waveform, and we will also use it with complex signals.
+In our first experiment, it generates a 1 kHz cosine. Later, we will change its frequency, amplitude, phase and waveform, and we will also use it with complex signals.
 
-It is especially useful when learning because we know exactly what signal we are putting into the flowgraph.
+It is particularly useful for learning because we know exactly what signal we are putting into the flowgraph.
 
 One distinction is worth making immediately:
 
-> Signal Source is generating digital samples inside GNU Radio. It is not producing a physical RF signal at an antenna connector.
+> Signal Source generates digital samples inside GNU Radio. It does not produce a physical RF signal at an antenna connector.
 
-That difference will become much clearer when we study sampling and SDR hardware.
+That difference will become clearer when we study sampling and SDR hardware.
 
 ### Throttle
 
-Throttle is a little unusual because it does not perform the kind of signal-processing operation we normally associate with a radio.
+Throttle is unusual because it does not perform the kind of signal-processing operation we normally associate with a radio.
 
-Our current flowgraph exists entirely inside the computer. There is no SDR hardware, sound card or other device forcing samples to arrive or leave at a particular real-world rate.
+Our current flowgraph exists entirely inside the computer. There is no SDR device, sound card or other hardware source or sink forcing the stream to run at a real-world sample rate.
 
-Without something controlling the rate, GNU Radio could process the generated samples as quickly as the computer and the rest of the flowgraph allow.
-
-Throttle prevents that by limiting the rate at which samples move through this software-only flowgraph.
+Without a rate-limiting block, GNU Radio can process samples as quickly as the computer and the rest of the flowgraph allow. **Throttle** limits the average processing rate to approximately the sample rate we specify, which keeps a software-only simulation from running unnecessarily fast.
 
 A useful rule for now is:
 
-> In a simulation made only from software-generated sources and processing blocks, you will often need a Throttle block.
+> In a software-only flowgraph with no hardware block providing the timing, a Throttle block is often needed.
 
-Later, when real hardware provides the timing, the situation changes.
+When real hardware provides the sample timing, we generally do not add Throttle to the same streaming path.
 
-Also remember that Throttle is **not** an ADC and it is not performing sampling. The signal inside GNU Radio is already represented by samples.
+Also remember that Throttle is **not** an ADC and does not create the samples. By the time the data reaches it, the signal is already represented digitally.
 
 ### QT GUI Time Sink
 
-The **QT GUI Time Sink** lets us look at samples in the time domain.
+The **QT GUI Time Sink** lets us inspect samples in the time domain.
 
-In this experiment it immediately showed us the shape and amplitude of our cosine.
+In this experiment, it showed the shape and amplitude of our cosine. Later, we will use it to compare signals, observe delays, inspect distortion and watch what happens when different parts of a flowgraph are changed.
 
-Later we will use it to compare signals, observe delays, inspect distortion and watch what happens when we change different parts of a flowgraph.
-
-But time is only one way of looking at a signal.
-
-Soon we will look at exactly the same signal from a completely different point of view: frequency.
+Time is only one way to look at a signal. Later, we will also look at signals in the frequency domain.
 
 ---
 
@@ -546,9 +386,7 @@ Soon we will look at exactly the same signal from a completely different point o
 
 Look again at the ports connecting the blocks in the flowgraph.
 
-You may have noticed that GNU Radio uses colours for them.
-
-Those colours are not just decoration. They help indicate the type of data travelling through a connection.
+We may have noticed that GNU Radio uses colours for them. Those colours help indicate the type of data travelling through each connection.
 
 In our first experiment, we selected:
 
@@ -558,19 +396,17 @@ Float
 
 for the Signal Source, Throttle and Time Sink.
 
-We are not going to study GNU Radio data types in detail yet, but remember this simple rule:
+We are not going to study GNU Radio data types in detail yet, but remember one simple rule:
 
-> Blocks connected together must agree on the type of data being exchanged.
+> Blocks connected together must use compatible data types at their connected ports.
 
-This gives us a perfect opportunity to deliberately break our first flowgraph.
+This gives us a good opportunity to deliberately break our first flowgraph.
 
 ---
 
 ## 1.14 Experiment 2: Break the Flowgraph on Purpose
 
-Getting a flowgraph to work is useful.
-
-Breaking it on purpose can teach us even more.
+Getting a flowgraph to work is useful. Breaking it on purpose can teach us something different.
 
 ### Create a Type Mismatch
 
@@ -594,11 +430,9 @@ Now look at the connection between the two blocks and try to run or reconnect th
 
 GNU Radio should indicate that the two ports are not compatible.
 
-We have not learned what complex samples are yet, so don't worry about **why** Float and Complex are different. That comes later.
+We have not learned what complex samples are yet, so we do not need to worry about **why** Float and Complex are different. That comes later. The lesson here is simply that the data produced by one block must be compatible with the data expected by the next.
 
-The lesson for now is simply that the data leaving one block must be compatible with the data expected by the next block.
-
-When you are finished, change the Signal Source back to `Float`.
+When we are finished, change the Signal Source back to `Float`.
 
 ### Remove Throttle
 
@@ -606,79 +440,41 @@ Restore the working flowgraph.
 
 Now remove the Throttle block and connect:
 
-```text
-Signal Source → QT GUI Time Sink
-```
+**Signal Source → QT GUI Time Sink**
 
 Run the flowgraph again.
 
-Something interesting may happen: the flowgraph can still run.
+The flowgraph may still run. Without Throttle, however, there is no block in this simple chain intentionally limiting the sample-processing rate to `samp_rate`. GNU Radio can therefore process samples as quickly as the computer and the downstream block allow. Depending on the system, we may notice higher CPU usage or less predictable GUI behaviour.
 
-Without Throttle, GNU Radio is free to process the samples as quickly as the computer and the rest of the flowgraph allow. You may notice increased CPU usage or unusual GUI behaviour.
-
-This tells us something important about Throttle.
-
-It is not there because our cosine mathematically requires it. It is there because our experiment has no real hardware controlling the processing rate.
+This tells us something important about Throttle. The cosine does not mathematically require it. We use it because this experiment has no real hardware setting the sample timing.
 
 Stop the flowgraph and put Throttle back.
 
-We will investigate this much more carefully when we study sampling.
+We will return to the meaning of sample rate when we study sampling in detail.
 
 ---
 
 ## 1.15 A Flowgraph Can Be Wrong Without Crashing
 
-There is one more idea worth taking from our first experiment.
-
 Sometimes GNU Radio makes a problem obvious. Two ports may be incompatible, a parameter may be invalid, or the flowgraph may refuse to start.
 
-Those are relatively easy problems because the software tells us that something is wrong.
+Those problems are relatively easy to find because the software tells us something is wrong.
 
-But later we will meet a more interesting kind of mistake.
+Later, we will meet a more subtle kind of mistake: a flowgraph can run perfectly and still produce the wrong signal-processing result.
 
-A flowgraph can run perfectly and still produce the wrong result.
+GNU Radio cannot always know what result we intended. A poor parameter choice or an incorrectly designed processing chain may still be perfectly valid software.
 
-GNU Radio cannot always know what signal-processing result we intended. The program may run without any error message even though we have chosen a poor parameter or designed the processing chain incorrectly.
+That is why we will keep using the same habit throughout the book: predict, run, observe and explain.
 
-This is one reason we will keep using the same habit throughout the book:
+Quite often we will also break a working system, observe what changed and work out why.
 
-```text
-Predict
-
-   ↓
-
-Run
-
-   ↓
-
-Observe
-
-   ↓
-
-Explain
-```
-
-And quite often:
-
-```text
-Break it
-
-   ↓
-
-Observe what changed
-
-   ↓
-
-Work out why
-```
-
-That is much more useful than simply memorizing which blocks should be connected together.
+This is more useful than simply memorizing which blocks should be connected together.
 
 ---
 
-## 1.16 Try It Yourself
+## 1.16 Explore Further
 
-Before closing the flowgraph, experiment with it for a few minutes.
+Before closing the flowgraph, let us experiment with it for a few minutes.
 
 Start by changing the Signal Source frequency from:
 
@@ -692,9 +488,7 @@ to:
 2000
 ```
 
-Run the flowgraph again.
-
-What changed in the Time Sink?
+Run the flowgraph again. What changed in the Time Sink?
 
 Now return the frequency to `1000` and change the amplitude:
 
@@ -726,17 +520,15 @@ Waveform: Square
 
 Run the flowgraph again.
 
-What changed?
+What changed? Which settings stayed the same?
 
-Which settings stayed exactly the same?
+We do not need to explain every detail mathematically yet. In particular, there is much more to say about why a square wave looks and behaves differently from a cosine. We will get there later.
 
-Don't worry if you cannot yet explain every detail mathematically. In particular, there is much more to say about why a square wave looks and behaves differently from a cosine. We will get there later.
+For now, one habit matters most:
 
-For now, the point is to start developing a habit that we will use throughout the book:
+> Change one thing at a time, predict what should happen, and compare that prediction with what GNU Radio actually shows.
 
-> Change one thing at a time, predict what should happen, and then compare your prediction with what GNU Radio actually shows you.
-
-If something surprises you, that is usually where the interesting learning begins.
+Unexpected results are often the most useful ones to investigate.
 
 ---
 
@@ -744,44 +536,26 @@ If something surprises you, that is usually where the interesting learning begin
 
 We started this chapter with a simple question: what does a radio actually do?
 
-At its heart, a receiver takes a signal, selects and processes what we are interested in, and recovers useful information from it.
+At a high level, a receiver takes in signals, selects and processes the one we are interested in, and recovers useful information from it. Software Defined Radio allows many of those processing functions to be performed digitally and controlled through software.
 
-Software Defined Radio changes how much of that processing can be carried out digitally and controlled through software.
+We also saw that **software defined** does not mean **hardware free**. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the transition into the digital domain, where the signal is represented by samples and can be processed numerically.
 
-We also saw that **software defined** does not mean **hardware free**. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the bridge into the digital world, where the signal can be represented as samples and processed numerically.
+Most importantly, we built our first GNU Radio flowgraph, with the signal path **Signal Source → Throttle → QT GUI Time Sink**.
 
-Most importantly, we built our first working GNU Radio flowgraph:
+Along the way, we created a variable, configured and connected blocks, generated a known signal and viewed it in the time domain. We also introduced GNU Radio data types, learned why Throttle is useful in this software-only experiment and deliberately created a type mismatch to see how GNU Radio reacts.
 
-```text
-Signal Source → Throttle → QT GUI Time Sink
-```
-
-Along the way, we learned how to create a variable, configure and connect GNU Radio blocks, generate a known signal, and view it in the time domain. We also saw that GNU Radio connections carry particular data types, learned the basic purpose of Throttle in a software-only experiment, and deliberately broke a working flowgraph to see what we could learn from it.
-
-We have not gone very deep into the mathematics yet, and that is intentional.
-
-We first need to become comfortable looking at signals, changing them and asking sensible questions about what we see.
+We have not gone deeply into the mathematics yet, and that is intentional. First, we need to become comfortable looking at signals, changing them and asking sensible questions about what we observe.
 
 ---
 
 ## 1.18 Connecting to the Next Chapter
 
-Our first GNU Radio experiment generated a 1 kHz cosine.
-
-We could see it on the screen, but we used several words without really exploring them:
+Our first GNU Radio experiment generated a 1 kHz cosine. We could see it on the screen, but we used several words without exploring them properly:
 
 **amplitude**, **frequency**, **phase**, **period** and **offset**.
 
-What do they actually mean when we look at a waveform?
+What do those quantities mean when we look at a waveform? What changes when we double the frequency? What does a phase shift look like? What happens when we add an offset?
 
-What changes when we double the frequency?
-
-What does a phase shift look like?
-
-What does adding an offset physically do to the signal?
-
-Instead of starting with definitions and equations, we will answer those questions by changing the signal and watching what happens.
-
-That question leads naturally into Chapter 2:
+In Chapter 2, we will answer those questions by changing the signal and observing what happens.
 
 > **What exactly is a signal?**
