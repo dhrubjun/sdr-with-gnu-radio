@@ -18,7 +18,6 @@ A real receiver is more complicated than this, but even this simple picture tell
 
 With Software Defined Radio, many of those operations are still needed. What changes is **where and how we perform them**.
 
----
 
 ## 1.2 The Traditional Way of Building a Radio
 
@@ -42,7 +41,6 @@ Instead of changing a circuit, we may be able to change an algorithm or a set of
 
 That is the central idea behind Software Defined Radio.
 
----
 
 ## 1.3 So What Is Software Defined Radio?
 
@@ -64,7 +62,6 @@ We will encounter all of these later in the book. For now, the main idea is simp
 
 > In SDR, much of what the radio does to a signal can be implemented or controlled through digital processing and software.
 
----
 
 ## 1.4 Does "Software Defined" Mean There Is No Hardware?
 
@@ -88,7 +85,6 @@ Later in the book, we will connect actual SDR hardware and see this boundary for
 
 For now, however, we do not need an antenna or an SDR device at all. GNU Radio can generate signals directly inside the computer, giving us a controlled environment in which to learn what happens to them.
 
----
 
 ## 1.5 What About a Transmitter?
 
@@ -109,7 +105,6 @@ A compact way to remember the two directions is:
 
 We will spend a large part of this book working on the digital portion in the middle. It is worth remembering, however, that those numbers ultimately represent real signals entering or leaving real hardware.
 
----
 
 ## 1.6 Why Is SDR So Useful?
 
@@ -137,7 +132,6 @@ For learning, there is another advantage. We do not have to read about a filter 
 
 That experimental approach will guide the rest of this book.
 
----
 
 ## 1.7 Where Does GNU Radio Fit?
 
@@ -163,7 +157,6 @@ and
 
 If we can answer those questions, even a complicated flowgraph becomes much easier to understand.
 
----
 
 ## 1.8 Our First Signal
 
@@ -194,7 +187,6 @@ Frequency = 1 kHz
 
 Our goal is simple: ask GNU Radio to generate this signal and display it.
 
----
 
 ## 1.9 Experiment 1: Build Our First GNU Radio Flowgraph
 
@@ -291,7 +283,6 @@ More importantly, we should start reading the flowgraph from left to right. In t
 
 This is the beginning of learning to read GNU Radio flowgraphs as signal-processing systems rather than as collections of blocks.
 
----
 
 ## 1.10 Before We Press Run
 
@@ -303,7 +294,6 @@ What should we expect the Time Sink to show?
 
 We do not need to calculate anything yet. It is enough to form a picture in our minds, then run the flowgraph.
 
----
 
 ## 1.11 Observing the Result
 
@@ -334,7 +324,6 @@ and asked GNU Radio to generate numerical samples representing that signal. The 
 
 That same basic idea, generate or receive samples, process them and observe the result, will remain with us as the systems become more complicated.
 
----
 
 ## 1.12 GNU Radio Toolbox
 
@@ -380,7 +369,6 @@ In this experiment, it showed the shape and amplitude of our cosine. Later, we w
 
 Time is only one way to look at a signal. Later, we will also look at signals in the frequency domain.
 
----
 
 ## 1.13 A Small Detail That Will Matter Later: Data Types
 
@@ -402,7 +390,6 @@ We are not going to study GNU Radio data types in detail yet, but remember one s
 
 This gives us a good opportunity to deliberately break our first flowgraph.
 
----
 
 ## 1.14 Experiment 2: Break the Flowgraph on Purpose
 
@@ -452,7 +439,6 @@ Stop the flowgraph and put Throttle back.
 
 We will return to the meaning of sample rate when we study sampling in detail.
 
----
 
 ## 1.15 A Flowgraph Can Be Wrong Without Crashing
 
@@ -470,7 +456,6 @@ Quite often we will also break a working system, observe what changed and work o
 
 This is more useful than simply memorizing which blocks should be connected together.
 
----
 
 ## 1.16 Explore Further
 
@@ -530,7 +515,6 @@ For now, one habit matters most:
 
 Unexpected results are often the most useful ones to investigate.
 
----
 
 ## 1.17 What We Learned
 
@@ -546,7 +530,6 @@ Along the way, we created a variable, configured and connected blocks, generated
 
 We have not gone deeply into the mathematics yet, and that is intentional. First, we need to become comfortable looking at signals, changing them and asking sensible questions about what we observe.
 
----
 
 ## 1.18 Connecting to the Next Chapter
 
