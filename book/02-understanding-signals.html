@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chapter 15: Bits, Symbols and Digital Communication – SDR with GNU Radio</title>
+<title>Chapter 2: Understanding Signals – SDR with GNU Radio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -36,8 +36,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../book/chapter16.html" rel="next">
-<link href="../book/chapter14.html" rel="prev">
+<link href="../book/chapter03.html" rel="next">
+<link href="../book/01-what-is-software-defined-radio.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -284,7 +284,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter15.html"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/02-understanding-signals.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -334,7 +334,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -443,7 +443,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  <a href="../book/chapter15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -541,49 +541,71 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
-  <li><a href="#a-bit-is-information-not-a-voltage" id="toc-a-bit-is-information-not-a-voltage" class="nav-link" data-scroll-target="#a-bit-is-information-not-a-voltage">15.1 A Bit Is Information, Not a Voltage</a></li>
-  <li><a href="#experiment-15.1-bits-as-a-sampled-waveform" id="toc-experiment-15.1-bits-as-a-sampled-waveform" class="nav-link" data-scroll-target="#experiment-15.1-bits-as-a-sampled-waveform">Experiment 15.1: Bits as a Sampled Waveform</a>
+  <li><a href="#a-signal-is-something-that-changes" id="toc-a-signal-is-something-that-changes" class="nav-link active" data-scroll-target="#a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</a></li>
+  <li><a href="#amplitude-how-large-is-the-signal" id="toc-amplitude-how-large-is-the-signal" class="nav-link" data-scroll-target="#amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</a>
   <ul class="collapse">
-  <li><a href="#bit-rate-and-bit-duration" id="toc-bit-rate-and-bit-duration" class="nav-link" data-scroll-target="#bit-rate-and-bit-duration">15.2 Bit Rate and Bit Duration</a></li>
+  <li><a href="#gnu-radio-experiment-comparing-amplitudes" id="toc-gnu-radio-experiment-comparing-amplitudes" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</a></li>
+  <li><a href="#a-small-gnu-radio-detail" id="toc-a-small-gnu-radio-detail" class="nav-link" data-scroll-target="#a-small-gnu-radio-detail">A Small GNU Radio Detail</a></li>
   </ul></li>
-  <li><a href="#experiment-15.2-changing-the-bit-rate" id="toc-experiment-15.2-changing-the-bit-rate" class="nav-link" data-scroll-target="#experiment-15.2-changing-the-bit-rate">Experiment 15.2: Changing the Bit Rate</a>
+  <li><a href="#frequency-how-fast-does-the-signal-repeat" id="toc-frequency-how-fast-does-the-signal-repeat" class="nav-link" data-scroll-target="#frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</a></li>
+  <li><a href="#period-how-long-does-one-cycle-take" id="toc-period-how-long-does-one-cycle-take" class="nav-link" data-scroll-target="#period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</a>
   <ul class="collapse">
-  <li><a href="#try-it-yourself" id="toc-try-it-yourself" class="nav-link" data-scroll-target="#try-it-yourself">Try It Yourself</a></li>
-  <li><a href="#do-we-have-to-handle-bits-one-at-a-time" id="toc-do-we-have-to-handle-bits-one-at-a-time" class="nav-link" data-scroll-target="#do-we-have-to-handle-bits-one-at-a-time">15.3 Do We Have to Handle Bits One at a Time?</a></li>
+  <li><a href="#gnu-radio-experiment-frequency-and-period" id="toc-gnu-radio-experiment-frequency-and-period" class="nav-link" data-scroll-target="#gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</a></li>
+  <li><a href="#gnu-radio-toolbox-number-of-points" id="toc-gnu-radio-toolbox-number-of-points" class="nav-link" data-scroll-target="#gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</a></li>
   </ul></li>
-  <li><a href="#experiment-15.3-from-bits-to-symbols" id="toc-experiment-15.3-from-bits-to-symbols" class="nav-link" data-scroll-target="#experiment-15.3-from-bits-to-symbols">Experiment 15.3: From Bits to Symbols</a>
+  <li><a href="#phase-where-is-the-signal-in-its-cycle" id="toc-phase-where-is-the-signal-in-its-cycle" class="nav-link" data-scroll-target="#phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</a>
   <ul class="collapse">
-  <li><a href="#bits-per-symbol" id="toc-bits-per-symbol" class="nav-link" data-scroll-target="#bits-per-symbol">15.4 Bits per Symbol</a></li>
+  <li><a href="#gnu-radio-experiment-comparing-phase" id="toc-gnu-radio-experiment-comparing-phase" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</a></li>
   </ul></li>
-  <li><a href="#experiment-15.4-bit-rate-vs-symbol-rate" id="toc-experiment-15.4-bit-rate-vs-symbol-rate" class="nav-link" data-scroll-target="#experiment-15.4-bit-rate-vs-symbol-rate">Experiment 15.4: Bit Rate vs Symbol Rate</a>
+  <li><a href="#dc-offset-moving-the-whole-signal-up-or-down" id="toc-dc-offset-moving-the-whole-signal-up-or-down" class="nav-link" data-scroll-target="#dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</a>
   <ul class="collapse">
-  <li><a href="#bits-and-baud-are-not-always-the-same" id="toc-bits-and-baud-are-not-always-the-same" class="nav-link" data-scroll-target="#bits-and-baud-are-not-always-the-same">Bit/s and baud are not always the same</a></li>
-  <li><a href="#what-does-mapping-mean" id="toc-what-does-mapping-mean" class="nav-link" data-scroll-target="#what-does-mapping-mean">15.5 What Does Mapping Mean?</a></li>
+  <li><a href="#gnu-radio-experiment-comparing-offset" id="toc-gnu-radio-experiment-comparing-offset" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</a></li>
   </ul></li>
-  <li><a href="#experiment-15.5-mapping-bits-to-symbol-indices" id="toc-experiment-15.5-mapping-bits-to-symbol-indices" class="nav-link" data-scroll-target="#experiment-15.5-mapping-bits-to-symbol-indices">Experiment 15.5: Mapping Bits to Symbol Indices</a>
+  <li><a href="#waveform-shape" id="toc-waveform-shape" class="nav-link" data-scroll-target="#waveform-shape">2.7 Waveform Shape</a>
   <ul class="collapse">
-  <li><a href="#from-a-teaching-pattern-to-arbitrary-data" id="toc-from-a-teaching-pattern-to-arbitrary-data" class="nav-link" data-scroll-target="#from-a-teaching-pattern-to-arbitrary-data">15.6 From a Teaching Pattern to Arbitrary Data</a></li>
+  <li><a href="#gnu-radio-experiment-comparing-waveforms" id="toc-gnu-radio-experiment-comparing-waveforms" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</a></li>
+  <li><a href="#a-note-about-the-square-wave-settings" id="toc-a-note-about-the-square-wave-settings" class="nav-link" data-scroll-target="#a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</a></li>
   </ul></li>
-  <li><a href="#experiment-15.6-random-bits-to-symbols" id="toc-experiment-15.6-random-bits-to-symbols" class="nav-link" data-scroll-target="#experiment-15.6-random-bits-to-symbols">Experiment 15.6: Random Bits to Symbols</a>
+  <li><a href="#what-happens-when-signals-meet" id="toc-what-happens-when-signals-meet" class="nav-link" data-scroll-target="#what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</a></li>
+  <li><a href="#adding-two-signals" id="toc-adding-two-signals" class="nav-link" data-scroll-target="#adding-two-signals">2.9 Adding Two Signals</a>
   <ul class="collapse">
-  <li><a href="#bits-bytes-and-gnu-radio-stream-items" id="toc-bits-bytes-and-gnu-radio-stream-items" class="nav-link" data-scroll-target="#bits-bytes-and-gnu-radio-stream-items">15.7 Bits, Bytes, and GNU Radio Stream Items</a></li>
-  <li><a href="#a-symbol-is-still-not-a-radio-waveform" id="toc-a-symbol-is-still-not-a-radio-waveform" class="nav-link" data-scroll-target="#a-symbol-is-still-not-a-radio-waveform">15.8 A Symbol Is Still Not a Radio Waveform</a></li>
-  <li><a href="#why-symbols-are-useful" id="toc-why-symbols-are-useful" class="nav-link" data-scroll-target="#why-symbols-are-useful">15.9 Why Symbols Are Useful</a></li>
-  <li><a href="#putting-the-whole-chain-together" id="toc-putting-the-whole-chain-together" class="nav-link" data-scroll-target="#putting-the-whole-chain-together">15.10 Putting the Whole Chain Together</a></li>
-  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">What We Learned</a></li>
-  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">Connecting to the Next Chapter</a></li>
+  <li><a href="#gnu-radio-experiment-the-add-block" id="toc-gnu-radio-experiment-the-add-block" class="nav-link" data-scroll-target="#gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</a></li>
+  <li><a href="#gnu-radio-toolbox-branching-a-stream" id="toc-gnu-radio-toolbox-branching-a-stream" class="nav-link" data-scroll-target="#gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</a></li>
   </ul></li>
+  <li><a href="#phase-changes-the-result-of-addition" id="toc-phase-changes-the-result-of-addition" class="nav-link" data-scroll-target="#phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</a>
+  <ul class="collapse">
+  <li><a href="#case-1-phase-difference-0" id="toc-case-1-phase-difference-0" class="nav-link" data-scroll-target="#case-1-phase-difference-0">Case 1: Phase Difference = 0°</a></li>
+  <li><a href="#case-2-phase-difference-90" id="toc-case-2-phase-difference-90" class="nav-link" data-scroll-target="#case-2-phase-difference-90">Case 2: Phase Difference = 90°</a></li>
+  <li><a href="#case-3-phase-difference-180" id="toc-case-3-phase-difference-180" class="nav-link" data-scroll-target="#case-3-phase-difference-180">Case 3: Phase Difference = 180°</a></li>
+  <li><a href="#the-bigger-lesson" id="toc-the-bigger-lesson" class="nav-link" data-scroll-target="#the-bigger-lesson">The Bigger Lesson</a></li>
+  </ul></li>
+  <li><a href="#beats-when-frequencies-are-almost-the-same" id="toc-beats-when-frequencies-are-almost-the-same" class="nav-link" data-scroll-target="#beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</a>
+  <ul class="collapse">
+  <li><a href="#gnu-radio-experiment-beats" id="toc-gnu-radio-experiment-beats" class="nav-link" data-scroll-target="#gnu-radio-experiment-beats">GNU Radio Experiment: Beats</a></li>
+  <li><a href="#beats-are-a-phase-story" id="toc-beats-are-a-phase-story" class="nav-link" data-scroll-target="#beats-are-a-phase-story">Beats Are a Phase Story</a></li>
+  </ul></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">2.12 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#multiple-time-sink-inputs" id="toc-multiple-time-sink-inputs" class="nav-link" data-scroll-target="#multiple-time-sink-inputs">Multiple Time Sink Inputs</a></li>
+  <li><a href="#number-of-points" id="toc-number-of-points" class="nav-link" data-scroll-target="#number-of-points">Number of Points</a></li>
+  <li><a href="#variables-and-expressions" id="toc-variables-and-expressions" class="nav-link" data-scroll-target="#variables-and-expressions">Variables and Expressions</a></li>
+  <li><a href="#add" id="toc-add" class="nav-link" data-scroll-target="#add">Add</a></li>
+  <li><a href="#branching" id="toc-branching" class="nav-link" data-scroll-target="#branching">Branching</a></li>
+  <li><a href="#reusing-a-flowgraph" id="toc-reusing-a-flowgraph" class="nav-link" data-scroll-target="#reusing-a-flowgraph">Reusing a Flowgraph</a></li>
+  </ul></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">2.13 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">2.14 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">2.15 Connecting to the Next Chapter</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/chapter15.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/02-understanding-signals.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/chapter15.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/chapter15.html"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/02-understanding-signals.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></h1>
+<h1 class="title"><span class="chapter-title">Chapter 2: Understanding Signals</span></h1>
 </div>
 
 
@@ -600,707 +622,576 @@ window.Quarto = {
 </header>
 
 
-<section id="main-question" class="level2">
-<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
-<p><strong>How can zeros and ones eventually become a radio waveform?</strong></p>
-<p>In Chapters 12 through 14, our message signals varied continuously.</p>
-<p>In AM, the message controlled amplitude. In FM, the message controlled instantaneous frequency. Even when we added noise or changed the modulation conditions, the underlying message was still an analog waveform whose value could vary continuously with time.</p>
-<p>Digital communication begins from a different kind of information.</p>
-<p>Instead of asking a transmitter to carry every possible message value directly, we may begin with a sequence such as</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>These zeros and ones are <strong>bits</strong>.</p>
-<p>But there is an immediate problem.</p>
-<p>An antenna cannot radiate an abstract <code>1</code> or <code>0</code>. A radio ultimately has to produce a physical waveform: voltages and currents changing with time, electromagnetic fields propagating through space, and sampled signals inside an SDR.</p>
-<p>So there must be a path from</p>
-<pre class="text"><code>bits
-  |
-  v
-groups of bits
-  |
-  v
-symbols
-  |
-  v
-physical signal states
-  |
-  v
-radio waveform</code></pre>
-<p>This chapter develops the first half of that path.</p>
-<p>We will not yet build BPSK, QPSK, QAM, or even PAM. Those modulation methods deserve their own treatment. For now, our goal is more fundamental: understand what bits and symbols are, how fast they occur, why several bits can be grouped into one symbol, and what <strong>mapping</strong> means before any actual digital modulation takes place.</p>
-<hr>
+<p>In Chapter 1, we generated our first signal in GNU Radio: a simple cosine wave. Even that basic waveform had several properties we had not yet explored properly, including amplitude, frequency, period, phase, offset and waveform shape.</p>
+<p>These ideas appear throughout signal processing and communication systems. Before going deeper into SDR, we need to develop an intuitive feel for what each one means and what changes when we adjust it.</p>
+<p>Rather than starting with definitions alone, we will change one property at a time and observe the result in GNU Radio. Later in the chapter, we will combine signals and see how amplitude, frequency and phase interact.</p>
+<section id="a-signal-is-something-that-changes" class="level2">
+<h2 class="anchored" data-anchor-id="a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</h2>
+<p>A microphone produces an electrical signal that changes as sound reaches it. A temperature sensor may produce a slowly varying voltage. A radio antenna responds to electromagnetic fields that can change extremely quickly.</p>
+<p>In signal processing, a <strong>signal</strong> represents a quantity that varies with time or with some other independent variable. In this book, time will usually be the variable of interest.</p>
+<p>For much of this chapter, we will use a cosine because it is simple, predictable and fundamental to communication systems.</p>
+<p>A cosine signal can be written as <span class="math display">\[
+x(t)=A\cos(2\pi ft+\phi)+C
+\]</span> Each quantity controls something we can observe directly:</p>
+<ul>
+<li><span class="math inline">\(A\)</span> controls the amplitude,</li>
+<li><span class="math inline">\(f\)</span> controls the frequency,</li>
+<li><span class="math inline">\(\phi\)</span> controls the phase,</li>
+<li><span class="math inline">\(C\)</span> controls the DC offset.</li>
+</ul>
+<p>Instead of trying to understand all of them at once, we will change them one at a time.</p>
 </section>
-<section id="a-bit-is-information-not-a-voltage" class="level2">
-<h2 class="anchored" data-anchor-id="a-bit-is-information-not-a-voltage">15.1 A Bit Is Information, Not a Voltage</h2>
-<p>A bit has two possible values:</p>
-<pre class="text"><code>0
-1</code></pre>
-<p>That sounds simple, but it is worth separating the <strong>information</strong> from the <strong>signal used to represent that information</strong>.</p>
-<p>The sequence</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>is information.</p>
-<p>Inside a computer or SDR, those values must be stored and processed using some numerical data type. Later, when the information is transmitted, the bits must influence some physical signal property.</p>
-<p>These are related ideas, but they are not the same thing.</p>
-<p>A beginner can easily fall into the habit of thinking that a bit <code>1</code> literally means one volt and a bit <code>0</code> literally means zero volts. That can be one possible representation, but it is not the definition of a bit. In another system, the same bit may eventually be represented by a phase, a frequency, a complex I/Q point, or something else entirely.</p>
-<p>Before worrying about modulation, let us first make a bit sequence visible in GNU Radio.</p>
-<hr>
-</section>
-<section id="experiment-15.1-bits-as-a-sampled-waveform" class="level1">
-<h1>Experiment 15.1: Bits as a Sampled Waveform</h1>
-<p>We begin with a known sequence rather than random data:</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>Using a known sequence is useful because we can predict exactly what should appear in the Time Sink.</p>
-<p>The flowgraph is shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp1-bit-waveform-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph for representing a known bit sequence as a sampled waveform</figcaption>
-</figure>
-</div>
-<p>The important parameters are:</p>
+<section id="amplitude-how-large-is-the-signal" class="level2">
+<h2 class="anchored" data-anchor-id="amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</h2>
+<p>A useful intuition for amplitude comes from audio. If the electrical signal driving a speaker becomes larger while everything else remains unchanged, the sound will generally become louder. The signal is larger, but it does not play faster simply because its amplitude increased.</p>
+<p>For a cosine centred around zero, <span class="math display">\[
+x(t)=A\cos(2\pi ft)
+\]</span> the value <span class="math inline">\(A\)</span> is the amplitude. It tells us how far the waveform moves away from its centre value.</p>
+<p>If <span class="math display">\[
+A=1
+\]</span> the signal reaches approximately +1 and -1. If <span class="math display">\[
+A=2
+\]</span> it reaches approximately +2 and -2.</p>
+<p>The waveform becomes taller, but its repetition rate does not change.</p>
+<section id="gnu-radio-experiment-comparing-amplitudes" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</h3>
+<p>We will generate three cosine waves with identical frequency, phase and offset, but different amplitudes.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Parameter</th>
-<th style="text-align: right;">Value</th>
+<th>Signal</th>
+<th style="text-align: right;">Frequency</th>
+<th style="text-align: right;">Amplitude</th>
+<th style="text-align: right;">Phase</th>
+<th style="text-align: right;">Offset</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Sample rate</td>
-<td style="text-align: right;"><code>32k</code> samples/s</td>
-</tr>
-<tr class="even">
-<td>Bit rate</td>
-<td style="text-align: right;"><code>1k</code> bit/s</td>
-</tr>
-<tr class="odd">
-<td>Samples per bit</td>
-<td style="text-align: right;"><code>32</code></td>
-</tr>
-<tr class="even">
-<td>Vector Source</td>
-<td style="text-align: right;"><code>[1, 0, 1, 1, 0, 0, 1, 0]</code></td>
-</tr>
-<tr class="odd">
-<td>Repeat</td>
-<td style="text-align: right;">Yes</td>
-</tr>
-<tr class="even">
-<td>Time Sink points</td>
-<td style="text-align: right;"><code>512</code></td>
-</tr>
-</tbody>
-</table>
-<p>The Vector Source produces the known sequence as byte values. We deliberately restrict those byte values to <code>0</code> and <code>1</code> because they represent binary information.</p>
-<p>The <strong>UChar to Float</strong> block changes the numerical data type from unsigned byte values to floating-point values. It does not change the information:</p>
-<pre class="text"><code>byte 0  -&gt;  float 0.0
-byte 1  -&gt;  float 1.0</code></pre>
-<p>The most important new operation is <strong>Repeat</strong>.</p>
-<p>If one bit were represented by only one sample, the sequence would simply be a stream of isolated numerical values. But a transmitted bit occupies a finite interval of time. In our sampled SDR representation, we therefore use several samples to describe the signal during one bit interval.</p>
-<p>We chose</p>
-<p><span class="math display">\[
-f_s = 32000\text{ samples/s}
-\]</span></p>
-<p>and</p>
-<p><span class="math display">\[
-R_b = 1000\text{ bit/s}.
-\]</span></p>
-<p>The number of samples used for each bit is therefore</p>
-<p><span class="math display">\[
-N_{\text{samples/bit}} = \frac{f_s}{R_b} = \frac{32000}{1000} = 32.
-\]</span></p>
-<p>So Repeat holds every bit value for 32 samples.</p>
-<p>Conceptually,</p>
-<pre class="text"><code>Information bits:
-
-1        0        1        1        0
-
-Sampled representation:
-
-111...111 000...000 111...111 111...111 000...000
-&lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt; &lt;-- 32 --&gt;
- samples    samples    samples    samples    samples</code></pre>
-<p>The result is shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp1-bit-waveform.png" class="img-fluid figure-img"></p>
-<figcaption>Known binary sequence represented using 32 samples per bit</figcaption>
-</figure>
-</div>
-<p>The waveform repeats the pattern <code>1 0 1 1 0 0 1 0</code>.</p>
-<p>At a bit rate of 1000 bit/s, one bit lasts</p>
-<p><span class="math display">\[
-T_b = \frac{1}{R_b} = \frac{1}{1000} = 1\text{ ms}.
-\]</span></p>
-<p>That is exactly what we see: each individual bit interval is 1 ms wide.</p>
-<p>The Time Sink displays 512 samples. At 32 kS/s, this corresponds to</p>
-<p><span class="math display">\[
-T_{\text{display}} = \frac{512}{32000} = 16\text{ ms}.
-\]</span></p>
-<p>Since each bit lasts 1 ms, the display contains 16 bit intervals, or two repetitions of our eight-bit pattern.</p>
-<p>This experiment gives us an important distinction that will remain useful throughout digital communication:</p>
-<blockquote class="blockquote">
-<p><strong>A bit is a unit of information. A sample is a numerical description of a waveform at one instant. One bit may be represented by many samples.</strong></p>
-</blockquote>
-<hr>
-<blockquote class="blockquote">
-<h3 id="gnu-radio-toolbox-uchar-to-float" class="anchored">GNU Radio Toolbox: UChar to Float</h3>
-<p><strong>UChar to Float</strong> converts unsigned-character values into floating-point values.</p>
-<p>In this experiment, the input byte values are <code>0</code> and <code>1</code>, so the output becomes <code>0.0</code> and <code>1.0</code>.</p>
-<p>The block does not perform modulation and does not change the information. It only changes the numerical data type so that the values can be treated as a floating-point signal in the following blocks.</p>
-</blockquote>
-<blockquote class="blockquote">
-<h3 id="gnu-radio-toolbox-repeat" class="anchored">GNU Radio Toolbox: Repeat</h3>
-<p>The <strong>Repeat</strong> block repeats every input item a specified number of times.</p>
-<p>Here, its interpolation value is <code>32</code>, so each input bit value appears for 32 output samples.</p>
-<p>This is useful for making each bit occupy a definite time interval in our sampled representation. Later chapters will introduce more realistic pulse shaping. For now, Repeat gives us a simple rectangular representation that makes bit timing easy to see.</p>
-</blockquote>
-<hr>
-<section id="bit-rate-and-bit-duration" class="level2">
-<h2 class="anchored" data-anchor-id="bit-rate-and-bit-duration">15.2 Bit Rate and Bit Duration</h2>
-<p>Experiment 15.1 used a bit rate of 1000 bit/s. That gave every bit a duration of 1 ms.</p>
-<p>What happens if we transmit the same information faster?</p>
-<p>The relationship is simple:</p>
-<p><span class="math display">\[
-T_b = \frac{1}{R_b}.
-\]</span></p>
-<p>A higher bit rate means a shorter bit duration.</p>
-<p>Rather than accepting that only as an equation, we can watch it happen.</p>
-<hr>
-</section>
-</section>
-<section id="experiment-15.2-changing-the-bit-rate" class="level1">
-<h1>Experiment 15.2: Changing the Bit Rate</h1>
-<p>We keep the sample rate fixed at 32 kS/s and use a QT GUI Range to vary the bit rate from 500 to 4000 bit/s.</p>
-<p>The same known binary sequence is used throughout. Only the speed at which the bits are represented changes.</p>
-<p>The important relationship in the flowgraph is</p>
-<p><span class="math display">\[
-N_{\text{samples/bit}} = \frac{f_s}{R_b}.
-\]</span></p>
-<p>At our fixed sample rate, the following values result:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: right;">Bit rate</th>
-<th style="text-align: right;">Bit duration</th>
-<th style="text-align: right;">Samples per bit</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">500 bit/s</td>
-<td style="text-align: right;">2 ms</td>
-<td style="text-align: right;">64</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">1000 bit/s</td>
-<td style="text-align: right;">1 ms</td>
-<td style="text-align: right;">32</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2000 bit/s</td>
-<td style="text-align: right;">0.5 ms</td>
-<td style="text-align: right;">16</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">4000 bit/s</td>
-<td style="text-align: right;">0.25 ms</td>
-<td style="text-align: right;">8</td>
-</tr>
-</tbody>
-</table>
-<p>Before looking at the result, predict what should happen.</p>
-<p>The Time Sink continues to show the same 16 ms interval. If each bit becomes shorter, more bits should fit inside that unchanged window.</p>
-<p>At 500 bit/s, the waveform looks relatively slow and wide.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp2-bit-rate-500.png" class="img-fluid figure-img"></p>
-<figcaption>Binary waveform at 500 bit/s</figcaption>
-</figure>
-</div>
-<p>Each bit lasts 2 ms, so only eight bit intervals fit inside 16 ms.</p>
-<p>Now increase the bit rate to 2000 bit/s.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp2-bit-rate-2000.png" class="img-fluid figure-img"></p>
-<figcaption>Binary waveform at 2000 bit/s</figcaption>
-</figure>
-</div>
-<p>The bits are now much narrower. Each bit lasts only 0.5 ms, so 32 bit intervals fit into the same 16 ms display.</p>
-<p>Nothing about the information alphabet has changed. We still have only zeros and ones, and the source pattern is unchanged. We are simply sending the bits more quickly.</p>
-<p>This is the physical meaning of bit rate:</p>
-<blockquote class="blockquote">
-<p><strong>Bit rate tells us how many information bits pass through the system each second.</strong></p>
-</blockquote>
-<section id="try-it-yourself" class="level3">
-<h3 class="anchored" data-anchor-id="try-it-yourself">Try It Yourself</h3>
-<p>Move the Bit Rate control through <code>500</code>, <code>1000</code>, <code>2000</code>, and <code>4000</code> bit/s.</p>
-<p>Before moving the control, predict both the bit duration and the number of samples per bit.</p>
-<p>Then watch the waveform. At a fixed sample rate, notice that increasing the bit rate means fewer samples are available to represent each bit.</p>
-<hr>
-</section>
-<section id="do-we-have-to-handle-bits-one-at-a-time" class="level2">
-<h2 class="anchored" data-anchor-id="do-we-have-to-handle-bits-one-at-a-time">15.3 Do We Have to Handle Bits One at a Time?</h2>
-<p>So far, every bit has been treated individually:</p>
-<pre class="text"><code>1 | 0 | 1 | 1 | 0 | 0 | 1 | 0</code></pre>
-<p>But there is no rule saying that a transmitter must always work with one bit at a time.</p>
-<p>Suppose we group the bits in pairs:</p>
-<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
-<p>There are four possible two-bit combinations:</p>
-<pre class="text"><code>00
-01
-10
-11</code></pre>
-<p>We can give each combination a label:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Bit group</th>
-<th style="text-align: right;">Symbol index</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>00</code></td>
+<td>Signal 1</td>
+<td style="text-align: right;">1 kHz</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
 <tr class="even">
-<td><code>01</code></td>
+<td>Signal 2</td>
+<td style="text-align: right;">1 kHz</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr class="odd">
-<td><code>10</code></td>
+<td>Signal 3</td>
+<td style="text-align: right;">1 kHz</td>
 <td style="text-align: right;">2</td>
-</tr>
-<tr class="even">
-<td><code>11</code></td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
 </tr>
 </tbody>
 </table>
-<p>Each two-bit group is now treated as one <strong>symbol</strong>.</p>
-<p>This is the first major step from bits toward digital modulation.</p>
-<p>A symbol is not necessarily one bit. A symbol is one choice from a set of allowed possibilities, and that choice may represent one bit, two bits, four bits, or some other number of bits depending on the system.</p>
-<hr>
-</section>
-</section>
-<section id="experiment-15.3-from-bits-to-symbols" class="level1">
-<h1>Experiment 15.3: From Bits to Symbols</h1>
-<p>We reuse the sequence</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>but now group two bits at a time.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp3-bits-to-symbols-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph for grouping bits into two-bit symbols</figcaption>
-</figure>
-</div>
-<p>The new block is <strong>Repack Bits</strong>. It is configured to convert one-bit input items into two-bit output items.</p>
-<p>For our known sequence,</p>
-<pre class="text"><code>Bits:
-1 0 | 1 1 | 0 0 | 1 0
-
-Groups:
- 10 |  11 |  00 |  10
-
-Symbol indices:
-  2 |   3 |   0 |   2</code></pre>
-<p>The resulting symbol indices are shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp3-symbol-indices.png" class="img-fluid figure-img"></p>
-<figcaption>Two-bit groups represented as symbol indices</figcaption>
-</figure>
-</div>
-<p>The sequence is</p>
-<pre class="text"><code>2 -&gt; 3 -&gt; 0 -&gt; 2 -&gt; 2 -&gt; 3 -&gt; 0 -&gt; 2 -&gt; ...</code></pre>
-<p>The adjacent <code>2</code> values at the repetition boundary merge visually into a longer flat section. This is expected: the last group of one source period is <code>10</code>, and the first group of the next period is also <code>10</code>.</p>
-<p>There is an important point here.</p>
-<p>The vertical values <code>0</code>, <code>1</code>, <code>2</code>, and <code>3</code> are <strong>symbol indices</strong>. We are plotting them numerically because it is convenient to inspect them.</p>
-<p>They are not yet transmitted amplitudes.</p>
-<p>In particular,</p>
-<pre class="text"><code>symbol index 3</code></pre>
-<p>does not mean</p>
-<pre class="text"><code>3 volts</code></pre>
-<p>or amplitude <code>3</code>, phase <code>3</code>, or frequency <code>3</code>.</p>
-<p>At this stage, the number is only a label identifying which bit group occurred.</p>
-<hr>
+<p>The sample rate remains <span class="math display">\[
+f_s=32\,000\text{ samples/s}
+\]</span> The important experimental rule is simple:</p>
 <blockquote class="blockquote">
-<h3 id="gnu-radio-toolbox-repack-bits" class="anchored">GNU Radio Toolbox: Repack Bits</h3>
-<p><strong>Repack Bits</strong> changes how bits are grouped into stream items.</p>
-<p>In this experiment, the input contains one useful bit per byte and the output contains two useful bits per byte. Therefore, every two input bits become one output value between <code>0</code> and <code>3</code>.</p>
-<p>With the bit ordering used in our experiment:</p>
-<pre class="text"><code>00 -&gt; 0
-01 -&gt; 1
-10 -&gt; 2
-11 -&gt; 3</code></pre>
-<p>Repack Bits does not yet perform modulation. It reorganizes the digital data so that groups of bits can be treated as symbols.</p>
-<p>Bit ordering matters. If the ordering is changed, the numerical index assigned to a particular bit pattern can change even though the underlying bits are the same.</p>
+<p>Change one property at a time.</p>
 </blockquote>
-<hr>
-<section id="bits-per-symbol" class="level2">
-<h2 class="anchored" data-anchor-id="bits-per-symbol">15.4 Bits per Symbol</h2>
-<p>The previous experiment used two bits per symbol, giving four possible symbols.</p>
-<p>The pattern generalizes naturally.</p>
-<p>If each symbol contains <span class="math inline">\(k\)</span> bits, then the number of possible bit patterns is</p>
-<p><span class="math display">\[
-M = 2^k.
-\]</span></p>
-<p>For example:</p>
+<p>Because frequency, phase and offset remain fixed, any difference between the three waveforms comes from amplitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/amplitude-comparison-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for comparing three signal amplitudes.</figcaption>
+</figure>
+</div>
+<p>The three signals are connected to the same QT GUI Time Sink by setting <strong>Number of Inputs</strong> to <code>3</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/amplitude-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Three 1 kHz cosine signals with different amplitudes.</figcaption>
+</figure>
+</div>
+<p>The peaks and zero crossings occur at the same times, so the three signals are oscillating at the same rate. Only their vertical size changes.</p>
+<p>That vertical size is the amplitude.</p>
+</section>
+<section id="a-small-gnu-radio-detail" class="level3">
+<h3 class="anchored" data-anchor-id="a-small-gnu-radio-detail">A Small GNU Radio Detail</h3>
+<p>GNU Radio may display an amplitude of <code>0.5</code> as</p>
+<pre class="text"><code>500m</code></pre>
+<p>Here, <code>m</code> means <strong>milli</strong>, so <span class="math display">\[
+500m=500\times10^{-3}=0.5
+\]</span> GNU Radio frequently uses engineering prefixes such as <code>m</code>, <code>k</code> and <code>M</code>. We will see them often as the flowgraphs become more complicated.</p>
+</section>
+</section>
+<section id="frequency-how-fast-does-the-signal-repeat" class="level2">
+<h2 class="anchored" data-anchor-id="frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</h2>
+<p>Imagine two blinking lights. One flashes once every second, while the other flashes ten times every second. Both repeat, but one repeats much faster.</p>
+<p><strong>Frequency</strong> tells us how many complete cycles occur per second. Its unit is hertz (Hz).</p>
+<p>A frequency of <span class="math display">\[
+f=1\text{ Hz}
+\]</span> means one cycle per second, while <span class="math display">\[
+f=1000\text{ Hz}
+\]</span> means 1000 cycles per second. We can also write <span class="math display">\[
+1000\text{ Hz}=1\text{ kHz}
+\]</span> A higher frequency therefore means more cycles in the same amount of time.</p>
+</section>
+<section id="period-how-long-does-one-cycle-take" class="level2">
+<h2 class="anchored" data-anchor-id="period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</h2>
+<p>Frequency tells us how many cycles occur in one second. <strong>Period</strong> asks the complementary question: how long does one cycle take?</p>
+<p>The period is represented by <span class="math inline">\(T\)</span>, and frequency and period are related by <span class="math display">\[
+T=\frac{1}{f}
+\]</span> or equivalently <span class="math display">\[
+f=\frac{1}{T}
+\]</span> For a 1 kHz signal, <span class="math display">\[
+T=\frac{1}{1000}=0.001\text{ s}=1\text{ ms}
+\]</span> Each cycle therefore lasts 1 ms.</p>
+<section id="gnu-radio-experiment-frequency-and-period" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</h3>
+<p>We can reuse the same three-signal flowgraph from the amplitude experiment. This time, all amplitudes remain at <code>1</code>, while only the frequencies change.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: right;">Bits per symbol <span class="math inline">\(k\)</span></th>
-<th style="text-align: right;">Possible symbols <span class="math inline">\(M\)</span></th>
+<th>Signal</th>
+<th style="text-align: right;">Frequency</th>
+<th style="text-align: right;">Amplitude</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td>Signal 1</td>
+<td style="text-align: right;">500 Hz</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">4</td>
+<td>Signal 2</td>
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">1</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">8</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">16</td>
+<td>Signal 3</td>
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">1</td>
 </tr>
 </tbody>
 </table>
-<p>Conversely,</p>
-<p><span class="math display">\[
-k = \log_2(M).
-\]</span></p>
-<p>This is why digital communication systems often talk about 2, 4, 8, 16, 64, or 256 possible symbol states. Powers of two allow an integer number of bits to be associated with each symbol.</p>
-<p>But grouping more bits into a symbol raises another question.</p>
-<p>If the bit rate remains fixed, how fast do the symbols themselves occur?</p>
-<hr>
-</section>
-</section>
-<section id="experiment-15.4-bit-rate-vs-symbol-rate" class="level1">
-<h1>Experiment 15.4: Bit Rate vs Symbol Rate</h1>
-<p>We keep the bit rate fixed at</p>
-<p><span class="math display">\[
-R_b = 1000\text{ bit/s}
-\]</span></p>
-<p>and compare three ways of grouping the same binary data:</p>
-<pre class="text"><code>1 bit per symbol
-2 bits per symbol
-4 bits per symbol</code></pre>
-<p>The flowgraph creates three parallel branches from the same source.</p>
+<p>Keep the phase and offset at zero.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch15/ch15-exp4-bit-vs-symbol-rate-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph comparing one, two, and four bits per symbol</figcaption>
+<p><img src="../figures/ch02/frequency-period-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of 500 Hz, 1 kHz, and 2 kHz cosine signals.</figcaption>
 </figure>
 </div>
-<p>The sample rate remains 32 kS/s. Since one bit at 1000 bit/s lasts 1 ms, it occupies 32 samples.</p>
-<p>Therefore:</p>
-<pre class="text"><code>1 bit/symbol  -&gt;  32 samples/symbol
-2 bits/symbol -&gt;  64 samples/symbol
-4 bits/symbol -&gt; 128 samples/symbol</code></pre>
-<p>The three results are displayed over the same 16 ms time window.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp4-bit-vs-symbol-rate.png" class="img-fluid figure-img"></p>
-<figcaption>Comparison of bit rate and symbol rate for different numbers of bits per symbol</figcaption>
-</figure>
-</div>
-<p>The top graph treats each bit as one symbol. The middle graph groups two bits per symbol. The bottom graph groups four bits per symbol.</p>
-<p>At a fixed bit rate, increasing the number of bits carried by each symbol means that fewer symbols are needed every second.</p>
-<p>For one bit per symbol,</p>
-<p><span class="math display">\[
-R_s = 1000\text{ symbols/s}.
-\]</span></p>
-<p>For two bits per symbol,</p>
-<p><span class="math display">\[
-R_s = 500\text{ symbols/s}.
-\]</span></p>
-<p>For four bits per symbol,</p>
-<p><span class="math display">\[
-R_s = 250\text{ symbols/s}.
-\]</span></p>
-<p>The general relationship is</p>
-<p><span class="math display">\[
-R_b = kR_s.
-\]</span></p>
-<p>Since <span class="math inline">\(k = \log_2(M)\)</span>, we can also write</p>
-<p><span class="math display">\[
-R_b = R_s\log_2(M).
-\]</span></p>
-<p>Here:</p>
+<p>Over a 4 ms interval:</p>
 <ul>
-<li><span class="math inline">\(R_b\)</span> is the bit rate in bit/s,</li>
-<li><span class="math inline">\(R_s\)</span> is the symbol rate in symbols/s,</li>
-<li><span class="math inline">\(k\)</span> is the number of bits carried by each symbol,</li>
-<li><span class="math inline">\(M\)</span> is the number of possible symbols.</li>
+<li>the 500 Hz signal completes 2 cycles,</li>
+<li>the 1 kHz signal completes 4 cycles,</li>
+<li>the 2 kHz signal completes 8 cycles.</li>
 </ul>
-<section id="bits-and-baud-are-not-always-the-same" class="level3">
-<h3 class="anchored" data-anchor-id="bits-and-baud-are-not-always-the-same">Bit/s and baud are not always the same</h3>
-<p>The symbol rate is commonly measured in <strong>baud</strong>.</p>
-<p>One baud means one symbol per second.</p>
-<p>This gives an important distinction:</p>
-<pre class="text"><code>1000 bit/s with 1 bit/symbol -&gt; 1000 baud
-1000 bit/s with 2 bits/symbol -&gt;  500 baud
-1000 bit/s with 4 bits/symbol -&gt;  250 baud</code></pre>
-<p>So bit/s and baud are equal only when each symbol carries exactly one bit.</p>
-<p>This is one of the easiest ideas to confuse when first learning digital communication. Bit rate describes the rate of <strong>information bits</strong>. Symbol rate describes the rate at which the transmitter makes <strong>symbol choices</strong>.</p>
-<hr>
+<p>The corresponding periods are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Frequency</th>
+<th style="text-align: right;">Period</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">2 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">1 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">0.5 ms</td>
+</tr>
+</tbody>
+</table>
+<p>When frequency doubles, the period is halved. That inverse relationship is exactly what <span class="math inline">\(T=1/f\)</span> describes.</p>
 </section>
-<section id="what-does-mapping-mean" class="level2">
-<h2 class="anchored" data-anchor-id="what-does-mapping-mean">15.5 What Does Mapping Mean?</h2>
-<p>We have already been using a simple rule:</p>
-<pre class="text"><code>00 -&gt; symbol 0
-01 -&gt; symbol 1
-10 -&gt; symbol 2
-11 -&gt; symbol 3</code></pre>
-<p>That rule is a <strong>mapping</strong>.</p>
-<p>Mapping answers the question:</p>
-<blockquote class="blockquote">
-<p>Which symbol should represent this particular group of bits?</p>
-</blockquote>
-<p>The idea sounds almost trivial with four possibilities, but it becomes extremely important later. In QPSK, QAM, and other modulation schemes, the transmitter must associate groups of bits with particular allowed signal states, and the receiver must reverse that association.</p>
-<p>For now, we keep the mapping abstract. We map bits only to symbol indices, not to amplitudes, phases, frequencies, or I/Q points.</p>
-<hr>
+<section id="gnu-radio-toolbox-number-of-points" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</h3>
+<p>This experiment also gives us a useful reason to look more closely at the QT GUI Time Sink.</p>
+<p>In Chapter 1, we used:</p>
+<pre class="text"><code>Number of Points = 1024
+Sample Rate = 32000</code></pre>
+<p>At a sample rate of 32,000 samples/s, 1024 displayed samples correspond to <span class="math display">\[
+\frac{1024}{32000}=0.032\text{ s}=32\text{ ms}
+\]</span> For the frequency comparison, 32 ms shows many cycles. If we want to examine only a few cycles, a shorter window is more useful.</p>
+<p>With</p>
+<pre class="text"><code>Number of Points = 128</code></pre>
+<p>the displayed duration becomes <span class="math display">\[
+\frac{128}{32000}=0.004\text{ s}=4\text{ ms}
+\]</span> For a streaming Time Sink, the approximate time span represented by <span class="math inline">\(N\)</span> displayed samples is <span class="math display">\[
+T_{\text{display}}=\frac{N}{f_s}
+\]</span> This connection between sample rate, number of displayed samples and visible time will be useful throughout the book.</p>
 </section>
 </section>
-<section id="experiment-15.5-mapping-bits-to-symbol-indices" class="level1">
-<h1>Experiment 15.5: Mapping Bits to Symbol Indices</h1>
-<p>The previous experiments showed either the bit stream or the symbol stream. Now we display them together over the same time interval.</p>
+<section id="phase-where-is-the-signal-in-its-cycle" class="level2">
+<h2 class="anchored" data-anchor-id="phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</h2>
+<p>Two signals can have the same amplitude and frequency and still fail to line up. One may reach its peak earlier than the other even though both complete each cycle in the same amount of time.</p>
+<p>That relative position within a cycle is described by <strong>phase</strong>.</p>
+<p>A useful picture is to imagine two people moving around the same circular track at the same speed. If they start side by side, they remain together. If one starts a quarter of a lap ahead, their speed is unchanged, but their positions around the track differ.</p>
+<p>A complete cycle corresponds to <span class="math display">\[
+360^\circ=2\pi\text{ radians}
+\]</span> Some common phase values are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Degrees</th>
+<th style="text-align: right;">Radians</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0°</td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">90°</td>
+<td style="text-align: right;"><span class="math inline">\(\pi/2\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">180°</td>
+<td style="text-align: right;"><span class="math inline">\(\pi\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">270°</td>
+<td style="text-align: right;"><span class="math inline">\(3\pi/2\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">360°</td>
+<td style="text-align: right;"><span class="math inline">\(2\pi\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>GNU Radio’s Signal Source specifies <strong>Initial Phase</strong> in radians.</p>
+<p>Phase is most useful when a reference exists. Saying that one signal is 90° ahead of another tells us how the two cycles are positioned relative to each other.</p>
+<section id="gnu-radio-experiment-comparing-phase" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</h3>
+<p>Keep the following parameters fixed:</p>
+<pre class="text"><code>Frequency = 1 kHz
+Amplitude = 1
+Offset = 0</code></pre>
+<p>Use three initial phases:</p>
+<pre class="text"><code>Signal 1: 0
+Signal 2: pi/2
+Signal 3: pi</code></pre>
+<p>To make <code>pi</code> available in the flowgraph, add a Variable block:</p>
+<pre class="text"><code>ID: pi
+Value: 3.14159</code></pre>
+<p>GNU Radio can then evaluate expressions such as <code>pi/2</code> directly in block properties. This is often clearer than entering a decimal approximation everywhere.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch15/ch15-exp5-bit-to-symbol-mapping-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph for comparing original bits with mapped symbol indices</figcaption>
+<p><img src="../figures/ch02/phase-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Three equal-frequency signals with different initial phases.</figcaption>
 </figure>
 </div>
-<p>The top branch displays the original binary data. The lower branch groups the same bits in pairs using Repack Bits and displays the resulting symbol indices.</p>
-<p>We use 256 display points at 32 kS/s, giving an 8 ms window. At 1000 bit/s, that window contains exactly eight bit intervals.</p>
-<p>The result is especially useful because the two displays can be read together.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch15/ch15-exp5-bit-to-symbol-mapping.png" class="img-fluid figure-img"></p>
-<figcaption>Original binary data and the corresponding two-bit symbol indices</figcaption>
-</figure>
-</div>
-<p>Over the 8 ms interval,</p>
-<pre class="text"><code>Time:       0        2        4        6        8 ms
-
-Bits:       1 0  |   1 1  |   0 0  |   1 0
-             |         |         |         |
-             v         v         v         v
-Symbols:     2    |    3    |    0    |    2</code></pre>
-<p>Each bit lasts 1 ms, while each two-bit symbol lasts 2 ms.</p>
-<p>The mapping can therefore be read directly from the experiment:</p>
-<pre class="text"><code>10 -&gt; 2
-11 -&gt; 3
-00 -&gt; 0
-10 -&gt; 2</code></pre>
-<p>Again, the values on the symbol graph are labels. We have not yet decided what physical signal state symbol <code>2</code> or symbol <code>3</code> will produce.</p>
-<p>That distinction is deliberate. It keeps two separate operations clear:</p>
-<pre class="text"><code>bit grouping and symbol mapping
-              |
-              v
-        symbol index
-              |
-              v
-physical signal mapping comes later</code></pre>
-<hr>
-<section id="from-a-teaching-pattern-to-arbitrary-data" class="level2">
-<h2 class="anchored" data-anchor-id="from-a-teaching-pattern-to-arbitrary-data">15.6 From a Teaching Pattern to Arbitrary Data</h2>
-<p>Known patterns are excellent for learning because we can predict every result. Real communication systems, however, do not normally transmit the same eight bits forever.</p>
-<p>The information may come from audio, images, sensor measurements, network packets, files, control messages, or many other sources. From the modulator’s point of view, the incoming binary data can appear arbitrary.</p>
-<p>So our final experiment replaces the controlled Vector Source with a Random Source.</p>
-<hr>
+<p>At <span class="math inline">\(t=0\)</span>, the 0° cosine starts at +1, the 90° cosine starts at 0, and the 180° cosine starts at -1.</p>
+<p>Their amplitudes and frequencies are identical. What changes is their position within the cycle.</p>
 </section>
 </section>
-<section id="experiment-15.6-random-bits-to-symbols" class="level1">
-<h1>Experiment 15.6: Random Bits to Symbols</h1>
-<p>The Random Source is configured to generate binary values only:</p>
-<pre class="text"><code>Minimum: 0
-Maximum: 2</code></pre>
-<p>With the GNU Radio Random Source used here, this produces values <code>0</code> and <code>1</code>.</p>
-<p>The upper branch displays the random binary data. The second branch performs exactly the same two-bit grouping used earlier and displays symbol indices from <code>0</code> to <code>3</code>.</p>
+<section id="dc-offset-moving-the-whole-signal-up-or-down" class="level2">
+<h2 class="anchored" data-anchor-id="dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</h2>
+<p>Until now, our cosine waves have been centred around zero. A cosine with amplitude 1 therefore moves between -1 and +1.</p>
+<p>If we add 1 to every value, <span class="math display">\[
+x(t)=\cos(2\pi ft)+1
+\]</span> the waveform now moves between 0 and 2.</p>
+<p>Its shape and frequency have not changed, and its amplitude about its centre is still 1. The entire waveform has simply moved upward.</p>
+<p>That shift in the centre value is called a <strong>DC offset</strong>.</p>
+<section id="gnu-radio-experiment-comparing-offset" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</h3>
+<p>Reuse the same three-signal structure and keep:</p>
+<pre class="text"><code>Frequency = 1 kHz
+Amplitude = 1
+Phase = 0</code></pre>
+<p>Change only the offsets:</p>
+<pre class="text"><code>Signal 1: Offset = 0
+Signal 2: Offset = +1
+Signal 3: Offset = -1</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch15/ch15-exp6-random-bits-to-symbols.png" class="img-fluid figure-img"></p>
-<figcaption>Random binary data and the resulting two-bit symbol indices</figcaption>
+<p><img src="../figures/ch02/dc-offset-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Cosine signals with different DC offsets.</figcaption>
 </figure>
 </div>
-<p>Unlike our repeating Vector Source, the random data continually changes, so the Time Sink display also continually updates. That is expected. The exact pattern is no longer the important part.</p>
-<p>What matters is that the processing rule has not changed:</p>
-<pre class="text"><code>random binary data
-        |
-        v
-group two bits
-        |
-        v
-00, 01, 10, or 11
-        |
-        v
-symbol index 0, 1, 2, or 3</code></pre>
-<p>There is also a practical visualization detail worth remembering. Two separate QT GUI Time Sinks may capture different positions in a continuously running random stream, so a static screenshot is not the best place to verify every visible bit pair against every visible symbol. Experiment 15.5 already gave us that controlled, sample-by-sample comparison.</p>
-<p>The purpose of this experiment is different: it shows that the same grouping process works for an ongoing stream of arbitrary binary data.</p>
-<hr>
-<blockquote class="blockquote">
-<h3 id="gnu-radio-toolbox-random-source" class="anchored">GNU Radio Toolbox: Random Source</h3>
-<p>The <strong>Random Source</strong> generates pseudo-random numerical values.</p>
-<p>In this chapter, we configure it so that the generated values are only <code>0</code> and <code>1</code>, giving us a convenient test source for binary data.</p>
-<p>A Random Source is useful when we no longer need a hand-picked pattern and want to exercise a digital processing chain with changing data.</p>
-</blockquote>
-<hr>
-<section id="bits-bytes-and-gnu-radio-stream-items" class="level2">
-<h2 class="anchored" data-anchor-id="bits-bytes-and-gnu-radio-stream-items">15.7 Bits, Bytes, and GNU Radio Stream Items</h2>
-<p>Our experiments reveal a subtle distinction that becomes increasingly important as GNU Radio flowgraphs become more digital.</p>
-<p>When we say that a stream contains bits, we are describing the <strong>information</strong> carried by the stream.</p>
-<p>But GNU Radio still has to store each stream item using a data type.</p>
-<p>For example, our Vector Source and Random Source used byte-sized items whose numerical values happened to be only <code>0</code> and <code>1</code>.</p>
-<p>So conceptually we had</p>
-<pre class="text"><code>information:
-1 0 1 1 0 0 1 0</code></pre>
-<p>while GNU Radio carried those values inside byte stream items.</p>
-<p>After Repack Bits changed the grouping to two bits per item, the possible numerical values became</p>
-<pre class="text"><code>0, 1, 2, 3</code></pre>
-<p>but the stream items were still byte-sized containers.</p>
-<p>This is why it is useful to keep three questions separate:</p>
+<p>The first waveform is centred at 0, the second at +1 and the third at -1.</p>
+<p>The +1-offset signal reaches a maximum value of +2, but its amplitude is <strong>not 2</strong>. It moves one unit above and below its centre value of +1, so its amplitude remains 1.</p>
+<p>This distinction between amplitude and absolute signal level will matter later when we work with more complicated signals.</p>
+</section>
+</section>
+<section id="waveform-shape" class="level2">
+<h2 class="anchored" data-anchor-id="waveform-shape">2.7 Waveform Shape</h2>
+<p>Frequency tells us how often a periodic signal repeats, but it does not tell us what happens during one cycle.</p>
+<p>A cosine, square wave and triangle wave can all repeat 1000 times per second while having very different shapes.</p>
+<section id="gnu-radio-experiment-comparing-waveforms" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</h3>
+<p>Generate three 1 kHz periodic signals:</p>
+<ul>
+<li>cosine,</li>
+<li>square,</li>
+<li>triangle.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/waveform-shape-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of cosine, square, and triangle waveforms.</figcaption>
+</figure>
+</div>
+<p>The cosine changes smoothly. The square wave switches abruptly between two levels. The triangle wave changes linearly between its minimum and maximum.</p>
+<p>We do not need a separate sine example here. Sine and cosine have the same basic waveform shape and differ by a phase shift, which we have already explored.</p>
+</section>
+<section id="a-note-about-the-square-wave-settings" class="level3">
+<h3 class="anchored" data-anchor-id="a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</h3>
+<p>For this comparison, we want the real-valued square wave to switch between approximately -1 and +1.</p>
+<p>With GNU Radio’s Signal Source, a real square wave uses <code>Offset</code> for one level and <code>Amplitude + Offset</code> for the other. Therefore we use:</p>
+<pre class="text"><code>Amplitude = 2
+Offset = -1</code></pre>
+<p>which gives levels of approximately -1 and +1.</p>
+<p>This is a GNU Radio block-parameter detail worth noticing. For a cosine, the Amplitude field directly corresponds to the centre-to-peak amplitude. For this square-wave implementation, the same field controls the separation between the two output levels together with Offset.</p>
+<p>All three waveforms repeat at 1 kHz, yet their shapes are different. The reason becomes much clearer when we later examine signals in the <strong>frequency domain</strong>. For now, the important observation is that repetition frequency alone does not completely describe a waveform.</p>
+</section>
+</section>
+<section id="what-happens-when-signals-meet" class="level2">
+<h2 class="anchored" data-anchor-id="what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</h2>
+<p>So far, we have mainly studied signals one at a time. Real radio systems rarely have that luxury.</p>
+<p>An antenna may receive signals from several transmitters. Noise is added to useful signals. Reflections create delayed copies. Interference can arrive at the same receiver together with the signal we want.</p>
+<p>To understand these situations, we need to see what happens when signals are combined.</p>
+</section>
+<section id="adding-two-signals" class="level2">
+<h2 class="anchored" data-anchor-id="adding-two-signals">2.9 Adding Two Signals</h2>
+<p>Suppose we have two signals, <span class="math inline">\(x_1(t)\)</span> and <span class="math inline">\(x_2(t)\)</span>. Their sum is <span class="math display">\[
+y(t)=x_1(t)+x_2(t)
+\]</span> At each instant, the two signal values are added. If <span class="math inline">\(x_1=1\)</span> and <span class="math inline">\(x_2=0.5\)</span>, then <span class="math inline">\(y=1.5\)</span>. If <span class="math inline">\(x_1=-1\)</span> while <span class="math inline">\(x_2=0.5\)</span>, then <span class="math inline">\(y=-0.5\)</span>.</p>
+<p>GNU Radio lets us observe this directly.</p>
+<section id="gnu-radio-experiment-the-add-block" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</h3>
+<p>Generate two cosine signals:</p>
+<pre class="text"><code>Signal 1
+Frequency = 1 kHz
+Amplitude = 1
+Signal 2
+Frequency = 2 kHz
+Amplitude = 0.5</code></pre>
+<p>Then add an <strong>Add</strong> block.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/signal-addition-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph showing two signals being added.</figcaption>
+</figure>
+</div>
+<p>The Add block performs sample-by-sample addition: <span class="math display">\[
+y[n]=x_1[n]+x_2[n]
+\]</span> Each original signal is also branched to the QT GUI Time Sink so that the two inputs and their sum can be compared directly.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/signal-addition.png" class="img-fluid figure-img"></p>
+<figcaption>Two cosine signals and their sum.</figcaption>
+</figure>
+</div>
+<p>The sum no longer looks like either original cosine. A more complicated waveform has appeared simply because two simple signals were added together.</p>
+<p>This is a basic operation, but it is central to what happens in real receivers. Desired signals, interference, noise and multipath components can all combine at the receiver input.</p>
+</section>
+<section id="gnu-radio-toolbox-branching-a-stream" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</h3>
+<p>The flowgraph also introduces a useful GNU Radio behaviour. The output of each Throttle block is connected to two destinations: one path goes directly to the Time Sink, while the other goes to the Add block.</p>
+<p>No special splitter block is required. A stream can feed multiple downstream blocks directly.</p>
+<p>Branching does <strong>not</strong> divide the numerical amplitude of the stream. Each downstream block receives the same sample values.</p>
+</section>
+</section>
+<section id="phase-changes-the-result-of-addition" class="level2">
+<h2 class="anchored" data-anchor-id="phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</h2>
+<p>We can now connect two ideas from earlier in the chapter: <strong>phase</strong> and <strong>addition</strong>.</p>
+<p>Consider two cosine signals with the same frequency and the same amplitude. If their relative phase changes, their sum changes too.</p>
+<p>Use two 1 kHz cosine signals, each with amplitude 1. Keep the first signal at</p>
+<pre class="text"><code>Phase = 0</code></pre>
+<p>and run the experiment three times while changing only the initial phase of the second signal.</p>
+<section id="case-1-phase-difference-0" class="level3">
+<h3 class="anchored" data-anchor-id="case-1-phase-difference-0">Case 1: Phase Difference = 0°</h3>
+<p>The two signals are aligned. When one reaches +1, the other also reaches +1, and when one reaches -1, the other reaches -1.</p>
+<p>Their sum therefore reaches approximately +2 and -2.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-addition-0deg.png" class="img-fluid figure-img"></p>
+<figcaption>Addition of two equal signals with 0 degree phase difference.</figcaption>
+</figure>
+</div>
+<p>The two signals reinforce each other completely. This is <strong>constructive interference</strong>.</p>
+</section>
+<section id="case-2-phase-difference-90" class="level3">
+<h3 class="anchored" data-anchor-id="case-2-phase-difference-90">Case 2: Phase Difference = 90°</h3>
+<p>Now shift the second signal by <span class="math display">\[
+90^\circ=\frac{\pi}{2}
+\]</span> The signals still have the same amplitude and frequency, but their peaks no longer occur at the same time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/phase-addition-90deg.png" class="img-fluid figure-img"></p>
+<figcaption>Addition of two signals with a 90 degree phase difference.</figcaption>
+</figure>
+</div>
+<p>The sum is still a sinusoid at the same frequency. Its amplitude is approximately <span class="math display">\[
+\sqrt{2}\approx1.414
+\]</span> and its phase lies between the phases of the two original signals.</p>
+<p>The signals still reinforce each other, but less strongly than in the 0° case.</p>
+</section>
+<section id="case-3-phase-difference-180" class="level3">
+<h3 class="anchored" data-anchor-id="case-3-phase-difference-180">Case 3: Phase Difference = 180°</h3>
+<p>Finally, shift the second signal by <span class="math display">\[
+180^\circ=\pi
+\]</span> Now the second cosine is the negative of the first: <span class="math display">\[
+x_2(t)=-x_1(t)
+\]</span> so <span class="math display">\[
+x_1(t)+x_2(t)=0
+\]</span> <img src="../figures/ch02/phase-addition-180deg.png" class="img-fluid" alt="Addition of two signals with a 180 degree phase difference."></p>
+<p>The sum becomes a line at zero. The two input signals have not disappeared individually; their instantaneous values simply cancel in the sum.</p>
+<p>This is <strong>destructive interference</strong>, and in this ideal equal-amplitude case the cancellation is complete.</p>
+</section>
+<section id="the-bigger-lesson" class="level3">
+<h3 class="anchored" data-anchor-id="the-bigger-lesson">The Bigger Lesson</h3>
+<p>For two equal-amplitude sinusoids of the same frequency, the amplitude of their sum depends on the phase difference <span class="math inline">\(\Delta\phi\)</span>.</p>
+<p>For individual amplitude <span class="math inline">\(A\)</span>, <span class="math display">\[
+A_{\text{sum}}=2A\left|\cos\left(\frac{\Delta\phi}{2}\right)\right|
+\]</span> There is no need to memorise this expression yet. The experiment already shows the important behaviour:</p>
+<ul>
+<li>0° gives maximum reinforcement,</li>
+<li>90° gives partial reinforcement,</li>
+<li>180° gives complete cancellation.</li>
+</ul>
+<p>Relative phase matters whenever signals of the same frequency combine.</p>
+</section>
+</section>
+<section id="beats-when-frequencies-are-almost-the-same" class="level2">
+<h2 class="anchored" data-anchor-id="beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</h2>
+<p>Now consider two signals whose frequencies are close, but not identical: <span class="math display">\[
+f_1=1000\text{ Hz}
+\]</span> and <span class="math display">\[
+f_2=1050\text{ Hz}
+\]</span> The 1050 Hz signal completes its cycles slightly faster. Even if the two signals begin aligned, they cannot stay aligned because their relative phase changes continuously.</p>
+<p>At some times they reinforce each other strongly. Later they move towards opposite phase and nearly cancel. Eventually they align again.</p>
+<p>This repeated reinforcement and cancellation produces <strong>beats</strong>.</p>
+<section id="gnu-radio-experiment-beats" class="level3">
+<h3 class="anchored" data-anchor-id="gnu-radio-experiment-beats">GNU Radio Experiment: Beats</h3>
+<p>Reuse the addition flowgraph with:</p>
+<pre class="text"><code>Signal 1
+Frequency = 1000 Hz
+Amplitude = 1
+Signal 2
+Frequency = 1050 Hz
+Amplitude = 1</code></pre>
+<p>To make the slow amplitude variation visible, increase the Time Sink window to about 40 ms.</p>
+<p>With <span class="math display">\[
+f_s=32000\text{ samples/s}
+\]</span> a 40 ms window requires <span class="math display">\[
+N=32000\times0.04=1280
+\]</span> samples, so set</p>
+<pre class="text"><code>Number of Points = 1280</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch02/beats.png" class="img-fluid figure-img"></p>
+<figcaption>Beat pattern produced by adding 1000 Hz and 1050 Hz signals.</figcaption>
+</figure>
+</div>
+<p>The summed waveform grows in amplitude, becomes very small, grows again and continues repeating.</p>
+<p>Around 0 ms, the two signals are approximately aligned and reinforce strongly. Around 10 ms, they are approximately 180° apart and nearly cancel. Around 20 ms, they align again.</p>
+<p>The frequency difference is <span class="math display">\[
+\Delta f=|1050-1000|=50\text{ Hz}
+\]</span> For two nearby sinusoids, the beat rate is the magnitude of this difference: <span class="math display">\[
+f_{\text{beat}}=|f_2-f_1|=50\text{ Hz}
+\]</span> so the beat pattern repeats every <span class="math display">\[
+T_{\text{beat}}=\frac{1}{50}=20\text{ ms}
+\]</span> which matches the spacing between successive strong-reinforcement regions in the plot.</p>
+</section>
+<section id="beats-are-a-phase-story" class="level3">
+<h3 class="anchored" data-anchor-id="beats-are-a-phase-story">Beats Are a Phase Story</h3>
+<p>Beats are not a separate mystery. They follow directly from the phase-addition behaviour we just observed.</p>
+<p>With equal frequencies, the relative phase stays fixed. With slightly different frequencies, the relative phase changes steadily with time. The signals therefore move repeatedly through constructive and destructive combinations.</p>
+<p>The chain of ideas is:</p>
+<p><strong>frequency difference → changing relative phase → changing reinforcement and cancellation</strong></p>
+<p>That physical connection is more useful than memorising the beat-frequency formula by itself.</p>
+</section>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">2.12 GNU Radio Toolbox</h2>
+<p>This chapter introduced several useful GNU Radio concepts.</p>
+<section id="multiple-time-sink-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-time-sink-inputs">Multiple Time Sink Inputs</h3>
+<p>A QT GUI Time Sink can display several streams at once by increasing <strong>Number of Inputs</strong>. This lets us compare signals on the same time axis.</p>
+</section>
+<section id="number-of-points" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-points">Number of Points</h3>
+<p>For a streaming Time Sink, the approximate displayed duration is <span class="math display">\[
+T_{\text{display}}=\frac{N}{f_s}
+\]</span> where <span class="math inline">\(N\)</span> is the Number of Points and <span class="math inline">\(f_s\)</span> is the sample rate.</p>
+</section>
+<section id="variables-and-expressions" class="level3">
+<h3 class="anchored" data-anchor-id="variables-and-expressions">Variables and Expressions</h3>
+<p>We continued using</p>
+<pre class="text"><code>samp_rate</code></pre>
+<p>and introduced</p>
+<pre class="text"><code>pi</code></pre>
+<p>as another variable. GNU Radio block properties can also evaluate expressions such as</p>
+<pre class="text"><code>pi/2</code></pre>
+<p>which makes parameter relationships easier to read and modify.</p>
+</section>
+<section id="add" class="level3">
+<h3 class="anchored" data-anchor-id="add">Add</h3>
+<p>The <strong>Add</strong> block accepts multiple compatible input streams and produces their sample-by-sample sum.</p>
+</section>
+<section id="branching" class="level3">
+<h3 class="anchored" data-anchor-id="branching">Branching</h3>
+<p>One output stream can feed more than one downstream block. We used this to send the same signal both to the Add block and directly to the Time Sink.</p>
+</section>
+<section id="reusing-a-flowgraph" class="level3">
+<h3 class="anchored" data-anchor-id="reusing-a-flowgraph">Reusing a Flowgraph</h3>
+<p>Several experiments used the same basic flowgraph while changing only one parameter. This is often the clearest way to investigate a signal property because everything else remains fixed.</p>
+</section>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">2.13 Explore Further</h2>
+<p>Before moving on, we can use the same flowgraphs to test a few predictions.</p>
 <ol type="1">
-<li>How many information bits are represented?</li>
-<li>How are those bits grouped into symbols?</li>
-<li>What GNU Radio data type is carrying the numerical values?</li>
+<li><p>Change the amplitude comparison from <code>0.5, 1, 2</code> to <code>1, 2, 3</code>. Which features of the waveforms change, and which stay fixed?</p></li>
+<li><p>Change the frequency comparison to <code>250 Hz, 500 Hz, 1 kHz</code>. Before running it, predict how many cycles of each signal will appear in the same time window.</p></li>
+<li><p>Try a phase difference of 45°: <span class="math display">\[
+45^\circ=\frac{\pi}{4}
+\]</span> Before running the flowgraph, predict whether the resulting amplitude should be closer to 2, closer to 0, or somewhere in between.</p></li>
+<li><p>Change the beat experiment from</p></li>
 </ol>
-<p>They are not the same question.</p>
-<hr>
-</section>
-<section id="a-symbol-is-still-not-a-radio-waveform" class="level2">
-<h2 class="anchored" data-anchor-id="a-symbol-is-still-not-a-radio-waveform">15.8 A Symbol Is Still Not a Radio Waveform</h2>
-<p>At this point, we have come a long way from our original bit stream.</p>
-<p>We can take</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>group it as</p>
-<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
-<p>and label the groups as</p>
-<pre class="text"><code>2 | 3 | 0 | 2</code></pre>
-<p>But we still have not transmitted anything.</p>
-<p>The symbol indices are still abstract numerical labels inside the transmitter.</p>
-<p>Eventually, the transmitter needs to associate each allowed symbol with a distinguishable <strong>physical signal state</strong>.</p>
-<p>This is where the analog ideas from the previous chapters become useful again.</p>
-<p>A sinusoidal carrier has properties we already know how to manipulate:</p>
-<pre class="text"><code>                         Carrier
-                            |
-             +--------------+--------------+
-             |              |              |
-             v              v              v
-         Amplitude       Frequency        Phase</code></pre>
-<p>Digital communication can choose among discrete values of these properties.</p>
-<p>For example, a system might distinguish symbols using different amplitudes, different frequencies, different phases, or combinations of signal dimensions.</p>
-<p>This leads to familiar modulation families such as ASK, FSK, PSK, and QAM. Later chapters will develop the important schemes experimentally.</p>
-<p>The key conceptual change from analog modulation is this:</p>
-<blockquote class="blockquote">
-<p>In analog modulation, a signal property can follow a continuously varying message. In digital modulation, the transmitter chooses from a discrete set of allowed signal states according to the current symbol.</p>
-</blockquote>
-<p>That is the bridge from the analog communication chapters to the digital communication chapters.</p>
-<hr>
-</section>
-<section id="why-symbols-are-useful" class="level2">
-<h2 class="anchored" data-anchor-id="why-symbols-are-useful">15.9 Why Symbols Are Useful</h2>
-<p>It may seem simpler to transmit one bit at a time forever. Why bother grouping bits into symbols?</p>
-<p>One reason is that a larger set of distinguishable signal states can allow each transmitted symbol to carry more information.</p>
-<p>If there are only two possible symbols, each symbol can identify one of two possibilities and therefore carry one bit.</p>
-<p>If there are four possible symbols, one symbol can identify one of four possibilities and therefore carry two bits.</p>
-<p>If there are sixteen possible symbols, one symbol can identify one of sixteen possibilities and therefore carry four bits.</p>
-<p>This does not mean that increasing the number of symbols is free. As the allowed states become more numerous, the receiver generally has to distinguish between more possibilities, and noise or distortion can make that harder.</p>
-<p>We will see that tradeoff much more clearly when the symbols become actual amplitude levels and constellation points.</p>
-<p>For now, the important idea is simply:</p>
-<blockquote class="blockquote">
-<p><strong>A symbol is a transmitted choice, and one symbol can represent several bits of information.</strong></p>
-</blockquote>
-<hr>
-</section>
-<section id="putting-the-whole-chain-together" class="level2">
-<h2 class="anchored" data-anchor-id="putting-the-whole-chain-together">15.10 Putting the Whole Chain Together</h2>
-<p>We can now describe the transmitter-side logic without referring to any particular digital modulation scheme.</p>
-<p>Suppose the incoming information is</p>
-<pre class="text"><code>1 0 1 1 0 0 1 0</code></pre>
-<p>Choose two bits per symbol:</p>
-<pre class="text"><code>10 | 11 | 00 | 10</code></pre>
-<p>Map those groups to symbol indices:</p>
-<pre class="text"><code> 2 |  3 |  0 |  2</code></pre>
-<p>The remaining step is still unanswered:</p>
-<pre class="text"><code>Bits
-  |
-  v
-Bit groups
-  |
-  v
-Symbol indices
-  |
-  v
-??? physical signal states ???
-  |
-  v
-Waveform</code></pre>
-<p>That question mark is exactly where the next part of digital modulation begins.</p>
-<hr>
+<pre class="text"><code>1000 Hz + 1050 Hz</code></pre>
+<p>to</p>
+<pre class="text"><code>1000 Hz + 1010 Hz</code></pre>
+<p>Predict whether the beat pattern will become faster or slower.</p>
+<ol start="5" type="1">
+<li>Then try</li>
+</ol>
+<pre class="text"><code>1000 Hz + 1100 Hz</code></pre>
+<p>and compare the result.</p>
+<p>The useful habit is the same one we established in Chapter 1: change one thing, predict the effect, run the experiment and compare the observation with the prediction.</p>
 </section>
 <section id="what-we-learned" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-learned">What We Learned</h2>
-<p>In this chapter, we made the transition from continuously varying analog messages to discrete digital information.</p>
-<p>The most important ideas are:</p>
+<h2 class="anchored" data-anchor-id="what-we-learned">2.14 What We Learned</h2>
+<p>By changing one property at a time, we found that:</p>
 <ul>
-<li>A <strong>bit</strong> is a unit of binary information with two possible values, <code>0</code> and <code>1</code>.</li>
-<li>A bit is not the same thing as a sample, voltage, byte, or waveform level.</li>
-<li>The <strong>bit rate</strong> <span class="math inline">\(R_b\)</span> tells us how many information bits are carried per second.</li>
-<li>The bit duration is</li>
+<li><strong>amplitude</strong> controls how far a waveform moves from its centre value,</li>
+<li><strong>frequency</strong> tells us how many cycles occur per second,</li>
+<li><strong>period</strong> tells us how long one cycle takes,</li>
+<li><strong>phase</strong> describes position within a cycle relative to a reference,</li>
+<li><strong>DC offset</strong> moves the centre value of a waveform,</li>
+<li><strong>waveform shape</strong> describes how the signal changes during each cycle.</li>
 </ul>
-<p><span class="math display">\[
-T_b = \frac{1}{R_b}.
-\]</span></p>
-<ul>
-<li>In an SDR, one bit may be represented by many waveform samples.</li>
-<li>Several bits can be grouped and treated as one <strong>symbol</strong>.</li>
-<li>If a symbol contains <span class="math inline">\(k\)</span> bits, the number of possible symbols is</li>
-</ul>
-<p><span class="math display">\[
-M = 2^k.
-\]</span></p>
-<ul>
-<li>The relationship between bit rate and symbol rate is</li>
-</ul>
-<p><span class="math display">\[
-R_b = kR_s = R_s\log_2(M).
-\]</span></p>
-<ul>
-<li>Symbol rate is measured in <strong>baud</strong>. Baud and bit/s are equal only when there is one bit per symbol.</li>
-<li><strong>Mapping</strong> defines which symbol corresponds to each possible group of bits.</li>
-<li>A symbol index such as <code>0</code>, <code>1</code>, <code>2</code>, or <code>3</code> is only a label until we associate it with a physical signal state.</li>
-<li>GNU Radio’s byte stream items, information bits, symbol indices, and waveform samples are related but distinct concepts.</li>
-<li>The same bit-to-symbol process works for known teaching sequences and for continuously changing binary data.</li>
-</ul>
-<p>The central mental model to carry forward is:</p>
-<pre class="text"><code>bits -&gt; bit groups -&gt; symbols -&gt; physical signal states -&gt; waveform</code></pre>
-<p>In this chapter, we reached the symbols.</p>
-<hr>
+<p>We then allowed signals to interact. The experiments showed that signals add sample by sample, relative phase determines how equal-frequency sinusoids reinforce or cancel, and a small frequency difference makes the relative phase change continuously, producing beats.</p>
+<p>These ideas are simple in isolation, but they will reappear throughout the rest of the book.</p>
 </section>
 <section id="connecting-to-the-next-chapter" class="level2">
-<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">Connecting to the Next Chapter</h2>
-<p>We now know how to take binary information, group the bits, and produce symbol indices.</p>
-<p>But the radio still needs something physical to transmit.</p>
-<p>The simplest possibility is to let different symbols correspond to different signal amplitudes.</p>
-<p>For example, instead of treating <code>0</code> and <code>1</code> only as abstract labels, we could assign them two actual signal levels. With more symbols, we could choose from four or more allowed levels.</p>
-<p>That leads directly to <strong>Pulse Amplitude Modulation (PAM)</strong>.</p>
-<p>In the next chapter, we will turn our abstract symbols into amplitude levels, add noise, and discover a new receiver problem:</p>
-<blockquote class="blockquote">
-<p><strong>If the received value does not land exactly on an ideal symbol level, how does the receiver decide which symbol was transmitted?</strong></p>
-</blockquote>
-<p>That question will introduce symbol decisions, decision thresholds, and the first real digital modulation scheme in our progression.</p>
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">2.15 Connecting to the Next Chapter</h2>
+<p>So far, the signals in our GNU Radio experiments have already existed as digital samples inside the computer.</p>
+<p>A physical signal arriving from the real world is different. Before software can process it, the analog waveform must be represented by a sequence of samples.</p>
+<p>That raises several practical questions. How often should the signal be measured? What happens if the sampling rate is too low? Can two different analog frequencies produce the same sequence of digital samples?</p>
+<p>These questions lead directly to one of the most important ideas in digital signal processing: <strong>sampling and aliasing</strong>.</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -1719,13 +1610,13 @@ R_b = kR_s = R_s\log_2(M).
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../book/chapter14.html" class="pagination-link" aria-label="Chapter 14: Frequency Modulation">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 14: Frequency Modulation</span></span>
+      <a href="../book/01-what-is-software-defined-radio.html" class="pagination-link" aria-label="Chapter 1: What Is Software Defined Radio?">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../book/chapter16.html" class="pagination-link" aria-label="Chapter 16: Linear Modulation and PAM">
-        <span class="nav-page-text"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../book/chapter03.html" class="pagination-link" aria-label="Chapter 3: Sampling and Aliasing">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1737,7 +1628,7 @@ R_b = kR_s = R_s\log_2(M).
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/chapter15.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/02-understanding-signals.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>
