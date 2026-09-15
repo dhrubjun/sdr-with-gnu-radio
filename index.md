@@ -1,8 +1,8 @@
 # Learn Software Defined Radio by Building, Observing, and Experimenting
 
-**SDR with GNU Radio** is an experiment-driven introduction to Software Defined Radio, digital signal processing, and communication systems.
+**SDR with GNU Radio** is a practical introduction to Software Defined Radio, digital signal processing, and digital communication.
 
-The book develops the ideas progressively through intuition, GNU Radio experiments, visual observation, and supporting mathematics. The goal is not only to learn how GNU Radio works, but to understand why real communication systems behave the way they do.
+The book develops each topic by connecting three things: the underlying signal-processing idea, a GNU Radio experiment, and the behaviour we can actually observe. Mathematics is introduced where it helps explain what the experiment is showing.
 
 :::: {.columns}
 
@@ -12,7 +12,7 @@ The book develops the ideas progressively through intuition, GNU Radio experimen
 
 ![](figures/ch18/ch18-exp1-rectangular-symbol-bandwidth-flowgraph.png)
 
-Build signals and communication systems in GNU Radio.
+Build signals, channels, and communication systems in GNU Radio.
 
 :::
 
@@ -22,7 +22,7 @@ Build signals and communication systems in GNU Radio.
 
 ![](figures/ch18/ch18-exp6-rrc-rolloff-spectrum.png)
 
-Explore signals in the frequency domain and observe how their spectra change.
+Change parameters and observe how the waveform and spectrum respond.
 
 :::
 
@@ -32,7 +32,7 @@ Explore signals in the frequency domain and observe how their spectra change.
 
 ![](figures/ch19/ch19-exp3-high-snr-constellation.png)
 
-Analyze received signals using constellation diagrams and other visual tools.
+Use spectra, eye diagrams, and constellations to understand what the receiver is seeing.
 
 :::
 
@@ -40,42 +40,38 @@ Analyze received signals using constellation diagrams and other visual tools.
 
 ## About the Book
 
-This book follows a practical learning path from basic signals to complete communication systems.
+The book starts with signals, sampling, complex numbers, I/Q representation, frequency-domain analysis, filtering, and modulation.
 
-Rather than introducing every concept through mathematics first, most chapters begin with an engineering question, build a GNU Radio experiment, observe what happens, and then explain the theory behind the result.
+From there, it moves into digital communication: bits and symbols, PAM, QPSK and QAM, pulse shaping, matched filtering, wireless-channel impairments, equalization, carrier synchronization, symbol timing, frame detection, and a complete single-carrier receiver.
 
-## How This Book Is Taught
+The current OFDM section begins by asking why multicarrier communication is useful and how orthogonal subcarriers can overlap in frequency without necessarily interfering.
 
-Most topics follow the same learning pattern:
+The aim is not to treat GNU Radio as a collection of blocks to memorize. Each flowgraph is used to answer an engineering question and to connect the visible result back to the underlying DSP.
 
-```text
-Idea
-  ↓
-Prediction
-  ↓
-GNU Radio Experiment
-  ↓
-Observation
-  ↓
-Explanation
-  ↓
-Mathematics
-  ↓
-Engineering Interpretation
-```
+## How the Chapters Work
 
-This makes the experiments part of the explanation rather than just demonstrations added after the theory.
+Most chapters begin with a question or problem.
 
-## What You Will Learn
+We first build a small experiment, predict what should happen, and then examine the result using the most useful view for that problem, such as a time-domain plot, spectrum, eye diagram, constellation, or numerical measurement.
 
-The book progresses from signals, sampling, IQ representation, FFTs, filtering, and modulation to wireless-channel effects, equalization, synchronization, complete digital receivers, OFDM, and practical SDR hardware.
+The theory is then developed around what the experiment revealed.
+
+As the book progresses, the individual ideas are combined into larger communication systems rather than remaining isolated demonstrations.
+
+## What the Experiments Include
+
+The examples use GNU Radio flowgraphs together with a small number of supporting Python scripts where a separate calculation or visualization is useful.
+
+The experiments cover both successful operation and deliberate failure cases. Seeing what happens when carrier recovery, timing recovery, equalization, or frame synchronization is missing is an important part of understanding what each receiver stage actually does.
 
 ## About the Author
 
-**Dhrubjun Nath Saikia** is the author of *SDR with GNU Radio*. The book is developed as a practical, experiment-driven guide to Software Defined Radio, digital signal processing, and communication systems.
+**Dhrubjun Nath Saikia** is the author of *SDR with GNU Radio*.
+
+The book grew from a hands-on approach to learning signal processing and communication systems: build the system, observe its behaviour, and then explain why it behaves that way.
 
 ## Source Code and Experiments
 
-The GNU Radio flowgraphs, supporting scripts, figures, and Markdown source are available in the project repository.
+The GNU Radio flowgraphs, supporting scripts, figures, and Markdown source used throughout the book are available in the project repository.
 
 [View the project on GitHub](https://github.com/dhrubjun/sdr-with-gnu-radio)
