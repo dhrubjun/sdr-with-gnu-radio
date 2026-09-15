@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chapter 1: What Is Software Defined Radio? – SDR with GNU Radio</title>
+<title>Chapter 25: Why OFDM? – SDR with GNU Radio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -36,8 +36,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../book/02-understanding-signals.html" rel="next">
-<link href="../index.html" rel="prev">
+<link href="../book/24-building-complete-receiver.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -284,7 +283,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/25-OFDM.html">Part VIII: OFDM and Multicarrier Communication</a></li><li class="breadcrumb-item"><a href="../book/25-OFDM.html"><span class="chapter-title">Chapter 25: Why OFDM?</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -329,7 +328,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -526,7 +525,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
   </div>
 </li>
       </ul>
@@ -541,50 +540,47 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#what-does-a-radio-actually-do" id="toc-what-does-a-radio-actually-do" class="nav-link active" data-scroll-target="#what-does-a-radio-actually-do">1.1 What Does a Radio Actually Do?</a></li>
-  <li><a href="#the-traditional-way-of-building-a-radio" id="toc-the-traditional-way-of-building-a-radio" class="nav-link" data-scroll-target="#the-traditional-way-of-building-a-radio">1.2 The Traditional Way of Building a Radio</a></li>
-  <li><a href="#so-what-is-software-defined-radio" id="toc-so-what-is-software-defined-radio" class="nav-link" data-scroll-target="#so-what-is-software-defined-radio">1.3 So What Is Software Defined Radio?</a></li>
-  <li><a href="#does-software-defined-mean-there-is-no-hardware" id="toc-does-software-defined-mean-there-is-no-hardware" class="nav-link" data-scroll-target="#does-software-defined-mean-there-is-no-hardware">1.4 Does “Software Defined” Mean There Is No Hardware?</a></li>
-  <li><a href="#what-about-a-transmitter" id="toc-what-about-a-transmitter" class="nav-link" data-scroll-target="#what-about-a-transmitter">1.5 What About a Transmitter?</a></li>
-  <li><a href="#why-is-sdr-so-useful" id="toc-why-is-sdr-so-useful" class="nav-link" data-scroll-target="#why-is-sdr-so-useful">1.6 Why Is SDR So Useful?</a></li>
-  <li><a href="#where-does-gnu-radio-fit" id="toc-where-does-gnu-radio-fit" class="nav-link" data-scroll-target="#where-does-gnu-radio-fit">1.7 Where Does GNU Radio Fit?</a></li>
-  <li><a href="#our-first-signal" id="toc-our-first-signal" class="nav-link" data-scroll-target="#our-first-signal">1.8 Our First Signal</a></li>
-  <li><a href="#experiment-1-build-our-first-gnu-radio-flowgraph" id="toc-experiment-1-build-our-first-gnu-radio-flowgraph" class="nav-link" data-scroll-target="#experiment-1-build-our-first-gnu-radio-flowgraph">1.9 Experiment 1: Build Our First GNU Radio Flowgraph</a>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#the-problem-with-one-very-fast-carrier" id="toc-the-problem-with-one-very-fast-carrier" class="nav-link" data-scroll-target="#the-problem-with-one-very-fast-carrier">25.1 The Problem with One Very Fast Carrier</a></li>
+  <li><a href="#experiment-25.1-symbol-rate-and-multipath" id="toc-experiment-25.1-symbol-rate-and-multipath" class="nav-link" data-scroll-target="#experiment-25.1-symbol-rate-and-multipath">25.2 Experiment 25.1: Symbol Rate and Multipath</a></li>
+  <li><a href="#from-one-fast-stream-to-several-slower-streams" id="toc-from-one-fast-stream-to-several-slower-streams" class="nav-link" data-scroll-target="#from-one-fast-stream-to-several-slower-streams">25.3 From One Fast Stream to Several Slower Streams</a></li>
+  <li><a href="#experiment-25.2-building-a-simple-multicarrier-signal" id="toc-experiment-25.2-building-a-simple-multicarrier-signal" class="nav-link" data-scroll-target="#experiment-25.2-building-a-simple-multicarrier-signal">25.4 Experiment 25.2: Building a Simple Multicarrier Signal</a></li>
+  <li><a href="#what-does-orthogonal-mean" id="toc-what-does-orthogonal-mean" class="nav-link" data-scroll-target="#what-does-orthogonal-mean">25.5 What Does Orthogonal Mean?</a></li>
+  <li><a href="#experiment-25.3-demonstrating-subcarrier-orthogonality" id="toc-experiment-25.3-demonstrating-subcarrier-orthogonality" class="nav-link" data-scroll-target="#experiment-25.3-demonstrating-subcarrier-orthogonality">25.6 Experiment 25.3: Demonstrating Subcarrier Orthogonality</a>
   <ul class="collapse">
-  <li><a href="#create-the-sample-rate-variable" id="toc-create-the-sample-rate-variable" class="nav-link" data-scroll-target="#create-the-sample-rate-variable">Create the Sample-Rate Variable</a></li>
-  <li><a href="#add-the-signal-source" id="toc-add-the-signal-source" class="nav-link" data-scroll-target="#add-the-signal-source">Add the Signal Source</a></li>
-  <li><a href="#add-the-throttle" id="toc-add-the-throttle" class="nav-link" data-scroll-target="#add-the-throttle">Add the Throttle</a></li>
-  <li><a href="#add-the-qt-gui-time-sink" id="toc-add-the-qt-gui-time-sink" class="nav-link" data-scroll-target="#add-the-qt-gui-time-sink">Add the QT GUI Time Sink</a></li>
-  <li><a href="#connect-the-blocks" id="toc-connect-the-blocks" class="nav-link" data-scroll-target="#connect-the-blocks">Connect the Blocks</a></li>
+  <li><a href="#relative-rotation" id="toc-relative-rotation" class="nav-link" data-scroll-target="#relative-rotation">Relative Rotation</a></li>
+  <li><a href="#non-orthogonal-750-hz-spacing" id="toc-non-orthogonal-750-hz-spacing" class="nav-link" data-scroll-target="#non-orthogonal-750-hz-spacing">Non-Orthogonal 750 Hz Spacing</a></li>
+  <li><a href="#two-complete-rotations" id="toc-two-complete-rotations" class="nav-link" data-scroll-target="#two-complete-rotations">Two Complete Rotations</a></li>
+  <li><a href="#why-ofdm-uses-the-smallest-orthogonal-spacing" id="toc-why-ofdm-uses-the-smallest-orthogonal-spacing" class="nav-link" data-scroll-target="#why-ofdm-uses-the-smallest-orthogonal-spacing">Why OFDM Uses the Smallest Orthogonal Spacing</a></li>
+  <li><a href="#what-the-gui-displays-mean" id="toc-what-the-gui-displays-mean" class="nav-link" data-scroll-target="#what-the-gui-displays-mean">What the GUI Displays Mean</a></li>
   </ul></li>
-  <li><a href="#before-we-press-run" id="toc-before-we-press-run" class="nav-link" data-scroll-target="#before-we-press-run">1.10 Before We Press Run</a></li>
-  <li><a href="#observing-the-result" id="toc-observing-the-result" class="nav-link" data-scroll-target="#observing-the-result">1.11 Observing the Result</a></li>
-  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">1.12 GNU Radio Toolbox</a>
+  <li><a href="#why-orthogonality-matters-to-a-receiver" id="toc-why-orthogonality-matters-to-a-receiver" class="nav-link" data-scroll-target="#why-orthogonality-matters-to-a-receiver">25.7 Why Orthogonality Matters to a Receiver</a></li>
+  <li><a href="#experiment-25.4-recovering-data-from-orthogonal-subcarriers" id="toc-experiment-25.4-recovering-data-from-orthogonal-subcarriers" class="nav-link" data-scroll-target="#experiment-25.4-recovering-data-from-orthogonal-subcarriers">25.8 Experiment 25.4: Recovering Data from Orthogonal Subcarriers</a>
   <ul class="collapse">
-  <li><a href="#signal-source" id="toc-signal-source" class="nav-link" data-scroll-target="#signal-source">Signal Source</a></li>
-  <li><a href="#throttle" id="toc-throttle" class="nav-link" data-scroll-target="#throttle">Throttle</a></li>
-  <li><a href="#qt-gui-time-sink" id="toc-qt-gui-time-sink" class="nav-link" data-scroll-target="#qt-gui-time-sink">QT GUI Time Sink</a></li>
+  <li><a href="#orthogonal-case" id="toc-orthogonal-case" class="nav-link" data-scroll-target="#orthogonal-case">Orthogonal Case</a></li>
+  <li><a href="#non-orthogonal-case" id="toc-non-orthogonal-case" class="nav-link" data-scroll-target="#non-orthogonal-case">Non-Orthogonal Case</a></li>
   </ul></li>
-  <li><a href="#a-small-detail-that-will-matter-later-data-types" id="toc-a-small-detail-that-will-matter-later-data-types" class="nav-link" data-scroll-target="#a-small-detail-that-will-matter-later-data-types">1.13 A Small Detail That Will Matter Later: Data Types</a></li>
-  <li><a href="#experiment-2-break-the-flowgraph-on-purpose" id="toc-experiment-2-break-the-flowgraph-on-purpose" class="nav-link" data-scroll-target="#experiment-2-break-the-flowgraph-on-purpose">1.14 Experiment 2: Break the Flowgraph on Purpose</a>
+  <li><a href="#spectral-overlap-is-not-the-same-as-interference" id="toc-spectral-overlap-is-not-the-same-as-interference" class="nav-link" data-scroll-target="#spectral-overlap-is-not-the-same-as-interference">25.9 Spectral Overlap Is Not the Same as Interference</a></li>
+  <li><a href="#why-ofdm-helps-with-multipath" id="toc-why-ofdm-helps-with-multipath" class="nav-link" data-scroll-target="#why-ofdm-helps-with-multipath">25.10 Why OFDM Helps with Multipath</a></li>
+  <li><a href="#choosing-the-orthogonal-frequencies" id="toc-choosing-the-orthogonal-frequencies" class="nav-link" data-scroll-target="#choosing-the-orthogonal-frequencies">25.11 Choosing the Orthogonal Frequencies</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">25.12 GNU Radio Toolbox</a>
   <ul class="collapse">
-  <li><a href="#create-a-type-mismatch" id="toc-create-a-type-mismatch" class="nav-link" data-scroll-target="#create-a-type-mismatch">Create a Type Mismatch</a></li>
-  <li><a href="#remove-throttle" id="toc-remove-throttle" class="nav-link" data-scroll-target="#remove-throttle">Remove Throttle</a></li>
+  <li><a href="#moving-average-as-the-correlation-window" id="toc-moving-average-as-the-correlation-window" class="nav-link" data-scroll-target="#moving-average-as-the-correlation-window">Moving Average as the Correlation Window</a></li>
+  <li><a href="#repeat-in-the-data-recovery-experiment" id="toc-repeat-in-the-data-recovery-experiment" class="nav-link" data-scroll-target="#repeat-in-the-data-recovery-experiment">Repeat in the Data-Recovery Experiment</a></li>
   </ul></li>
-  <li><a href="#a-flowgraph-can-be-wrong-without-crashing" id="toc-a-flowgraph-can-be-wrong-without-crashing" class="nav-link" data-scroll-target="#a-flowgraph-can-be-wrong-without-crashing">1.15 A Flowgraph Can Be Wrong Without Crashing</a></li>
-  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">1.16 Explore Further</a></li>
-  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">1.17 What We Learned</a></li>
-  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">1.18 Connecting to the Next Chapter</a></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">25.13 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">25.14 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">25.15 Connecting to the Next Chapter</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/01-what-is-software-defined-radio.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/25-OFDM.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/25-OFDM.html">Part VIII: OFDM and Multicarrier Communication</a></li><li class="breadcrumb-item"><a href="../book/25-OFDM.html"><span class="chapter-title">Chapter 25: Why OFDM?</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></h1>
+<h1 class="title"><span class="chapter-title">Chapter 25: Why OFDM?</span></h1>
 </div>
 
 
@@ -601,377 +597,746 @@ window.Quarto = {
 </header>
 
 
-<section id="what-does-a-radio-actually-do" class="level2">
-<h2 class="anchored" data-anchor-id="what-does-a-radio-actually-do">1.1 What Does a Radio Actually Do?</h2>
-<p>Before talking about Software Defined Radio, let us forget the word <strong>software</strong> for a moment and start with a simpler question:</p>
-<blockquote class="blockquote">
-<p>What does a radio actually do?</p>
-</blockquote>
-<p>Suppose we want to listen to an FM radio station. The antenna is not receiving only that station. Many electromagnetic signals may be reaching it at the same time: other FM stations, mobile networks, Wi-Fi, Bluetooth, satellite signals and more.</p>
-<p>Yet when we tune the radio, we hear the station we selected.</p>
-<p>Somewhere inside the receiver, a sequence of operations separates the signal we want from everything else and recovers the information carried by it.</p>
-<p>At a high level, the process is simple: receive the signal, select the part we want, suppress what we do not want, and recover the information.</p>
-<p>A real receiver is more complicated than this, but even this simple picture tells us something important: a radio is essentially a chain of operations performed on a signal.</p>
-<p>With Software Defined Radio, many of those operations are still needed. What changes is <strong>where and how we perform them</strong>.</p>
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>Why divide one high-rate data stream among many slower orthogonal subcarriers instead of transmitting everything on one fast carrier?</strong></p>
+<p>Chapter 24 completed the single-carrier part of the receiver.</p>
+<p>We combined pulse shaping, synchronization, equalization, symbol decisions, frame detection, and payload recovery into one end-to-end QPSK system. That receiver could compensate for several important impairments, but the multipath experiment also exposed a deeper difficulty.</p>
+<p>As the symbol rate of a single-carrier system increases, the symbol duration becomes shorter. A physical echo delay that was small compared with one long symbol can become a large fraction of a shorter symbol.</p>
+<p>The resulting intersymbol interference becomes harder to manage.</p>
+<p>A different approach is to divide the high-rate information stream into several slower parallel streams and transmit them on different subcarriers.</p>
+<p>That is the starting point of multicarrier communication.</p>
+<p>But simply adding many carriers creates another problem. If they are kept far apart, spectrum is wasted. If they are moved closer together without any special structure, they interfere.</p>
+<p>OFDM solves both problems by using many <strong>orthogonal</strong> subcarriers.</p>
+<p>Their spectra can overlap, yet the receiver can still separate them when the frequencies and observation interval satisfy the required orthogonality relationship.</p>
+<p>This chapter develops that idea experimentally before introducing the IFFT.</p>
 </section>
-<section id="the-traditional-way-of-building-a-radio" class="level2">
-<h2 class="anchored" data-anchor-id="the-traditional-way-of-building-a-radio">1.2 The Traditional Way of Building a Radio</h2>
-<p>Traditionally, many radio operations have been carried out using dedicated electronic circuits.</p>
-<p>A receiver might contain amplifiers, filters, mixers, oscillators and demodulators, with each part designed to perform a particular job.</p>
-<p>A very simplified receiver chain might look like this:</p>
-<p><strong>Antenna → RF Amplifier → Analog Filter → Mixer → Another Filter → Demodulator → Audio</strong></p>
-<p>There is nothing inherently wrong with this approach. In fact, as we will soon see, SDR does not make analog hardware disappear.</p>
-<p>The important difference is flexibility.</p>
-<p>If part of a radio has been built specifically to process one kind of signal, changing the radio’s behaviour may require modifying or replacing some of that hardware.</p>
-<p>Now imagine moving some of those operations into digital processing controlled by software.</p>
-<p>Instead of changing a circuit, we may be able to change an algorithm or a set of parameters.</p>
-<p>That is the central idea behind Software Defined Radio.</p>
-</section>
-<section id="so-what-is-software-defined-radio" class="level2">
-<h2 class="anchored" data-anchor-id="so-what-is-software-defined-radio">1.3 So What Is Software Defined Radio?</h2>
-<p>A <strong>Software Defined Radio</strong>, usually shortened to <strong>SDR</strong>, is a radio in which many signal-processing functions that could otherwise be implemented in dedicated hardware are performed digitally and controlled through software.</p>
-<p>A simplified SDR receiver can be described by the following signal path:</p>
-<p><strong>Antenna → RF Front End → ADC → Digital Samples → Software Processing → Information</strong></p>
-<p>The <strong>ADC</strong>, or <strong>Analog-to-Digital Converter</strong>, marks an important boundary.</p>
-<p>Before the ADC, the receiver is working with an analog electrical signal. Depending on the radio architecture, the RF front end may already have amplified, filtered or frequency-translated that signal.</p>
-<p>After the ADC, the signal is represented by a sequence of numbers called <strong>samples</strong>.</p>
-<p>Once the signal is represented numerically, we can process it digitally. That processing can include filtering, frequency translation, demodulation, synchronization, decoding and signal detection.</p>
-<p>We will encounter all of these later in the book. For now, the main idea is simpler:</p>
-<blockquote class="blockquote">
-<p>In SDR, much of what the radio does to a signal can be implemented or controlled through digital processing and software.</p>
-</blockquote>
-</section>
-<section id="does-software-defined-mean-there-is-no-hardware" class="level2">
-<h2 class="anchored" data-anchor-id="does-software-defined-mean-there-is-no-hardware">1.4 Does “Software Defined” Mean There Is No Hardware?</h2>
-<p>No.&nbsp;An SDR is still a physical radio system, and it still needs hardware.</p>
-<p>We cannot connect an antenna directly to a Python program and expect the computer to receive a 2.4 GHz Wi-Fi signal.</p>
-<p>The signal arriving at an antenna is a physical electromagnetic signal. Before software can process it, hardware must receive it, condition it and convert it into digital samples.</p>
-<p>The basic idea is shown below.</p>
+<section id="the-problem-with-one-very-fast-carrier" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem-with-one-very-fast-carrier">25.1 The Problem with One Very Fast Carrier</h2>
+<p>For a single-carrier system with symbol rate <span class="math inline">\(R_s\)</span>, the symbol duration is</p>
+<p><span class="math display">\[
+T_s=\frac{1}{R_s}
+\]</span></p>
+<p>Increasing the symbol rate therefore reduces the time occupied by each symbol.</p>
+<p>That can increase the information rate, but the physical propagation channel has not changed.</p>
+<p>A reflected signal may still arrive with the same absolute delay.</p>
+<p>If that delay is small compared with <span class="math inline">\(T_s\)</span>, its effect may be manageable.</p>
+<p>If <span class="math inline">\(T_s\)</span> becomes shorter, the same delay occupies a larger fraction of the symbol interval.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch01/sdr-receiver-architecture.png" class="img-fluid figure-img"></p>
-<figcaption>Simplified SDR receiver architecture.</figcaption>
+<p><img src="../figures/ch25/ch25_symbol_rate_fixed_echo_delay_concept.png" class="img-fluid figure-img"></p>
+<figcaption>A fixed multipath delay occupies a larger fraction of the symbol interval as the symbol rate increases.</figcaption>
 </figure>
 </div>
-<p>Notice the boundary between the analog and digital sides.</p>
-<p>The antenna and RF front end are on the analog side. Depending on the radio, the <strong>RF front end</strong> may contain amplifiers, filters, mixers, oscillators and gain-control circuits.</p>
-<p>The ADC then converts the conditioned analog signal into digital samples. From that point onward, much of the remaining processing can be performed digitally.</p>
-<p>Later in the book, we will connect actual SDR hardware and see this boundary for ourselves.</p>
-<p>For now, however, we do not need an antenna or an SDR device at all. GNU Radio can generate signals directly inside the computer, giving us a controlled environment in which to learn what happens to them.</p>
+<p>The important quantity is therefore not simply the echo delay or the symbol rate by itself.</p>
+<p>It is the relationship between <strong>channel delay spread and symbol duration</strong>.</p>
 </section>
-<section id="what-about-a-transmitter" class="level2">
-<h2 class="anchored" data-anchor-id="what-about-a-transmitter">1.5 What About a Transmitter?</h2>
-<p>So far we have looked at a receiver, but the same idea works in the other direction.</p>
-<p>A simplified SDR transmitter can be described as:</p>
-<p><strong>Information → Digital Signal Processing → Digital Samples → DAC → RF Front End → Antenna</strong></p>
-<p>Here, <strong>DAC</strong> means <strong>Digital-to-Analog Converter</strong>.</p>
-<p>The DAC converts digitally generated samples into an analog electrical signal. The RF hardware can then filter, amplify or frequency-translate that signal as needed before transmission.</p>
-<p>A compact way to remember the two directions is:</p>
+<section id="experiment-25.1-symbol-rate-and-multipath" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-25.1-symbol-rate-and-multipath">25.2 Experiment 25.1: Symbol Rate and Multipath</h2>
+<p>We now observe this effect with a single-carrier QPSK signal.</p>
+<p>The sample rate is</p>
+<p><span class="math display">\[
+F_s=32000\text{ samples/s}
+\]</span></p>
+<p>and the first case uses</p>
+<p><span class="math display">\[
+sps=32
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+R_s=\frac{F_s}{sps}=\frac{32000}{32}=1000\text{ symbols/s}
+\]</span></p>
+<p>The transmitter uses QPSK with root-raised-cosine pulse shaping.</p>
+<p>The channel contains a direct path and one delayed copy.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32 ksample/s</code></td>
+</tr>
+<tr class="even">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code> initially</td>
+</tr>
+<tr class="odd">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1 ksymbol/s</code> initially</td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+</tr>
+<tr class="odd">
+<td>Filter span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="even">
+<td>Number of taps</td>
+<td style="text-align: right;"><code>257</code></td>
+</tr>
+<tr class="odd">
+<td>Echo delay</td>
+<td style="text-align: right;"><code>8</code> samples</td>
+</tr>
+<tr class="even">
+<td>Echo gain</td>
+<td style="text-align: right;"><code>0.5</code></td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp01_symbol_rate_multipath_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for the single-carrier symbol-rate and multipath experiment.</figcaption>
+</figure>
+</div>
+<p>The echo delay is kept fixed while the symbol rate is changed.</p>
+<p>This is important.</p>
+<p>The channel is not being made worse between runs. The same physical delay is being compared with different symbol durations.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp01_symbol_rate_multipath_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of the effect of a fixed multipath delay at different single-carrier symbol rates.</figcaption>
+</figure>
+</div>
+<p>At the lower symbol rate, the eye and constellation remain comparatively well behaved.</p>
+<p>As the symbol rate increases, the same 8-sample echo occupies a larger fraction of one symbol interval. The eye closes further and the constellation becomes more distorted.</p>
+<p>A higher symbol rate is not inherently bad.</p>
+<p>The difficulty appears when the symbol duration becomes short relative to the channel delay spread.</p>
+<p>This suggests a different strategy: instead of one very fast stream, divide the information among several slower streams.</p>
+</section>
+<section id="from-one-fast-stream-to-several-slower-streams" class="level2">
+<h2 class="anchored" data-anchor-id="from-one-fast-stream-to-several-slower-streams">25.3 From One Fast Stream to Several Slower Streams</h2>
+<p>Suppose a high-rate stream is divided among four parallel subcarriers.</p>
+<p>Each subcarrier then carries only part of the total information rate.</p>
+<p>Its symbol rate can therefore be lower, giving a longer symbol duration.</p>
+<p>For the same physical multipath delay, a longer symbol duration means the delayed energy occupies a smaller fraction of one symbol interval.</p>
+<p>That is the fundamental <strong>multicarrier</strong> idea.</p>
+<p>There is, however, an immediate cost.</p>
+<p>If the subcarriers are widely separated so that their spectra do not overlap, significant frequency space can be left unused.</p>
+<p>A practical system therefore wants two things at once:</p>
 <ul>
-<li><strong>Receiver:</strong> Analog Signal → ADC → Digital Samples → Software</li>
-<li><strong>Transmitter:</strong> Software → Digital Samples → DAC → Analog Signal</li>
+<li>relatively slow symbols on each subcarrier;</li>
+<li>efficient packing of those subcarriers in frequency.</li>
 </ul>
-<p>We will spend a large part of this book working on the digital portion in the middle. It is worth remembering, however, that those numbers ultimately represent real signals entering or leaving real hardware.</p>
+<p>Orthogonality is what makes both possible.</p>
 </section>
-<section id="why-is-sdr-so-useful" class="level2">
-<h2 class="anchored" data-anchor-id="why-is-sdr-so-useful">1.6 Why Is SDR So Useful?</h2>
-<p>The attraction of SDR becomes clearer when we think about flexibility.</p>
-<p>Suppose we want to experiment with FM today, a digital modulation scheme tomorrow and a packet receiver next week. If every signal-processing operation were permanently fixed in hardware, making those changes could be difficult.</p>
-<p>With SDR, much of the radio’s behaviour can be changed in software.</p>
-<p>The same general SDR platform can therefore be used for many different purposes, including:</p>
-<ul>
-<li>broadcast radio experiments</li>
-<li>digital communication</li>
-<li>satellite reception</li>
-<li>spectrum monitoring</li>
-<li>packet communication</li>
-<li>radar experiments</li>
-<li>wireless research</li>
-</ul>
-<p>This does not mean that software can do anything we want. The hardware still sets practical limits such as the frequencies we can receive or transmit, the instantaneous bandwidth available to us and the system’s dynamic range.</p>
-<p>Within those limits, however, SDR gives us considerable flexibility.</p>
-<p>For learning, there is another advantage. We do not have to read about a filter and simply trust that it behaves a certain way. We can build one, send a signal through it, change its settings and observe the result immediately.</p>
-<p>That experimental approach will guide the rest of this book.</p>
+<section id="experiment-25.2-building-a-simple-multicarrier-signal" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-25.2-building-a-simple-multicarrier-signal">25.4 Experiment 25.2: Building a Simple Multicarrier Signal</h2>
+<p>Before introducing OFDM, we manually build a four-subcarrier waveform from ordinary GNU Radio blocks.</p>
+<p>Each branch generates QPSK symbols, pulse shapes them at a lower symbol rate, shifts the complex signal to a chosen subcarrier frequency, and contributes to the final sum.</p>
+<p>The subcarriers are initially placed near</p>
+<pre class="text"><code>-6 kHz
+-2 kHz
++2 kHz
++6 kHz</code></pre>
+<p>so the spacing is approximately 4 kHz.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp02_multicarrier_signal_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph used to construct the four-subcarrier multicarrier signal.</figcaption>
+</figure>
+</div>
+<p>The combined spectrum contains four distinct pulse-shaped regions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp02_four_subcarrier_multicarrier_spectrum.png" class="img-fluid figure-img"></p>
+<figcaption>Spectrum of the manually constructed four-subcarrier multicarrier signal.</figcaption>
+</figure>
+</div>
+<p>This demonstrates the multicarrier principle.</p>
+<p>Several slower streams can coexist in different frequency regions.</p>
+<p>But the large gaps also reveal the weakness of this simple arrangement.</p>
+<p>If a system used hundreds of subcarriers with similar guard spacing, much of the available spectrum would remain unused.</p>
+<p>We therefore want to move the subcarriers closer together.</p>
+<p>The next question is whether overlapping subcarrier spectra must necessarily interfere.</p>
 </section>
-<section id="where-does-gnu-radio-fit" class="level2">
-<h2 class="anchored" data-anchor-id="where-does-gnu-radio-fit">1.7 Where Does GNU Radio Fit?</h2>
-<p><strong>GNU Radio</strong> is a signal-processing framework that lets us build systems by connecting processing blocks together.</p>
-<p>Using <strong>GNU Radio Companion</strong>, or <strong>GRC</strong>, we can build these systems graphically. The resulting diagram is called a <strong>flowgraph</strong>.</p>
-<p>For our first experiment, the signal path is very simple:</p>
-<p><strong>Signal Source → Throttle → QT GUI Time Sink</strong></p>
-<p>The Signal Source will generate a signal. Throttle will limit the rate at which samples are processed in this software-only flowgraph. The QT GUI Time Sink will display those samples against time.</p>
-<p>The connections between the blocks show the direction in which the sample stream travels.</p>
-<p>One habit will help us throughout the book. Whenever we look at a GNU Radio block, we should ask two questions:</p>
-<blockquote class="blockquote">
-<p>What does the signal look like before this block?</p>
-</blockquote>
+<section id="what-does-orthogonal-mean" class="level2">
+<h2 class="anchored" data-anchor-id="what-does-orthogonal-mean">25.5 What Does Orthogonal Mean?</h2>
+<p>A familiar example comes from vectors.</p>
+<p>Consider</p>
+<p><span class="math display">\[
+\mathbf{x}=[1,0]
+\]</span></p>
 <p>and</p>
+<p><span class="math display">\[
+\mathbf{y}=[0,1]
+\]</span></p>
+<p>A vector compared with itself gives</p>
+<p><span class="math display">\[
+\mathbf{x}\cdot\mathbf{x}=1
+\]</span></p>
+<p>while the dot product between the two different vectors is</p>
+<p><span class="math display">\[
+\mathbf{x}\cdot\mathbf{y}=0
+\]</span></p>
+<p>The vectors are orthogonal.</p>
+<p>Signals can have an analogous relationship.</p>
+<p>Instead of comparing two short vectors, we compare two waveforms over a specified time interval.</p>
+<p>For normalized signals,</p>
+<p><span class="math display">\[
+C_{ii}=1
+\]</span></p>
+<p>for a signal compared with itself, while two different orthogonal signals satisfy</p>
+<p><span class="math display">\[
+C_{ij}=0,\qquad i\neq j
+\]</span></p>
+<p>over the chosen observation interval.</p>
+<p>That zero cross-correlation is exactly what we want between different OFDM subcarriers.</p>
+</section>
+<section id="experiment-25.3-demonstrating-subcarrier-orthogonality" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-25.3-demonstrating-subcarrier-orthogonality">25.6 Experiment 25.3: Demonstrating Subcarrier Orthogonality</h2>
+<p>We now use two simple complex carriers without data modulation so that the orthogonality itself is visible.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate, <span class="math inline">\(F_s\)</span></td>
+<td style="text-align: right;"><code>32 ksample/s</code></td>
+</tr>
+<tr class="even">
+<td>Number of samples, <span class="math inline">\(N\)</span></td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="odd">
+<td>Useful interval, <span class="math inline">\(T_u\)</span></td>
+<td style="text-align: right;"><code>1 ms</code></td>
+</tr>
+<tr class="even">
+<td>First carrier, <span class="math inline">\(f_1\)</span></td>
+<td style="text-align: right;"><code>1 kHz</code></td>
+</tr>
+<tr class="odd">
+<td>Second carrier, <span class="math inline">\(f_2\)</span></td>
+<td style="text-align: right;">variable</td>
+</tr>
+</tbody>
+</table>
+<p>The useful observation interval is</p>
+<p><span class="math display">\[
+T_u=\frac{N}{F_s}=\frac{32}{32000}=0.001\text{ s}=1\text{ ms}
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\frac{1}{T_u}=1000\text{ Hz}
+\]</span></p>
+<p>The two carriers are combined with Multiply Conjugate.</p>
+<p>A Moving Average then averages the complex result over exactly 32 samples:</p>
+<pre class="text"><code>Length: 32
+Scale: 0.03125</code></pre>
+<p>Complex to Mag converts the result into a correlation magnitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp03_subcarrier_orthogonality_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for measuring the correlation between two subcarriers over the useful interval.</figcaption>
+</figure>
+</div>
+<section id="relative-rotation" class="level3">
+<h3 class="anchored" data-anchor-id="relative-rotation">Relative Rotation</h3>
+<p>The easiest way to understand the result is to think of the complex carriers as rotating arrows.</p>
+<p>Let</p>
+<p><span class="math display">\[
+f_1=1000\text{ Hz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_2=2000\text{ Hz}
+\]</span></p>
+<p>Their relative frequency is</p>
+<p><span class="math display">\[
+\Delta f=f_2-f_1=1000\text{ Hz}
+\]</span></p>
+<p>A 1 kHz relative rotation completes one full cycle in</p>
+<p><span class="math display">\[
+\frac{1}{1000}=1\text{ ms}
+\]</span></p>
+<p>which is exactly <span class="math inline">\(T_u\)</span>.</p>
+<p>During the averaging interval, the relative phasor therefore makes one complete revolution.</p>
+<p>Its directions cancel over the full cycle, so the correlation magnitude approaches zero.</p>
+<p>The two carriers are orthogonal over that interval.</p>
+</section>
+<section id="non-orthogonal-750-hz-spacing" class="level3">
+<h3 class="anchored" data-anchor-id="non-orthogonal-750-hz-spacing">Non-Orthogonal 750 Hz Spacing</h3>
+<p>Now keep</p>
+<p><span class="math display">\[
+f_1=1000\text{ Hz}
+\]</span></p>
+<p>and use</p>
+<p><span class="math display">\[
+f_2=1750\text{ Hz}
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\Delta f=750\text{ Hz}
+\]</span></p>
+<p>and during <span class="math inline">\(T_u=1\)</span> ms,</p>
+<p><span class="math display">\[
+\Delta fT_u=750(0.001)=0.75
+\]</span></p>
+<p>The relative phasor completes only three quarters of a cycle.</p>
+<p>The directions therefore do not cancel completely.</p>
+<p>The measured correlation magnitude is approximately</p>
+<p><span class="math display">\[
+|C|\approx0.300377
+\]</span></p>
+<p>which is nonzero.</p>
+<p>The carriers are not orthogonal over this interval.</p>
+</section>
+<section id="two-complete-rotations" class="level3">
+<h3 class="anchored" data-anchor-id="two-complete-rotations">Two Complete Rotations</h3>
+<p>We also test</p>
+<p><span class="math display">\[
+f_2=3000\text{ Hz}
+\]</span></p>
+<p>with <span class="math inline">\(f_1=1000\)</span> Hz.</p>
+<p>Now</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>so the relative phasor completes exactly two rotations in 1 ms.</p>
+<p>Two complete rotations also average to zero.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp03_subcarrier_orthogonality_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of non-orthogonal and orthogonal subcarrier spacings.</figcaption>
+</figure>
+</div>
+<p>The general condition is</p>
+<p><span class="math display">\[
+\Delta f=\frac{k}{T_u},\qquad k=1,2,3,\ldots
+\]</span></p>
+<p>or equivalently,</p>
+<p><span class="math display">\[
+\Delta fT_u=k
+\]</span></p>
+<p>where <span class="math inline">\(k\)</span> is a nonzero integer.</p>
+</section>
+<section id="why-ofdm-uses-the-smallest-orthogonal-spacing" class="level3">
+<h3 class="anchored" data-anchor-id="why-ofdm-uses-the-smallest-orthogonal-spacing">Why OFDM Uses the Smallest Orthogonal Spacing</h3>
+<p>If <span class="math inline">\(2/T_u\)</span>, <span class="math inline">\(3/T_u\)</span>, and larger integer multiples are also orthogonal, why is</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_u}
+\]</span></p>
+<p>the familiar OFDM spacing?</p>
+<p>Because it is the smallest nonzero orthogonal spacing.</p>
+<p>For <span class="math inline">\(T_u=1\)</span> ms:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Spacing</th>
+<th style="text-align: right;"><span class="math inline">\(\Delta fT_u\)</span></th>
+<th>Orthogonal?</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">750 Hz</td>
+<td style="text-align: right;">0.75</td>
+<td>No</td>
+<td>nonzero cross-correlation</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1 kHz</td>
+<td style="text-align: right;">1</td>
+<td>Yes</td>
+<td>closest orthogonal spacing</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2 kHz</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td>orthogonal but more widely separated</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3 kHz</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td>orthogonal but wastes more spacing</td>
+</tr>
+</tbody>
+</table>
+<p>OFDM normally uses adjacent spacing</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_u}
+\]</span></p>
+<p>because it preserves orthogonality while packing the subcarriers as closely as possible in this ideal model.</p>
+</section>
+<section id="what-the-gui-displays-mean" class="level3">
+<h3 class="anchored" data-anchor-id="what-the-gui-displays-mean">What the GUI Displays Mean</h3>
+<p>The Frequency Sink after Multiply Conjugate shows the <strong>relative frequency</strong> between the two carriers.</p>
+<p>For example, with <span class="math inline">\(f_1=1\)</span> kHz and <span class="math inline">\(f_2=2\)</span> kHz, the displayed component appears near <span class="math inline">\(-1\)</span> kHz because of the multiplication order.</p>
+<p>That spectral line does not by itself prove orthogonality.</p>
+<p>The decisive measurement is the complex average over the complete useful interval.</p>
+<p>When that cross-correlation approaches zero, the two carriers are orthogonal over <span class="math inline">\(T_u\)</span>.</p>
+</section>
+</section>
+<section id="why-orthogonality-matters-to-a-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="why-orthogonality-matters-to-a-receiver">25.7 Why Orthogonality Matters to a Receiver</h2>
+<p>Zero cross-correlation becomes useful when different subcarriers carry different data.</p>
+<p>Suppose Subcarrier 1 carries symbol <span class="math inline">\(A_1\)</span> and Subcarrier 2 carries symbol <span class="math inline">\(A_2\)</span>.</p>
+<p>If the receiver detects Subcarrier 1, we want the desired carrier to survive while the other carrier contributes nothing.</p>
+<p>For normalized carriers,</p>
+<p><span class="math display">\[
+C_{11}=1
+\]</span></p>
+<p>and for an orthogonal neighbour,</p>
+<p><span class="math display">\[
+C_{21}=0
+\]</span></p>
+<p>The detected contribution is then</p>
+<p><span class="math display">\[
+A_1C_{11}+A_2C_{21}=A_1(1)+A_2(0)=A_1
+\]</span></p>
+<p>The desired symbol remains.</p>
+<p>The orthogonal neighbour cancels in the corresponding correlation operation.</p>
+<p>This is the practical reason orthogonality matters.</p>
+</section>
+<section id="experiment-25.4-recovering-data-from-orthogonal-subcarriers" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-25.4-recovering-data-from-orthogonal-subcarriers">25.8 Experiment 25.4: Recovering Data from Orthogonal Subcarriers</h2>
+<p>We now transmit independent QPSK data on two subcarriers and attempt to recover Subcarrier 1.</p>
+<p>Two spacings are compared:</p>
+<ul>
+<li>1 kHz, which is orthogonal over <span class="math inline">\(T_u=1\)</span> ms;</li>
+<li>750 Hz, which is not.</li>
+</ul>
+<p>Unlike Experiment 25.2, we do not use RRC pulse shaping here.</p>
+<p>Each QPSK symbol is held constant for exactly 32 samples using Repeat.</p>
+<p>With</p>
+<p><span class="math display">\[
+F_s=32000\text{ samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+N=32
+\]</span></p>
+<p>each symbol occupies</p>
+<p><span class="math display">\[
+T_u=\frac{32}{32000}=1\text{ ms}
+\]</span></p>
+<p>This rectangular finite-duration symbol interval is intentional because it gives us the same common interval used in the orthogonality experiment.</p>
+<p>The main values are</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32 ksample/s</code></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(N\)</span></td>
+<td style="text-align: right;"><code>32</code> samples</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(T_u\)</span></td>
+<td style="text-align: right;"><code>1 ms</code></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(f_1\)</span></td>
+<td style="text-align: right;"><code>1 kHz</code></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(f_2\)</span></td>
+<td style="text-align: right;"><code>2 kHz</code> for orthogonal case</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(f_2\)</span></td>
+<td style="text-align: right;"><code>1.75 kHz</code> for non-orthogonal case</td>
+</tr>
+</tbody>
+</table>
+<p>At the receiver, the combined signal is multiplied by the conjugate of a 1 kHz reference, averaged over 32 samples, and reduced to one recovered complex value per symbol interval.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp04_orthogonal_subcarrier_recovery_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for recovering one QPSK subcarrier from the two-subcarrier signal.</figcaption>
+</figure>
+</div>
+<section id="orthogonal-case" class="level3">
+<h3 class="anchored" data-anchor-id="orthogonal-case">Orthogonal Case</h3>
+<p>For</p>
+<p><span class="math display">\[
+f_1=1000\text{ Hz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_2=2000\text{ Hz}
+\]</span></p>
+<p>the spacing is</p>
+<p><span class="math display">\[
+\Delta f=1000\text{ Hz}=\frac{1}{T_u}
+\]</span></p>
+<p>The detected symbol is</p>
+<p><span class="math display">\[
+A_1C_{11}+A_2C_{21}=A_1
+\]</span></p>
+<p>because the second subcarrier has zero cross-correlation with the first over the useful interval.</p>
+<p>The recovered constellation therefore contains the expected four QPSK points.</p>
+</section>
+<section id="non-orthogonal-case" class="level3">
+<h3 class="anchored" data-anchor-id="non-orthogonal-case">Non-Orthogonal Case</h3>
+<p>Now use</p>
+<p><span class="math display">\[
+f_2=1750\text{ Hz}
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+\Delta f=750\text{ Hz}
+\]</span></p>
+<p>The cross-correlation is no longer zero.</p>
+<p>The detected symbol becomes</p>
+<p><span class="math display">\[
+\hat{A}_1=A_1+C_{21}A_2
+\]</span></p>
+<p>Part of Subcarrier 2 therefore leaks into the detection of Subcarrier 1.</p>
+<p>Because <span class="math inline">\(A_2\)</span> is itself changing among QPSK values, each desired constellation point can be displaced in several different directions.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_exp04_orthogonal_vs_nonorthogonal_recovery.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of recovered Subcarrier 1 for orthogonal and non-orthogonal subcarrier spacing.</figcaption>
+</figure>
+</div>
+<p>The orthogonal case produces four clean constellation points.</p>
+<p>The non-orthogonal case produces several displaced points.</p>
+<p>This unwanted interaction is <strong>inter-carrier interference</strong>, or ICI.</p>
+<p>The conclusion should be stated carefully.</p>
+<p>A non-orthogonal pair is not necessarily impossible to decode with every conceivable receiver.</p>
+<p>What this experiment shows is that orthogonal subcarriers can ideally be separated by the corresponding correlation operation without mutual interference, whereas loss of orthogonality introduces unwanted coupling between the detected subcarrier values.</p>
+</section>
+</section>
+<section id="spectral-overlap-is-not-the-same-as-interference" class="level2">
+<h2 class="anchored" data-anchor-id="spectral-overlap-is-not-the-same-as-interference">25.9 Spectral Overlap Is Not the Same as Interference</h2>
+<p>A simple multicarrier system can avoid interference by leaving large gaps between subcarriers.</p>
+<p>That works, but it wastes spectrum.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch25/ch25_widely_separated_multicarrier_concept.png" class="img-fluid figure-img"></p>
+<figcaption>Widely separated subcarriers leave unused spectrum between neighboring channels.</figcaption>
+</figure>
+</div>
+<p>OFDM takes a different approach.</p>
+<p>The individual subcarrier spectra are allowed to overlap.</p>
+<p>The frequencies are chosen so that the waveforms remain orthogonal over the common useful symbol interval.</p>
+<p>That leads to one of the central ideas of the chapter:</p>
 <blockquote class="blockquote">
-<p>What has this block changed?</p>
+<p><strong>Overlapping spectra do not automatically imply inter-carrier interference. What matters is whether the subcarriers remain orthogonal over the receiver’s observation interval.</strong></p>
 </blockquote>
-<p>If we can answer those questions, even a complicated flowgraph becomes much easier to understand.</p>
+<p>This allows OFDM to combine relatively slow subcarrier symbols with efficient frequency packing.</p>
 </section>
-<section id="our-first-signal" class="level2">
-<h2 class="anchored" data-anchor-id="our-first-signal">1.8 Our First Signal</h2>
-<p>We need a signal to experiment with, so we will begin with one of the simplest and most useful signals in signal processing: a sinusoid.</p>
-<p>A sinusoidal signal can be written as:</p>
+<section id="why-ofdm-helps-with-multipath" class="level2">
+<h2 class="anchored" data-anchor-id="why-ofdm-helps-with-multipath">25.10 Why OFDM Helps with Multipath</h2>
+<p>We can now return to the problem that started the chapter.</p>
+<p>A high-rate single-carrier stream requires short symbols.</p>
+<p>A fixed physical multipath delay can therefore occupy a large fraction of one symbol interval.</p>
+<p>Multicarrier transmission divides the same overall data stream among many slower subcarriers.</p>
+<p>Each subcarrier can use a longer symbol duration.</p>
+<p>The physical propagation delay has not disappeared, but it now occupies a smaller fraction of the useful symbol interval.</p>
+<p>This makes multipath easier to manage.</p>
+<p>OFDM does not magically eliminate multipath.</p>
+<p>Later we will still need a guard interval or cyclic prefix, channel estimation, and equalization.</p>
+<p>The important point is more fundamental:</p>
+<blockquote class="blockquote">
+<p><strong>Many slower subcarriers create longer symbol intervals, reducing the relative severity of a fixed channel delay spread.</strong></p>
+</blockquote>
+<p>Orthogonality then allows those subcarriers to be packed closely in frequency.</p>
+</section>
+<section id="choosing-the-orthogonal-frequencies" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-the-orthogonal-frequencies">25.11 Choosing the Orthogonal Frequencies</h2>
+<p>A practical OFDM design begins with the useful symbol duration <span class="math inline">\(T_u\)</span>.</p>
+<p>The minimum adjacent orthogonal spacing is</p>
 <p><span class="math display">\[
-x(t)=A\cos(2\pi ft+\phi)
+\Delta f=\frac{1}{T_u}
 \]</span></p>
-<p>If that equation looks unfamiliar, do not worry. We are not going to derive anything from it yet.</p>
-<p>For the moment, notice only a few things:</p>
-<ul>
-<li><strong>amplitude</strong> tells us how large the signal is,</li>
-<li><strong>frequency</strong> tells us how quickly it repeats,</li>
-<li><strong>phase</strong> tells us where the signal is within its cycle.</li>
-</ul>
-<p>Here, <strong>t</strong> represents time. We will unpack the rest of the equation properly in the next chapter.</p>
-<p>For our first experiment, we will use:</p>
-<pre class="text"><code>Amplitude = 1
-Frequency = 1 kHz</code></pre>
-<p>Our goal is simple: ask GNU Radio to generate this signal and display it.</p>
-</section>
-<section id="experiment-1-build-our-first-gnu-radio-flowgraph" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-1-build-our-first-gnu-radio-flowgraph">1.9 Experiment 1: Build Our First GNU Radio Flowgraph</h2>
-<p>Open <strong>GNU Radio Companion</strong> and create a new flowgraph.</p>
-<p>Before adding the signal-processing blocks, we need one variable.</p>
-<section id="create-the-sample-rate-variable" class="level3">
-<h3 class="anchored" data-anchor-id="create-the-sample-rate-variable">Create the Sample-Rate Variable</h3>
-<p>Search for a <strong>Variable</strong> block and add it to the flowgraph.</p>
-<p>Set:</p>
-<pre class="text"><code>ID: samp_rate
-Value: 32000</code></pre>
-<p>GNU Radio will display <code>32000</code> as <code>32k</code> on the flowgraph. It is simply using compact engineering notation.</p>
-<p>We may naturally wonder why we chose 32,000, or what a sample rate means in the first place. For now, we only need the value. We will study sampling properly in a later chapter.</p>
-</section>
-<section id="add-the-signal-source" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-signal-source">Add the Signal Source</h3>
-<p>Search for <strong>Signal Source</strong> and add it to the flowgraph.</p>
-<p>Open its properties and configure it as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/signal-source-properties.png" class="img-fluid figure-img"></p>
-<figcaption>Signal Source settings used to generate the 1 kHz cosine.</figcaption>
-</figure>
-</div>
-<p>We have asked the block to generate a cosine with a frequency of <code>1000</code> Hz and an amplitude of <code>1</code>.</p>
-<p>Notice that we have not typed <code>32000</code> directly into the Sample Rate field. Instead, we use:</p>
-<pre class="text"><code>samp_rate</code></pre>
-<p>This refers to the variable we created earlier. If we later change <code>samp_rate</code>, every block that uses the same variable can follow that change.</p>
-<p>There are other settings in the window, such as Offset, Initial Phase and Show Msg Ports. We do not need them yet. We will introduce those options when they become useful.</p>
-</section>
-<section id="add-the-throttle" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-throttle">Add the Throttle</h3>
-<p>Next, search for <strong>Throttle</strong> and add it to the flowgraph.</p>
-<p>Set its type to <code>Float</code> and its sample rate to <code>samp_rate</code>, as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/throttle-properties.png" class="img-fluid figure-img"></p>
-<figcaption>Throttle settings used in the first GNU Radio flowgraph.</figcaption>
-</figure>
-</div>
-<p>Leave the remaining settings as shown.</p>
-<p>The purpose of Throttle may not be obvious at first. Why should a signal that exists only inside the computer need a rate limit?</p>
-<p>We will answer that after the flowgraph is running.</p>
-</section>
-<section id="add-the-qt-gui-time-sink" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-qt-gui-time-sink">Add the QT GUI Time Sink</h3>
-<p>Finally, add a <strong>QT GUI Time Sink</strong> and configure it as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/qt-gui-time-sink-properties.png" class="img-fluid figure-img"></p>
-<figcaption>QT GUI Time Sink settings used in the first experiment.</figcaption>
-</figure>
-</div>
-<p>For this experiment, the settings that matter most are:</p>
-<pre class="text"><code>Type: Float
-Number of Points: 1024
-Sample Rate: samp_rate</code></pre>
-<p>The Time Sink contains many other options, including Grid, Autoscale, Trigger, Update Period and GUI Hint. We can ignore them for now. We will return to those settings when we have a reason to use them.</p>
-</section>
-<section id="connect-the-blocks" class="level3">
-<h3 class="anchored" data-anchor-id="connect-the-blocks">Connect the Blocks</h3>
-<p>Connect the three processing blocks in this order:</p>
-<p><strong>Signal Source → Throttle → QT GUI Time Sink</strong></p>
-<p>The completed flowgraph should look like this:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/complete-gnu-radio-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>Our first GNU Radio flowgraph.</figcaption>
-</figure>
-</div>
-<p>Take a moment to read the flowgraph before running it.</p>
-<p>The Signal Source shows <code>Frequency: 1k</code>.</p>
-<p>The Variable shows <code>Value: 32k</code>.</p>
-<p>The Time Sink shows <code>Number of Points: 1.024k</code>.</p>
-<p>GNU Radio often uses prefixes such as <code>k</code> to keep values compact. Here, <code>1k</code> means 1000 and <code>32k</code> means 32000.</p>
-<p>More importantly, we should start reading the flowgraph from left to right. In this case, the chain is doing three things: generating a cosine, controlling the processing rate and displaying the samples.</p>
-<p>This is the beginning of learning to read GNU Radio flowgraphs as signal-processing systems rather than as collections of blocks.</p>
-</section>
-</section>
-<section id="before-we-press-run" class="level2">
-<h2 class="anchored" data-anchor-id="before-we-press-run">1.10 Before We Press Run</h2>
-<p>Before running the flowgraph, let us make a prediction.</p>
-<p>We told GNU Radio to generate a cosine with an amplitude of 1 and a frequency of 1 kHz.</p>
-<p>What should we expect the Time Sink to show?</p>
-<p>We do not need to calculate anything yet. It is enough to form a picture in our minds, then run the flowgraph.</p>
-</section>
-<section id="observing-the-result" class="level2">
-<h2 class="anchored" data-anchor-id="observing-the-result">1.11 Observing the Result</h2>
-<p>We should see something like this:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/first-cosine-result.png" class="img-fluid figure-img"></p>
-<figcaption>The 1 kHz cosine displayed in the QT GUI Time Sink.</figcaption>
-</figure>
-</div>
-<p>There is our first signal.</p>
-<p>The waveform moves between approximately +1 and -1, which agrees with the amplitude entered in the Signal Source. It also repeats regularly across the time axis.</p>
-<p>Even this simple plot raises several useful questions:</p>
-<ul>
-<li>How long does one cycle take?</li>
-<li>How many cycles occur in one second?</li>
-<li>Why does the curve look smooth if GNU Radio is processing individual samples?</li>
-<li>How many samples are used to represent each cycle?</li>
-</ul>
-<p>We do not need to answer all of them yet. The point is simply to notice that a simple cosine already gives us several things to investigate.</p>
-<p>What have we actually done? We started with the mathematical description</p>
+<p>The subcarrier frequencies can therefore be written as</p>
 <p><span class="math display">\[
-x(t)=A\cos(2\pi ft+\phi)
+f_k=f_0+\frac{k}{T_u}
 \]</span></p>
-<p>and asked GNU Radio to generate numerical samples representing that signal. The Time Sink then displayed those samples in the time domain.</p>
-<p>That same basic idea, generate or receive samples, process them and observe the result, will remain with us as the systems become more complicated.</p>
+<p>where <span class="math inline">\(k\)</span> is an integer.</p>
+<p>The value <span class="math inline">\(f_0\)</span> shifts the complete set in frequency.</p>
+<p>The relative spacing determines the orthogonality over the common interval.</p>
+<p>For</p>
+<p><span class="math display">\[
+T_u=1\text{ ms}
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+\Delta f=1\text{ kHz}
+\]</span></p>
+<p>A possible baseband set is therefore</p>
+<pre class="text"><code>...  -2 kHz  -1 kHz   0   +1 kHz  +2 kHz  ...</code></pre>
+<p>Now suppose one useful OFDM symbol contains <span class="math inline">\(N\)</span> time-domain samples at sample rate <span class="math inline">\(F_s\)</span>.</p>
+<p>Then</p>
+<p><span class="math display">\[
+T_u=\frac{N}{F_s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_u}=\frac{F_s}{N}
+\]</span></p>
+<p>But <span class="math inline">\(F_s/N\)</span> is exactly the spacing between DFT frequency bins.</p>
+<p>This is the bridge between the manually constructed subcarriers in this chapter and the FFT/IFFT implementation used by practical OFDM systems.</p>
 </section>
 <section id="gnu-radio-toolbox" class="level2">
-<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">1.12 GNU Radio Toolbox</h2>
-<p>Throughout this book, we will keep a running <strong>GNU Radio Toolbox</strong>.</p>
-<p>The goal is not to list every property of every GNU Radio block. When we meet a useful block or feature, we will learn the part that matters for the experiment at hand. As the same blocks appear again, we will gradually learn more about them.</p>
-<section id="signal-source" class="level3">
-<h3 class="anchored" data-anchor-id="signal-source">Signal Source</h3>
-<p>The <strong>Signal Source</strong> generates a known sequence of samples inside GNU Radio.</p>
-<p>In our first experiment, it generates a 1 kHz cosine. Later, we will change its frequency, amplitude, phase and waveform, and we will also use it with complex signals.</p>
-<p>It is particularly useful for learning because we know exactly what signal we are putting into the flowgraph.</p>
-<p>One distinction is worth making immediately:</p>
-<blockquote class="blockquote">
-<p>Signal Source generates digital samples inside GNU Radio. It does not produce a physical RF signal at an antenna connector.</p>
-</blockquote>
-<p>That difference will become clearer when we study sampling and SDR hardware.</p>
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">25.12 GNU Radio Toolbox</h2>
+<p>Several familiar GNU Radio blocks take on new roles in the multicarrier experiments.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Signal Source</td>
+<td>creates complex subcarrier references</td>
+</tr>
+<tr class="even">
+<td>Multiply</td>
+<td>shifts a complex QPSK stream to a subcarrier frequency</td>
+</tr>
+<tr class="odd">
+<td>Add</td>
+<td>combines several subcarrier waveforms</td>
+</tr>
+<tr class="even">
+<td>Multiply Conjugate</td>
+<td>exposes the relative phase and frequency between two subcarriers</td>
+</tr>
+<tr class="odd">
+<td>Moving Average</td>
+<td>averages the relative phasor over exactly one useful interval</td>
+</tr>
+<tr class="even">
+<td>Complex to Mag</td>
+<td>converts the complex cross-correlation result to a magnitude</td>
+</tr>
+<tr class="odd">
+<td>Repeat</td>
+<td>holds each QPSK value constant for the complete useful symbol interval in Experiment 25.4</td>
+</tr>
+<tr class="even">
+<td>Keep 1 in N</td>
+<td>selects one recovered complex value per useful symbol interval</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>displays subcarrier spectra and relative-frequency components</td>
+</tr>
+<tr class="even">
+<td>QT GUI Constellation Sink</td>
+<td>shows whether one subcarrier has been recovered cleanly</td>
+</tr>
+</tbody>
+</table>
+<section id="moving-average-as-the-correlation-window" class="level3">
+<h3 class="anchored" data-anchor-id="moving-average-as-the-correlation-window">Moving Average as the Correlation Window</h3>
+<p>In Experiment 25.3,</p>
+<pre class="text"><code>Length: 32
+Scale: 1.0/32</code></pre>
+<p>makes the Moving Average calculate a normalized average over one 1 ms useful interval.</p>
+<p>Its meaning here is therefore more specific than generic smoothing.</p>
+<p>It is the integration window over which orthogonality is tested.</p>
 </section>
-<section id="throttle" class="level3">
-<h3 class="anchored" data-anchor-id="throttle">Throttle</h3>
-<p>Throttle is unusual because it does not perform the kind of signal-processing operation we normally associate with a radio.</p>
-<p>Our current flowgraph exists entirely inside the computer. There is no SDR device, sound card or other hardware source or sink forcing the stream to run at a real-world sample rate.</p>
-<p>Without a rate-limiting block, GNU Radio can process samples as quickly as the computer and the rest of the flowgraph allow. <strong>Throttle</strong> limits the average processing rate to approximately the sample rate we specify, which keeps a software-only simulation from running unnecessarily fast.</p>
-<p>A useful rule for now is:</p>
-<blockquote class="blockquote">
-<p>In a software-only flowgraph with no hardware block providing the timing, a Throttle block is often needed.</p>
-</blockquote>
-<p>When real hardware provides the sample timing, we generally do not add Throttle to the same streaming path.</p>
-<p>Also remember that Throttle is <strong>not</strong> an ADC and does not create the samples. By the time the data reaches it, the signal is already represented digitally.</p>
+<section id="repeat-in-the-data-recovery-experiment" class="level3">
+<h3 class="anchored" data-anchor-id="repeat-in-the-data-recovery-experiment">Repeat in the Data-Recovery Experiment</h3>
+<p>The Repeat block in Experiment 25.4 deliberately creates a rectangular 1 ms symbol interval.</p>
+<p>That is not presented as a practical final OFDM pulse-shaping solution.</p>
+<p>It is a controlled teaching construction that lets the data experiment use the same <span class="math inline">\(T_u\)</span> and orthogonality condition developed in Experiment 25.3.</p>
 </section>
-<section id="qt-gui-time-sink" class="level3">
-<h3 class="anchored" data-anchor-id="qt-gui-time-sink">QT GUI Time Sink</h3>
-<p>The <strong>QT GUI Time Sink</strong> lets us inspect samples in the time domain.</p>
-<p>In this experiment, it showed the shape and amplitude of our cosine. Later, we will use it to compare signals, observe delays, inspect distortion and watch what happens when different parts of a flowgraph are changed.</p>
-<p>Time is only one way to look at a signal. Later, we will also look at signals in the frequency domain.</p>
-</section>
-</section>
-<section id="a-small-detail-that-will-matter-later-data-types" class="level2">
-<h2 class="anchored" data-anchor-id="a-small-detail-that-will-matter-later-data-types">1.13 A Small Detail That Will Matter Later: Data Types</h2>
-<p>Look again at the ports connecting the blocks in the flowgraph.</p>
-<p>We may have noticed that GNU Radio uses colours for them. Those colours help indicate the type of data travelling through each connection.</p>
-<p>In our first experiment, we selected:</p>
-<pre class="text"><code>Float</code></pre>
-<p>for the Signal Source, Throttle and Time Sink.</p>
-<p>We are not going to study GNU Radio data types in detail yet, but remember one simple rule:</p>
-<blockquote class="blockquote">
-<p>Blocks connected together must use compatible data types at their connected ports.</p>
-</blockquote>
-<p>This gives us a good opportunity to deliberately break our first flowgraph.</p>
-</section>
-<section id="experiment-2-break-the-flowgraph-on-purpose" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-2-break-the-flowgraph-on-purpose">1.14 Experiment 2: Break the Flowgraph on Purpose</h2>
-<p>Getting a flowgraph to work is useful. Breaking it on purpose can teach us something different.</p>
-<section id="create-a-type-mismatch" class="level3">
-<h3 class="anchored" data-anchor-id="create-a-type-mismatch">Create a Type Mismatch</h3>
-<p>Stop the flowgraph and open the Signal Source properties.</p>
-<p>Change:</p>
-<pre class="text"><code>Output Type: Float</code></pre>
-<p>to:</p>
-<pre class="text"><code>Output Type: Complex</code></pre>
-<p>Leave the Throttle set to <code>Float</code>.</p>
-<p>Now look at the connection between the two blocks and try to run or reconnect the flowgraph.</p>
-<p>GNU Radio should indicate that the two ports are not compatible.</p>
-<p>We have not learned what complex samples are yet, so we do not need to worry about <strong>why</strong> Float and Complex are different. That comes later. The lesson here is simply that the data produced by one block must be compatible with the data expected by the next.</p>
-<p>When we are finished, change the Signal Source back to <code>Float</code>.</p>
-</section>
-<section id="remove-throttle" class="level3">
-<h3 class="anchored" data-anchor-id="remove-throttle">Remove Throttle</h3>
-<p>Restore the working flowgraph.</p>
-<p>Now remove the Throttle block and connect:</p>
-<p><strong>Signal Source → QT GUI Time Sink</strong></p>
-<p>Run the flowgraph again.</p>
-<p>The flowgraph may still run. Without Throttle, however, there is no block in this simple chain intentionally limiting the sample-processing rate to <code>samp_rate</code>. GNU Radio can therefore process samples as quickly as the computer and the downstream block allow. Depending on the system, we may notice higher CPU usage or less predictable GUI behaviour.</p>
-<p>This tells us something important about Throttle. The cosine does not mathematically require it. We use it because this experiment has no real hardware setting the sample timing.</p>
-<p>Stop the flowgraph and put Throttle back.</p>
-<p>We will return to the meaning of sample rate when we study sampling in detail.</p>
-</section>
-</section>
-<section id="a-flowgraph-can-be-wrong-without-crashing" class="level2">
-<h2 class="anchored" data-anchor-id="a-flowgraph-can-be-wrong-without-crashing">1.15 A Flowgraph Can Be Wrong Without Crashing</h2>
-<p>Sometimes GNU Radio makes a problem obvious. Two ports may be incompatible, a parameter may be invalid, or the flowgraph may refuse to start.</p>
-<p>Those problems are relatively easy to find because the software tells us something is wrong.</p>
-<p>Later, we will meet a more subtle kind of mistake: a flowgraph can run perfectly and still produce the wrong signal-processing result.</p>
-<p>GNU Radio cannot always know what result we intended. A poor parameter choice or an incorrectly designed processing chain may still be perfectly valid software.</p>
-<p>That is why we will keep using the same habit throughout the book: predict, run, observe and explain.</p>
-<p>Quite often we will also break a working system, observe what changed and work out why.</p>
-<p>This is more useful than simply memorizing which blocks should be connected together.</p>
 </section>
 <section id="explore-further" class="level2">
-<h2 class="anchored" data-anchor-id="explore-further">1.16 Explore Further</h2>
-<p>Before closing the flowgraph, let us experiment with it for a few minutes.</p>
-<p>Start by changing the Signal Source frequency from:</p>
-<pre class="text"><code>1000</code></pre>
-<p>to:</p>
-<pre class="text"><code>2000</code></pre>
-<p>Run the flowgraph again. What changed in the Time Sink?</p>
-<p>Now return the frequency to <code>1000</code> and change the amplitude:</p>
-<pre class="text"><code>Amplitude = 0.5</code></pre>
-<p>What changed this time?</p>
-<p>Try:</p>
-<pre class="text"><code>Amplitude = 2</code></pre>
-<p>Then try changing the Offset.</p>
-<p>Finally, return the other settings to their original values and change:</p>
-<pre class="text"><code>Waveform: Cosine</code></pre>
-<p>to:</p>
-<pre class="text"><code>Waveform: Square</code></pre>
-<p>Run the flowgraph again.</p>
-<p>What changed? Which settings stayed the same?</p>
-<p>We do not need to explain every detail mathematically yet. In particular, there is much more to say about why a square wave looks and behaves differently from a cosine. We will get there later.</p>
-<p>For now, one habit matters most:</p>
-<blockquote class="blockquote">
-<p>Change one thing at a time, predict what should happen, and compare that prediction with what GNU Radio actually shows.</p>
-</blockquote>
-<p>Unexpected results are often the most useful ones to investigate.</p>
+<h2 class="anchored" data-anchor-id="explore-further">25.13 Explore Further</h2>
+<p>The experiments can be extended without changing their basic structure.</p>
+<ol type="1">
+<li><p>Keep <code>f1 = 1 kHz</code> and <code>Tu = 1 ms</code>, then test <code>f2 = 1.5</code>, <code>2.0</code>, <code>2.5</code>, <code>3.0</code>, and <code>4.0 kHz</code>. Calculate <span class="math inline">\(\Delta fT_u\)</span> before looking at the Number Sink.</p></li>
+<li><p>Test negative frequency differences as well as positive ones. Orthogonality depends on the integer number of relative rotations, not on the sign alone.</p></li>
+<li><p>Keep the subcarrier spacing fixed at 1 kHz and change the averaging interval. Observe that a spacing can be orthogonal for one interval and non-orthogonal for another.</p></li>
+<li><p>In Experiment 25.4, replace the 1 kHz spacing with 750 Hz and predict the constellation locations before running the flowgraph.</p></li>
+<li><p>Compare 1 kHz and 2 kHz orthogonal spacing. Both should separate ideally, but one uses frequency space more efficiently.</p></li>
+<li><p>Increase the number of manually constructed subcarriers and observe how quickly the flowgraph becomes cumbersome. This motivates the IFFT implementation directly.</p></li>
+<li><p>Return to Experiment 25.1 and compare a fixed physical echo with several symbol durations. Relate the observed eye closure to the ratio between echo delay and symbol duration.</p></li>
+</ol>
 </section>
 <section id="what-we-learned" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-learned">1.17 What We Learned</h2>
-<p>We started this chapter with a simple question: what does a radio actually do?</p>
-<p>At a high level, a receiver takes in signals, selects and processes the one we are interested in, and recovers useful information from it. Software Defined Radio allows many of those processing functions to be performed digitally and controlled through software.</p>
-<p>We also saw that <strong>software defined</strong> does not mean <strong>hardware free</strong>. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the transition into the digital domain, where the signal is represented by samples and can be processed numerically.</p>
-<p>Most importantly, we built our first GNU Radio flowgraph, with the signal path <strong>Signal Source → Throttle → QT GUI Time Sink</strong>.</p>
-<p>Along the way, we created a variable, configured and connected blocks, generated a known signal and viewed it in the time domain. We also introduced GNU Radio data types, learned why Throttle is useful in this software-only experiment and deliberately created a type mismatch to see how GNU Radio reacts.</p>
-<p>We have not gone deeply into the mathematics yet, and that is intentional. First, we need to become comfortable looking at signals, changing them and asking sensible questions about what we observe.</p>
+<h2 class="anchored" data-anchor-id="what-we-learned">25.14 What We Learned</h2>
+<p>This chapter developed the motivation for OFDM from the communication problem rather than beginning with an OFDM block.</p>
+<p>A high symbol rate shortens the single-carrier symbol duration.</p>
+<p>A fixed multipath delay therefore becomes more significant relative to each symbol as the symbol rate increases.</p>
+<p>This motivates dividing a high-rate stream among several slower parallel streams.</p>
+<p>The manually constructed four-subcarrier experiment showed the multicarrier idea directly, but wide carrier spacing used the available spectrum inefficiently.</p>
+<p>Orthogonality provides the solution.</p>
+<p>For normalized carriers, a subcarrier correlated with itself gives</p>
+<p><span class="math display">\[
+C_{ii}=1
+\]</span></p>
+<p>while two different orthogonal subcarriers satisfy</p>
+<p><span class="math display">\[
+C_{ij}=0,\qquad i\neq j
+\]</span></p>
+<p>over the common useful interval.</p>
+<p>Experiment 25.3 showed this physically through relative rotation.</p>
+<p>With <span class="math inline">\(T_u=1\)</span> ms, 1 kHz spacing produced one complete relative revolution and approximately zero cross-correlation.</p>
+<p>A 750 Hz spacing produced only 0.75 of a revolution and a measured correlation magnitude of approximately 0.300377.</p>
+<p>A 2 kHz spacing produced two complete revolutions and again gave approximately zero cross-correlation.</p>
+<p>The general condition is</p>
+<p><span class="math display">\[
+\Delta f=\frac{k}{T_u}
+\]</span></p>
+<p>for nonzero integer <span class="math inline">\(k\)</span>.</p>
+<p>OFDM normally uses</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_u}
+\]</span></p>
+<p>because it is the smallest nonzero orthogonal spacing.</p>
+<p>Experiment 25.4 then showed why that zero cross-correlation matters to actual data.</p>
+<p>For orthogonal subcarriers, detection of Subcarrier 1 produced</p>
+<p><span class="math display">\[
+A_1(1)+A_2(0)=A_1
+\]</span></p>
+<p>so the other QPSK stream did not contribute to the recovered symbol in the ideal correlation model.</p>
+<p>When the spacing was changed to 750 Hz, the second subcarrier leaked into the first and produced ICI.</p>
+<p>The key distinction is that <strong>spectral overlap is not automatically the same as interference</strong>.</p>
+<p>Orthogonal subcarrier spectra can overlap while remaining ideally separable over the correct observation interval.</p>
+<p>Finally, the relationship</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_u}=\frac{F_s}{N}
+\]</span></p>
+<p>showed that the orthogonal subcarrier spacing is exactly the DFT-bin spacing for an <span class="math inline">\(N\)</span>-sample useful symbol.</p>
+<p>That is the bridge to the IFFT.</p>
 </section>
 <section id="connecting-to-the-next-chapter" class="level2">
-<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">1.18 Connecting to the Next Chapter</h2>
-<p>Our first GNU Radio experiment generated a 1 kHz cosine. We could see it on the screen, but we used several words without exploring them properly:</p>
-<p><strong>amplitude</strong>, <strong>frequency</strong>, <strong>phase</strong>, <strong>period</strong> and <strong>offset</strong>.</p>
-<p>What do those quantities mean when we look at a waveform? What changes when we double the frequency? What does a phase shift look like? What happens when we add an offset?</p>
-<p>In Chapter 2, we will answer those questions by changing the signal and observing what happens.</p>
-<blockquote class="blockquote">
-<p><strong>What exactly is a signal?</strong></p>
-</blockquote>
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">25.15 Connecting to the Next Chapter</h2>
+<p>We now understand why OFDM uses many slow, closely spaced, orthogonal subcarriers.</p>
+<p>Our experiments constructed those subcarriers manually with separate oscillators, multipliers, and adders.</p>
+<p>That approach is useful for two or four carriers because every operation remains visible.</p>
+<p>It does not scale well to dozens, hundreds, or thousands of subcarriers.</p>
+<p>The DFT relationship developed in this chapter gives us a better method.</p>
+<p>If the desired complex data symbols are placed directly into orthogonal frequency bins, the inverse discrete Fourier transform can generate the complete time-domain multicarrier waveform in one operation.</p>
+<p>The FFT and IFFT therefore do more than analyze OFDM.</p>
+<p>They provide the computational structure that makes practical OFDM possible.</p>
+<p>The next chapter develops that idea directly.</p>
+<p>That leads to <strong>Chapter 26: Building an OFDM Signal with the IFFT</strong>.</p>
 
 
 </section>
@@ -1392,14 +1757,11 @@ x(t)=A\cos(2\pi ft+\phi)
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../index.html" class="pagination-link" aria-label="Home">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Home</span></span>
+      <a href="../book/24-building-complete-receiver.html" class="pagination-link" aria-label="Chapter 24: Building a Complete Single-Carrier Digital Receiver">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../book/02-understanding-signals.html" class="pagination-link" aria-label="Chapter 2: Understanding Signals">
-        <span class="nav-page-text"><span class="chapter-title">Chapter 2: Understanding Signals</span></span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->
@@ -1410,7 +1772,7 @@ x(t)=A\cos(2\pi ft+\phi)
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/01-what-is-software-defined-radio.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/25-OFDM.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 16: Linear Modulation and PAM – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/17-bpsk-qpsk-qam.html" rel="next">
+<link href="../book/15-bits-symbols.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/15-bits-symbols.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/16-linear-modulation-and-PAM.html"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-symbol-index-to-signal-amplitude" id="toc-from-symbol-index-to-signal-amplitude" class="nav-link" data-scroll-target="#from-symbol-index-to-signal-amplitude">16.1 From Symbol Index to Signal Amplitude</a></li>
+  <li><a href="#experiment-16.1-mapping-symbols-to-4-pam-levels" id="toc-experiment-16.1-mapping-symbols-to-4-pam-levels" class="nav-link" data-scroll-target="#experiment-16.1-mapping-symbols-to-4-pam-levels">16.2 Experiment 16.1: Mapping Symbols to 4-PAM Levels</a></li>
+  <li><a href="#experiment-16.2-from-pam-levels-to-a-waveform" id="toc-experiment-16.2-from-pam-levels-to-a-waveform" class="nav-link" data-scroll-target="#experiment-16.2-from-pam-levels-to-a-waveform">16.3 Experiment 16.2: From PAM Levels to a Waveform</a>
+  <ul class="collapse">
+  <li><a href="#why-this-is-pam" id="toc-why-this-is-pam" class="nav-link" data-scroll-target="#why-this-is-pam">Why This Is PAM</a></li>
+  </ul></li>
+  <li><a href="#experiment-16.3-hard-decisions-in-2-pam" id="toc-experiment-16.3-hard-decisions-in-2-pam" class="nav-link" data-scroll-target="#experiment-16.3-hard-decisions-in-2-pam">16.4 Experiment 16.3: Hard Decisions in 2-PAM</a></li>
+  <li><a href="#experiment-16.4-2-pam-with-noise" id="toc-experiment-16.4-2-pam-with-noise" class="nav-link" data-scroll-target="#experiment-16.4-2-pam-with-noise">16.5 Experiment 16.4: 2-PAM with Noise</a>
+  <ul class="collapse">
+  <li><a href="#a-deliberate-simplification" id="toc-a-deliberate-simplification" class="nav-link" data-scroll-target="#a-deliberate-simplification">A Deliberate Simplification</a></li>
+  </ul></li>
+  <li><a href="#from-2-pam-to-4-pam-decision-regions" id="toc-from-2-pam-to-4-pam-decision-regions" class="nav-link" data-scroll-target="#from-2-pam-to-4-pam-decision-regions">16.6 From 2-PAM to 4-PAM Decision Regions</a></li>
+  <li><a href="#experiment-16.5-hard-decisions-in-4-pam" id="toc-experiment-16.5-hard-decisions-in-4-pam" class="nav-link" data-scroll-target="#experiment-16.5-hard-decisions-in-4-pam">16.7 Experiment 16.5: Hard Decisions in 4-PAM</a>
+  <ul class="collapse">
+  <li><a href="#building-the-detector-from-ordinary-blocks" id="toc-building-the-detector-from-ordinary-blocks" class="nav-link" data-scroll-target="#building-the-detector-from-ordinary-blocks">Building the Detector from Ordinary Blocks</a></li>
+  <li><a href="#embedded-python-detector" id="toc-embedded-python-detector" class="nav-link" data-scroll-target="#embedded-python-detector">Embedded Python Detector</a></li>
+  </ul></li>
+  <li><a href="#experiment-16.6-4-pam-with-noise" id="toc-experiment-16.6-4-pam-with-noise" class="nav-link" data-scroll-target="#experiment-16.6-4-pam-with-noise">16.8 Experiment 16.6: 4-PAM with Noise</a></li>
+  <li><a href="#distance-to-a-decision-boundary" id="toc-distance-to-a-decision-boundary" class="nav-link" data-scroll-target="#distance-to-a-decision-boundary">16.9 Distance to a Decision Boundary</a></li>
+  <li><a href="#symbol-energy-and-normalisation" id="toc-symbol-energy-and-normalisation" class="nav-link" data-scroll-target="#symbol-energy-and-normalisation">16.10 Symbol Energy and Normalisation</a></li>
+  <li><a href="#four-different-quantities-in-one-receiver" id="toc-four-different-quantities-in-one-receiver" class="nav-link" data-scroll-target="#four-different-quantities-in-one-receiver">16.11 Four Different Quantities in One Receiver</a></li>
+  <li><a href="#where-pam-fits-in-a-complete-link" id="toc-where-pam-fits-in-a-complete-link" class="nav-link" data-scroll-target="#where-pam-fits-in-a-complete-link">16.12 Where PAM Fits in a Complete Link</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">16.13 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#chunks-to-symbols" id="toc-chunks-to-symbols" class="nav-link" data-scroll-target="#chunks-to-symbols">Chunks to Symbols</a></li>
+  <li><a href="#binary-slicer" id="toc-binary-slicer" class="nav-link" data-scroll-target="#binary-slicer">Binary Slicer</a></li>
+  <li><a href="#add-const" id="toc-add-const" class="nav-link" data-scroll-target="#add-const">Add Const</a></li>
+  <li><a href="#embedded-python-block" id="toc-embedded-python-block" class="nav-link" data-scroll-target="#embedded-python-block">Embedded Python Block</a></li>
+  </ul></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">16.14 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">16.15 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">16.16 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/16-linear-modulation-and-PAM.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/15-bits-symbols.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/16-linear-modulation-and-PAM.html"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>What if we represent digital information using different signal amplitudes?</strong></p>
+<p>Chapter 15 ended with symbol indices.</p>
+<p>For two bits per symbol, the bit groups</p>
+<pre class="text"><code>00
+01
+10
+11</code></pre>
+<p>became the indices</p>
+<pre class="text"><code>0
+1
+2
+3</code></pre>
+<p>Those numbers were useful labels, but they were still abstract. Nothing in the number <code>2</code>, for example, says what the transmitted signal should look like.</p>
+<p>This chapter completes that missing step.</p>
+<p>We will map each symbol index to a real amplitude, turn those amplitudes into a simple waveform, add noise, and then ask the receiver to decide which symbol was most likely transmitted.</p>
+<p>That leads us to <strong>Pulse Amplitude Modulation</strong>, or <strong>PAM</strong>, and to several ideas that will remain important throughout digital communication:</p>
+<ul>
+<li>symbol mapping;</li>
+<li>decision thresholds;</li>
+<li>hard decisions;</li>
+<li>noisy observations;</li>
+<li>symbol errors;</li>
+<li>symbol energy.</li>
+</ul>
+<p>The geometry is still one-dimensional. Every symbol lies somewhere on one amplitude axis.</p>
+<p>That simplicity makes PAM a good place to learn how a digital receiver makes decisions before we move into the two-dimensional I/Q plane.</p>
+</section>
+<section id="from-symbol-index-to-signal-amplitude" class="level2">
+<h2 class="anchored" data-anchor-id="from-symbol-index-to-signal-amplitude">16.1 From Symbol Index to Signal Amplitude</h2>
+<p>Suppose the transmitter has four symbol indices:</p>
+<p><span class="math display">\[
+0,\;1,\;2,\;3.
+\]</span></p>
+<p>We can choose a mapping such as:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Symbol Index</th>
+<th style="text-align: right;">PAM Amplitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">-3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">+3</td>
+</tr>
+</tbody>
+</table>
+<p>The allowed amplitudes are therefore</p>
+<p><span class="math display">\[
+\{-3,\;-1,\;+1,\;+3\}.
+\]</span></p>
+<p>Because there are four possible levels, this is <strong>4-PAM</strong>.</p>
+<p>The important distinction is:</p>
+<p>The mapping is <code>0 → -3</code>, <code>1 → -1</code>, <code>2 → +1</code>, and <code>3 → +3</code>.</p>
+<p>The number on the left is a digital label.</p>
+<p>The number on the right is the signal value chosen to represent that label.</p>
+<p>There is no requirement that symbol index <code>2</code> be transmitted as amplitude <code>2</code>. The mapping is a design choice.</p>
+</section>
+<section id="experiment-16.1-mapping-symbols-to-4-pam-levels" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.1-mapping-symbols-to-4-pam-levels">16.2 Experiment 16.1: Mapping Symbols to 4-PAM Levels</h2>
+<p>The first experiment adds one new operation to the bit-to-symbol chain from Chapter 15: a lookup from symbol index to amplitude.</p>
+<p>Use:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32k</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Bit rate</td>
+<td style="text-align: right;"><code>1k</code> bit/s</td>
+</tr>
+<tr class="odd">
+<td>Bits per symbol</td>
+<td style="text-align: right;"><code>2</code></td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>500</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>64</code></td>
+</tr>
+<tr class="even">
+<td>4-PAM symbol table</td>
+<td style="text-align: right;"><code>[-3, -1, 1, 3]</code></td>
+</tr>
+</tbody>
+</table>
+<p>The rate relationship remains</p>
+<p><span class="math display">\[
+R_b=kR_s.
+\]</span></p>
+<p>With two bits per symbol,</p>
+<p><span class="math display">\[
+R_s=\frac{R_b}{k}=\frac{1000}{2}=500\text{ symbols/s}.
+\]</span></p>
+<p>At 32 kS/s,</p>
+<p><span class="math display">\[
+N_{\text{sps}}=\frac{f_s}{R_s}=\frac{32000}{500}=64.
+\]</span></p>
+<p>The flowgraph uses <strong>Chunks to Symbols</strong> as the mapper.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp1-symbol-to-amplitude-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.1 flowgraph: mapping symbol indices to PAM amplitudes</figcaption>
+</figure>
+</div>
+<p>The actual block uses:</p>
+<pre class="text"><code>Input Type: byte
+Output Type: float
+Symbol Table: [-3, -1, 1, 3]
+Dimension: 1
+Num Ports: 1</code></pre>
+<p>The incoming symbol index selects one entry from the table:</p>
+<p>The mapping is <code>0 → -3</code>, <code>1 → -1</code>, <code>2 → +1</code>, and <code>3 → +3</code>.</p>
+<p>The result is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp1-symbol-to-amplitude.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.1 result: symbol indices and corresponding 4-PAM amplitudes</figcaption>
+</figure>
+</div>
+<p>The two plots contain the same information in different forms.</p>
+<p>One shows abstract symbol indices.</p>
+<p>The other shows the amplitudes assigned to those indices.</p>
+<p>Chunks to Symbols has not created new information. It has changed how the information is represented.</p>
+<p>That same idea will return later when integer symbol labels are mapped to complex constellation points.</p>
+</section>
+<section id="experiment-16.2-from-pam-levels-to-a-waveform" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.2-from-pam-levels-to-a-waveform">16.3 Experiment 16.2: From PAM Levels to a Waveform</h2>
+<p>A symbol amplitude still needs a duration.</p>
+<p>If the symbol rate is (R_s), then</p>
+<p><span class="math display">\[
+T_s=\frac{1}{R_s}.
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+R_s=500\text{ symbols/s},
+\]</span></p>
+<p>the symbol duration is</p>
+<p><span class="math display">\[
+T_s=\frac{1}{500}=2\text{ ms}.
+\]</span></p>
+<p>A simple way to create a sampled waveform is to hold each amplitude constant throughout that interval.</p>
+<p>With 64 samples per symbol, the Repeat block outputs 64 copies of every mapped PAM value.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp2-rectangular-pam-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.2 flowgraph: constructing a rectangular 4-PAM waveform</figcaption>
+</figure>
+</div>
+<p>The result separates two ideas that are easy to mix together.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp2-rectangular-pam.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.2 result: individual 4-PAM symbol values and the rectangular PAM waveform</figcaption>
+</figure>
+</div>
+<p>A sequence such as</p>
+<p><span class="math display">\[
+1,\;3,\;-3,\;1,\;1,\;3,\;-3,\;1
+\]</span></p>
+<p>is a sequence of symbol values.</p>
+<p>After Repeat, each value is held for the full symbol interval. The result is a waveform in time.</p>
+<p>For this chapter, the rectangular pulse is useful because its timing is obvious. It is not yet meant to be a realistic band-limited transmit pulse.</p>
+<section id="why-this-is-pam" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-is-pam">Why This Is PAM</h3>
+<p>A general baseband linear modulation signal can be written as</p>
+<p><span class="math display">\[
+x(t)=\sum_k a_kp(t-kT_s),
+\]</span></p>
+<p>where:</p>
+<ul>
+<li>(a_k) is the symbol value;</li>
+<li>(p(t)) is the pulse shape;</li>
+<li>(T_s) is the symbol duration.</li>
+</ul>
+<p>In this experiment, (p(t)) is rectangular.</p>
+<p>The pulse shape stays the same. Only its coefficient (a_k) changes from symbol to symbol.</p>
+<p>That is the basic idea behind Pulse Amplitude Modulation.</p>
+<p>It is also why PAM fits naturally into the broader class of <strong>linear modulation</strong>.</p>
+</section>
+</section>
+<section id="experiment-16.3-hard-decisions-in-2-pam" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.3-hard-decisions-in-2-pam">16.4 Experiment 16.3: Hard Decisions in 2-PAM</h2>
+<p>Before building a receiver for four levels, it is useful to simplify the problem.</p>
+<p>Consider <strong>2-PAM</strong>:</p>
+<pre class="text"><code>bit 0 -&gt; -1
+bit 1 -&gt; +1</code></pre>
+<p>The allowed levels are</p>
+<p><span class="math display">\[
+\{-1,\;+1\}.
+\]</span></p>
+<p>If the receiver observes (+0.82), the value is not exactly (+1), but it is clearly closer to the positive symbol than the negative one.</p>
+<p>For symmetric 2-PAM, the natural boundary is zero.</p>
+<p>The intended decision rule is</p>
+<p><span class="math display">\[
+r&lt;0\rightarrow\text{bit }0
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+r&gt;0\rightarrow\text{bit }1,
+\]</span></p>
+<p>where (r) is the received symbol observation.</p>
+<p>An observation exactly at zero lies on the decision boundary. In a continuous-noise model, landing exactly there has probability zero, so the important behaviour is what happens on either side.</p>
+<p>The GNU Radio experiment uses:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32k</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Bit rate</td>
+<td style="text-align: right;"><code>1k</code> bit/s</td>
+</tr>
+<tr class="odd">
+<td>Bits per symbol</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1k</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="even">
+<td>2-PAM symbol table</td>
+<td style="text-align: right;"><code>[-1, 1]</code></td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp3-2pam-hard-decision-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.3 flowgraph: hard decisions for a 2-PAM signal</figcaption>
+</figure>
+</div>
+<p>The <strong>Binary Slicer</strong> performs the zero-threshold hard decision.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp3-2pam-hard-decision.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.3 result: original bits, 2-PAM levels, and detected bits</figcaption>
+</figure>
+</div>
+<p>The noiseless chain is now complete:</p>
+<p>The noiseless chain is straightforward: bit <code>0</code> maps to <code>-1</code> and is detected as <code>0</code>, while bit <code>1</code> maps to <code>+1</code> and is detected as <code>1</code>.</p>
+<p>This is simple, but it establishes an important receiver viewpoint.</p>
+<p>The receiver does not need the physical amplitude to equal the original bit value.</p>
+<p>It only needs a rule that maps the measured signal back to one of the allowed digital states.</p>
+<p>That is a <strong>hard decision</strong>.</p>
+</section>
+<section id="experiment-16.4-2-pam-with-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.4-2-pam-with-noise">16.5 Experiment 16.4: 2-PAM with Noise</h2>
+<p>Real receivers do not observe perfect levels.</p>
+<p>A transmitted (+1) may arrive as</p>
+<pre class="text"><code>+0.92
++1.18
++0.55
++1.31</code></pre>
+<p>and a transmitted (-1) may arrive as</p>
+<pre class="text"><code>-0.87
+-1.16
+-0.48
+-1.29</code></pre>
+<p>The receiver can still make the correct decision as long as the observation stays on the correct side of zero.</p>
+<p>Experiment 16.4 adds real Gaussian noise before the Binary Slicer.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp4-2pam-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.4 flowgraph: 2-PAM with adjustable Gaussian noise and hard decisions</figcaption>
+</figure>
+</div>
+<p>Use:</p>
+<pre class="text"><code>QT GUI Range
+ID: noise_amp
+Label: Noise Amplitude
+Default Value: 0
+Start: 0
+Stop: 2
+Step: 0.05
+
+Noise Source
+Noise Type: Gaussian
+Amplitude: noise_amp
+Seed: 0</code></pre>
+<p>For GNU Radio’s real Gaussian Noise Source, <code>Amplitude</code> is the standard deviation of the generated noise.</p>
+<p>With <code>Seed = 0</code>, GNU Radio chooses a seed from the system clock. A non-zero seed is better when exactly repeatable noise is needed.</p>
+<section id="a-deliberate-simplification" class="level3">
+<h3 class="anchored" data-anchor-id="a-deliberate-simplification">A Deliberate Simplification</h3>
+<p>The order of the blocks matters.</p>
+<p>In this experiment, GNU Radio first creates one ideal PAM symbol value, adds one Gaussian noise value to that symbol observation, sends the noisy observation to the Binary Slicer, and only then uses Repeat to stretch the result for display.</p>
+<p>So this is not yet a sample-by-sample noisy channel.</p>
+<p>It is a <strong>symbol-level observation model</strong>:</p>
+<p><span class="math display">\[
+r_k=a_k+n_k.
+\]</span></p>
+<p>That simplification is intentional. It lets us study decision thresholds without also introducing pulse shaping, matched filtering, timing recovery, and sampling.</p>
+<p>With moderate noise:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp4-2pam-noise-correct.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.4 result: noisy 2-PAM observations that remain on the correct side of the threshold</figcaption>
+</figure>
+</div>
+<p>The received values move away from (-1) and (+1), but the detected bits remain correct.</p>
+<p>A transmitted (+1) received as</p>
+<p><span class="math display">\[
+r=+0.42
+\]</span></p>
+<p>is still positive, so the detector returns <code>1</code>.</p>
+<p>A transmitted (-1) received as</p>
+<p><span class="math display">\[
+r=-0.35
+\]</span></p>
+<p>is still negative, so the detector returns <code>0</code>.</p>
+<p>Now increase the noise.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp4-2pam-wrong-decision.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.4 result: a noisy 2-PAM observation crosses the threshold and causes a wrong decision</figcaption>
+</figure>
+</div>
+<p>Once an observation crosses zero, the receiver selects the wrong decision region.</p>
+<p>For example, if (+1) was transmitted but</p>
+<p><span class="math display">\[
+r=-0.18,
+\]</span></p>
+<p>the Binary Slicer sees a negative value and outputs <code>0</code>.</p>
+<p>The key lesson is:</p>
+<blockquote class="blockquote">
+<p><strong>Noise does not cause a digital error merely because it changes the amplitude. An error occurs when the observation crosses a decision boundary.</strong></p>
+</blockquote>
+</section>
+</section>
+<section id="from-2-pam-to-4-pam-decision-regions" class="level2">
+<h2 class="anchored" data-anchor-id="from-2-pam-to-4-pam-decision-regions">16.6 From 2-PAM to 4-PAM Decision Regions</h2>
+<p>Return to the 4-PAM alphabet:</p>
+<p><span class="math display">\[
+\{-3,\;-1,\;+1,\;+3\}.
+\]</span></p>
+<p>With two levels, one boundary at zero was enough.</p>
+<p>With four levels, the receiver needs three boundaries.</p>
+<p>For equally spaced levels and equal a priori likelihoods in symmetric Gaussian noise, the natural thresholds lie halfway between adjacent symbols:</p>
+<p><span class="math display">\[
+-2,\;0,\;+2.
+\]</span></p>
+<p>The resulting regions are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Received Observation</th>
+<th style="text-align: right;">Detected Symbol Index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>(r&lt;-2)</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>(-2r&lt;0)</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>(0r&lt;2)</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td>(r)</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<p>These midpoint thresholds are optimal for the simple equal-probability, equal-cost, additive Gaussian model used here.</p>
+<p>In a different receiver, unequal symbol probabilities or unequal error costs could shift the optimum boundaries.</p>
+<p>That broader detection-theory problem is not needed yet. For our experiment, midpoint thresholds give a clear and physically meaningful receiver.</p>
+</section>
+<section id="experiment-16.5-hard-decisions-in-4-pam" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.5-hard-decisions-in-4-pam">16.7 Experiment 16.5: Hard Decisions in 4-PAM</h2>
+<p>Experiment 16.5 implements the three thresholds in two ways.</p>
+<p>The transmitter uses:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32k</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Bit rate</td>
+<td style="text-align: right;"><code>1k</code> bit/s</td>
+</tr>
+<tr class="odd">
+<td>Bits per symbol</td>
+<td style="text-align: right;"><code>2</code></td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>500</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>64</code></td>
+</tr>
+<tr class="even">
+<td>4-PAM table</td>
+<td style="text-align: right;"><code>[-3, -1, 1, 3]</code></td>
+</tr>
+</tbody>
+</table>
+<section id="building-the-detector-from-ordinary-blocks" class="level3">
+<h3 class="anchored" data-anchor-id="building-the-detector-from-ordinary-blocks">Building the Detector from Ordinary Blocks</h3>
+<p>Binary Slicer makes a sign decision around zero.</p>
+<p>To test a threshold somewhere else, shift the input first.</p>
+<p>For the (-2) boundary,</p>
+<p><span class="math display">\[
+r&gt;-2
+\]</span></p>
+<p>can be written as</p>
+<p><span class="math display">\[
+r+2&gt;0.
+\]</span></p>
+<p>For the (+2) boundary,</p>
+<p><span class="math display">\[
+r&gt;2
+\]</span></p>
+<p>can be written as</p>
+<p><span class="math display">\[
+r-2&gt;0.
+\]</span></p>
+<p>The receiver therefore performs three tests:</p>
+<p>The receiver therefore evaluates three shifted versions of the same observation: <code>r + 2</code>, <code>r</code>, and <code>r - 2</code>, each followed by a Binary Slicer.</p>
+<p>Away from the exact boundaries, the three binary outputs form:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">PAM Level</th>
+<th style="text-align: right;">(r&gt;-2)</th>
+<th style="text-align: right;">(r&gt;0)</th>
+<th style="text-align: right;">(r&gt;2)</th>
+<th style="text-align: right;">Sum</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">+1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">+3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<p>The sum directly gives the symbol index.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp5-4pam-hard-decision-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.5 flowgraph: 4-PAM hard decisions using ordinary GNU Radio blocks and an Embedded Python alternative</figcaption>
+</figure>
+</div>
+<p>The flowgraph also includes an Embedded Python implementation of the same detector.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp5-4pam-hard-decision.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.5 result: transmitted indices, 4-PAM levels, and hard decisions from both detector implementations</figcaption>
+</figure>
+</div>
+<p>Both receivers produce the same symbol sequence for the ideal input.</p>
+<p>The ordinary-block implementation is valuable because every threshold is visible.</p>
+<p>The Python version is valuable because it expresses the same logic compactly.</p>
+</section>
+<section id="embedded-python-detector" class="level3">
+<h3 class="anchored" data-anchor-id="embedded-python-detector">Embedded Python Detector</h3>
+<p>The detector used in the experiment is:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> gnuradio <span class="im">import</span> gr</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> blk(gr.sync_block):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        gr.sync_block.<span class="fu">__init__</span>(</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>            name<span class="op">=</span><span class="st">'4-PAM Hard Decision'</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            in_sig<span class="op">=</span>[np.float32],</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>            out_sig<span class="op">=</span>[np.uint8]</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> work(<span class="va">self</span>, input_items, output_items):</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> input_items[<span class="dv">0</span>]</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> output_items[<span class="dv">0</span>]</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> <span class="bu">min</span>(<span class="bu">len</span>(x), <span class="bu">len</span>(y))</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> x[i] <span class="op">&lt;</span> <span class="op">-</span><span class="dv">2</span>:</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>                y[i] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> x[i] <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>                y[i] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> x[i] <span class="op">&lt;</span> <span class="dv">2</span>:</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>                y[i] <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                y[i] <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> n</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The boundary convention is now explicit.</p>
+<p>An observation exactly at (-2) is assigned to symbol 1, exactly at (0) to symbol 2, and exactly at (+2) to symbol 3.</p>
+<p>In practical continuous-noise operation, exact equality is not normally important. What matters is which region the observation enters.</p>
+</section>
+</section>
+<section id="experiment-16.6-4-pam-with-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-16.6-4-pam-with-noise">16.8 Experiment 16.6: 4-PAM with Noise</h2>
+<p>The final experiment adds Gaussian noise to the 4-PAM symbol observations and keeps only the compact Embedded Python detector.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp6-4pam-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.6 flowgraph: 4-PAM with adjustable noise and an Embedded Python hard-decision receiver</figcaption>
+</figure>
+</div>
+<p>The noise settings remain:</p>
+<pre class="text"><code>Noise Type: Gaussian
+Amplitude: noise_amp
+Seed: 0</code></pre>
+<p>As in Experiment 16.4, the noise is added at the <strong>symbol-observation level before Repeat</strong>.</p>
+<p>The model is therefore</p>
+<p><span class="math display">\[
+r_k=a_k+n_k,
+\]</span></p>
+<p>not yet a complete oversampled transmit-channel-receive chain.</p>
+<p>With moderate noise:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp6-4pam-noise-correct.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.6 result: noisy 4-PAM observations remain inside their correct decision regions</figcaption>
+</figure>
+</div>
+<p>The received values no longer sit exactly at (-3), (-1), (+1), and (+3), but they remain inside the correct regions.</p>
+<p>The detector therefore recovers the correct symbol indices.</p>
+<p>With stronger noise:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch16/ch16-exp6-4pam-wrong-decisions.png" class="img-fluid figure-img"></p>
+<figcaption>Experiment 16.6 result: strong noise pushes 4-PAM observations across decision thresholds and causes symbol errors</figcaption>
+</figure>
+</div>
+<p>Some observations cross (-2), (0), or (+2).</p>
+<p>Once that happens, the receiver chooses another region and produces a symbol error.</p>
+<p>For example, if (+1) was transmitted, the correct region is</p>
+<p><span class="math display">\[
+0\leq r&lt;2.
+\]</span></p>
+<p>Noise can cause an error in either direction:</p>
+<p><span class="math display">\[
+r&lt;0
+\]</span></p>
+<p>moves the observation into the (-1) region, while</p>
+<p><span class="math display">\[
+r\geq2
+\]</span></p>
+<p>moves it into the (+3) region.</p>
+<p>The receiver is still following its decision rule correctly. The problem is that the channel has moved the observation into the wrong region.</p>
+</section>
+<section id="distance-to-a-decision-boundary" class="level2">
+<h2 class="anchored" data-anchor-id="distance-to-a-decision-boundary">16.9 Distance to a Decision Boundary</h2>
+<p>The experiments suggest a better way to think about noise robustness.</p>
+<p>The receiver does not ask:</p>
+<blockquote class="blockquote">
+<p>Did the observation land exactly on the ideal symbol?</p>
+</blockquote>
+<p>It asks:</p>
+<blockquote class="blockquote">
+<p>Which decision region contains the observation?</p>
+</blockquote>
+<p>For 2-PAM, the levels are (-1) and (+1), and the threshold is zero.</p>
+<p>Each ideal symbol is therefore one amplitude unit from the nearest decision boundary.</p>
+<p>For 4-PAM with levels</p>
+<p><span class="math display">\[
+-3,\;-1,\;+1,\;+3,
+\]</span></p>
+<p>the thresholds are</p>
+<p><span class="math display">\[
+-2,\;0,\;+2.
+\]</span></p>
+<p>Each ideal level is also one amplitude unit from its nearest boundary in this unnormalised constellation.</p>
+<p>That does <strong>not</strong> mean the two modulation schemes have identical performance in a fair communication comparison.</p>
+<p>Their average energies are different.</p>
+<p>This is why distance and energy must be considered together.</p>
+</section>
+<section id="symbol-energy-and-normalisation" class="level2">
+<h2 class="anchored" data-anchor-id="symbol-energy-and-normalisation">16.10 Symbol Energy and Normalisation</h2>
+<p>For a rectangular symbol of constant amplitude (A) lasting (T_s),</p>
+<p><span class="math display">\[
+E_s=A^2T_s.
+\]</span></p>
+<p>The sign does not matter because the amplitude is squared.</p>
+<p>For 2-PAM,</p>
+<p><span class="math display">\[
+A\in\{-1,+1\},
+\]</span></p>
+<p>so both symbols have</p>
+<p><span class="math display">\[
+E_s=T_s.
+\]</span></p>
+<p>For the 4-PAM alphabet</p>
+<p><span class="math display">\[
+A\in\{-3,-1,+1,+3\},
+\]</span></p>
+<p>the squared amplitudes are</p>
+<p><span class="math display">\[
+9,\;1,\;1,\;9.
+\]</span></p>
+<p>If all four symbols are equally likely, the average symbol energy is</p>
+<p><span class="math display">\[
+\overline{E_s}=\frac{9+1+1+9}{4}T_s=5T_s.
+\]</span></p>
+<p>So the raw 4-PAM constellation used in the experiments has five times the average symbol energy of the raw 2-PAM constellation if the symbol durations are the same.</p>
+<p>A fair noise-performance comparison must not ignore that.</p>
+<p>Dividing the 4-PAM amplitudes by</p>
+<p><span class="math display">\[
+\sqrt{5}
+\]</span></p>
+<p>gives</p>
+<p><span class="math display">\[
+\left\{-\frac{3}{\sqrt{5}},-\frac{1}{\sqrt{5}},+\frac{1}{\sqrt{5}},+\frac{3}{\sqrt{5}}\right\},
+\]</span></p>
+<p>which has unit average squared amplitude.</p>
+<p>For our rectangular pulse of duration (T_s), its average symbol energy then becomes</p>
+<p><span class="math display">\[
+\overline{E_s}=T_s.
+\]</span></p>
+<p>If the pulse shape itself is normalised to unit energy, the same scaling gives unit average symbol energy.</p>
+<p>We keep the simple levels (-3,-1,+1,+3) in the experiments because the mapping and thresholds are much easier to see.</p>
+<p>The screenshots should therefore be used to understand decision geometry, not to claim a fair BER comparison between 2-PAM and 4-PAM.</p>
+</section>
+<section id="four-different-quantities-in-one-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="four-different-quantities-in-one-receiver">16.11 Four Different Quantities in One Receiver</h2>
+<p>Consider symbol index <code>2</code>.</p>
+<p>In our 4-PAM mapping, symbol index <code>2</code> is mapped to the ideal amplitude <code>+1</code>. After the channel and noise, the receiver might observe a value such as <code>+0.63</code>. Because <code>+0.63</code> still lies inside the decision region for symbol index <code>2</code>, the detector returns <code>2</code>.</p>
+<p>These are four different quantities.</p>
+<p><strong>Symbol index</strong> is an abstract digital label.</p>
+<p><strong>Ideal symbol amplitude</strong> is the signal value assigned to that label.</p>
+<p><strong>Received observation</strong> is what the receiver actually measures.</p>
+<p><strong>Detected symbol index</strong> is the receiver’s discrete decision.</p>
+<p>Keeping these stages separate is essential.</p>
+<p>Later, when symbols become complex I/Q points, the same logic will remain:</p>
+<p>The same sequence remains: a label is mapped to an ideal point, the channel moves it to a noisy point, and the receiver makes a decision.</p>
+<p>Only the geometry will change.</p>
+</section>
+<section id="where-pam-fits-in-a-complete-link" class="level2">
+<h2 class="anchored" data-anchor-id="where-pam-fits-in-a-complete-link">16.12 Where PAM Fits in a Complete Link</h2>
+<p>The experiments deliberately isolate mapping and decisions.</p>
+<p>A practical baseband digital link contains more stages:</p>
+<p>A practical link proceeds from bits to symbol mapping, pulse shaping, transmission through the channel, receiver filtering, sampling at the symbol instants, symbol decisions, and finally recovered bits.</p>
+<p>This chapter focuses on two parts:</p>
+<ul>
+<li>mapping symbol indices to amplitudes;</li>
+<li>turning noisy amplitude observations back into symbol indices.</li>
+</ul>
+<p>The omitted stages are not unimportant.</p>
+<p>Pulse shaping controls bandwidth and inter-symbol interference.</p>
+<p>Receiver filtering improves how the desired signal is collected.</p>
+<p>Timing recovery determines when the receiver should sample.</p>
+<p>Those topics are easier to understand once the decision problem itself is already clear.</p>
+<p>The noise experiments in this chapter are therefore intentionally simple symbol-level models, not complete communication channels.</p>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">16.13 GNU Radio Toolbox</h2>
+<p>Several familiar blocks take on important digital-communication roles here.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Repack Bits</td>
+<td>Groups incoming bits into symbol indices</td>
+</tr>
+<tr class="even">
+<td>Chunks to Symbols</td>
+<td>Maps symbol indices to real PAM amplitudes</td>
+</tr>
+<tr class="odd">
+<td>Repeat</td>
+<td>Holds a symbol value for several display samples to form a rectangular waveform</td>
+</tr>
+<tr class="even">
+<td>Binary Slicer</td>
+<td>Implements a zero-threshold binary hard decision</td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Adds real Gaussian disturbance to symbol observations</td>
+</tr>
+<tr class="even">
+<td>QT GUI Range</td>
+<td>Controls the noise standard deviation interactively</td>
+</tr>
+<tr class="odd">
+<td>Add Const</td>
+<td>Moves a non-zero threshold to zero before Binary Slicer</td>
+</tr>
+<tr class="even">
+<td>Embedded Python Block</td>
+<td>Implements compact multi-level 4-PAM decision logic</td>
+</tr>
+</tbody>
+</table>
+<section id="chunks-to-symbols" class="level3">
+<h3 class="anchored" data-anchor-id="chunks-to-symbols">Chunks to Symbols</h3>
+<p>The block behaves like a lookup table.</p>
+<p>For</p>
+<pre class="text"><code>[-3, -1, 1, 3]</code></pre>
+<p>index <code>0</code> selects <code>-3</code>, index <code>1</code> selects <code>-1</code>, and so on.</p>
+</section>
+<section id="binary-slicer" class="level3">
+<h3 class="anchored" data-anchor-id="binary-slicer">Binary Slicer</h3>
+<p>The block produces binary <code>1</code> for positive input and binary <code>0</code> for negative input.</p>
+<p>In symmetric 2-PAM, this makes zero the natural decision boundary.</p>
+<p>For exact zero, the block documentation does not define the behaviour in the same positive/negative wording, so we treat zero as the mathematical boundary rather than relying on it as an ordinary decision case.</p>
+</section>
+<section id="add-const" class="level3">
+<h3 class="anchored" data-anchor-id="add-const">Add Const</h3>
+<p>A threshold at (T) can be turned into a zero-threshold test by forming</p>
+<p><span class="math display">\[
+r-T.
+\]</span></p>
+<p>Experiment 16.5 uses this idea for the thresholds (-2) and (+2).</p>
+</section>
+<section id="embedded-python-block" class="level3">
+<h3 class="anchored" data-anchor-id="embedded-python-block">Embedded Python Block</h3>
+<p>Once the threshold logic is understood, a short custom block can express the same receiver more compactly.</p>
+<p>The block does not use a different detection principle. It simply packages the decision regions into reusable code.</p>
+</section>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">16.14 Explore Further</h2>
+<p>The PAM experiments are well suited to prediction before execution.</p>
+<ol type="1">
+<li><p>Change the 4-PAM symbol table to <code>[-6, -2, 2, 6]</code>. Predict the new midpoint thresholds.</p></li>
+<li><p>Change the 2-PAM mapping to <code>[-2, 2]</code>. Predict how far each ideal level will be from the zero decision boundary.</p></li>
+<li><p>In Experiment 16.4, use a non-zero Noise Source seed so the same noise realisation can be reproduced across runs.</p></li>
+<li><p>In Experiment 16.5, replace the 4-PAM levels with a non-uniform alphabet such as <code>[-4, -1, 1, 3]</code>. Calculate the midpoint thresholds before modifying the receiver.</p></li>
+<li><p>Change the 4-PAM detector to output the nearest ideal amplitude instead of the symbol index. Compare the role of a slicer with the role of a symbol decoder.</p></li>
+<li><p>Normalise the 4-PAM levels by (), then recalculate the corresponding thresholds.</p></li>
+<li><p>Move the Noise Source after Repeat and observe how different the time-domain display becomes when every waveform sample receives an independent disturbance rather than one disturbance per symbol observation.</p></li>
+</ol>
+<p>The last experiment is especially useful because it connects this simplified chapter to the more realistic transmit-channel-receive chain that comes later.</p>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">16.15 What We Learned</h2>
+<p>Chapter 15 ended with symbol indices.</p>
+<p>This chapter turned those labels into signal amplitudes.</p>
+<p>For 4-PAM, we used</p>
+<p><span class="math display">\[
+0\rightarrow-3,\qquad1\rightarrow-1,\qquad2\rightarrow+1,\qquad3\rightarrow+3.
+\]</span></p>
+<p>Chunks to Symbols performed that mapping.</p>
+<p>Repeat then held each symbol value for a chosen number of samples, giving us a simple rectangular PAM waveform.</p>
+<p>In the general linear modulation model,</p>
+<p><span class="math display">\[
+x(t)=\sum_k a_kp(t-kT_s),
+\]</span></p>
+<p>the data changes the coefficient (a_k), while (p(t)) describes the pulse shape.</p>
+<p>At the receiver, we began with 2-PAM and one decision boundary at zero.</p>
+<p>Then we moved to 4-PAM and three boundaries at</p>
+<p><span class="math display">\[
+-2,\;0,\;+2.
+\]</span></p>
+<p>The noise experiments showed that a received symbol does not need to land exactly on its ideal level.</p>
+<p>It only needs to stay inside the correct decision region.</p>
+<p>A symbol error occurs when noise pushes the observation across a boundary.</p>
+<p>We also separated four quantities that will remain important:</p>
+<p>A useful sequence to remember is: symbol index, ideal signal value, received observation, and detected symbol index.</p>
+<p>Finally, symbol energy showed why raw amplitude spacing alone is not enough for a fair comparison between modulation schemes. Energy normalisation matters when performance is compared quantitatively.</p>
+<p>The one-dimensional PAM picture has now given us the essential language of digital detection:</p>
+<ul>
+<li>ideal symbol locations;</li>
+<li>noisy observations;</li>
+<li>distances;</li>
+<li>thresholds;</li>
+<li>decision regions.</li>
+</ul>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">16.16 Connecting to the Next Chapter</h2>
+<p>Every PAM symbol in this chapter lived on one real amplitude axis.</p>
+<p>But a complex baseband sample has two components:</p>
+<p><span class="math display">\[
+x[n]=I[n]+jQ[n].
+\]</span></p>
+<p>That gives us two dimensions.</p>
+<p>Instead of choosing one amplitude on a line, a digital symbol can choose a point in the I/Q plane.</p>
+<p>The receiver will still see ideal symbol locations, noisy observations, and decision regions. The same ideas from PAM will survive.</p>
+<p>The geometry will simply become two-dimensional.</p>
+<p>That takes us to Chapter 17, <strong>BPSK, QPSK and QAM</strong>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/15-bits-symbols.html" class="pagination-link" aria-label="Chapter 15: Bits, Symbols and Digital Communication">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/17-bpsk-qpsk-qam.html" class="pagination-link" aria-label="Chapter 17: BPSK, QPSK and QAM">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/16-linear-modulation-and-PAM.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

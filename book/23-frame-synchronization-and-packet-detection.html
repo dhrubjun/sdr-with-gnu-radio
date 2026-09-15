@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 23: Frame Synchronization and Packet Detection – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/24-building-complete-receiver.html" rel="next">
+<link href="../book/22-symbol-timing-synchronization.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/21-PLL-and-carrier-synchronization.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/23-frame-synchronization-and-packet-detection.html"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-a-continuous-stream-to-a-frame" id="toc-from-a-continuous-stream-to-a-frame" class="nav-link" data-scroll-target="#from-a-continuous-stream-to-a-frame">23.1 From a Continuous Stream to a Frame</a></li>
+  <li><a href="#experiment-23.1-creating-a-repeated-qpsk-frame" id="toc-experiment-23.1-creating-a-repeated-qpsk-frame" class="nav-link" data-scroll-target="#experiment-23.1-creating-a-repeated-qpsk-frame">23.2 Experiment 23.1: Creating a Repeated QPSK Frame</a></li>
+  <li><a href="#searching-for-the-preamble-with-correlation" id="toc-searching-for-the-preamble-with-correlation" class="nav-link" data-scroll-target="#searching-for-the-preamble-with-correlation">23.3 Searching for the Preamble with Correlation</a></li>
+  <li><a href="#experiment-23.2-detecting-the-preamble-with-correlation" id="toc-experiment-23.2-detecting-the-preamble-with-correlation" class="nav-link" data-scroll-target="#experiment-23.2-detecting-the-preamble-with-correlation">23.4 Experiment 23.2: Detecting the Preamble with Correlation</a></li>
+  <li><a href="#correlation-in-noise" id="toc-correlation-in-noise" class="nav-link" data-scroll-target="#correlation-in-noise">23.5 Correlation in Noise</a></li>
+  <li><a href="#experiment-23.3-preamble-detection-in-noise" id="toc-experiment-23.3-preamble-detection-in-noise" class="nav-link" data-scroll-target="#experiment-23.3-preamble-detection-in-noise">23.6 Experiment 23.3: Preamble Detection in Noise</a></li>
+  <li><a href="#turning-a-correlation-peak-into-a-detection" id="toc-turning-a-correlation-peak-into-a-detection" class="nav-link" data-scroll-target="#turning-a-correlation-peak-into-a-detection">23.7 Turning a Correlation Peak into a Detection</a></li>
+  <li><a href="#experiment-23.4-effect-of-detection-threshold" id="toc-experiment-23.4-effect-of-detection-threshold" class="nav-link" data-scroll-target="#experiment-23.4-effect-of-detection-threshold">23.8 Experiment 23.4: Effect of Detection Threshold</a></li>
+  <li><a href="#experiment-23.5-effect-of-preamble-sequence-and-length" id="toc-experiment-23.5-effect-of-preamble-sequence-and-length" class="nav-link" data-scroll-target="#experiment-23.5-effect-of-preamble-sequence-and-length">23.9 Experiment 23.5: Effect of Preamble Sequence and Length</a></li>
+  <li><a href="#from-correlation-peaks-to-receiver-events" id="toc-from-correlation-peaks-to-receiver-events" class="nav-link" data-scroll-target="#from-correlation-peaks-to-receiver-events">23.10 From Correlation Peaks to Receiver Events</a></li>
+  <li><a href="#experiment-23.6-detecting-an-access-code-and-creating-frame-tags" id="toc-experiment-23.6-detecting-an-access-code-and-creating-frame-tags" class="nav-link" data-scroll-target="#experiment-23.6-detecting-an-access-code-and-creating-frame-tags">23.11 Experiment 23.6: Detecting an Access Code and Creating Frame Tags</a>
+  <ul class="collapse">
+  <li><a href="#where-is-the-tag-placed" id="toc-where-is-the-tag-placed" class="nav-link" data-scroll-target="#where-is-the-tag-placed">Where Is the Tag Placed?</a></li>
+  </ul></li>
+  <li><a href="#two-different-meanings-of-threshold" id="toc-two-different-meanings-of-threshold" class="nav-link" data-scroll-target="#two-different-meanings-of-threshold">23.12 Two Different Meanings of Threshold</a></li>
+  <li><a href="#experiment-23.7-access-code-error-tolerance" id="toc-experiment-23.7-access-code-error-tolerance" class="nav-link" data-scroll-target="#experiment-23.7-access-code-error-tolerance">23.13 Experiment 23.7: Access-Code Error Tolerance</a></li>
+  <li><a href="#putting-frame-detection-into-the-qpsk-receiver" id="toc-putting-frame-detection-into-the-qpsk-receiver" class="nav-link" data-scroll-target="#putting-frame-detection-into-the-qpsk-receiver">23.14 Putting Frame Detection into the QPSK Receiver</a></li>
+  <li><a href="#experiment-23.8-qpsk-frame-detection" id="toc-experiment-23.8-qpsk-frame-detection" class="nav-link" data-scroll-target="#experiment-23.8-qpsk-frame-detection">23.15 Experiment 23.8: QPSK Frame Detection</a>
+  <ul class="collapse">
+  <li><a href="#why-did-the-absolute-tag-offset-change" id="toc-why-did-the-absolute-tag-offset-change" class="nav-link" data-scroll-target="#why-did-the-absolute-tag-offset-change">Why Did the Absolute Tag Offset Change?</a></li>
+  </ul></li>
+  <li><a href="#experiment-23.8-continued-frame-detection-in-noise" id="toc-experiment-23.8-continued-frame-detection-in-noise" class="nav-link" data-scroll-target="#experiment-23.8-continued-frame-detection-in-noise">23.16 Experiment 23.8 Continued: Frame Detection in Noise</a>
+  <ul class="collapse">
+  <li><a href="#noise-voltage-0" id="toc-noise-voltage-0" class="nav-link" data-scroll-target="#noise-voltage-0">Noise Voltage = 0</a></li>
+  <li><a href="#noise-voltage-1.5" id="toc-noise-voltage-1.5" class="nav-link" data-scroll-target="#noise-voltage-1.5">Noise Voltage = 1.5</a></li>
+  <li><a href="#noise-voltage-2" id="toc-noise-voltage-2" class="nav-link" data-scroll-target="#noise-voltage-2">Noise Voltage = 2</a></li>
+  </ul></li>
+  <li><a href="#why-not-simply-increase-the-error-tolerance" id="toc-why-not-simply-increase-the-error-tolerance" class="nav-link" data-scroll-target="#why-not-simply-increase-the-error-tolerance">23.17 Why Not Simply Increase the Error Tolerance?</a></li>
+  <li><a href="#preamble-access-code-and-frame_start" id="toc-preamble-access-code-and-frame_start" class="nav-link" data-scroll-target="#preamble-access-code-and-frame_start">23.18 Preamble, Access Code, and <code>frame_start</code></a></li>
+  <li><a href="#physical-meaning-of-frame-synchronization" id="toc-physical-meaning-of-frame-synchronization" class="nav-link" data-scroll-target="#physical-meaning-of-frame-synchronization">23.19 Physical Meaning of Frame Synchronization</a></li>
+  <li><a href="#frame-synchronization-does-not-guarantee-correct-data" id="toc-frame-synchronization-does-not-guarantee-correct-data" class="nav-link" data-scroll-target="#frame-synchronization-does-not-guarantee-correct-data">23.20 Frame Synchronization Does Not Guarantee Correct Data</a></li>
+  <li><a href="#practical-sdr-perspective" id="toc-practical-sdr-perspective" class="nav-link" data-scroll-target="#practical-sdr-perspective">23.21 Practical SDR Perspective</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">23.22 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#threshold" id="toc-threshold" class="nav-link" data-scroll-target="#threshold">Threshold</a></li>
+  <li><a href="#correlate-access-code---tag" id="toc-correlate-access-code---tag" class="nav-link" data-scroll-target="#correlate-access-code---tag">Correlate Access Code - Tag</a></li>
+  <li><a href="#tag-debug" id="toc-tag-debug" class="nav-link" data-scroll-target="#tag-debug">Tag Debug</a></li>
+  <li><a href="#binary-slicer" id="toc-binary-slicer" class="nav-link" data-scroll-target="#binary-slicer">Binary Slicer</a></li>
+  <li><a href="#interleave" id="toc-interleave" class="nav-link" data-scroll-target="#interleave">Interleave</a></li>
+  <li><a href="#head" id="toc-head" class="nav-link" data-scroll-target="#head">Head</a></li>
+  </ul></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">23.23 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">23.24 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">23.25 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/23-frame-synchronization-and-packet-detection.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/21-PLL-and-carrier-synchronization.html">Part VII: Teaching the Receiver Where to Look</a></li><li class="breadcrumb-item"><a href="../book/23-frame-synchronization-and-packet-detection.html"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>How does a receiver determine where a frame or packet begins in a continuous stream of recovered symbols or bits?</strong></p>
+<p>Chapter 22 recovered symbol timing. The receiver learned when to measure each symbol so that the transmitted constellation could be observed at useful decision instants.</p>
+<p>But correct symbol timing does not tell us where a message begins.</p>
+<p>A receiver may produce a continuous stream such as</p>
+<pre class="text"><code>... 1 0 1 1 0 0 1 0 0 1 1 0 0 1 0 1 1 0 1 1 0 0 1 0 ...</code></pre>
+<p>and still need to answer several questions.</p>
+<p>Where does one frame begin?</p>
+<p>Which bits belong to the synchronization sequence?</p>
+<p>Which bits belong to the payload?</p>
+<p>That is the problem of <strong>frame synchronization</strong>.</p>
+<p>In this chapter, we create repeated QPSK frames, insert a known preamble, detect it with correlation, study the effects of noise and threshold choice, compare different preamble sequences and lengths, and finally use GNU Radio stream tags to mark detected frame boundaries.</p>
+<p>Carrier synchronization determines the correct phase and frequency reference. Timing synchronization determines when to sample the waveform. Frame synchronization determines where the structured message begins.</p>
+</section>
+<section id="from-a-continuous-stream-to-a-frame" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-continuous-stream-to-a-frame">23.1 From a Continuous Stream to a Frame</h2>
+<p>A practical digital communication system usually organizes information into <strong>frames</strong> or <strong>packets</strong>.</p>
+<p>A simple frame may contain</p>
+<pre class="text"><code>Preamble | Payload</code></pre>
+<p>The <strong>payload</strong> contains the information we want to communicate.</p>
+<p>The <strong>preamble</strong> is a known sequence deliberately inserted by the transmitter.</p>
+<p>Sending known information may appear wasteful, but it gives the receiver a recognizable landmark. If every frame begins with the same sequence, the receiver can search the incoming stream for that pattern.</p>
+<p>A more complete frame may also contain a header and an error-detection field, but we do not need that structure yet.</p>
+<p>The central idea is simple:</p>
+<blockquote class="blockquote">
+<p><strong>A known preamble gives the receiver a way to locate an otherwise unknown frame boundary.</strong></p>
+</blockquote>
+<p>In these experiments, packet detection and frame-boundary detection are closely related because the same known sequence provides both the evidence that a frame is present and the reference position for that frame.</p>
+</section>
+<section id="experiment-23.1-creating-a-repeated-qpsk-frame" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.1-creating-a-repeated-qpsk-frame">23.2 Experiment 23.1: Creating a Repeated QPSK Frame</h2>
+<p>Before detecting a frame, we first create one.</p>
+<p>The transmitted stream repeats the same basic structure:</p>
+<pre class="text"><code>Preamble | Payload | Preamble | Payload | ...</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp01_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for the repeated QPSK frame</figcaption>
+</figure>
+</div>
+<p>The modulation itself is familiar QPSK. The new element is the structure of the transmitted data.</p>
+<p>The main settings are</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32 kS/s</code></td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>4 ksym/s</code></td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>8</code></td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+</tr>
+<tr class="odd">
+<td>RRC span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="even">
+<td>Number of RRC taps</td>
+<td style="text-align: right;"><code>65</code></td>
+</tr>
+</tbody>
+</table>
+<p>Because the frame repeats, the preamble also appears periodically in the transmitted stream.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp01_repeated_qpsk_frame.png" class="img-fluid figure-img"></p>
+<figcaption>Repeated QPSK frame</figcaption>
+</figure>
+</div>
+<p>At this stage, the receiver is not yet detecting anything.</p>
+<p>The experiment simply creates a known sequence that appears repeatedly inside an otherwise continuous communication signal.</p>
+</section>
+<section id="searching-for-the-preamble-with-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="searching-for-the-preamble-with-correlation">23.3 Searching for the Preamble with Correlation</h2>
+<p>The DSP operation we need was introduced in Chapter 11: <strong>correlation</strong>.</p>
+<p>There, correlation measured how strongly a received signal matched a known reference.</p>
+<p>Here, the same idea becomes a frame-synchronization tool.</p>
+<p>Let the known preamble contain <span class="math inline">\(N\)</span> complex symbols. One form of sliding correlation is</p>
+<p><span class="math display">\[
+C[k]=\sum_{n=0}^{N-1}r[k+n]p^*[n]
+\]</span></p>
+<p>where <span class="math inline">\(r[\cdot]\)</span> is the received sequence and <span class="math inline">\(p[\cdot]\)</span> is the known preamble.</p>
+<p>A detector can examine</p>
+<p><span class="math display">\[
+|C[k]|
+\]</span></p>
+<p>As the reference slides across unrelated payload symbols, the terms do not reinforce consistently.</p>
+<p>When the received sequence aligns with the known preamble, the terms reinforce and a larger correlation response appears.</p>
+<p>The important point is that correlation combines evidence from the <strong>entire known sequence</strong> rather than deciding from one sample alone.</p>
+</section>
+<section id="experiment-23.2-detecting-the-preamble-with-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.2-detecting-the-preamble-with-correlation">23.4 Experiment 23.2: Detecting the Preamble with Correlation</h2>
+<p>We now search the repeated QPSK stream for the known preamble.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp02_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for preamble correlation</figcaption>
+</figure>
+</div>
+<p>Because the same preamble occurs once per frame, we expect strong correlation responses at regular intervals.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp02_preamble_correlation.png" class="img-fluid figure-img"></p>
+<figcaption>Preamble correlation for the repeated frame</figcaption>
+</figure>
+</div>
+<p>That is what we observe.</p>
+<p>The receiver does not need to know the payload. It only needs the known synchronization sequence.</p>
+<p>Correlation has now changed from a general similarity measure into a practical synchronization mechanism.</p>
+</section>
+<section id="correlation-in-noise" class="level2">
+<h2 class="anchored" data-anchor-id="correlation-in-noise">23.5 Correlation in Noise</h2>
+<p>A simple noisy received signal can be written as</p>
+<p><span class="math display">\[
+r[n]=s[n]+w[n]
+\]</span></p>
+<p>Noise changes the individual received samples.</p>
+<p>Correlation still has an advantage because it combines information from several known symbols. Random noise does not normally reinforce over the preamble in the same structured way as the correctly aligned sequence.</p>
+<p>This does not make correlation immune to noise.</p>
+<p>As the disturbance becomes stronger, genuine correlation peaks can shrink or fluctuate, while accidental responses from noise and payload data can become more significant.</p>
+</section>
+<section id="experiment-23.3-preamble-detection-in-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.3-preamble-detection-in-noise">23.6 Experiment 23.3: Preamble Detection in Noise</h2>
+<p>We now increase only the Channel Model noise voltage.</p>
+<p>The experiment observes both the recovered QPSK symbols and the preamble-correlation response.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp03_noise_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of noise on preamble correlation and recovered QPSK symbols</figcaption>
+</figure>
+</div>
+<p>As the noise increases, the constellation spreads and the correlation response becomes more variable.</p>
+<p>Useful preamble peaks remain recognizable over part of the tested range, but visual inspection is not enough for an automatic receiver.</p>
+<p>The receiver needs a numerical rule that decides whether a correlation response is large enough to count as a detection.</p>
+<p>That leads to a threshold.</p>
+</section>
+<section id="turning-a-correlation-peak-into-a-detection" class="level2">
+<h2 class="anchored" data-anchor-id="turning-a-correlation-peak-into-a-detection">23.7 Turning a Correlation Peak into a Detection</h2>
+<p>Suppose the receiver declares a preamble when</p>
+<p><span class="math display">\[
+|C[k]|&gt;T
+\]</span></p>
+<p>where <span class="math inline">\(T\)</span> is the detection threshold.</p>
+<p>A low threshold makes the detector more sensitive, but unrelated payload patterns or noise fluctuations are then more likely to cross it.</p>
+<p>That can produce a <strong>false detection</strong>.</p>
+<p>A high threshold makes the detector more selective, but a genuine preamble weakened by noise or distortion may fail to cross it.</p>
+<p>That produces a <strong>missed detection</strong>.</p>
+<p>There is therefore no universal best threshold.</p>
+<p>The threshold expresses how much correlation evidence the receiver requires before it accepts that the preamble has been found.</p>
+</section>
+<section id="experiment-23.4-effect-of-detection-threshold" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.4-effect-of-detection-threshold">23.8 Experiment 23.4: Effect of Detection Threshold</h2>
+<p>We compare three detection thresholds.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Detection threshold</th>
+<th>Observation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td>sensitive; more values qualify</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">11</td>
+<td>useful separation in this experiment</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">14</td>
+<td>above the genuine observed peaks</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp04_threshold_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of different preamble detection thresholds</figcaption>
+</figure>
+</div>
+<p>At threshold 7, the detector responds readily.</p>
+<p>Around 11, the strongest preamble responses are separated more clearly from the lower values.</p>
+<p>At 14, the genuine observed peaks no longer reach the decision level, so detections are missed.</p>
+<p>For this experiment, <strong>11</strong> is a useful choice.</p>
+<p>It is not a universal threshold. A useful value depends on signal scaling, preamble length and sequence, noise, channel conditions, and the acceptable tradeoff between false alarms and missed detections.</p>
+</section>
+<section id="experiment-23.5-effect-of-preamble-sequence-and-length" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.5-effect-of-preamble-sequence-and-length">23.9 Experiment 23.5: Effect of Preamble Sequence and Length</h2>
+<p>Detection quality depends not only on the threshold but also on the sequence being searched for.</p>
+<p>We compare:</p>
+<ol type="1">
+<li>the correct 8-symbol preamble;</li>
+<li>a wrong 8-symbol sequence;</li>
+<li>a shorter 4-symbol preamble.</li>
+</ol>
+<p>For the retained comparison, the detection threshold is 7.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp05_preamble_comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of the preamble sequence and length on correlation</figcaption>
+</figure>
+</div>
+<p>The correct 8-symbol preamble produces strong, clearly separated peaks.</p>
+<p>For the wrong 8-symbol comparison, the reference sequence is</p>
+<pre class="text"><code>[1+1j, 1-1j, -1-1j, -1+1j, 1+1j, 1-1j, -1-1j, -1+1j]</code></pre>
+<p>Its correlation response is weaker and less distinctive than the correct sequence.</p>
+<p>The shorter 4-symbol preamble still produces periodic responses, but the peak magnitude is lower because fewer known symbols contribute to the correlation sum.</p>
+<p>This gives two useful lessons.</p>
+<p>First, <strong>sequence choice matters</strong>. A useful preamble should have correlation properties that make the desired alignment easy to distinguish from other alignments.</p>
+<p>Second, <strong>length creates a tradeoff</strong>. A longer preamble can provide more detection evidence, but it also consumes more transmission overhead.</p>
+<p>Longer is not automatically better. The sequence itself matters as well.</p>
+<p>A constellation plot is not needed for this experiment because the question concerns preamble detection rather than modulation quality.</p>
+</section>
+<section id="from-correlation-peaks-to-receiver-events" class="level2">
+<h2 class="anchored" data-anchor-id="from-correlation-peaks-to-receiver-events">23.10 From Correlation Peaks to Receiver Events</h2>
+<p>A correlation plot is useful for understanding the detector, but a practical receiver needs machine-readable information saying that a frame landmark was found at a particular stream position.</p>
+<p>GNU Radio can attach metadata to stream items using a <strong>stream tag</strong>.</p>
+<p>The tag does not replace the data item. It adds information to that position in the stream.</p>
+<p>For example, a receiver can create a tag with the key</p>
+<pre class="text"><code>frame_start</code></pre>
+<p>when it detects the known access code.</p>
+<p>Downstream blocks can then use that metadata to interpret the following data relative to the detected frame boundary.</p>
+</section>
+<section id="experiment-23.6-detecting-an-access-code-and-creating-frame-tags" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.6-detecting-an-access-code-and-creating-frame-tags">23.11 Experiment 23.6: Detecting an Access Code and Creating Frame Tags</h2>
+<p>We now move from complex-symbol preamble correlation to a direct bit-stream experiment.</p>
+<p>The repeated frame is</p>
+<pre class="text"><code>Access code: 10110010
+Payload:     01100101</code></pre>
+<p>The frame length is</p>
+<p><span class="math display">\[
+N_{\text{frame}}=8+8=16\text{ bits}
+\]</span></p>
+<p>GNU Radio’s <code>Correlate Access Code - Tag</code> block searches for</p>
+<pre class="text"><code>10110010</code></pre>
+<p>with the settings</p>
+<pre class="text"><code>Access Code: 10110010
+Threshold: 0
+Tag Name: frame_start</code></pre>
+<p><code>Tag Debug</code> is configured to display the <code>frame_start</code> tags.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp06_access_code_detection.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio access-code detection</figcaption>
+</figure>
+</div>
+<p>The observed tag offsets include</p>
+<pre class="text"><code>8
+24
+40
+56
+72
+88
+104
+120</code></pre>
+<p>The spacing is</p>
+<p><span class="math display">\[
+24-8=16
+\]</span></p>
+<p>which matches the 16-bit repeated frame.</p>
+<section id="where-is-the-tag-placed" class="level3">
+<h3 class="anchored" data-anchor-id="where-is-the-tag-placed">Where Is the Tag Placed?</h3>
+<p>The detector cannot know that the access code matched until the complete 8-bit pattern has arrived.</p>
+<p>In this direct-bit experiment, the tag therefore appears immediately after the detected access code, at the first payload bit.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp06_tag_offset_concept.png" class="img-fluid figure-img"></p>
+<figcaption>Conceptual position of the detected frame tags</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp06_access_code_tags.png" class="img-fluid figure-img"></p>
+<figcaption>Tag Debug output for repeated access-code detections</figcaption>
+</figure>
+</div>
+<p>The receiver has now converted pattern detection into explicit stream metadata.</p>
+</section>
+</section>
+<section id="two-different-meanings-of-threshold" class="level2">
+<h2 class="anchored" data-anchor-id="two-different-meanings-of-threshold">23.12 Two Different Meanings of Threshold</h2>
+<p>Two different threshold concepts appear in this chapter.</p>
+<p>They must not be confused.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Threshold</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Correlation detection threshold</td>
+<td>minimum correlation evidence required for a detection</td>
+</tr>
+<tr class="even">
+<td><code>Correlate Access Code - Tag</code> threshold</td>
+<td>maximum number of access-code bit mismatches tolerated</td>
+</tr>
+</tbody>
+</table>
+<p>A correlation threshold of 11 and an access-code threshold of 1 are completely different quantities.</p>
+<p>The first compares a continuous-valued correlation response with a decision level.</p>
+<p>The second controls how many binary disagreements are allowed when matching the access code.</p>
+</section>
+<section id="experiment-23.7-access-code-error-tolerance" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.7-access-code-error-tolerance">23.13 Experiment 23.7: Access-Code Error Tolerance</h2>
+<p>We deliberately corrupt one access-code bit.</p>
+<p>With</p>
+<pre class="text"><code>Threshold: 0</code></pre>
+<p>the access-code detector requires an exact match, so the corrupted pattern is rejected.</p>
+<p>We then change only</p>
+<pre class="text"><code>Threshold: 1</code></pre>
+<p>which allows one bit mismatch.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp07_access_code_error_tolerance.png" class="img-fluid figure-img"></p>
+<figcaption>Access-code detection with one tolerated bit error</figcaption>
+</figure>
+</div>
+<p>The detector now creates <code>frame_start</code> tags.</p>
+<p>In the retained output, the accepted one-bit mismatch is reported with</p>
+<pre class="text"><code>Value: 1</code></pre>
+<p>Allowing access-code errors therefore creates another tradeoff.</p>
+<p>A strict match reduces accidental detections but can miss a corrupted genuine code.</p>
+<p>Greater tolerance can preserve detection when some access-code bits are wrong, but more unintended bit patterns may also qualify.</p>
+</section>
+<section id="putting-frame-detection-into-the-qpsk-receiver" class="level2">
+<h2 class="anchored" data-anchor-id="putting-frame-detection-into-the-qpsk-receiver">23.14 Putting Frame Detection into the QPSK Receiver</h2>
+<p>The direct bit-stream experiment isolated the access-code detector.</p>
+<p>We now integrate it into the communication receiver.</p>
+<p>The main processing stages are</p>
+<p><strong>Pulse Shaping → Channel → Matched Filtering → Symbol Timing Recovery → QPSK Decisions → Bit Reconstruction → Access-Code Detection → <code>frame_start</code> Tags</strong></p>
+<p>Frame synchronization does not replace timing synchronization.</p>
+<p>Timing synchronization answers:</p>
+<blockquote class="blockquote">
+<p><strong>Where should each symbol be sampled?</strong></p>
+</blockquote>
+<p>Frame synchronization answers:</p>
+<blockquote class="blockquote">
+<p><strong>Which recovered symbol or bit marks the beginning of the frame structure?</strong></p>
+</blockquote>
+<p>The two stages solve different problems.</p>
+</section>
+<section id="experiment-23.8-qpsk-frame-detection" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.8-qpsk-frame-detection">23.15 Experiment 23.8: QPSK Frame Detection</h2>
+<p>The complete frame-detection flowgraph combines the synchronization and decision stages needed to recover the repeated bit structure.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp08_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Complete QPSK frame-detection flowgraph</figcaption>
+</figure>
+</div>
+<p>The main settings are</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32 kS/s</code></td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>4 ksym/s</code></td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>8</code></td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+</tr>
+<tr class="odd">
+<td>RRC span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="even">
+<td>RRC taps</td>
+<td style="text-align: right;"><code>65</code></td>
+</tr>
+<tr class="odd">
+<td>Access code</td>
+<td style="text-align: right;"><code>10110010</code></td>
+</tr>
+<tr class="even">
+<td>Access-code threshold</td>
+<td style="text-align: right;"><code>0</code></td>
+</tr>
+<tr class="odd">
+<td>Tag name</td>
+<td style="text-align: right;"><code>frame_start</code></td>
+</tr>
+<tr class="even">
+<td>Head</td>
+<td style="text-align: right;"><code>128</code> items</td>
+</tr>
+</tbody>
+</table>
+<p>The Symbol Sync configuration from Chapter 22 is retained:</p>
+<pre class="text"><code>Timing Error Detector: Gardner
+Samples per Symbol: 8
+Expected TED Gain: 1
+Loop Bandwidth: 0.045
+Damping Factor: 1
+Maximum Deviation: 1.5
+Output Samples/Symbol: 1
+Interpolating Resampler: MMSE, 8 tap FIR</code></pre>
+<p>The synchronized QPSK symbols are separated into I and Q components.</p>
+<p>Binary Slicers produce bit decisions, and Interleave reconstructs the serial bit order used by the frame detector.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp08_recovered_qpsk.png" class="img-fluid figure-img"></p>
+<figcaption>Recovered QPSK symbols in the complete frame detector</figcaption>
+</figure>
+</div>
+<p>The recovered constellation forms four compact QPSK clusters.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp08_frame_tags.png" class="img-fluid figure-img"></p>
+<figcaption>Detected frame tags in the complete QPSK receiver</figcaption>
+</figure>
+</div>
+<p>The observed frame-tag offsets are</p>
+<pre class="text"><code>22
+38
+54
+70
+86
+102
+118</code></pre>
+<p>Again,</p>
+<p><span class="math display">\[
+38-22=16
+\]</span></p>
+<p>so the tag spacing agrees with the 16-bit frame length.</p>
+<section id="why-did-the-absolute-tag-offset-change" class="level3">
+<h3 class="anchored" data-anchor-id="why-did-the-absolute-tag-offset-change">Why Did the Absolute Tag Offset Change?</h3>
+<p>The direct bit-stream experiment produced its first tag at offset 8.</p>
+<p>The complete QPSK receiver produces the first retained tag at offset 22.</p>
+<p>The difference is expected because the complete receiver contains filtering, timing recovery, and startup transients that were absent from the direct-bit experiment.</p>
+<p>The absolute stream offset can therefore change.</p>
+<p>The important repeated-frame observation is</p>
+<p><span class="math display">\[
+n_{k+1}-n_k=16
+\]</span></p>
+<p>The receiver processing changes latency, while the repeated spacing still reveals the correct frame structure.</p>
+</section>
+</section>
+<section id="experiment-23.8-continued-frame-detection-in-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-23.8-continued-frame-detection-in-noise">23.16 Experiment 23.8 Continued: Frame Detection in Noise</h2>
+<p>We now increase the Channel Model noise voltage while leaving the access-code detector settings unchanged.</p>
+<p>The retained comparison uses</p>
+<pre class="text"><code>Noise Voltage: 0
+Noise Voltage: 1.5
+Noise Voltage: 2</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch23/ch23_exp08_noise_frame_detection.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK frame detection at noise voltages 0, 1.5, and 2</figcaption>
+</figure>
+</div>
+<section id="noise-voltage-0" class="level3">
+<h3 class="anchored" data-anchor-id="noise-voltage-0">Noise Voltage = 0</h3>
+<p>The constellation contains four compact clusters, and the detected tags are</p>
+<pre class="text"><code>22
+38
+54
+70
+86
+102
+118</code></pre>
+<p>Frame synchronization works correctly.</p>
+</section>
+<section id="noise-voltage-1.5" class="level3">
+<h3 class="anchored" data-anchor-id="noise-voltage-1.5">Noise Voltage = 1.5</h3>
+<p>The constellation spreads significantly.</p>
+<p>The retained tag offsets are</p>
+<pre class="text"><code>22
+54
+70
+86
+102
+118</code></pre>
+<p>The expected tag at 38 is missing.</p>
+<p>This is a <strong>missed detection</strong>.</p>
+<p>The constellation is still recognizably QPSK, but frame-level synchronization has already begun to fail.</p>
+<p>This is an important systems lesson: a receiver can still appear usable at the symbol level while a higher-level detection function is already making mistakes.</p>
+</section>
+<section id="noise-voltage-2" class="level3">
+<h3 class="anchored" data-anchor-id="noise-voltage-2">Noise Voltage = 2</h3>
+<p>The constellation is much more dispersed.</p>
+<p>The retained output includes offsets such as</p>
+<pre class="text"><code>41
+54
+70
+86
+102
+118</code></pre>
+<p>The expected periodic sequence is disrupted, and an unexpected detection appears at 41.</p>
+<p>At this noise level, symbol and bit errors can destroy genuine access-code matches and can also create accidental bit patterns that resemble the access code.</p>
+<p>The exact erroneous offsets depend on the particular noise realization.</p>
+<p>The general conclusion is:</p>
+<blockquote class="blockquote">
+<p><strong>As bit decisions become unreliable, frame detection can suffer both missed detections and false detections.</strong></p>
+</blockquote>
+</section>
+</section>
+<section id="why-not-simply-increase-the-error-tolerance" class="level2">
+<h2 class="anchored" data-anchor-id="why-not-simply-increase-the-error-tolerance">23.17 Why Not Simply Increase the Error Tolerance?</h2>
+<p>Allowing more access-code mismatches can reduce missed detections when the genuine code is corrupted.</p>
+<p>But Experiment 23.7 showed the cost.</p>
+<p>Greater tolerance also increases the number of unintended bit patterns that can qualify as a match.</p>
+<p>There is therefore no free correction.</p>
+<p>Useful access-code length, sequence, and tolerated mismatch count depend on the expected channel conditions and on how costly false detections and missed detections are for the system.</p>
+</section>
+<section id="preamble-access-code-and-frame_start" class="level2">
+<h2 class="anchored" data-anchor-id="preamble-access-code-and-frame_start">23.18 Preamble, Access Code, and <code>frame_start</code></h2>
+<p>These terms are related but not interchangeable.</p>
+<p>A <strong>preamble</strong> is a known sequence transmitted to help the receiver detect or synchronize to a frame.</p>
+<p>An <strong>access code</strong> is the known binary pattern searched for by the bit-level access-code detector.</p>
+<p>In our experiments, the access code is</p>
+<pre class="text"><code>10110010</code></pre>
+<p><code>frame_start</code> is different.</p>
+<p>It is not transmitted through the channel.</p>
+<p>It is a <strong>GNU Radio stream-tag key created inside the receiver</strong> after the access code has been detected.</p>
+<p>The transmitter sends known structure. The receiver recognizes that structure and creates metadata describing the detected position.</p>
+</section>
+<section id="physical-meaning-of-frame-synchronization" class="level2">
+<h2 class="anchored" data-anchor-id="physical-meaning-of-frame-synchronization">23.19 Physical Meaning of Frame Synchronization</h2>
+<p>After carrier recovery and timing recovery, a receiver can still be producing an endless stream of symbols or bits.</p>
+<p>Frame synchronization gives that stream structure.</p>
+<p>The transmitter inserts a known landmark.</p>
+<p>The channel distorts the signal.</p>
+<p>The receiver recovers symbols or bits and searches for the landmark.</p>
+<p>When the detector accepts a match, the receiver establishes a reference position from which the payload can be interpreted.</p>
+<p>Frame synchronization therefore converts a continuous stream of decisions into structured communication.</p>
+</section>
+<section id="frame-synchronization-does-not-guarantee-correct-data" class="level2">
+<h2 class="anchored" data-anchor-id="frame-synchronization-does-not-guarantee-correct-data">23.20 Frame Synchronization Does Not Guarantee Correct Data</h2>
+<p>Detecting a frame boundary answers one question:</p>
+<blockquote class="blockquote">
+<p><strong>Where is the frame?</strong></p>
+</blockquote>
+<p>It does not prove that every payload bit is correct.</p>
+<p>A receiver can recover carrier phase, recover symbol timing, detect the access code, and still make payload bit errors because of noise or other impairments.</p>
+<p>This creates another distinction.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Receiver function</th>
+<th>Main question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Frame synchronization</td>
+<td>Where does the frame begin?</td>
+</tr>
+<tr class="even">
+<td>Error detection</td>
+<td>Was the recovered frame corrupted?</td>
+</tr>
+<tr class="odd">
+<td>Error correction</td>
+<td>Can some corrupted information be recovered?</td>
+</tr>
+</tbody>
+</table>
+<p>Practical frames often contain an error-detection field such as a cyclic redundancy check, or CRC.</p>
+<p>A CRC gives the receiver a way to test whether the recovered frame is consistent with the transmitted redundancy.</p>
+<p>Some systems also use forward error correction, or FEC, which adds structured redundancy so that certain errors can be corrected rather than merely detected.</p>
+<p>Those topics belong to the broader subject of channel coding and are beyond the experimental scope of this chapter.</p>
+<p>The important point here is narrower:</p>
+<blockquote class="blockquote">
+<p><strong>Successful frame synchronization tells the receiver where the data is. It does not guarantee that the data is correct.</strong></p>
+</blockquote>
+</section>
+<section id="practical-sdr-perspective" class="level2">
+<h2 class="anchored" data-anchor-id="practical-sdr-perspective">23.21 Practical SDR Perspective</h2>
+<p>Real communication systems often use synchronization sequences chosen specifically for good detection properties rather than arbitrary bit patterns.</p>
+<p>Important design considerations can include:</p>
+<ul>
+<li>autocorrelation behaviour;</li>
+<li>cross-correlation with other sequences;</li>
+<li>sequence length;</li>
+<li>false-alarm probability;</li>
+<li>detection probability;</li>
+<li>channel distortion;</li>
+<li>carrier offset;</li>
+<li>timing uncertainty;</li>
+<li>multipath;</li>
+<li>computational complexity.</li>
+</ul>
+<p>Sequence families such as Barker sequences, Gold codes, and Zadoff-Chu sequences appear in different communication and ranging systems because synchronization performance depends strongly on sequence design.</p>
+<p>We do not develop those families here.</p>
+<p>The principle established by our experiments is enough for the current receiver:</p>
+<blockquote class="blockquote">
+<p><strong>A receiver can find structure in an unknown stream by searching for a known transmitted pattern.</strong></p>
+</blockquote>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">23.22 GNU Radio Toolbox</h2>
+<p>Several GNU Radio blocks take on important frame-synchronization roles in this chapter.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Threshold</td>
+<td>helps convert a continuous correlation response into a detection state</td>
+</tr>
+<tr class="even">
+<td>Correlate Access Code - Tag</td>
+<td>searches a bit stream for a known binary code and creates a tag</td>
+</tr>
+<tr class="odd">
+<td>Tag Debug</td>
+<td>displays selected stream tags and offsets</td>
+</tr>
+<tr class="even">
+<td>Binary Slicer</td>
+<td>converts recovered real-valued I or Q components into binary decisions</td>
+</tr>
+<tr class="odd">
+<td>Interleave</td>
+<td>reconstructs the serial bit sequence from I and Q decisions</td>
+</tr>
+<tr class="even">
+<td>Head</td>
+<td>limits a repeating experiment to a finite number of output items</td>
+</tr>
+</tbody>
+</table>
+<section id="threshold" class="level3">
+<h3 class="anchored" data-anchor-id="threshold">Threshold</h3>
+<p>The Threshold block operates on a continuous-valued input using low and high decision levels.</p>
+<p>In the correlation experiment, it helps convert correlation evidence into a detection indication.</p>
+<p>This is separate from the access-code mismatch threshold used later.</p>
+</section>
+<section id="correlate-access-code---tag" class="level3">
+<h3 class="anchored" data-anchor-id="correlate-access-code---tag">Correlate Access Code - Tag</h3>
+<p>The retained settings are</p>
+<pre class="text"><code>Access Code: 10110010
+Threshold: 0
+Tag Name: frame_start</code></pre>
+<p>For this block, <code>Threshold</code> specifies how many access-code bit mismatches may be tolerated.</p>
+</section>
+<section id="tag-debug" class="level3">
+<h3 class="anchored" data-anchor-id="tag-debug">Tag Debug</h3>
+<p>Tag Debug displays stream-tag information in the GNU Radio console.</p>
+<p>The retained configuration includes</p>
+<pre class="text"><code>Name: Access Code Detection
+Key Filter: frame_start
+Display: On</code></pre>
+<p>The displayed offset identifies the tagged stream position.</p>
+</section>
+<section id="binary-slicer" class="level3">
+<h3 class="anchored" data-anchor-id="binary-slicer">Binary Slicer</h3>
+<p>Binary Slicer converts a real-valued input into binary decisions.</p>
+<p>In the QPSK receiver, the I and Q components are sliced separately.</p>
+</section>
+<section id="interleave" class="level3">
+<h3 class="anchored" data-anchor-id="interleave">Interleave</h3>
+<p>Interleave combines the I and Q bit-decision streams in alternating order so that the serial frame bit sequence can be reconstructed.</p>
+</section>
+<section id="head" class="level3">
+<h3 class="anchored" data-anchor-id="head">Head</h3>
+<p>The complete experiment uses</p>
+<pre class="text"><code>Num Items: 128</code></pre>
+<p>to provide a finite observation interval.</p>
+<p>Head does not perform synchronization. It only prevents the repeating source and Tag Debug output from running indefinitely.</p>
+</section>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">23.23 Explore Further</h2>
+<p>The frame-detection experiments support several useful extensions.</p>
+<ol type="1">
+<li><p>Keep the transmitted frame unchanged and search for a different access code. Confirm that correct timing and a clean constellation do not help if the receiver is searching for the wrong pattern.</p></li>
+<li><p>Restore the correct access code and increase the tolerated bit-error threshold. Observe the tradeoff between missed detections and accidental matches.</p></li>
+<li><p>Increase the Channel Model noise gradually and identify where the first missed detection appears.</p></li>
+<li><p>Change the payload while keeping the access code fixed. Check whether some payload patterns create more accidental access-code-like matches than others.</p></li>
+<li><p>Increase the Head length and observe a longer sequence of frame tags.</p></li>
+<li><p>Repeat the symbol-level correlation experiment with a shorter and longer preamble while keeping the signal scaling comparable.</p></li>
+<li><p>Compare a low correlation threshold with a high one under the same noisy condition. Record both missed and extra detections rather than judging only the largest peak.</p></li>
+<li><p>Change the preamble sequence while keeping its length fixed. Compare how distinct the correct-alignment correlation peak remains.</p></li>
+</ol>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">23.24 What We Learned</h2>
+<p>Timing synchronization and frame synchronization solve different problems.</p>
+<p>Timing recovery determines when to sample each symbol.</p>
+<p>Frame synchronization determines where structured data begins in the recovered stream.</p>
+<p>A known preamble gives the receiver a recognizable landmark.</p>
+<p>Correlation searches for that landmark by combining evidence across several known symbols.</p>
+<p>Correlation can remain useful in noise, but sufficiently strong disturbance makes genuine and accidental responses harder to separate.</p>
+<p>A correlation detection threshold trades sensitivity against false detections and missed detections.</p>
+<p>The useful threshold depends on the actual sequence, scaling, channel, and receiver requirements.</p>
+<p>Preamble sequence and length both matter. A shorter sequence reduces overhead but provides less correlation evidence in this experiment.</p>
+<p>GNU Radio stream tags attach metadata to positions in a stream.</p>
+<p><code>Correlate Access Code - Tag</code> can detect a known binary pattern and create a <code>frame_start</code> tag.</p>
+<p>Its threshold is a tolerated bit-mismatch count, not a correlation-magnitude threshold.</p>
+<p>With access-code threshold 0, the one-bit-corrupted code was rejected.</p>
+<p>With threshold 1, that one-bit mismatch was accepted in the retained experiment.</p>
+<p>The direct repeated 16-bit frame produced tags separated by 16 items.</p>
+<p>In the direct-bit experiment, the tag appeared after the detected access code.</p>
+<p>Filtering, synchronization, and startup transients changed the absolute tag offsets in the complete QPSK receiver, while the repeated 16-item spacing remained.</p>
+<p>The complete receiver recovered QPSK symbols, converted them into bits, detected the access code, and marked frame boundaries.</p>
+<p>Increasing noise caused missed detections, and stronger noise also produced an unintended detection in the retained run.</p>
+<p>Finally, frame synchronization identifies structure. It does not guarantee that the payload itself is error-free.</p>
+<p>The receiver now understands more than waveform timing or constellation geometry. It has begun to recognize the organization of the transmitted information.</p>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">23.25 Connecting to the Next Chapter</h2>
+<p>The previous chapters developed the major functions of a single-carrier receiver one at a time.</p>
+<p>Pulse shaping and matched filtering established the waveform.</p>
+<p>The wireless channel introduced impairments.</p>
+<p>Equalization addressed structured multipath distortion.</p>
+<p>Carrier synchronization recovered phase and frequency.</p>
+<p>Timing synchronization recovered the symbol-sampling instants.</p>
+<p>This chapter identified frame boundaries.</p>
+<p>These functions have been easier to understand separately, but a practical receiver must make them work together on the same received signal.</p>
+<p>That raises the next question:</p>
+<blockquote class="blockquote">
+<p><strong>What happens when all of these receiver functions are combined into one end-to-end digital communication system?</strong></p>
+</blockquote>
+<p>Chapter 24 answers that question.</p>
+<p>We will integrate the receiver stages, recover actual transmitted information, and then deliberately disable important functions so that their failure signatures can be observed directly.</p>
+<p>That leads to <strong>Chapter 24: Building a Complete Single-Carrier Digital Receiver</strong>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/22-symbol-timing-synchronization.html" class="pagination-link" aria-label="Chapter 22: Symbol Timing Synchronization">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/24-building-complete-receiver.html" class="pagination-link" aria-label="Chapter 24: Building a Complete Single-Carrier Digital Receiver">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/23-frame-synchronization-and-packet-detection.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

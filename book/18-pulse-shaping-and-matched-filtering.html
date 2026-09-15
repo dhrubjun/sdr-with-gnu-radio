@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 18: Pulse Shaping and Matched Filtering – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/19-wireless-channel.html" rel="next">
+<link href="../book/17-bpsk-qpsk-qam.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/15-bits-symbols.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/18-pulse-shaping-and-matched-filtering.html"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-constellation-points-to-symbol-waveforms" id="toc-from-constellation-points-to-symbol-waveforms" class="nav-link" data-scroll-target="#from-constellation-points-to-symbol-waveforms">18.1 From Constellation Points to Symbol Waveforms</a></li>
+  <li><a href="#experiment-18.1-rectangular-symbols-and-bandwidth" id="toc-experiment-18.1-rectangular-symbols-and-bandwidth" class="nav-link" data-scroll-target="#experiment-18.1-rectangular-symbols-and-bandwidth">18.2 Experiment 18.1: Rectangular Symbols and Bandwidth</a>
+  <ul class="collapse">
+  <li><a href="#why-do-abrupt-edges-create-spectral-sidelobes" id="toc-why-do-abrupt-edges-create-spectral-sidelobes" class="nav-link" data-scroll-target="#why-do-abrupt-edges-create-spectral-sidelobes">Why Do Abrupt Edges Create Spectral Sidelobes?</a></li>
+  <li><a href="#changing-the-symbol-rate" id="toc-changing-the-symbol-rate" class="nav-link" data-scroll-target="#changing-the-symbol-rate">Changing the Symbol Rate</a></li>
+  </ul></li>
+  <li><a href="#experiment-18.2-smoothing-the-rectangular-waveform" id="toc-experiment-18.2-smoothing-the-rectangular-waveform" class="nav-link" data-scroll-target="#experiment-18.2-smoothing-the-rectangular-waveform">18.3 Experiment 18.2: Smoothing the Rectangular Waveform</a></li>
+  <li><a href="#experiment-18.3-what-happens-to-one-pulse" id="toc-experiment-18.3-what-happens-to-one-pulse" class="nav-link" data-scroll-target="#experiment-18.3-what-happens-to-one-pulse">18.4 Experiment 18.3: What Happens to One Pulse?</a>
+  <ul class="collapse">
+  <li><a href="#why-is-the-filtered-pulse-shifted" id="toc-why-is-the-filtered-pulse-shifted" class="nav-link" data-scroll-target="#why-is-the-filtered-pulse-shifted">Why Is the Filtered Pulse Shifted?</a></li>
+  </ul></li>
+  <li><a href="#experiment-18.4-building-isi-intuition" id="toc-experiment-18.4-building-isi-intuition" class="nav-link" data-scroll-target="#experiment-18.4-building-isi-intuition">18.5 Experiment 18.4: Building ISI Intuition</a></li>
+  <li><a href="#the-nyquist-idea-we-need-here" id="toc-the-nyquist-idea-we-need-here" class="nav-link" data-scroll-target="#the-nyquist-idea-we-need-here">18.6 The Nyquist Idea We Need Here</a></li>
+  <li><a href="#experiment-18.5-overlap-without-isi" id="toc-experiment-18.5-overlap-without-isi" class="nav-link" data-scroll-target="#experiment-18.5-overlap-without-isi">18.7 Experiment 18.5: Overlap Without ISI</a>
+  <ul class="collapse">
+  <li><a href="#how-the-figure-was-generated" id="toc-how-the-figure-was-generated" class="nav-link" data-scroll-target="#how-the-figure-was-generated">How the Figure Was Generated</a></li>
+  <li><a href="#why-not-transmit-an-ideal-sinc" id="toc-why-not-transmit-an-ideal-sinc" class="nav-link" data-scroll-target="#why-not-transmit-an-ideal-sinc">Why Not Transmit an Ideal Sinc?</a></li>
+  </ul></li>
+  <li><a href="#raised-cosine-and-the-roll-off-factor" id="toc-raised-cosine-and-the-roll-off-factor" class="nav-link" data-scroll-target="#raised-cosine-and-the-roll-off-factor">18.8 Raised Cosine and the Roll-Off Factor</a></li>
+  <li><a href="#why-root-raised-cosine" id="toc-why-root-raised-cosine" class="nav-link" data-scroll-target="#why-root-raised-cosine">18.9 Why Root Raised Cosine?</a></li>
+  <li><a href="#experiment-18.6-exploring-the-rrc-roll-off-factor" id="toc-experiment-18.6-exploring-the-rrc-roll-off-factor" class="nav-link" data-scroll-target="#experiment-18.6-exploring-the-rrc-roll-off-factor">18.10 Experiment 18.6: Exploring the RRC Roll-Off Factor</a>
+  <ul class="collapse">
+  <li><a href="#time-domain-result" id="toc-time-domain-result" class="nav-link" data-scroll-target="#time-domain-result">Time-Domain Result</a></li>
+  <li><a href="#frequency-domain-result" id="toc-frequency-domain-result" class="nav-link" data-scroll-target="#frequency-domain-result">Frequency-Domain Result</a></li>
+  </ul></li>
+  <li><a href="#experiment-18.7-tx-rrc-and-rx-rrc" id="toc-experiment-18.7-tx-rrc-and-rx-rrc" class="nav-link" data-scroll-target="#experiment-18.7-tx-rrc-and-rx-rrc">18.11 Experiment 18.7: TX RRC and RX RRC</a>
+  <ul class="collapse">
+  <li><a href="#what-do-we-observe" id="toc-what-do-we-observe" class="nav-link" data-scroll-target="#what-do-we-observe">What Do We Observe?</a></li>
+  </ul></li>
+  <li><a href="#why-is-the-receiver-rrc-a-matched-filter" id="toc-why-is-the-receiver-rrc-a-matched-filter" class="nav-link" data-scroll-target="#why-is-the-receiver-rrc-a-matched-filter">18.12 Why Is the Receiver RRC a Matched Filter?</a></li>
+  <li><a href="#experiment-18.8-matched-filtering-in-noise" id="toc-experiment-18.8-matched-filtering-in-noise" class="nav-link" data-scroll-target="#experiment-18.8-matched-filtering-in-noise">18.13 Experiment 18.8: Matched Filtering in Noise</a></li>
+  <li><a href="#experiment-18.9-opening-the-eye" id="toc-experiment-18.9-opening-the-eye" class="nav-link" data-scroll-target="#experiment-18.9-opening-the-eye">18.14 Experiment 18.9: Opening the Eye</a>
+  <ul class="collapse">
+  <li><a href="#generating-the-data-in-gnu-radio" id="toc-generating-the-data-in-gnu-radio" class="nav-link" data-scroll-target="#generating-the-data-in-gnu-radio">Generating the Data in GNU Radio</a></li>
+  <li><a href="#the-clean-eye" id="toc-the-clean-eye" class="nav-link" data-scroll-target="#the-clean-eye">The Clean Eye</a></li>
+  <li><a href="#adding-noise" id="toc-adding-noise" class="nav-link" data-scroll-target="#adding-noise">Adding Noise</a></li>
+  </ul></li>
+  <li><a href="#putting-the-pieces-together" id="toc-putting-the-pieces-together" class="nav-link" data-scroll-target="#putting-the-pieces-together">18.15 Putting the Pieces Together</a>
+  <ul class="collapse">
+  <li><a href="#rectangular-symbols-are-easy-but-spectrally-expensive" id="toc-rectangular-symbols-are-easy-but-spectrally-expensive" class="nav-link" data-scroll-target="#rectangular-symbols-are-easy-but-spectrally-expensive">Rectangular Symbols Are Easy but Spectrally Expensive</a></li>
+  <li><a href="#smoothing-improves-the-spectrum-but-spreads-the-pulse" id="toc-smoothing-improves-the-spectrum-but-spreads-the-pulse" class="nav-link" data-scroll-target="#smoothing-improves-the-spectrum-but-spreads-the-pulse">Smoothing Improves the Spectrum but Spreads the Pulse</a></li>
+  <li><a href="#pulse-spreading-creates-the-possibility-of-isi" id="toc-pulse-spreading-creates-the-possibility-of-isi" class="nav-link" data-scroll-target="#pulse-spreading-creates-the-possibility-of-isi">Pulse Spreading Creates the Possibility of ISI</a></li>
+  <li><a href="#overlap-itself-is-not-the-problem" id="toc-overlap-itself-is-not-the-problem" class="nav-link" data-scroll-target="#overlap-itself-is-not-the-problem">Overlap Itself Is Not the Problem</a></li>
+  <li><a href="#raised-cosine-provides-a-practical-tradeoff" id="toc-raised-cosine-provides-a-practical-tradeoff" class="nav-link" data-scroll-target="#raised-cosine-provides-a-practical-tradeoff">Raised Cosine Provides a Practical Tradeoff</a></li>
+  <li><a href="#rrc-splits-the-filtering-between-transmitter-and-receiver" id="toc-rrc-splits-the-filtering-between-transmitter-and-receiver" class="nav-link" data-scroll-target="#rrc-splits-the-filtering-between-transmitter-and-receiver">RRC Splits the Filtering Between Transmitter and Receiver</a></li>
+  <li><a href="#the-receiver-filter-also-acts-as-a-matched-filter" id="toc-the-receiver-filter-also-acts-as-a-matched-filter" class="nav-link" data-scroll-target="#the-receiver-filter-also-acts-as-a-matched-filter">The Receiver Filter Also Acts as a Matched Filter</a></li>
+  <li><a href="#the-eye-diagram-shows-the-sampling-margin" id="toc-the-eye-diagram-shows-the-sampling-margin" class="nav-link" data-scroll-target="#the-eye-diagram-shows-the-sampling-margin">The Eye Diagram Shows the Sampling Margin</a></li>
+  </ul></li>
+  <li><a href="#a-few-things-that-can-go-wrong" id="toc-a-few-things-that-can-go-wrong" class="nav-link" data-scroll-target="#a-few-things-that-can-go-wrong">18.16 A Few Things That Can Go Wrong</a>
+  <ul class="collapse">
+  <li><a href="#sampling-at-the-wrong-time" id="toc-sampling-at-the-wrong-time" class="nav-link" data-scroll-target="#sampling-at-the-wrong-time">Sampling at the Wrong Time</a></li>
+  <li><a href="#using-mismatched-pulse-shaping-parameters" id="toc-using-mismatched-pulse-shaping-parameters" class="nav-link" data-scroll-target="#using-mismatched-pulse-shaping-parameters">Using Mismatched Pulse-Shaping Parameters</a></li>
+  <li><a href="#removing-the-matched-filter" id="toc-removing-the-matched-filter" class="nav-link" data-scroll-target="#removing-the-matched-filter">Removing the Matched Filter</a></li>
+  <li><a href="#choosing-roll-off-without-considering-bandwidth" id="toc-choosing-roll-off-without-considering-bandwidth" class="nav-link" data-scroll-target="#choosing-roll-off-without-considering-bandwidth">Choosing Roll-Off Without Considering Bandwidth</a></li>
+  </ul></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">18.17 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#interpolating-fir-filter" id="toc-interpolating-fir-filter" class="nav-link" data-scroll-target="#interpolating-fir-filter">Interpolating FIR Filter</a></li>
+  <li><a href="#decimating-fir-filter" id="toc-decimating-fir-filter" class="nav-link" data-scroll-target="#decimating-fir-filter">Decimating FIR Filter</a></li>
+  <li><a href="#file-sink" id="toc-file-sink" class="nav-link" data-scroll-target="#file-sink">File Sink</a></li>
+  </ul></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">18.18 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">18.19 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">18.20 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/18-pulse-shaping-and-matched-filtering.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/15-bits-symbols.html">Part V: From Bits to Waveforms</a></li><li class="breadcrumb-item"><a href="../book/18-pulse-shaping-and-matched-filtering.html"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>Why can’t we simply transmit abrupt rectangular symbols over the air?</strong></p>
+<p>In Chapter 17, we learned where digital symbols live.</p>
+<p>For BPSK, the ideal symbols lie at <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span> on the I axis. For QPSK, the symbols occupy four points in the I/Q plane. For 16-QAM, the constellation expands into a two-dimensional grid.</p>
+<p>That gave us the geometry of digital modulation.</p>
+<p>But a constellation diagram does not tell us what happens between one symbol and the next. A radio does not transmit isolated dots on an I/Q plane. It transmits a waveform that changes with time.</p>
+<p>The simplest approach is to hold each symbol value constant for one symbol period and then switch immediately to the next value. This produces rectangular symbol pulses.</p>
+<p>Rectangular pulses are easy to generate and easy to understand, but their abrupt edges produce substantial spectral sidelobes. If we smooth those edges, the spectrum becomes better contained, but each pulse also spreads farther in time. That creates the possibility of <strong>intersymbol interference</strong>, or ISI.</p>
+<p>This chapter develops that problem experimentally. We will begin with rectangular symbols, observe their spectrum, smooth them, and examine how filtering spreads a pulse in time. From there we will introduce the Nyquist zero-ISI idea, raised-cosine and root-raised-cosine shaping, matched filtering, and finally the eye diagram.</p>
+<p>The goal is to understand why pulse shaping is needed and what the receiver gains from using a matched filter.</p>
+</section>
+<section id="from-constellation-points-to-symbol-waveforms" class="level2">
+<h2 class="anchored" data-anchor-id="from-constellation-points-to-symbol-waveforms">18.1 From Constellation Points to Symbol Waveforms</h2>
+<p>Suppose a BPSK mapper produces the sequence</p>
+<p><span class="math display">\[
+a[k]\in\{-1,+1\}
+\]</span></p>
+<p>These are symbol values. They tell us what the transmitted signal should represent at each symbol time, but they do not yet define the complete waveform.</p>
+<p>To create a waveform, each symbol is associated with a pulse shape. A useful general model is</p>
+<p><span class="math display">\[
+x(t)=\sum_k a[k]p(t-kT_s)
+\]</span></p>
+<p>where <span class="math inline">\(p(t)\)</span> is the pulse shape and <span class="math inline">\(T_s\)</span> is the symbol period.</p>
+<p>Each symbol creates a shifted copy of the same basic pulse. The symbol value scales that pulse, and all the shifted pulses add together.</p>
+<p>If <span class="math inline">\(p(t)\)</span> is rectangular, we obtain rectangular symbol pulses. If <span class="math inline">\(p(t)\)</span> belongs to the raised-cosine family, the waveform is smoother and has very different spectral behaviour.</p>
+<p>The pulse shape therefore affects occupied bandwidth, spectral sidelobes, how far one symbol extends into neighbouring intervals, how the receiver should filter the signal, and how reliably the receiver can sample the symbols.</p>
+<p>We will begin with the simplest pulse shape.</p>
+</section>
+<section id="experiment-18.1-rectangular-symbols-and-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.1-rectangular-symbols-and-bandwidth">18.2 Experiment 18.1: Rectangular Symbols and Bandwidth</h2>
+<p>The first question is simple:</p>
+<blockquote class="blockquote">
+<p><strong>What is wrong with holding each BPSK symbol constant for one symbol period?</strong></p>
+</blockquote>
+<p>We already used rectangular symbol waveforms while developing digital modulation. Here we focus on their spectrum.</p>
+<p>The experiment maps a symbol stream to <span class="math inline">\(-1\)</span> and <span class="math inline">\(+1\)</span>, repeats each symbol for a fixed number of samples, and observes the resulting waveform and spectrum.</p>
+<p>A convenient starting point is</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32000</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="odd">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1000</code> symbols/s</td>
+</tr>
+<tr class="even">
+<td>BPSK levels</td>
+<td style="text-align: right;"><code>[-1, +1]</code></td>
+</tr>
+</tbody>
+</table>
+<p>The relationship between sample rate, symbol rate, and samples per symbol is</p>
+<p><span class="math display">\[
+sps=\frac{f_s}{R_s}
+\]</span></p>
+<p>or equivalently,</p>
+<p><span class="math display">\[
+R_s=\frac{f_s}{sps}
+\]</span></p>
+<p>With <span class="math inline">\(f_s=32000\)</span> samples/s and <span class="math inline">\(sps=32\)</span>,</p>
+<p><span class="math display">\[
+R_s=1000\text{ symbols/s}
+\]</span></p>
+<p>The flowgraph maps the symbols, uses Repeat to hold each value for <code>sps</code> samples, and sends the resulting waveform to Time and Frequency Sinks.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp1-rectangular-symbol-bandwidth-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Rectangular-symbol bandwidth experiment flowgraph</figcaption>
+</figure>
+</div>
+<p>The Repeat block creates the rectangular pulse shape. Each mapped symbol remains constant for <code>sps</code> output samples before the next symbol appears.</p>
+<section id="why-do-abrupt-edges-create-spectral-sidelobes" class="level3">
+<h3 class="anchored" data-anchor-id="why-do-abrupt-edges-create-spectral-sidelobes">Why Do Abrupt Edges Create Spectral Sidelobes?</h3>
+<p>A rectangular symbol can change from <span class="math inline">\(+1\)</span> to <span class="math inline">\(-1\)</span> almost instantaneously at a symbol boundary. That sharp edge is a rapid change in time.</p>
+<p>Slowly varying waveforms can be represented mostly by lower-frequency components. Rapid changes require higher-frequency Fourier components as well. An ideal discontinuity is the limiting case: reproducing a perfectly vertical edge requires frequency components extending indefinitely.</p>
+<p>For a rectangular pulse of duration <span class="math inline">\(T_s\)</span>, the Fourier transform has a sinc-shaped form. Ignoring an unimportant time shift,</p>
+<p><span class="math display">\[
+P(f)=T_s\,\operatorname{sinc}(fT_s)
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+\operatorname{sinc}(x)=\frac{\sin(\pi x)}{\pi x}
+\]</span></p>
+<p>The important feature is not only the main lobe. The sinc function also has sidelobes that extend far from the centre frequency and decay relatively slowly.</p>
+<p>This poor spectral containment is a property of the rectangular pulse itself, not an artifact of the GNU Radio FFT display.</p>
+</section>
+<section id="changing-the-symbol-rate" class="level3">
+<h3 class="anchored" data-anchor-id="changing-the-symbol-rate">Changing the Symbol Rate</h3>
+<p>We repeated the observation for three symbol rates:</p>
+<pre class="text"><code>500 symbols/s
+1000 symbols/s
+2000 symbols/s</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp1-rectangular-spectrum-rs500.png" class="img-fluid figure-img"></p>
+<figcaption>Rectangular-symbol spectrum at 500 symbols/s</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp1-rectangular-spectrum-rs1000.png" class="img-fluid figure-img"></p>
+<figcaption>Rectangular-symbol spectrum at 1000 symbols/s</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp1-rectangular-spectrum-rs2000.png" class="img-fluid figure-img"></p>
+<figcaption>Rectangular-symbol spectrum at 2000 symbols/s</figcaption>
+</figure>
+</div>
+<p>As the symbol rate increases, the waveform can change more rapidly and the spectral structure spreads outward.</p>
+<p>The important lesson is that <strong>symbol rate and pulse shape both influence the bandwidth of a digital signal</strong>.</p>
+<p>The BPSK constellation is unchanged in all three cases. The two ideal symbol points remain the same, but the waveform used to connect those symbols in time occupies a different spectral width.</p>
+</section>
+</section>
+<section id="experiment-18.2-smoothing-the-rectangular-waveform" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.2-smoothing-the-rectangular-waveform">18.3 Experiment 18.2: Smoothing the Rectangular Waveform</h2>
+<p>If abrupt edges produce unwanted high-frequency content, the natural next step is to smooth them.</p>
+<p>We take the rectangular BPSK waveform from Experiment 18.1 and pass it through an ordinary low-pass FIR filter. The waveform is observed before and after filtering in both time and frequency.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp2-pulse-smoothing-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Pulse-smoothing experiment flowgraph</figcaption>
+</figure>
+</div>
+<p>The purpose of the low-pass filter is not to build the final communication system. It is to expose the basic time-frequency tradeoff.</p>
+<p>The filter suppresses high-frequency components, so the abrupt transitions become rounded.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp2-pulse-smoothing.png" class="img-fluid figure-img"></p>
+<figcaption>Rectangular and smoothed symbol waveforms and spectra</figcaption>
+</figure>
+</div>
+<p>In the time domain, the transitions are smoother. In the frequency domain, the sidelobes are reduced.</p>
+<p>This is the behaviour we expected: reducing abrupt time-domain changes reduces high-frequency content and improves spectral containment.</p>
+<p>But the time-domain result contains another clue. The filter does not simply round each transition while leaving every symbol confined to its original interval. The filtered waveform extends around each transition.</p>
+<p>To understand that effect more clearly, we need to isolate one pulse.</p>
+</section>
+<section id="experiment-18.3-what-happens-to-one-pulse" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.3-what-happens-to-one-pulse">18.4 Experiment 18.3: What Happens to One Pulse?</h2>
+<p>Instead of using a long sequence of changing symbols, we now examine one isolated rectangular pulse.</p>
+<p>The question is:</p>
+<blockquote class="blockquote">
+<p><strong>When a filter smooths one rectangular pulse, what happens to that pulse in time?</strong></p>
+</blockquote>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp3-single-pulse-spreading.png" class="img-fluid figure-img"></p>
+<figcaption>Single rectangular pulse before and after smoothing</figcaption>
+</figure>
+</div>
+<p>Before filtering, the pulse is confined to a clear interval.</p>
+<p>After filtering, the pulse is smoother, but its influence extends beyond the original rectangular interval.</p>
+<p>This is the price of smoothing. A filter that removes high-frequency content cannot preserve an infinitely sharp start and stop. The pulse becomes less compact in time.</p>
+<p>Improving spectral containment therefore generally requires giving up some time localization.</p>
+<section id="why-is-the-filtered-pulse-shifted" class="level3">
+<h3 class="anchored" data-anchor-id="why-is-the-filtered-pulse-shifted">Why Is the Filtered Pulse Shifted?</h3>
+<p>The filtered pulse also appears later in time.</p>
+<p>That shift is not ISI.</p>
+<p>A causal linear-phase FIR filter introduces group delay. For an FIR filter with <span class="math inline">\(N\)</span> taps, the group delay is approximately</p>
+<p><span class="math display">\[
+D=\frac{N-1}{2}
+\]</span></p>
+<p>samples.</p>
+<p>In seconds,</p>
+<p><span class="math display">\[
+\tau_g=\frac{N-1}{2f_s}
+\]</span></p>
+<p>A filtered waveform may therefore be delayed even when the filtering is working exactly as intended.</p>
+<p>Filter delay and ISI describe different effects. Filter delay shifts the waveform in time. ISI changes the contribution of neighbouring symbols to a symbol decision.</p>
+<p>Once one pulse spreads beyond its own symbol interval, it can overlap the pulses on either side. The next experiment examines what that means for a symbol inside a sequence.</p>
+</section>
+</section>
+<section id="experiment-18.4-building-isi-intuition" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.4-building-isi-intuition">18.5 Experiment 18.4: Building ISI Intuition</h2>
+<p>Rather than beginning with a formal definition of intersymbol interference, we can ask a more useful question:</p>
+<blockquote class="blockquote">
+<p><strong>Can the waveform associated with one symbol depend on the symbols around it?</strong></p>
+</blockquote>
+<p>To make that visible, we keep the central symbol the same while changing its neighbours. The smoothing filter remains unchanged.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp4-same-symbol-different-neighbours.png" class="img-fluid figure-img"></p>
+<figcaption>Same symbol with different neighbouring symbols after filtering</figcaption>
+</figure>
+</div>
+<p>The central symbol has the same intended value in each case, but the filtered waveform around it is not identical.</p>
+<p>The reason is that filtering spreads the neighbouring pulses in time. Their tails extend into the interval occupied by the symbol we are examining.</p>
+<p>The waveform at a particular time is therefore not determined only by the current symbol. It contains contributions from surrounding symbols.</p>
+<p>This gives us the useful definition:</p>
+<blockquote class="blockquote">
+<p><strong>ISI occurs when the contribution from one symbol affects the observation used to decide another symbol.</strong></p>
+</blockquote>
+<p>Pulse overlap is part of the picture, but overlap alone is not enough to say that ISI is present.</p>
+<p>The next experiment shows why. Pulses can overlap strongly and still contribute zero interference at the correct decision instants.</p>
+</section>
+<section id="the-nyquist-idea-we-need-here" class="level2">
+<h2 class="anchored" data-anchor-id="the-nyquist-idea-we-need-here">18.6 The Nyquist Idea We Need Here</h2>
+<p>We have already used the name <strong>Nyquist</strong> earlier in the book.</p>
+<p>In Chapter 3, the question was how fast a waveform must be sampled to avoid aliasing. That is the Nyquist sampling criterion.</p>
+<p>The Nyquist idea needed here answers a different question: how should symbol pulses behave so that neighbouring symbols do not interfere at the correct decision instants?</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nyquist idea</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sampling criterion</td>
+<td>How fast must a waveform be sampled to avoid aliasing?</td>
+</tr>
+<tr class="even">
+<td>Zero-ISI pulse criterion</td>
+<td>How should symbol pulses behave at neighbouring decision instants?</td>
+</tr>
+</tbody>
+</table>
+<p>The two ideas share a name, but they solve different problems.</p>
+</section>
+<section id="experiment-18.5-overlap-without-isi" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.5-overlap-without-isi">18.7 Experiment 18.5: Overlap Without ISI</h2>
+<p>Suppose the receiver makes one symbol decision every <span class="math inline">\(T_s\)</span> seconds.</p>
+<p>We want the pulse associated with the current symbol to have its full value at its own sampling instant while every shifted neighbouring pulse contributes zero at that same time.</p>
+<p>For a normalized pulse <span class="math inline">\(p(t)\)</span>, the ideal condition is</p>
+<p><span class="math display">\[
+p(0)=1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+p(nT_s)=0,\qquad n=\pm1,\pm2,\pm3,\ldots
+\]</span></p>
+<p>This is the central idea behind the Nyquist zero-ISI criterion.</p>
+<p>A sinc pulse gives us the clearest visual demonstration.</p>
+<p>The sinc extends far beyond one symbol interval, so shifted sinc pulses overlap heavily. Their zero crossings, however, occur at integer multiples of the symbol period.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp5-sinc-zero-isi.png" class="img-fluid figure-img"></p>
+<figcaption>Shifted sinc pulses demonstrating the Nyquist zero-ISI condition</figcaption>
+</figure>
+</div>
+<p>At the centre of one pulse, that pulse contributes its symbol value. At the same instant, the neighbouring shifted sinc pulses cross zero.</p>
+<p>The pulses can therefore overlap strongly between decision instants while contributing no unwanted value at the correct decision time.</p>
+<p>This is an important refinement of our earlier ISI intuition:</p>
+<blockquote class="blockquote">
+<p><strong>Pulse overlap does not automatically mean intersymbol interference. What matters is the contribution from neighbouring symbols at the decision instant.</strong></p>
+</blockquote>
+<p>For a symbol sequence <span class="math inline">\(a[k]\)</span>, the pulse-shaped waveform can be written as</p>
+<p><span class="math display">\[
+x(t)=\sum_k a[k]p(t-kT_s)
+\]</span></p>
+<p>At a sampling instant <span class="math inline">\(t=mT_s\)</span>,</p>
+<p><span class="math display">\[
+x(mT_s)=\sum_k a[k]p((m-k)T_s)
+\]</span></p>
+<p>If the pulse satisfies the zero-ISI condition, every term with <span class="math inline">\(k\neq m\)</span> vanishes, leaving</p>
+<p><span class="math display">\[
+x(mT_s)=a[m]
+\]</span></p>
+<p>The equation now formalizes what the figure shows.</p>
+<section id="how-the-figure-was-generated" class="level3">
+<h3 class="anchored" data-anchor-id="how-the-figure-was-generated">How the Figure Was Generated</h3>
+<p>For this idealized illustration, we used a short Python script rather than trying to draw several mathematically shifted sinc functions in GNU Radio.</p>
+<p>The complete script is stored with the chapter experiments as</p>
+<pre class="text"><code>ch18_exp5_sinc_zero_isi.py</code></pre>
+<p>Its purpose is visualization. The communication-system experiments before and after it remain in GNU Radio.</p>
+</section>
+<section id="why-not-transmit-an-ideal-sinc" class="level3">
+<h3 class="anchored" data-anchor-id="why-not-transmit-an-ideal-sinc">Why Not Transmit an Ideal Sinc?</h3>
+<p>The sinc pulse gives the zero-ISI behaviour we want, but an ideal sinc extends from <span class="math inline">\(-\infty\)</span> to <span class="math inline">\(+\infty\)</span>.</p>
+<p>A real transmitter cannot implement an infinite-duration pulse or an infinite-length filter.</p>
+<p>A practical system therefore needs a pulse family that preserves the zero-ISI idea while allowing some extra bandwidth in exchange for better time-domain behaviour.</p>
+<p>That leads to the raised-cosine family.</p>
+</section>
+</section>
+<section id="raised-cosine-and-the-roll-off-factor" class="level2">
+<h2 class="anchored" data-anchor-id="raised-cosine-and-the-roll-off-factor">18.8 Raised Cosine and the Roll-Off Factor</h2>
+<p>A raised-cosine pulse is designed so that its overall response satisfies the Nyquist zero-ISI condition.</p>
+<p>Its frequency response does not end with an infinitely sharp rectangular edge. Instead, it contains a smooth transition band controlled by the <strong>roll-off factor</strong>, usually written as <span class="math inline">\(\alpha\)</span>.</p>
+<p>The roll-off factor lies in the range</p>
+<p><span class="math display">\[
+0\leq\alpha\leq1
+\]</span></p>
+<p>For symbol rate <span class="math inline">\(R_s\)</span>, the one-sided baseband bandwidth of the raised-cosine response is</p>
+<p><span class="math display">\[
+B=\frac{R_s}{2}(1+\alpha)
+\]</span></p>
+<p>When <span class="math inline">\(\alpha=0\)</span>,</p>
+<p><span class="math display">\[
+B=\frac{R_s}{2}
+\]</span></p>
+<p>This is the minimum Nyquist baseband bandwidth for this idealized case.</p>
+<p>As <span class="math inline">\(\alpha\)</span> increases, the transition region becomes wider and the required bandwidth increases.</p>
+<p>That extra bandwidth can improve time-domain localization. A very sharp frequency-domain transition corresponds to a pulse with long oscillatory tails. Allowing a wider transition produces a pulse whose tails decay more quickly.</p>
+<p>The tradeoff is summarized below.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Roll-off</th>
+<th>Bandwidth</th>
+<th>Time-domain behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Small <span class="math inline">\(\alpha\)</span></td>
+<td>Narrower</td>
+<td>Longer tails and more ringing</td>
+</tr>
+<tr class="even">
+<td>Large <span class="math inline">\(\alpha\)</span></td>
+<td>Wider</td>
+<td>Better time localization</td>
+</tr>
+</tbody>
+</table>
+<p>Before examining that tradeoff experimentally, we need one practical detail. Communication systems commonly split the desired raised-cosine response between the transmitter and receiver.</p>
+</section>
+<section id="why-root-raised-cosine" class="level2">
+<h2 class="anchored" data-anchor-id="why-root-raised-cosine">18.9 Why Root Raised Cosine?</h2>
+<p>A common implementation uses a <strong>root-raised-cosine</strong>, or RRC, filter at the transmitter and another RRC filter at the receiver.</p>
+<p>Their cascade produces the overall raised-cosine response.</p>
+<p>In magnitude-response terms,</p>
+<p><span class="math display">\[
+|H_{\mathrm{RRC}}(f)|^2=H_{\mathrm{RC}}(f)
+\]</span></p>
+<p>The word <strong>root</strong> therefore has a direct meaning. Each RRC filter contributes one square-root part of the desired raised-cosine frequency response.</p>
+<p>A single RRC filter by itself is not the complete raised-cosine Nyquist response. The transmitter and receiver filters work together.</p>
+<p>The next two experiments make that distinction visible.</p>
+</section>
+<section id="experiment-18.6-exploring-the-rrc-roll-off-factor" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.6-exploring-the-rrc-roll-off-factor">18.10 Experiment 18.6: Exploring the RRC Roll-Off Factor</h2>
+<p>We now generate isolated RRC pulses with different roll-off factors and compare them in time and frequency.</p>
+<p>The main parameters are</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32000</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1000</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="even">
+<td>Filter span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="odd">
+<td>Number of taps</td>
+<td style="text-align: right;"><code>span*sps + 1 = 257</code></td>
+</tr>
+<tr class="even">
+<td>Roll-off values</td>
+<td style="text-align: right;"><code>0.10</code>, <code>0.25</code>, <code>0.50</code>, <code>1.00</code></td>
+</tr>
+</tbody>
+</table>
+<p>The pulse-shaping filter uses GNU Radio’s RRC tap generator:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>firdes.root_raised_cosine(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    sps,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    samp_rate,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    symbol_rate,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    alpha,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    ntaps</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The Interpolating FIR Filter uses</p>
+<pre class="text"><code>Interpolation: sps</code></pre>
+<p>so the symbol-rate sequence is converted into a waveform containing <code>sps</code> samples per symbol while the RRC filter shapes the pulse.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp6-rrc-rolloff-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>RRC roll-off comparison flowgraph</figcaption>
+</figure>
+</div>
+<section id="time-domain-result" class="level3">
+<h3 class="anchored" data-anchor-id="time-domain-result">Time-Domain Result</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp6-rrc-rolloff-time.png" class="img-fluid figure-img"></p>
+<figcaption>RRC pulse shapes for different roll-off factors</figcaption>
+</figure>
+</div>
+<p>With a small roll-off such as <span class="math inline">\(\alpha=0.10\)</span>, the pulse has longer and more pronounced tails.</p>
+<p>As <span class="math inline">\(\alpha\)</span> increases, the pulse becomes more concentrated around its main lobe and the tails decay more quickly.</p>
+<p>The peak amplitudes do not need to be identical in this comparison. We are interested in pulse shape and tail behaviour rather than individually normalizing every curve.</p>
+</section>
+<section id="frequency-domain-result" class="level3">
+<h3 class="anchored" data-anchor-id="frequency-domain-result">Frequency-Domain Result</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp6-rrc-rolloff-spectrum.png" class="img-fluid figure-img"></p>
+<figcaption>RRC spectra for different roll-off factors</figcaption>
+</figure>
+</div>
+<p>The frequency-domain result shows the other half of the tradeoff.</p>
+<p>A small <span class="math inline">\(\alpha\)</span> gives the narrowest transition region. A larger <span class="math inline">\(\alpha\)</span> allows the response to roll off over a wider frequency interval.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Roll-off</th>
+<th>Time-domain behaviour</th>
+<th>Frequency-domain behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Small <span class="math inline">\(\alpha\)</span></td>
+<td>Longer tails, more ringing</td>
+<td>Narrower transition bandwidth</td>
+</tr>
+<tr class="even">
+<td>Large <span class="math inline">\(\alpha\)</span></td>
+<td>Faster-decaying tails</td>
+<td>Wider transition bandwidth</td>
+</tr>
+</tbody>
+</table>
+<p>The roll-off factor is therefore a design parameter that trades occupied bandwidth against time-domain localization.</p>
+</section>
+</section>
+<section id="experiment-18.7-tx-rrc-and-rx-rrc" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.7-tx-rrc-and-rx-rrc">18.11 Experiment 18.7: TX RRC and RX RRC</h2>
+<p>Experiment 18.6 showed the response of a single RRC filter.</p>
+<p>We now apply a second matching RRC filter at the receiver and observe the combined response.</p>
+<p>For this experiment,</p>
+<pre class="text"><code>samp_rate   = 32000
+symbol_rate = 1000
+sps         = 32
+span        = 8
+ntaps       = 257
+alpha       = 0.35</code></pre>
+<p>The transmitter RRC is implemented with an Interpolating FIR Filter. The receiver uses a Decimating FIR Filter with decimation set to <code>1</code>, so the sample rate is not reduced in this experiment.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp7-tx-rx-rrc-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>TX and RX RRC filtering flowgraph</figcaption>
+</figure>
+</div>
+<p>For the receiver taps, we use the same RRC shape with gain <code>1</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>firdes.root_raised_cosine(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    samp_rate,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    symbol_rate,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    alpha,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    ntaps</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The receiver filter uses</p>
+<pre class="text"><code>Decimation: 1</code></pre>
+<section id="what-do-we-observe" class="level3">
+<h3 class="anchored" data-anchor-id="what-do-we-observe">What Do We Observe?</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp7-tx-rx-rrc-response.png" class="img-fluid figure-img"></p>
+<figcaption>RRC pulse before and after the receiver matched filter</figcaption>
+</figure>
+</div>
+<p>The TX RRC pulse and the output after the second RRC do not have the same shape.</p>
+<p>The cascade of the two finite-length RRC filters approximates a raised-cosine response.</p>
+<p>Around the main peak, the combined response approaches zero at symbol-spaced intervals:</p>
+<p><span class="math display">\[
+\pm T_s,\ \pm2T_s,\ \pm3T_s,\ldots
+\]</span></p>
+<p>For our symbol rate,</p>
+<p><span class="math display">\[
+T_s=\frac{1}{1000}=1\text{ ms}
+\]</span></p>
+<p>This is the practical version of the zero-ISI behaviour demonstrated earlier with shifted sinc pulses.</p>
+<p>The response after both filters is also shifted farther in time. That is expected because the TX branch has passed through one FIR filter, while the RX output has passed through two. Each filter contributes group delay.</p>
+<p>The horizontal shift is therefore filter delay, not a failure of the zero-ISI property.</p>
+<p>The receive RRC is also performing another important role: it is a matched filter for the transmitted pulse.</p>
+</section>
+</section>
+<section id="why-is-the-receiver-rrc-a-matched-filter" class="level2">
+<h2 class="anchored" data-anchor-id="why-is-the-receiver-rrc-a-matched-filter">18.12 Why Is the Receiver RRC a Matched Filter?</h2>
+<p>We first met matched filtering in Chapter 11 while asking how a receiver can detect a known waveform in noise.</p>
+<p>The same idea appears here, but the known waveform is now the transmitted symbol pulse.</p>
+<p>In general, if the expected pulse is <span class="math inline">\(p(t)\)</span>, the matched-filter impulse response has the form</p>
+<p><span class="math display">\[
+h_{\mathrm{MF}}(t)=p^*(T-t)
+\]</span></p>
+<p>For the real, symmetric RRC pulse used here, the matching receive filter has the same RRC shape apart from alignment and scaling.</p>
+<p>The receiver is therefore not applying an arbitrary low-pass filter. It filters the received waveform with a response matched to the transmitted pulse shape.</p>
+<p>In additive white Gaussian noise, the matched filter maximizes the signal-to-noise ratio at the chosen decision instant.</p>
+<p>The phrase <strong>at the decision instant</strong> is important. A matched filter does not remove all noise from the waveform. Noise remains at its output.</p>
+<p>Instead, the filter shapes the signal and noise so that the known pulse is represented as favourably as possible when the receiver makes the symbol decision.</p>
+</section>
+<section id="experiment-18.8-matched-filtering-in-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.8-matched-filtering-in-noise">18.13 Experiment 18.8: Matched Filtering in Noise</h2>
+<p>We return from the isolated pulse to a stream of BPSK symbols.</p>
+<p>The transmitter applies RRC pulse shaping. Gaussian noise is added between transmitter and receiver, and we observe the waveform before and after the RX RRC matched filter.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp8-matched-filter-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Matched-filtering-in-noise flowgraph</figcaption>
+</figure>
+</div>
+<p>The RRC parameters remain the same as in Experiment 18.7.</p>
+<p>A QT GUI Range controls the Gaussian-noise amplitude:</p>
+<pre class="text"><code>ID: noise_amp
+Default: 0
+Start: 0
+Stop: 2
+Step: 0.05</code></pre>
+<p>During development, we examined several values, including <code>0.2</code>, <code>0.5</code>, and <code>1.0</code>.</p>
+<p>A noise amplitude of <code>0.5</code> gives a useful comparison. The input to the matched filter is visibly noisy, while the pulse structure at the output remains easier to recognize.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp8-matched-filter-noise.png" class="img-fluid figure-img"></p>
+<figcaption>BPSK before and after matched filtering with Gaussian noise</figcaption>
+</figure>
+</div>
+<p>The matched filter has not removed the noise. It has filtered both the desired signal and the noise.</p>
+<p>The correct conclusion is that, because the receive filter is matched to the transmitted pulse, it improves the conditions for symbol detection and maximizes the output SNR at the appropriate decision instant in AWGN.</p>
+<p>Looking only at the continuous waveform still leaves one important question: where should the receiver sample?</p>
+<p>The eye diagram gives us a useful way to examine that question.</p>
+</section>
+<section id="experiment-18.9-opening-the-eye" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-18.9-opening-the-eye">18.14 Experiment 18.9: Opening the Eye</h2>
+<p>An <strong>eye diagram</strong> is a visualization of an oversampled received waveform around possible symbol sampling instants.</p>
+<p>It is not a new signal. The same waveform is divided into short sections, usually spanning one or two symbol periods, and many sections are overlaid on the same time axis.</p>
+<p>For BPSK, different symbol transitions such as <span class="math inline">\(+1\)</span> to <span class="math inline">\(+1\)</span>, <span class="math inline">\(+1\)</span> to <span class="math inline">\(-1\)</span>, <span class="math inline">\(-1\)</span> to <span class="math inline">\(+1\)</span>, and <span class="math inline">\(-1\)</span> to <span class="math inline">\(-1\)</span> appear together. The open region between the trajectories forms the eye.</p>
+<p>The eye diagram should not be confused with a constellation diagram. The eye shows how the <strong>oversampled waveform behaves around the sampling time</strong>, so it is especially useful for judging timing margin, pulse shape, and ISI. A constellation shows the <strong>complex samples actually selected at symbol instants</strong>, so it reveals effects such as carrier phase error, carrier frequency error, noise, residual ISI, and symbol-decision quality.</p>
+<p>An open eye therefore does not automatically imply a clean constellation. A receiver can have a reasonably open eye while its constellation rotates because of carrier phase or frequency error.</p>
+<section id="generating-the-data-in-gnu-radio" class="level3">
+<h3 class="anchored" data-anchor-id="generating-the-data-in-gnu-radio">Generating the Data in GNU Radio</h3>
+<p>The signal processing remains in GNU Radio. The chain is:</p>
+<p><strong>Random Source → Chunks to Symbols → TX RRC → Gaussian Noise → RX RRC Matched Filter → File Sink</strong></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp9-eye-diagram-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph used to capture eye-diagram data</figcaption>
+</figure>
+</div>
+<p>The File Sink records the matched-filter output as Float32 samples.</p>
+<p>Two captures are used:</p>
+<pre class="text"><code>ch18-eye-clean.dat    noise_amp = 0
+ch18-eye-05.dat       noise_amp = 0.5</code></pre>
+<p>Python is used only to construct the eye-diagram visualization from those recorded samples.</p>
+<p>With</p>
+<p><span class="math display">\[
+R_s=1000\text{ symbols/s}
+\]</span></p>
+<p>the symbol period is</p>
+<p><span class="math display">\[
+T_s=1\text{ ms}
+\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[
+sps=32
+\]</span></p>
+<p>two symbol periods contain</p>
+<p><span class="math display">\[
+2sps=64\text{ samples}
+\]</span></p>
+<p>The script reads the GNU Radio Float32 samples, discards the initial filter transient, takes successive 64-sample windows beginning one symbol apart, and overlays them.</p>
+<p>The complete script is stored as</p>
+<pre class="text"><code>ch18_exp9_eye_diagram.py</code></pre>
+<p>A compact version of the plotting method is:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>samp_rate <span class="op">=</span> <span class="dv">32000</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>sps <span class="op">=</span> <span class="dv">32</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>eye_len <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> sps</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>skip <span class="op">=</span> <span class="dv">20</span> <span class="op">*</span> sps</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>n_traces <span class="op">=</span> <span class="dv">120</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_eye(input_file, output_file, title):</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> np.fromfile(input_file, dtype<span class="op">=</span>np.float32)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> samples[skip:]</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    windows <span class="op">=</span> []</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(n_traces):</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        start <span class="op">=</span> k <span class="op">*</span> sps</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        end <span class="op">=</span> start <span class="op">+</span> eye_len</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> end <span class="op">&lt;=</span> <span class="bu">len</span>(x):</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>            windows.append(x[start:end])</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    windows <span class="op">=</span> np.asarray(windows)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    t_ms <span class="op">=</span> np.arange(eye_len) <span class="op">/</span> samp_rate <span class="op">*</span> <span class="dv">1000</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> window <span class="kw">in</span> windows:</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>        plt.plot(t_ms, window, linewidth<span class="op">=</span><span class="fl">0.8</span>, alpha<span class="op">=</span><span class="fl">0.22</span>)</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    plt.axvline(<span class="fl">1.0</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, linewidth<span class="op">=</span><span class="fl">1.2</span>)</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>    plt.title(title)</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">"Time (ms)"</span>)</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">"Amplitude"</span>)</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>    plt.xlim(<span class="dv">0</span>, <span class="dv">2</span>)</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    plt.ylim(<span class="op">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    plt.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    plt.savefig(output_file, dpi<span class="op">=</span><span class="dv">220</span>, bbox_inches<span class="op">=</span><span class="st">"tight"</span>)</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>    plt.close()</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>plot_eye(</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ch18-eye-clean.dat"</span>,</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>    <span class="st">"../../figures/ch18/ch18-exp9-eye-no-noise.png"</span>,</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BPSK Eye Diagram After RRC Matched Filtering"</span></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>plot_eye(</span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ch18-eye-05.dat"</span>,</span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>    <span class="st">"../../figures/ch18/ch18-exp9-eye-noise-05.png"</span>,</span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BPSK Eye Diagram with Noise After RRC Matched Filtering"</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The exact relative output path can be adjusted to match the experiment folder. The signal-processing method does not change.</p>
+</section>
+<section id="the-clean-eye" class="level3">
+<h3 class="anchored" data-anchor-id="the-clean-eye">The Clean Eye</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp9-eye-no-noise.png" class="img-fluid figure-img"></p>
+<figcaption>Clean BPSK eye after RRC matched filtering</figcaption>
+</figure>
+</div>
+<p>The dashed line at <span class="math inline">\(1\)</span> ms marks the symbol sampling instant used in the two-symbol display.</p>
+<p>At this time, the trajectories cluster around the two BPSK levels:</p>
+<p><span class="math display">\[
++1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+-1
+\]</span></p>
+<p>The receiver does not need the waveform trajectories to remain separated everywhere. It needs the symbol possibilities to be well separated when the decision is made.</p>
+<p>For BPSK, the decision boundary is around zero. A large vertical opening near the sampling instant gives good separation between the two possible symbol values.</p>
+<p>The horizontal opening carries different information. Sampling near the centre of the open region gives more timing margin. Sampling too early or too late moves the observation toward the transition region, where the separation is smaller and the decision becomes more sensitive to timing error, noise, and residual ISI.</p>
+</section>
+<section id="adding-noise" class="level3">
+<h3 class="anchored" data-anchor-id="adding-noise">Adding Noise</h3>
+<p>Now we use the second GNU Radio capture with</p>
+<pre class="text"><code>noise_amp = 0.5</code></pre>
+<p>and apply the same eye-diagram visualization.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch18/ch18-exp9-eye-noise-05.png" class="img-fluid figure-img"></p>
+<figcaption>BPSK eye with noise amplitude 0.5 after RRC matched filtering</figcaption>
+</figure>
+</div>
+<p>The trajectories are thicker and more spread out.</p>
+<p>At the selected sampling instant, however, the upper and lower symbol groups remain separated.</p>
+<p>A useful way to read an eye diagram is:</p>
+<ul>
+<li><strong>vertical eye opening</strong> indicates the available amplitude and noise margin at a given timing position;</li>
+<li><strong>horizontal eye opening</strong> indicates timing margin;</li>
+<li><strong>trajectory thickness</strong> reflects noise and other variations;</li>
+<li><strong>closure or distortion of the eye</strong> can indicate ISI, timing problems, noise, or other waveform impairments.</li>
+</ul>
+<p>The eye diagram summarizes the behaviour of the oversampled waveform around the sampling instant. It does not replace the constellation diagram. The two views answer different receiver questions.</p>
+</section>
+</section>
+<section id="putting-the-pieces-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-the-pieces-together">18.15 Putting the Pieces Together</h2>
+<p>We began with an apparently simple question: why not transmit rectangular symbols?</p>
+<p>We can now answer it step by step.</p>
+<section id="rectangular-symbols-are-easy-but-spectrally-expensive" class="level3">
+<h3 class="anchored" data-anchor-id="rectangular-symbols-are-easy-but-spectrally-expensive">Rectangular Symbols Are Easy but Spectrally Expensive</h3>
+<p>Holding a symbol constant and changing abruptly at the boundary produces a rectangular pulse.</p>
+<p>The sharp transitions require high-frequency Fourier components, producing a sinc-shaped spectrum with sidelobes that extend beyond the main lobe.</p>
+</section>
+<section id="smoothing-improves-the-spectrum-but-spreads-the-pulse" class="level3">
+<h3 class="anchored" data-anchor-id="smoothing-improves-the-spectrum-but-spreads-the-pulse">Smoothing Improves the Spectrum but Spreads the Pulse</h3>
+<p>An ordinary low-pass filter reduces the abruptness of the transitions and suppresses high-frequency components.</p>
+<p>The filtered pulse, however, is no longer confined to one symbol interval. Its tails extend into neighbouring intervals.</p>
+</section>
+<section id="pulse-spreading-creates-the-possibility-of-isi" class="level3">
+<h3 class="anchored" data-anchor-id="pulse-spreading-creates-the-possibility-of-isi">Pulse Spreading Creates the Possibility of ISI</h3>
+<p>Once neighbouring pulses overlap, the observation for one symbol can contain contributions from surrounding symbols.</p>
+<p>Our same-symbol/different-neighbours experiment made that dependence visible.</p>
+</section>
+<section id="overlap-itself-is-not-the-problem" class="level3">
+<h3 class="anchored" data-anchor-id="overlap-itself-is-not-the-problem">Overlap Itself Is Not the Problem</h3>
+<p>The sinc experiment showed that pulses can overlap strongly while contributing zero at the correct symbol decision instants.</p>
+<p>That is the key idea behind Nyquist zero-ISI pulse shaping.</p>
+</section>
+<section id="raised-cosine-provides-a-practical-tradeoff" class="level3">
+<h3 class="anchored" data-anchor-id="raised-cosine-provides-a-practical-tradeoff">Raised Cosine Provides a Practical Tradeoff</h3>
+<p>An ideal sinc is infinitely long.</p>
+<p>The raised-cosine family allows us to trade excess bandwidth against time-domain localization through the roll-off factor <span class="math inline">\(\alpha\)</span>.</p>
+</section>
+<section id="rrc-splits-the-filtering-between-transmitter-and-receiver" class="level3">
+<h3 class="anchored" data-anchor-id="rrc-splits-the-filtering-between-transmitter-and-receiver">RRC Splits the Filtering Between Transmitter and Receiver</h3>
+<p>Practical systems commonly use an RRC filter at the transmitter and a matching RRC filter at the receiver.</p>
+<p>Together, they approximate the desired raised-cosine response.</p>
+</section>
+<section id="the-receiver-filter-also-acts-as-a-matched-filter" class="level3">
+<h3 class="anchored" data-anchor-id="the-receiver-filter-also-acts-as-a-matched-filter">The Receiver Filter Also Acts as a Matched Filter</h3>
+<p>The receive RRC is matched to the transmitted pulse shape.</p>
+<p>In AWGN, this maximizes SNR at the appropriate decision instant. It does not remove all noise, but it improves the conditions under which the receiver makes its decision.</p>
+</section>
+<section id="the-eye-diagram-shows-the-sampling-margin" class="level3">
+<h3 class="anchored" data-anchor-id="the-eye-diagram-shows-the-sampling-margin">The Eye Diagram Shows the Sampling Margin</h3>
+<p>The eye diagram overlays many short sections of the matched-filtered waveform.</p>
+<p>Its vertical opening shows separation between possible symbol values, while its horizontal opening shows how much timing error can be tolerated before the sampling position approaches a transition.</p>
+<p>This completes the connection from constellation points to a practical pulse-shaped waveform.</p>
+</section>
+</section>
+<section id="a-few-things-that-can-go-wrong" class="level2">
+<h2 class="anchored" data-anchor-id="a-few-things-that-can-go-wrong">18.16 A Few Things That Can Go Wrong</h2>
+<p>The experiments were deliberately focused, but they allow us to predict several important failure modes.</p>
+<section id="sampling-at-the-wrong-time" class="level3">
+<h3 class="anchored" data-anchor-id="sampling-at-the-wrong-time">Sampling at the Wrong Time</h3>
+<p>The clean eye is most open near the preferred decision instant.</p>
+<p>Moving the sampling time toward a transition reduces the separation between symbol possibilities.</p>
+<p>A practical receiver therefore needs <strong>symbol timing synchronization</strong>. Knowing that there are <code>32</code> samples per symbol is not enough. The receiver must determine which sample position corresponds to the best decision time.</p>
+</section>
+<section id="using-mismatched-pulse-shaping-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="using-mismatched-pulse-shaping-parameters">Using Mismatched Pulse-Shaping Parameters</h3>
+<p>The transmitter and receiver filters are designed as a pair.</p>
+<p>If their pulse shapes, roll-off factors, or other relevant parameters do not correspond properly, the combined response is no longer the intended raised-cosine response and the zero-ISI behaviour can degrade.</p>
+</section>
+<section id="removing-the-matched-filter" class="level3">
+<h3 class="anchored" data-anchor-id="removing-the-matched-filter">Removing the Matched Filter</h3>
+<p>Without the receive matched filter, the receiver loses both the intended combined pulse response and the matched-filter SNR advantage at the decision instant.</p>
+<p>Experiment 18.8 showed why this matters in noise.</p>
+</section>
+<section id="choosing-roll-off-without-considering-bandwidth" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-roll-off-without-considering-bandwidth">Choosing Roll-Off Without Considering Bandwidth</h3>
+<p>A small roll-off reduces excess bandwidth but produces longer time-domain tails and places greater demands on a finite-length filter implementation.</p>
+<p>A larger roll-off improves time localization but occupies more spectrum.</p>
+<p>There is no universally correct value of <span class="math inline">\(\alpha\)</span>. It is a system-design choice.</p>
+</section>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">18.17 GNU Radio Toolbox</h2>
+<p>Several GNU Radio blocks play important pulse-shaping and receiver roles in this chapter.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Chunks to Symbols</td>
+<td>Maps symbol indices to BPSK amplitudes</td>
+</tr>
+<tr class="even">
+<td>Repeat</td>
+<td>Creates a simple rectangular symbol waveform for the first experiments</td>
+</tr>
+<tr class="odd">
+<td>Interpolating FIR Filter</td>
+<td>Increases the sample rate while applying the TX RRC pulse-shaping filter</td>
+</tr>
+<tr class="even">
+<td>Decimating FIR Filter</td>
+<td>Applies the RX RRC filter; used here with decimation set to <code>1</code></td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Adds Gaussian noise between transmitter and receiver</td>
+</tr>
+<tr class="even">
+<td>QT GUI Time Sink</td>
+<td>Displays pulse and waveform behaviour in time</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>Displays spectral behaviour</td>
+</tr>
+<tr class="even">
+<td>File Sink</td>
+<td>Records matched-filter output for eye-diagram visualization</td>
+</tr>
+</tbody>
+</table>
+<section id="interpolating-fir-filter" class="level3">
+<h3 class="anchored" data-anchor-id="interpolating-fir-filter">Interpolating FIR Filter</h3>
+<p>The <strong>Interpolating FIR Filter</strong> performs filtering while increasing the sample rate by an integer factor.</p>
+<p>In the RRC experiments, the interpolation factor is</p>
+<pre class="text"><code>Interpolation: sps</code></pre>
+<p>The symbol-rate input is converted into a waveform with <code>sps</code> samples per symbol while the RRC taps shape the pulse.</p>
+<p>Conceptually, interpolation can be understood as inserting samples between symbols and then filtering, although GNU Radio can implement the operation more efficiently than performing those steps separately.</p>
+<p>The important point is that the output stream now runs at <code>samp_rate</code>, not at the original symbol rate.</p>
+</section>
+<section id="decimating-fir-filter" class="level3">
+<h3 class="anchored" data-anchor-id="decimating-fir-filter">Decimating FIR Filter</h3>
+<p>In Experiment 18.7, the receiver uses a <strong>Decimating FIR Filter</strong> with</p>
+<pre class="text"><code>Decimation: 1</code></pre>
+<p>With decimation equal to one, the block acts as an ordinary FIR filter and does not reduce the sample rate.</p>
+<p>We use it because it accepts the receiver RRC taps directly. Later receiver designs may combine filtering with actual decimation.</p>
+</section>
+<section id="file-sink" class="level3">
+<h3 class="anchored" data-anchor-id="file-sink">File Sink</h3>
+<p>The <strong>File Sink</strong> records a GNU Radio stream directly to a file.</p>
+<p>For the eye-diagram experiment:</p>
+<pre class="text"><code>Input Type: Float
+Vector Length: 1
+Unbuffered: Off
+Append File: Overwrite</code></pre>
+<p>The output is a raw binary Float32 file.</p>
+<p>The File Sink does not change the signal. It records the stream so that the same samples can be inspected later with another tool.</p>
+<p>This division of work is common in SDR: GNU Radio performs the signal processing, while Python or another analysis environment can be used for specialized visualization.</p>
+</section>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">18.18 Explore Further</h2>
+<p>The experiments in this chapter are well suited to prediction before execution.</p>
+<ol type="1">
+<li><p>In Experiment 18.1, halve the symbol rate while keeping the sample rate unchanged. Predict how the spectral structure should change.</p></li>
+<li><p>In Experiment 18.2, change the low-pass filter cutoff and observe the tradeoff between transition smoothness and time-domain spreading.</p></li>
+<li><p>In Experiment 18.6, choose one roll-off factor and increase the RRC filter span. Compare the finite-length approximation of the pulse tails.</p></li>
+<li><p>Compare two values of <span class="math inline">\(\alpha\)</span> with the same symbol rate. Predict which one should occupy more bandwidth before looking at the Frequency Sink.</p></li>
+<li><p>In Experiment 18.8, gradually increase <code>noise_amp</code> and compare the waveform before and after the matched filter.</p></li>
+<li><p>Generate eye diagrams for several noise levels and compare the vertical eye opening.</p></li>
+<li><p>Shift the eye-diagram window by a few samples and observe how moving away from the preferred sampling position changes the apparent eye opening.</p></li>
+<li><p>Keep the eye diagram in mind while viewing a constellation in a later receiver experiment. Check whether a clean timing eye necessarily corresponds to a stationary constellation.</p></li>
+</ol>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">18.19 What We Learned</h2>
+<p>In this chapter, we moved from constellation geometry to the time waveform used to carry digital symbols.</p>
+<p>A constellation specifies the allowed symbol values. The pulse shape determines how those values evolve with time.</p>
+<p>Rectangular symbols are simple, but their abrupt transitions create a sinc-shaped spectrum with slowly decaying sidelobes.</p>
+<p>Smoothing the waveform improves spectral containment, but filtering spreads a pulse in time. Filter group delay must not be confused with ISI.</p>
+<p>ISI occurs when neighbouring symbols affect the observation used to decide the current symbol. Pulse overlap by itself does not imply ISI. The Nyquist zero-ISI criterion allows shifted pulses to overlap between decision instants while contributing zero interference at the correct sampling times.</p>
+<p>An ideal sinc pulse demonstrates this property clearly but is infinitely long. Raised-cosine pulse shaping provides a practical tradeoff between bandwidth and time-domain localization. The roll-off factor <span class="math inline">\(\alpha\)</span> controls that tradeoff.</p>
+<p>In practical systems, the raised-cosine response is commonly split between a TX RRC filter and a matching RX RRC filter. Their cascade gives the desired overall response, while the receive RRC also serves as a matched filter.</p>
+<p>In AWGN, matched filtering maximizes SNR at the appropriate decision instant. It does not simply remove noise.</p>
+<p>Finally, the eye diagram gives us a way to inspect the oversampled waveform around possible sampling instants. Its vertical opening indicates symbol separation and noise margin, while its horizontal opening indicates timing margin.</p>
+<p>The eye and the constellation describe different aspects of receiver behaviour. An open eye does not guarantee that the constellation will be clean or stationary if carrier synchronization is poor.</p>
+<p>The central idea of the chapter is that a good digital waveform does not require neighbouring pulses to remain separate everywhere. It requires them to combine correctly when the receiver makes its decisions.</p>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">18.20 Connecting to the Next Chapter</h2>
+<p>So far, the path between transmitter and receiver has been deliberately controlled.</p>
+<p>We added Gaussian noise when needed and otherwise assumed that the pulse-shaped waveform arrived without the more complicated effects of radio propagation.</p>
+<p>Over the air, that assumption does not hold.</p>
+<p>A signal becomes weaker with distance. Reflections can create several delayed copies of the same waveform. Those copies can combine constructively or destructively. Motion can introduce Doppler effects, and transmitter and receiver oscillators can introduce frequency offsets.</p>
+<p>The receiver therefore rarely observes exactly what the transmitter produced.</p>
+<p>Chapter 19 begins with a clean digital signal and progressively introduces attenuation, noise, frequency offset, delay, multipath, and fading.</p>
+<p>This takes us from pulse shaping and matched filtering into the behaviour of the wireless channel itself.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/17-bpsk-qpsk-qam.html" class="pagination-link" aria-label="Chapter 17: BPSK, QPSK and QAM">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/19-wireless-channel.html" class="pagination-link" aria-label="Chapter 19: The Wireless Channel">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 19: The Wireless Channel</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/18-pulse-shaping-and-matched-filtering.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

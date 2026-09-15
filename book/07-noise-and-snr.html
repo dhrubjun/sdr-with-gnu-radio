@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chapter 1: What Is Software Defined Radio? – SDR with GNU Radio</title>
+<title>Chapter 7: Noise, Noise Floor, and SNR – SDR with GNU Radio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -36,8 +36,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../book/02-understanding-signals.html" rel="next">
-<link href="../index.html" rel="prev">
+<link href="../book/08-mixture-and-frequency-translation.html" rel="next">
+<link href="../book/06-time-domain-to-frequency-domain.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -284,7 +284,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/07-noise-and-snr.html"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -329,7 +329,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -370,7 +370,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
   </div>
 </li>
       </ul>
@@ -541,50 +541,46 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#what-does-a-radio-actually-do" id="toc-what-does-a-radio-actually-do" class="nav-link active" data-scroll-target="#what-does-a-radio-actually-do">1.1 What Does a Radio Actually Do?</a></li>
-  <li><a href="#the-traditional-way-of-building-a-radio" id="toc-the-traditional-way-of-building-a-radio" class="nav-link" data-scroll-target="#the-traditional-way-of-building-a-radio">1.2 The Traditional Way of Building a Radio</a></li>
-  <li><a href="#so-what-is-software-defined-radio" id="toc-so-what-is-software-defined-radio" class="nav-link" data-scroll-target="#so-what-is-software-defined-radio">1.3 So What Is Software Defined Radio?</a></li>
-  <li><a href="#does-software-defined-mean-there-is-no-hardware" id="toc-does-software-defined-mean-there-is-no-hardware" class="nav-link" data-scroll-target="#does-software-defined-mean-there-is-no-hardware">1.4 Does “Software Defined” Mean There Is No Hardware?</a></li>
-  <li><a href="#what-about-a-transmitter" id="toc-what-about-a-transmitter" class="nav-link" data-scroll-target="#what-about-a-transmitter">1.5 What About a Transmitter?</a></li>
-  <li><a href="#why-is-sdr-so-useful" id="toc-why-is-sdr-so-useful" class="nav-link" data-scroll-target="#why-is-sdr-so-useful">1.6 Why Is SDR So Useful?</a></li>
-  <li><a href="#where-does-gnu-radio-fit" id="toc-where-does-gnu-radio-fit" class="nav-link" data-scroll-target="#where-does-gnu-radio-fit">1.7 Where Does GNU Radio Fit?</a></li>
-  <li><a href="#our-first-signal" id="toc-our-first-signal" class="nav-link" data-scroll-target="#our-first-signal">1.8 Our First Signal</a></li>
-  <li><a href="#experiment-1-build-our-first-gnu-radio-flowgraph" id="toc-experiment-1-build-our-first-gnu-radio-flowgraph" class="nav-link" data-scroll-target="#experiment-1-build-our-first-gnu-radio-flowgraph">1.9 Experiment 1: Build Our First GNU Radio Flowgraph</a>
+  <li><a href="#what-do-we-mean-by-noise" id="toc-what-do-we-mean-by-noise" class="nav-link active" data-scroll-target="#what-do-we-mean-by-noise">7.1 What Do We Mean by Noise?</a></li>
+  <li><a href="#experiment-1-observing-gaussian-noise" id="toc-experiment-1-observing-gaussian-noise" class="nav-link" data-scroll-target="#experiment-1-observing-gaussian-noise">7.2 Experiment 1: Observing Gaussian Noise</a>
   <ul class="collapse">
-  <li><a href="#create-the-sample-rate-variable" id="toc-create-the-sample-rate-variable" class="nav-link" data-scroll-target="#create-the-sample-rate-variable">Create the Sample-Rate Variable</a></li>
-  <li><a href="#add-the-signal-source" id="toc-add-the-signal-source" class="nav-link" data-scroll-target="#add-the-signal-source">Add the Signal Source</a></li>
-  <li><a href="#add-the-throttle" id="toc-add-the-throttle" class="nav-link" data-scroll-target="#add-the-throttle">Add the Throttle</a></li>
-  <li><a href="#add-the-qt-gui-time-sink" id="toc-add-the-qt-gui-time-sink" class="nav-link" data-scroll-target="#add-the-qt-gui-time-sink">Add the QT GUI Time Sink</a></li>
-  <li><a href="#connect-the-blocks" id="toc-connect-the-blocks" class="nav-link" data-scroll-target="#connect-the-blocks">Connect the Blocks</a></li>
+  <li><a href="#noise-in-the-time-domain" id="toc-noise-in-the-time-domain" class="nav-link" data-scroll-target="#noise-in-the-time-domain">Noise in the Time Domain</a></li>
+  <li><a href="#noise-in-the-frequency-domain" id="toc-noise-in-the-frequency-domain" class="nav-link" data-scroll-target="#noise-in-the-frequency-domain">Noise in the Frequency Domain</a></li>
+  <li><a href="#what-fft-averaging-changes" id="toc-what-fft-averaging-changes" class="nav-link" data-scroll-target="#what-fft-averaging-changes">What FFT Averaging Changes</a></li>
   </ul></li>
-  <li><a href="#before-we-press-run" id="toc-before-we-press-run" class="nav-link" data-scroll-target="#before-we-press-run">1.10 Before We Press Run</a></li>
-  <li><a href="#observing-the-result" id="toc-observing-the-result" class="nav-link" data-scroll-target="#observing-the-result">1.11 Observing the Result</a></li>
-  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">1.12 GNU Radio Toolbox</a>
+  <li><a href="#experiment-2-a-signal-inside-noise" id="toc-experiment-2-a-signal-inside-noise" class="nav-link" data-scroll-target="#experiment-2-a-signal-inside-noise">7.3 Experiment 2: A Signal Inside Noise</a></li>
+  <li><a href="#noise-floor-and-spectral-averaging" id="toc-noise-floor-and-spectral-averaging" class="nav-link" data-scroll-target="#noise-floor-and-spectral-averaging">7.4 Noise Floor and Spectral Averaging</a></li>
+  <li><a href="#from-noisy-to-signal-to-noise-ratio" id="toc-from-noisy-to-signal-to-noise-ratio" class="nav-link" data-scroll-target="#from-noisy-to-signal-to-noise-ratio">7.5 From “Noisy” to Signal-to-Noise Ratio</a></li>
+  <li><a href="#measuring-power-from-samples" id="toc-measuring-power-from-samples" class="nav-link" data-scroll-target="#measuring-power-from-samples">7.6 Measuring Power from Samples</a>
   <ul class="collapse">
-  <li><a href="#signal-source" id="toc-signal-source" class="nav-link" data-scroll-target="#signal-source">Signal Source</a></li>
-  <li><a href="#throttle" id="toc-throttle" class="nav-link" data-scroll-target="#throttle">Throttle</a></li>
-  <li><a href="#qt-gui-time-sink" id="toc-qt-gui-time-sink" class="nav-link" data-scroll-target="#qt-gui-time-sink">QT GUI Time Sink</a></li>
+  <li><a href="#real-and-complex-power" id="toc-real-and-complex-power" class="nav-link" data-scroll-target="#real-and-complex-power">Real and Complex Power</a></li>
+  <li><a href="#gaussian-noise-power" id="toc-gaussian-noise-power" class="nav-link" data-scroll-target="#gaussian-noise-power">Gaussian-Noise Power</a></li>
   </ul></li>
-  <li><a href="#a-small-detail-that-will-matter-later-data-types" id="toc-a-small-detail-that-will-matter-later-data-types" class="nav-link" data-scroll-target="#a-small-detail-that-will-matter-later-data-types">1.13 A Small Detail That Will Matter Later: Data Types</a></li>
-  <li><a href="#experiment-2-break-the-flowgraph-on-purpose" id="toc-experiment-2-break-the-flowgraph-on-purpose" class="nav-link" data-scroll-target="#experiment-2-break-the-flowgraph-on-purpose">1.14 Experiment 2: Break the Flowgraph on Purpose</a>
+  <li><a href="#experiment-3-measuring-snr-in-gnu-radio" id="toc-experiment-3-measuring-snr-in-gnu-radio" class="nav-link" data-scroll-target="#experiment-3-measuring-snr-in-gnu-radio">7.7 Experiment 3: Measuring SNR in GNU Radio</a>
   <ul class="collapse">
-  <li><a href="#create-a-type-mismatch" id="toc-create-a-type-mismatch" class="nav-link" data-scroll-target="#create-a-type-mismatch">Create a Type Mismatch</a></li>
-  <li><a href="#remove-throttle" id="toc-remove-throttle" class="nav-link" data-scroll-target="#remove-throttle">Remove Throttle</a></li>
+  <li><a href="#measured-results" id="toc-measured-results" class="nav-link" data-scroll-target="#measured-results">Measured Results</a></li>
+  <li><a href="#a-useful-6-db-rule" id="toc-a-useful-6-db-rule" class="nav-link" data-scroll-target="#a-useful-6-db-rule">A Useful 6 dB Rule</a></li>
   </ul></li>
-  <li><a href="#a-flowgraph-can-be-wrong-without-crashing" id="toc-a-flowgraph-can-be-wrong-without-crashing" class="nav-link" data-scroll-target="#a-flowgraph-can-be-wrong-without-crashing">1.15 A Flowgraph Can Be Wrong Without Crashing</a></li>
-  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">1.16 Explore Further</a></li>
-  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">1.17 What We Learned</a></li>
-  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">1.18 Connecting to the Next Chapter</a></li>
+  <li><a href="#noise-power-depends-on-bandwidth" id="toc-noise-power-depends-on-bandwidth" class="nav-link" data-scroll-target="#noise-power-depends-on-bandwidth">7.8 Noise Power Depends on Bandwidth</a></li>
+  <li><a href="#experiment-4-filter-bandwidth-and-noise-power" id="toc-experiment-4-filter-bandwidth-and-noise-power" class="nav-link" data-scroll-target="#experiment-4-filter-bandwidth-and-noise-power">7.9 Experiment 4: Filter Bandwidth and Noise Power</a>
+  <ul class="collapse">
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  </ul></li>
+  <li><a href="#bandwidth-filtering-and-receiver-snr" id="toc-bandwidth-filtering-and-receiver-snr" class="nav-link" data-scroll-target="#bandwidth-filtering-and-receiver-snr">7.10 Bandwidth, Filtering, and Receiver SNR</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">7.11 GNU Radio Toolbox</a></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">7.12 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">7.13 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">7.14 Connecting to the Next Chapter</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/01-what-is-software-defined-radio.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/07-noise-and-snr.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/07-noise-and-snr.html"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></h1>
+<h1 class="title"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></h1>
 </div>
 
 
@@ -601,377 +597,868 @@ window.Quarto = {
 </header>
 
 
-<section id="what-does-a-radio-actually-do" class="level2">
-<h2 class="anchored" data-anchor-id="what-does-a-radio-actually-do">1.1 What Does a Radio Actually Do?</h2>
-<p>Before talking about Software Defined Radio, let us forget the word <strong>software</strong> for a moment and start with a simpler question:</p>
+<p>Until now, most of our signals have been unusually clean. We generated tones with exact frequencies and amplitudes, observed their spectra, and could usually identify every component without much difficulty.</p>
+<p>Real receivers are different. Even when no obvious transmission is present, a spectrum display rarely becomes empty. Receiver electronics contribute noise. The environment contributes noise and interference. Thermal motion inside electronic components also produces noise.</p>
+<p>A useful signal therefore rarely arrives by itself. A more realistic description is</p>
+<p><span class="math display">\[
+\text{Received signal}=\text{wanted signal}+\text{noise}+\text{other unwanted signals}
+\]</span></p>
+<p>In this chapter, we will focus on noise. We will first observe noise by itself, then add it to a known signal, measure signal and noise power, calculate signal-to-noise ratio, and finally investigate how receiver bandwidth affects the amount of noise we collect.</p>
+<p>The main question is simple:</p>
 <blockquote class="blockquote">
-<p>What does a radio actually do?</p>
+<p>How weak can a signal become before it disappears into the noise?</p>
 </blockquote>
-<p>Suppose we want to listen to an FM radio station. The antenna is not receiving only that station. Many electromagnetic signals may be reaching it at the same time: other FM stations, mobile networks, Wi-Fi, Bluetooth, satellite signals and more.</p>
-<p>Yet when we tune the radio, we hear the station we selected.</p>
-<p>Somewhere inside the receiver, a sequence of operations separates the signal we want from everything else and recovers the information carried by it.</p>
-<p>At a high level, the process is simple: receive the signal, select the part we want, suppress what we do not want, and recover the information.</p>
-<p>A real receiver is more complicated than this, but even this simple picture tells us something important: a radio is essentially a chain of operations performed on a signal.</p>
-<p>With Software Defined Radio, many of those operations are still needed. What changes is <strong>where and how we perform them</strong>.</p>
+<p>There is no single universal answer, but by the end of the chapter we will have the tools needed to discuss that question much more precisely.</p>
+<section id="what-do-we-mean-by-noise" class="level2">
+<h2 class="anchored" data-anchor-id="what-do-we-mean-by-noise">7.1 What Do We Mean by Noise?</h2>
+<p>In signal processing, noise is an unwanted random component that interferes with the signal we are interested in.</p>
+<p>A sinusoid is predictable. Once its amplitude, frequency, and phase are known, its future waveform is determined. Noise is different. Knowing one random sample does not generally tell us the exact value of the next one.</p>
+<p>Instead of describing noise sample by sample, we use statistical properties. We can ask about its mean, variance, power, and how that power is distributed across frequency.</p>
+<p>For our experiments, we will use <strong>Gaussian noise</strong>. Gaussian describes the statistical distribution of the sample amplitudes. For zero-mean Gaussian noise, values near zero occur more often than large positive or negative values.</p>
+<p>The GNU Radio Noise Source uses its <code>Amplitude</code> parameter as the standard deviation of a real one-dimensional Gaussian noise process. Therefore, an amplitude of <code>1</code> does not restrict the samples to the range -1 to +1. Larger values can occur naturally.</p>
+<p>We will also describe the noise as approximately <strong>white</strong>. White describes how the noise power is distributed across frequency. Ideally,</p>
+<p><span class="math display">\[
+S_n(f)=\text{constant}
+\]</span></p>
+<p>over the frequency range of interest.</p>
+<p>Gaussian and white therefore describe different properties:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>What it describes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gaussian</td>
+<td>Statistical distribution of sample amplitudes</td>
+</tr>
+<tr class="even">
+<td>White</td>
+<td>Distribution of noise power across frequency</td>
+</tr>
+</tbody>
+</table>
+<p>Noise can be Gaussian without being white, and it can be white without having a Gaussian amplitude distribution.</p>
+<p>In a sampled system, we do not observe unlimited bandwidth. With</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<p>the represented Nyquist interval is approximately</p>
+<p><span class="math display">\[
+-16\text{ kHz}\leq f&lt;+16\text{ kHz}
+\]</span></p>
+<p>so when we describe the GNU Radio noise as white, we mean that its spectral behaviour is approximately uniform across the finite band represented by the sampled system.</p>
 </section>
-<section id="the-traditional-way-of-building-a-radio" class="level2">
-<h2 class="anchored" data-anchor-id="the-traditional-way-of-building-a-radio">1.2 The Traditional Way of Building a Radio</h2>
-<p>Traditionally, many radio operations have been carried out using dedicated electronic circuits.</p>
-<p>A receiver might contain amplifiers, filters, mixers, oscillators and demodulators, with each part designed to perform a particular job.</p>
-<p>A very simplified receiver chain might look like this:</p>
-<p><strong>Antenna → RF Amplifier → Analog Filter → Mixer → Another Filter → Demodulator → Audio</strong></p>
-<p>There is nothing inherently wrong with this approach. In fact, as we will soon see, SDR does not make analog hardware disappear.</p>
-<p>The important difference is flexibility.</p>
-<p>If part of a radio has been built specifically to process one kind of signal, changing the radio’s behaviour may require modifying or replacing some of that hardware.</p>
-<p>Now imagine moving some of those operations into digital processing controlled by software.</p>
-<p>Instead of changing a circuit, we may be able to change an algorithm or a set of parameters.</p>
-<p>That is the central idea behind Software Defined Radio.</p>
-</section>
-<section id="so-what-is-software-defined-radio" class="level2">
-<h2 class="anchored" data-anchor-id="so-what-is-software-defined-radio">1.3 So What Is Software Defined Radio?</h2>
-<p>A <strong>Software Defined Radio</strong>, usually shortened to <strong>SDR</strong>, is a radio in which many signal-processing functions that could otherwise be implemented in dedicated hardware are performed digitally and controlled through software.</p>
-<p>A simplified SDR receiver can be described by the following signal path:</p>
-<p><strong>Antenna → RF Front End → ADC → Digital Samples → Software Processing → Information</strong></p>
-<p>The <strong>ADC</strong>, or <strong>Analog-to-Digital Converter</strong>, marks an important boundary.</p>
-<p>Before the ADC, the receiver is working with an analog electrical signal. Depending on the radio architecture, the RF front end may already have amplified, filtered or frequency-translated that signal.</p>
-<p>After the ADC, the signal is represented by a sequence of numbers called <strong>samples</strong>.</p>
-<p>Once the signal is represented numerically, we can process it digitally. That processing can include filtering, frequency translation, demodulation, synchronization, decoding and signal detection.</p>
-<p>We will encounter all of these later in the book. For now, the main idea is simpler:</p>
-<blockquote class="blockquote">
-<p>In SDR, much of what the radio does to a signal can be implemented or controlled through digital processing and software.</p>
-</blockquote>
-</section>
-<section id="does-software-defined-mean-there-is-no-hardware" class="level2">
-<h2 class="anchored" data-anchor-id="does-software-defined-mean-there-is-no-hardware">1.4 Does “Software Defined” Mean There Is No Hardware?</h2>
-<p>No.&nbsp;An SDR is still a physical radio system, and it still needs hardware.</p>
-<p>We cannot connect an antenna directly to a Python program and expect the computer to receive a 2.4 GHz Wi-Fi signal.</p>
-<p>The signal arriving at an antenna is a physical electromagnetic signal. Before software can process it, hardware must receive it, condition it and convert it into digital samples.</p>
-<p>The basic idea is shown below.</p>
+<section id="experiment-1-observing-gaussian-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-observing-gaussian-noise">7.2 Experiment 1: Observing Gaussian Noise</h2>
+<p>Before adding noise to a useful signal, we will look at noise by itself.</p>
+<p>A Noise Source generates real Gaussian noise. A Throttle controls the processing rate in this software-only flowgraph, and the same stream is observed in both a QT GUI Time Sink and QT GUI Frequency Sink.</p>
+<p>We use</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<p>with an initial noise amplitude of <code>1</code>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch01/sdr-receiver-architecture.png" class="img-fluid figure-img"></p>
-<figcaption>Simplified SDR receiver architecture.</figcaption>
+<p><img src="../figures/ch07/ch07-exp1-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing Gaussian noise in the time and frequency domains.</figcaption>
 </figure>
 </div>
-<p>Notice the boundary between the analog and digital sides.</p>
-<p>The antenna and RF front end are on the analog side. Depending on the radio, the <strong>RF front end</strong> may contain amplifiers, filters, mixers, oscillators and gain-control circuits.</p>
-<p>The ADC then converts the conditioned analog signal into digital samples. From that point onward, much of the remaining processing can be performed digitally.</p>
-<p>Later in the book, we will connect actual SDR hardware and see this boundary for ourselves.</p>
-<p>For now, however, we do not need an antenna or an SDR device at all. GNU Radio can generate signals directly inside the computer, giving us a controlled environment in which to learn what happens to them.</p>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Block</th>
+<th>Parameter</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Variable</td>
+<td>ID</td>
+<td><code>samp_rate</code></td>
+</tr>
+<tr class="even">
+<td>Variable</td>
+<td>Value</td>
+<td><code>32e3</code></td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>Noise Type</td>
+<td>Gaussian</td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Amplitude</td>
+<td><code>1</code></td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>Seed</td>
+<td><code>0</code></td>
+</tr>
+<tr class="odd">
+<td>Throttle</td>
+<td>Sample Rate</td>
+<td><code>samp_rate</code></td>
+</tr>
+<tr class="even">
+<td>QT GUI Time Sink</td>
+<td>Type</td>
+<td>Float</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Time Sink</td>
+<td>Sample Rate</td>
+<td><code>samp_rate</code></td>
+</tr>
+<tr class="even">
+<td>QT GUI Frequency Sink</td>
+<td>Type</td>
+<td>Float</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>FFT Size</td>
+<td><code>1024</code></td>
+</tr>
+<tr class="even">
+<td>QT GUI Frequency Sink</td>
+<td>Center Frequency</td>
+<td><code>0</code></td>
+</tr>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>Bandwidth</td>
+<td><code>samp_rate</code></td>
+</tr>
+</tbody>
+</table>
+<p>For the first observation, frequency-sink averaging is disabled.</p>
+<section id="noise-in-the-time-domain" class="level3">
+<h3 class="anchored" data-anchor-id="noise-in-the-time-domain">Noise in the Time Domain</h3>
+<p>The Time Sink looks very different from the clean sinusoids used earlier. There is no obvious repeating waveform. The samples move irregularly above and below zero.</p>
+<p>Individual samples can also exceed a magnitude of 1 even though the Noise Source amplitude is set to <code>1</code>. This is expected because the amplitude parameter sets the standard deviation of the Gaussian process, not a hard limit.</p>
 </section>
-<section id="what-about-a-transmitter" class="level2">
-<h2 class="anchored" data-anchor-id="what-about-a-transmitter">1.5 What About a Transmitter?</h2>
-<p>So far we have looked at a receiver, but the same idea works in the other direction.</p>
-<p>A simplified SDR transmitter can be described as:</p>
-<p><strong>Information → Digital Signal Processing → Digital Samples → DAC → RF Front End → Antenna</strong></p>
-<p>Here, <strong>DAC</strong> means <strong>Digital-to-Analog Converter</strong>.</p>
-<p>The DAC converts digitally generated samples into an analog electrical signal. The RF hardware can then filter, amplify or frequency-translate that signal as needed before transmission.</p>
-<p>A compact way to remember the two directions is:</p>
-<ul>
-<li><strong>Receiver:</strong> Analog Signal → ADC → Digital Samples → Software</li>
-<li><strong>Transmitter:</strong> Software → Digital Samples → DAC → Analog Signal</li>
-</ul>
-<p>We will spend a large part of this book working on the digital portion in the middle. It is worth remembering, however, that those numbers ultimately represent real signals entering or leaving real hardware.</p>
+<section id="noise-in-the-frequency-domain" class="level3">
+<h3 class="anchored" data-anchor-id="noise-in-the-frequency-domain">Noise in the Frequency Domain</h3>
+<p>The Frequency Sink shows another important feature. Instead of producing one narrow spectral line, the noise occupies the displayed frequency range broadly.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp1-noise-no-averaging.png" class="img-fluid figure-img"></p>
+<figcaption>Gaussian noise in the time and frequency domains without FFT averaging.</figcaption>
+</figure>
+</div>
+<p>The spectrum is not perfectly flat. It fluctuates from bin to bin because each FFT is based on a finite block of random samples.</p>
+<p>A flat power spectral density is a statistical statement. It does not mean that every finite FFT of white noise must produce a perfectly horizontal line.</p>
 </section>
-<section id="why-is-sdr-so-useful" class="level2">
-<h2 class="anchored" data-anchor-id="why-is-sdr-so-useful">1.6 Why Is SDR So Useful?</h2>
-<p>The attraction of SDR becomes clearer when we think about flexibility.</p>
-<p>Suppose we want to experiment with FM today, a digital modulation scheme tomorrow and a packet receiver next week. If every signal-processing operation were permanently fixed in hardware, making those changes could be difficult.</p>
-<p>With SDR, much of the radio’s behaviour can be changed in software.</p>
-<p>The same general SDR platform can therefore be used for many different purposes, including:</p>
-<ul>
-<li>broadcast radio experiments</li>
-<li>digital communication</li>
-<li>satellite reception</li>
-<li>spectrum monitoring</li>
-<li>packet communication</li>
-<li>radar experiments</li>
-<li>wireless research</li>
-</ul>
-<p>This does not mean that software can do anything we want. The hardware still sets practical limits such as the frequencies we can receive or transmit, the instantaneous bandwidth available to us and the system’s dynamic range.</p>
-<p>Within those limits, however, SDR gives us considerable flexibility.</p>
-<p>For learning, there is another advantage. We do not have to read about a filter and simply trust that it behaves a certain way. We can build one, send a signal through it, change its settings and observe the result immediately.</p>
-<p>That experimental approach will guide the rest of this book.</p>
+<section id="what-fft-averaging-changes" class="level3">
+<h3 class="anchored" data-anchor-id="what-fft-averaging-changes">What FFT Averaging Changes</h3>
+<p>The QT GUI Frequency Sink can average successive spectral estimates. Conceptually, we can think of several estimates</p>
+<p><span class="math display">\[
+S_1[k],\ S_2[k],\ S_3[k],\ldots
+\]</span></p>
+<p>being combined so that some of the random frame-to-frame variation is reduced.</p>
+<p>With averaging enabled, the noise spectrum becomes visibly smoother:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp1-noise-with-averaging.png" class="img-fluid figure-img"></p>
+<figcaption>Gaussian noise spectrum with FFT averaging enabled.</figcaption>
+</figure>
+</div>
+<p>The important distinction is that <strong>FFT averaging does not remove noise from the underlying signal</strong>. The time-domain samples are unchanged. Only the displayed spectral estimate becomes smoother.</p>
+<p>More averaging therefore gives us a familiar trade-off:</p>
+<p><span class="math display">\[
+\text{More averaging}\longleftrightarrow\text{smoother display but slower response}
+\]</span></p>
+<p>This becomes useful when a persistent spectral component must be observed against a fluctuating noise background.</p>
 </section>
-<section id="where-does-gnu-radio-fit" class="level2">
-<h2 class="anchored" data-anchor-id="where-does-gnu-radio-fit">1.7 Where Does GNU Radio Fit?</h2>
-<p><strong>GNU Radio</strong> is a signal-processing framework that lets us build systems by connecting processing blocks together.</p>
-<p>Using <strong>GNU Radio Companion</strong>, or <strong>GRC</strong>, we can build these systems graphically. The resulting diagram is called a <strong>flowgraph</strong>.</p>
-<p>For our first experiment, the signal path is very simple:</p>
-<p><strong>Signal Source → Throttle → QT GUI Time Sink</strong></p>
-<p>The Signal Source will generate a signal. Throttle will limit the rate at which samples are processed in this software-only flowgraph. The QT GUI Time Sink will display those samples against time.</p>
-<p>The connections between the blocks show the direction in which the sample stream travels.</p>
-<p>One habit will help us throughout the book. Whenever we look at a GNU Radio block, we should ask two questions:</p>
+</section>
+<section id="experiment-2-a-signal-inside-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-a-signal-inside-noise">7.3 Experiment 2: A Signal Inside Noise</h2>
+<p>We now add noise to a familiar signal:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi1000t)
+\]</span></p>
+<p>The received signal in our simulation is</p>
+<p><span class="math display">\[
+r(t)=x(t)+n(t)
+\]</span></p>
+<p>where (n(t)) is Gaussian noise.</p>
+<p>A QT GUI Range controls the noise amplitude while the flowgraph is running.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-plus-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for adding Gaussian noise to a 1 kHz cosine.</figcaption>
+</figure>
+</div>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Block</th>
+<th>Parameter</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Signal Source</td>
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Signal Source</td>
+<td>Waveform</td>
+<td>Cosine</td>
+</tr>
+<tr class="odd">
+<td>Signal Source</td>
+<td>Frequency</td>
+<td><code>1e3</code></td>
+</tr>
+<tr class="even">
+<td>Signal Source</td>
+<td>Amplitude</td>
+<td><code>1</code></td>
+</tr>
+<tr class="odd">
+<td>Signal Source</td>
+<td>Sample Rate</td>
+<td><code>samp_rate</code></td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Noise Type</td>
+<td>Gaussian</td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>Amplitude</td>
+<td>controlled by QT GUI Range</td>
+</tr>
+<tr class="odd">
+<td>Add</td>
+<td>Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Throttle</td>
+<td>Sample Rate</td>
+<td><code>samp_rate</code></td>
+</tr>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>FFT Size</td>
+<td><code>1024</code></td>
+</tr>
+<tr class="even">
+<td>QT GUI Frequency Sink</td>
+<td>Bandwidth</td>
+<td><code>samp_rate</code></td>
+</tr>
+</tbody>
+</table>
+<p>We test four noise amplitudes:</p>
+<p><span class="math display">\[
+A_n=0.1,\quad0.5,\quad1.0,\quad2.0
+\]</span></p>
+<p>At (A_n=0.1), the cosine remains easy to recognize in both the time and frequency domains.</p>
+<p>At (A_n=0.5), the time-domain waveform becomes noticeably rougher, but the spectral components near () kHz remain clear.</p>
+<p>At (A_n=1.0), the noise is comparable in scale to the sinusoid. The waveform is heavily corrupted, but the frequency-domain peaks are still present.</p>
+<p>At (A_n=2.0), the time-domain waveform is dominated by random fluctuations. Even then, the Frequency Sink can still show evidence of the persistent 1 kHz component.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-noise-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of increasing Gaussian noise on a 1 kHz cosine for noise amplitudes 0.1, 0.5, 1.0, and 2.0.</figcaption>
+</figure>
+</div>
+<p>This gives us an important lesson:</p>
 <blockquote class="blockquote">
-<p>What does the signal look like before this block?</p>
+<p>A signal that is difficult to recognize in the time domain may still be identifiable in the frequency domain.</p>
 </blockquote>
+<p>The sinusoid concentrates energy at particular frequencies, while the approximately white noise spreads its energy broadly across the represented band.</p>
+</section>
+<section id="noise-floor-and-spectral-averaging" class="level2">
+<h2 class="anchored" data-anchor-id="noise-floor-and-spectral-averaging">7.4 Noise Floor and Spectral Averaging</h2>
+<p>The broadband background visible in the Frequency Sink is commonly called the <strong>noise floor</strong>.</p>
+<p>A strong spectral component rises clearly above the surrounding background. As the signal becomes weaker, or the noise becomes stronger, the peak approaches that background and detection becomes more difficult.</p>
+<p>The total noise power in a signal and the displayed FFT noise floor are related, but they are not identical quantities. The level shown by a spectrum display can depend on FFT size, window type, normalization, averaging, gain, bandwidth, and display configuration.</p>
+<p>For this reason, an uncalibrated GNU Radio Frequency Sink should not automatically be treated as an absolute RF power measurement.</p>
+<p>Now enable averaging in the Frequency Sink and repeat the four noise-amplitude cases.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp2-signal-noise-averaged-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Signal and Gaussian noise observed with FFT averaging enabled for noise amplitudes 0.1, 0.5, 1.0, and 2.0.</figcaption>
+</figure>
+</div>
+<p>The broadband trace becomes smoother, while the persistent components near () kHz remain at consistent frequencies.</p>
+<p>This can make a stable tone easier to distinguish visually, but again, the received samples themselves have not been cleaned. Only the spectral display has changed.</p>
+</section>
+<section id="from-noisy-to-signal-to-noise-ratio" class="level2">
+<h2 class="anchored" data-anchor-id="from-noisy-to-signal-to-noise-ratio">7.5 From “Noisy” to Signal-to-Noise Ratio</h2>
+<p>Descriptions such as “clean,” “noisy,” or “hard to see” are useful while learning, but engineering measurements need something more precise.</p>
+<p>The <strong>signal-to-noise ratio</strong>, or <strong>SNR</strong>, compares signal power with noise power:</p>
+<p><span class="math display">\[
+\mathrm{SNR}=\frac{P_s}{P_n}
+\]</span></p>
+<p>where (P_s) is signal power and (P_n) is noise power.</p>
+<p>SNR is usually expressed in decibels:</p>
+<p><span class="math display">\[
+\mathrm{SNR}_{\mathrm{dB}}=10\log_{10}\left(\frac{P_s}{P_n}\right)
+\]</span></p>
+<p>If (P_s=P_n), the linear SNR is 1 and</p>
+<p><span class="math display">\[
+\mathrm{SNR}_{\mathrm{dB}}=0\text{ dB}
+\]</span></p>
+<p>If (P_s&lt;P_n), the SNR in decibels is negative. Negative SNR does not mean negative power. It simply means that the noise power is greater than the signal power.</p>
+<p>To understand the calculation properly, we will measure (P_s) and (P_n) directly from the samples.</p>
+</section>
+<section id="measuring-power-from-samples" class="level2">
+<h2 class="anchored" data-anchor-id="measuring-power-from-samples">7.6 Measuring Power from Samples</h2>
+<p>For a real discrete-time signal, average power can be estimated as</p>
+<p><span class="math display">\[
+P\approx\frac{1}{N}\sum_{n=0}^{N-1}x^2[n]
+\]</span></p>
+<p>Our amplitude-1 cosine has theoretical average power</p>
+<p><span class="math display">\[
+P_s=\frac{A^2}{2}=\frac{1^2}{2}=0.5
+\]</span></p>
+<p>In GNU Radio, we can measure this by sending the same Float stream to both inputs of a Multiply block:</p>
+<p><span class="math display">\[
+x[n]\times x[n]=x^2[n]
+\]</span></p>
+<p>A Moving Average block then averages those squared samples.</p>
+<p>With</p>
+<pre class="text"><code>Length = 1000
+Scale = 1/1000</code></pre>
+<p>the block estimates power over a moving window of 1000 samples.</p>
+<p>For the cosine, the measured value should settle near</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
+<section id="real-and-complex-power" class="level3">
+<h3 class="anchored" data-anchor-id="real-and-complex-power">Real and Complex Power</h3>
+<p>This method is appropriate because the current experiment uses real-valued Float streams.</p>
+<p>For a complex signal</p>
+<p><span class="math display">\[
+z[n]=I[n]+jQ[n]
+\]</span></p>
+<p>we instead use magnitude squared:</p>
+<p><span class="math display">\[
+|z[n]|^2=z[n]z^*[n]=I^2[n]+Q^2[n]
+\]</span></p>
+<p>GNU Radio provides blocks such as <strong>Complex to Mag²</strong> for this purpose.</p>
+</section>
+<section id="gaussian-noise-power" class="level3">
+<h3 class="anchored" data-anchor-id="gaussian-noise-power">Gaussian-Noise Power</h3>
+<p>For zero-mean Gaussian noise with standard deviation (),</p>
+<p><span class="math display">\[
+P_n=E\{w^2[n]\}=\sigma^2
+\]</span></p>
+<p>For the real GNU Radio Gaussian Noise Source, the amplitude parameter is the standard deviation. Therefore,</p>
+<p><span class="math display">\[
+P_n=A_n^2
+\]</span></p>
+<p>in expectation.</p>
+<p>For our four settings:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Noise amplitude (A_n)</th>
+<th style="text-align: right;">Expected noise power (P_n)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">0.01</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p>This relationship is important:</p>
+<p><span class="math display">\[
+P_n\propto A_n^2
+\]</span></p>
+<p>Doubling noise amplitude therefore increases expected noise power by a factor of four.</p>
+</section>
+</section>
+<section id="experiment-3-measuring-snr-in-gnu-radio" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-measuring-snr-in-gnu-radio">7.7 Experiment 3: Measuring SNR in GNU Radio</h2>
+<p>The complete SNR-measurement flowgraph is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07_exp3_power_snr_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for measuring signal power, noise power, and SNR.</figcaption>
+</figure>
+</div>
+<p>The signal branch performs</p>
+<p><span class="math display">\[
+x[n]\rightarrow x^2[n]\rightarrow\text{average}\rightarrow P_s
+\]</span></p>
+<p>and the noise branch performs</p>
+<p><span class="math display">\[
+w[n]\rightarrow w^2[n]\rightarrow\text{average}\rightarrow P_n
+\]</span></p>
+<p>The two estimates are then combined:</p>
+<p><span class="math display">\[
+P_s,P_n\rightarrow\frac{P_s}{P_n}\rightarrow10\log_{10}(\cdot)\rightarrow\mathrm{SNR}_{\mathrm{dB}}
+\]</span></p>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>samp_rate</code></td>
+<td style="text-align: right;"><code>32e3</code></td>
+</tr>
+<tr class="even">
+<td><code>avg_len</code></td>
+<td style="text-align: right;"><code>1000</code></td>
+</tr>
+<tr class="odd">
+<td>Moving Average Scale</td>
+<td style="text-align: right;"><code>1.0/avg_len</code></td>
+</tr>
+<tr class="even">
+<td>Divide</td>
+<td style="text-align: right;">Float</td>
+</tr>
+<tr class="odd">
+<td>Log10</td>
+<td style="text-align: right;"><code>n = 1</code>, <code>k = 0</code></td>
+</tr>
+<tr class="even">
+<td>Multiply Const</td>
+<td style="text-align: right;"><code>10</code></td>
+</tr>
+</tbody>
+</table>
+<p>QT GUI Number Sinks display signal power, noise power, and SNR.</p>
+<section id="measured-results" class="level3">
+<h3 class="anchored" data-anchor-id="measured-results">Measured Results</h3>
+<p>The measurements from the experiment were approximately:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Noise amplitude</th>
+<th style="text-align: right;">Signal power</th>
+<th style="text-align: right;">Noise power</th>
+<th style="text-align: right;">Measured SNR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">0.5005</td>
+<td style="text-align: right;">0.0090</td>
+<td style="text-align: right;">+17.43 dB</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.5005</td>
+<td style="text-align: right;">0.2285</td>
+<td style="text-align: right;">+3.40 dB</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">0.4995</td>
+<td style="text-align: right;">1.0298</td>
+<td style="text-align: right;">-3.13 dB</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">0.5005</td>
+<td style="text-align: right;">4.0843</td>
+<td style="text-align: right;">-9.13 dB</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07_exp3_snr_vs_noise_amplitude.png" class="img-fluid figure-img"></p>
+<figcaption>Measured signal power, noise power, and SNR for different Gaussian-noise amplitudes.</figcaption>
+</figure>
+</div>
+<p>The signal power remains close to 0.5 because the cosine itself is unchanged. The measured noise power follows the expected square-law trend.</p>
+<p>Using</p>
+<p><span class="math display">\[
+P_s=0.5
+\]</span></p>
 <p>and</p>
+<p><span class="math display">\[
+P_n=A_n^2
+\]</span></p>
+<p>we predict</p>
+<p><span class="math display">\[
+\mathrm{SNR}_{\mathrm{dB}}=10\log_{10}\left(\frac{0.5}{A_n^2}\right)
+\]</span></p>
+<p>which gives:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Noise amplitude</th>
+<th style="text-align: right;">Theoretical SNR</th>
+<th style="text-align: right;">Measured SNR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">+16.99 dB</td>
+<td style="text-align: right;">+17.43 dB</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">+3.01 dB</td>
+<td style="text-align: right;">+3.40 dB</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">-3.01 dB</td>
+<td style="text-align: right;">-3.13 dB</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">-9.03 dB</td>
+<td style="text-align: right;">-9.13 dB</td>
+</tr>
+</tbody>
+</table>
+<p>The agreement is good. Small differences are expected because the noise is random and the power estimate uses a finite moving window.</p>
+<p>A longer averaging window generally gives a more stable estimate, but it responds more slowly when the signal or noise changes.</p>
+<p>This is different from Frequency Sink averaging. The Moving Average block operates on the actual stream of squared samples and produces a power estimate. Frequency Sink averaging only smooths successive spectral displays.</p>
+</section>
+<section id="a-useful-6-db-rule" class="level3">
+<h3 class="anchored" data-anchor-id="a-useful-6-db-rule">A Useful 6 dB Rule</h3>
+<p>If the noise amplitude doubles,</p>
+<p><span class="math display">\[
+A_n\rightarrow2A_n
+\]</span></p>
+<p>then the expected noise power increases by four:</p>
+<p><span class="math display">\[
+P_n\rightarrow4P_n
+\]</span></p>
+<p>With signal power fixed, the SNR falls by</p>
+<p><span class="math display">\[
+10\log_{10}(4)\approx6.02\text{ dB}
+\]</span></p>
+<p>So:</p>
 <blockquote class="blockquote">
-<p>What has this block changed?</p>
+<p>Doubling Gaussian-noise amplitude reduces SNR by approximately 6 dB when signal power remains unchanged.</p>
 </blockquote>
-<p>If we can answer those questions, even a complicated flowgraph becomes much easier to understand.</p>
 </section>
-<section id="our-first-signal" class="level2">
-<h2 class="anchored" data-anchor-id="our-first-signal">1.8 Our First Signal</h2>
-<p>We need a signal to experiment with, so we will begin with one of the simplest and most useful signals in signal processing: a sinusoid.</p>
-<p>A sinusoidal signal can be written as:</p>
+</section>
+<section id="noise-power-depends-on-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="noise-power-depends-on-bandwidth">7.8 Noise Power Depends on Bandwidth</h2>
+<p>SNR depends on noise power, but what determines how much noise power reaches a receiver?</p>
+<p>One important factor is <strong>bandwidth</strong>.</p>
+<p>If approximately white noise has an almost constant power spectral density over the region of interest, then accepting a wider frequency range collects more total noise power.</p>
+<p>The basic relationship is</p>
 <p><span class="math display">\[
-x(t)=A\cos(2\pi ft+\phi)
+P_n\propto B
 \]</span></p>
-<p>If that equation looks unfamiliar, do not worry. We are not going to derive anything from it yet.</p>
-<p>For the moment, notice only a few things:</p>
-<ul>
-<li><strong>amplitude</strong> tells us how large the signal is,</li>
-<li><strong>frequency</strong> tells us how quickly it repeats,</li>
-<li><strong>phase</strong> tells us where the signal is within its cycle.</li>
-</ul>
-<p>Here, <strong>t</strong> represents time. We will unpack the rest of the equation properly in the next chapter.</p>
-<p>For our first experiment, we will use:</p>
-<pre class="text"><code>Amplitude = 1
-Frequency = 1 kHz</code></pre>
-<p>Our goal is simple: ask GNU Radio to generate this signal and display it.</p>
-</section>
-<section id="experiment-1-build-our-first-gnu-radio-flowgraph" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-1-build-our-first-gnu-radio-flowgraph">1.9 Experiment 1: Build Our First GNU Radio Flowgraph</h2>
-<p>Open <strong>GNU Radio Companion</strong> and create a new flowgraph.</p>
-<p>Before adding the signal-processing blocks, we need one variable.</p>
-<section id="create-the-sample-rate-variable" class="level3">
-<h3 class="anchored" data-anchor-id="create-the-sample-rate-variable">Create the Sample-Rate Variable</h3>
-<p>Search for a <strong>Variable</strong> block and add it to the flowgraph.</p>
-<p>Set:</p>
-<pre class="text"><code>ID: samp_rate
-Value: 32000</code></pre>
-<p>GNU Radio will display <code>32000</code> as <code>32k</code> on the flowgraph. It is simply using compact engineering notation.</p>
-<p>We may naturally wonder why we chose 32,000, or what a sample rate means in the first place. For now, we only need the value. We will study sampling properly in a later chapter.</p>
-</section>
-<section id="add-the-signal-source" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-signal-source">Add the Signal Source</h3>
-<p>Search for <strong>Signal Source</strong> and add it to the flowgraph.</p>
-<p>Open its properties and configure it as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/signal-source-properties.png" class="img-fluid figure-img"></p>
-<figcaption>Signal Source settings used to generate the 1 kHz cosine.</figcaption>
-</figure>
-</div>
-<p>We have asked the block to generate a cosine with a frequency of <code>1000</code> Hz and an amplitude of <code>1</code>.</p>
-<p>Notice that we have not typed <code>32000</code> directly into the Sample Rate field. Instead, we use:</p>
-<pre class="text"><code>samp_rate</code></pre>
-<p>This refers to the variable we created earlier. If we later change <code>samp_rate</code>, every block that uses the same variable can follow that change.</p>
-<p>There are other settings in the window, such as Offset, Initial Phase and Show Msg Ports. We do not need them yet. We will introduce those options when they become useful.</p>
-</section>
-<section id="add-the-throttle" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-throttle">Add the Throttle</h3>
-<p>Next, search for <strong>Throttle</strong> and add it to the flowgraph.</p>
-<p>Set its type to <code>Float</code> and its sample rate to <code>samp_rate</code>, as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/throttle-properties.png" class="img-fluid figure-img"></p>
-<figcaption>Throttle settings used in the first GNU Radio flowgraph.</figcaption>
-</figure>
-</div>
-<p>Leave the remaining settings as shown.</p>
-<p>The purpose of Throttle may not be obvious at first. Why should a signal that exists only inside the computer need a rate limit?</p>
-<p>We will answer that after the flowgraph is running.</p>
-</section>
-<section id="add-the-qt-gui-time-sink" class="level3">
-<h3 class="anchored" data-anchor-id="add-the-qt-gui-time-sink">Add the QT GUI Time Sink</h3>
-<p>Finally, add a <strong>QT GUI Time Sink</strong> and configure it as shown below.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/qt-gui-time-sink-properties.png" class="img-fluid figure-img"></p>
-<figcaption>QT GUI Time Sink settings used in the first experiment.</figcaption>
-</figure>
-</div>
-<p>For this experiment, the settings that matter most are:</p>
-<pre class="text"><code>Type: Float
-Number of Points: 1024
-Sample Rate: samp_rate</code></pre>
-<p>The Time Sink contains many other options, including Grid, Autoscale, Trigger, Update Period and GUI Hint. We can ignore them for now. We will return to those settings when we have a reason to use them.</p>
-</section>
-<section id="connect-the-blocks" class="level3">
-<h3 class="anchored" data-anchor-id="connect-the-blocks">Connect the Blocks</h3>
-<p>Connect the three processing blocks in this order:</p>
-<p><strong>Signal Source → Throttle → QT GUI Time Sink</strong></p>
-<p>The completed flowgraph should look like this:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/complete-gnu-radio-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>Our first GNU Radio flowgraph.</figcaption>
-</figure>
-</div>
-<p>Take a moment to read the flowgraph before running it.</p>
-<p>The Signal Source shows <code>Frequency: 1k</code>.</p>
-<p>The Variable shows <code>Value: 32k</code>.</p>
-<p>The Time Sink shows <code>Number of Points: 1.024k</code>.</p>
-<p>GNU Radio often uses prefixes such as <code>k</code> to keep values compact. Here, <code>1k</code> means 1000 and <code>32k</code> means 32000.</p>
-<p>More importantly, we should start reading the flowgraph from left to right. In this case, the chain is doing three things: generating a cosine, controlling the processing rate and displaying the samples.</p>
-<p>This is the beginning of learning to read GNU Radio flowgraphs as signal-processing systems rather than as collections of blocks.</p>
-</section>
-</section>
-<section id="before-we-press-run" class="level2">
-<h2 class="anchored" data-anchor-id="before-we-press-run">1.10 Before We Press Run</h2>
-<p>Before running the flowgraph, let us make a prediction.</p>
-<p>We told GNU Radio to generate a cosine with an amplitude of 1 and a frequency of 1 kHz.</p>
-<p>What should we expect the Time Sink to show?</p>
-<p>We do not need to calculate anything yet. It is enough to form a picture in our minds, then run the flowgraph.</p>
-</section>
-<section id="observing-the-result" class="level2">
-<h2 class="anchored" data-anchor-id="observing-the-result">1.11 Observing the Result</h2>
-<p>We should see something like this:</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch01/first-cosine-result.png" class="img-fluid figure-img"></p>
-<figcaption>The 1 kHz cosine displayed in the QT GUI Time Sink.</figcaption>
-</figure>
-</div>
-<p>There is our first signal.</p>
-<p>The waveform moves between approximately +1 and -1, which agrees with the amplitude entered in the Signal Source. It also repeats regularly across the time axis.</p>
-<p>Even this simple plot raises several useful questions:</p>
-<ul>
-<li>How long does one cycle take?</li>
-<li>How many cycles occur in one second?</li>
-<li>Why does the curve look smooth if GNU Radio is processing individual samples?</li>
-<li>How many samples are used to represent each cycle?</li>
-</ul>
-<p>We do not need to answer all of them yet. The point is simply to notice that a simple cosine already gives us several things to investigate.</p>
-<p>What have we actually done? We started with the mathematical description</p>
+<p>where (B) is the effective noise bandwidth.</p>
+<p>If the accepted noise bandwidth doubles, we expect the total noise power to approximately double:</p>
 <p><span class="math display">\[
-x(t)=A\cos(2\pi ft+\phi)
+B\rightarrow2B\quad\Rightarrow\quad P_n\rightarrow2P_n
 \]</span></p>
-<p>and asked GNU Radio to generate numerical samples representing that signal. The Time Sink then displayed those samples in the time domain.</p>
-<p>That same basic idea, generate or receive samples, process them and observe the result, will remain with us as the systems become more complicated.</p>
+<p>In decibels,</p>
+<p><span class="math display">\[
+10\log_{10}(2)\approx3.01\text{ dB}
+\]</span></p>
+<p>so doubling the accepted noise bandwidth produces approximately 3 dB more total noise power for white noise.</p>
+</section>
+<section id="experiment-4-filter-bandwidth-and-noise-power" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-filter-bandwidth-and-noise-power">7.9 Experiment 4: Filter Bandwidth and Noise Power</h2>
+<p>We now test the bandwidth relationship directly.</p>
+<p>A Gaussian Noise Source feeds two measurement branches. One measures the original noise power. The other passes the noise through a Low Pass Filter before measuring the remaining power.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp4-noise-power-bandwidth-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for measuring noise power as a function of bandwidth.</figcaption>
+</figure>
+</div>
+<p>The important settings are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>samp_rate</code></td>
+<td style="text-align: right;"><code>32e3</code></td>
+</tr>
+<tr class="even">
+<td><code>avg_len</code></td>
+<td style="text-align: right;"><code>10000</code></td>
+</tr>
+<tr class="odd">
+<td>Initial <code>cutoff</code></td>
+<td style="text-align: right;"><code>1000</code> Hz</td>
+</tr>
+<tr class="even">
+<td>Noise Source Amplitude</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td>Low Pass Filter Decimation</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="even">
+<td>Low Pass Filter Gain</td>
+<td style="text-align: right;"><code>1</code></td>
+</tr>
+<tr class="odd">
+<td>Low Pass Filter Transition Width</td>
+<td style="text-align: right;"><code>500</code> Hz</td>
+</tr>
+<tr class="even">
+<td>Low Pass Filter Window</td>
+<td style="text-align: right;">Hamming</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Range Start</td>
+<td style="text-align: right;"><code>500</code> Hz</td>
+</tr>
+<tr class="even">
+<td>QT GUI Range Stop</td>
+<td style="text-align: right;"><code>4000</code> Hz</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Range Step</td>
+<td style="text-align: right;"><code>500</code> Hz</td>
+</tr>
+</tbody>
+</table>
+<p>The Frequency Sink is connected after the Low Pass Filter, so it shows the filtered-noise spectrum.</p>
+<p>We test cutoff frequencies of 500 Hz, 1 kHz, 2 kHz, and 4 kHz.</p>
+<p>Because this real low-pass filter is centred on DC, a cutoff (f_c) corresponds roughly to a two-sided pass region from (-f_c) to (+f_c), before accounting for the transition band. We therefore avoid treating the entered cutoff value as if it were an exact rectangular noise bandwidth.</p>
+<p>What matters for this experiment is that increasing the cutoff widens the accepted frequency region.</p>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>The measured values were approximately:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">LPF Cutoff</th>
+<th style="text-align: right;">Input Noise Power</th>
+<th style="text-align: right;">Filtered Noise Power</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">0.996</td>
+<td style="text-align: right;">0.025</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1 kHz</td>
+<td style="text-align: right;">0.977</td>
+<td style="text-align: right;">0.055</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2 kHz</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.122</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4 kHz</td>
+<td style="text-align: right;">0.992</td>
+<td style="text-align: right;">0.242</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch07/ch07-exp4-noise-power-vs-bandwidth.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of low-pass filter bandwidth on measured Gaussian-noise power.</figcaption>
+</figure>
+</div>
+<p>The input noise power stays close to 1, showing that the Noise Source itself has not changed.</p>
+<p>The filtered noise power rises as the filter becomes wider.</p>
+<p>Comparing the 2 kHz and 4 kHz cutoff settings,</p>
+<p><span class="math display">\[
+\frac{0.242}{0.122}\approx1.98
+\]</span></p>
+<p>so doubling the cutoff approximately doubled the measured passed-noise power in that part of the experiment.</p>
+<p>This is consistent with the white-noise relationship</p>
+<p><span class="math display">\[
+P_n\propto B
+\]</span></p>
+<p>and with the engineering rule:</p>
+<blockquote class="blockquote">
+<p>Doubling noise bandwidth increases total white-noise power by approximately 3 dB.</p>
+</blockquote>
+<p>The relationship is not exact because the input is random and the Low Pass Filter is not an ideal brick-wall filter. Its transition region passes some frequencies partially, so the true effective noise bandwidth depends on the complete filter response.</p>
+<p>This leads naturally to the idea of <strong>equivalent noise bandwidth</strong>, which we will not calculate yet.</p>
+</section>
+</section>
+<section id="bandwidth-filtering-and-receiver-snr" class="level2">
+<h2 class="anchored" data-anchor-id="bandwidth-filtering-and-receiver-snr">7.10 Bandwidth, Filtering, and Receiver SNR</h2>
+<p>The bandwidth experiment connects directly to practical SDR receivers.</p>
+<p>Suppose a desired signal occupies only a small part of the spectrum, but the receiver accepts a much wider band. The additional spectrum also brings additional noise.</p>
+<p>If we apply an appropriate filter around the desired signal, much of the out-of-band noise can be rejected. If the desired signal power is preserved while the accepted noise power falls, SNR improves.</p>
+<p>That does not mean the filter should be made arbitrarily narrow. A real signal occupies finite bandwidth. If the filter becomes narrower than the signal itself, part of the desired signal is attenuated or distorted.</p>
+<p>A better rule is:</p>
+<blockquote class="blockquote">
+<p>Use enough bandwidth to preserve the desired signal, but avoid accepting substantially more bandwidth than necessary.</p>
+</blockquote>
+<p>This is one of the fundamental reasons filtering matters in receivers.</p>
 </section>
 <section id="gnu-radio-toolbox" class="level2">
-<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">1.12 GNU Radio Toolbox</h2>
-<p>Throughout this book, we will keep a running <strong>GNU Radio Toolbox</strong>.</p>
-<p>The goal is not to list every property of every GNU Radio block. When we meet a useful block or feature, we will learn the part that matters for the experiment at hand. As the same blocks appear again, we will gradually learn more about them.</p>
-<section id="signal-source" class="level3">
-<h3 class="anchored" data-anchor-id="signal-source">Signal Source</h3>
-<p>The <strong>Signal Source</strong> generates a known sequence of samples inside GNU Radio.</p>
-<p>In our first experiment, it generates a 1 kHz cosine. Later, we will change its frequency, amplitude, phase and waveform, and we will also use it with complex signals.</p>
-<p>It is particularly useful for learning because we know exactly what signal we are putting into the flowgraph.</p>
-<p>One distinction is worth making immediately:</p>
-<blockquote class="blockquote">
-<p>Signal Source generates digital samples inside GNU Radio. It does not produce a physical RF signal at an antenna connector.</p>
-</blockquote>
-<p>That difference will become clearer when we study sampling and SDR hardware.</p>
-</section>
-<section id="throttle" class="level3">
-<h3 class="anchored" data-anchor-id="throttle">Throttle</h3>
-<p>Throttle is unusual because it does not perform the kind of signal-processing operation we normally associate with a radio.</p>
-<p>Our current flowgraph exists entirely inside the computer. There is no SDR device, sound card or other hardware source or sink forcing the stream to run at a real-world sample rate.</p>
-<p>Without a rate-limiting block, GNU Radio can process samples as quickly as the computer and the rest of the flowgraph allow. <strong>Throttle</strong> limits the average processing rate to approximately the sample rate we specify, which keeps a software-only simulation from running unnecessarily fast.</p>
-<p>A useful rule for now is:</p>
-<blockquote class="blockquote">
-<p>In a software-only flowgraph with no hardware block providing the timing, a Throttle block is often needed.</p>
-</blockquote>
-<p>When real hardware provides the sample timing, we generally do not add Throttle to the same streaming path.</p>
-<p>Also remember that Throttle is <strong>not</strong> an ADC and does not create the samples. By the time the data reaches it, the signal is already represented digitally.</p>
-</section>
-<section id="qt-gui-time-sink" class="level3">
-<h3 class="anchored" data-anchor-id="qt-gui-time-sink">QT GUI Time Sink</h3>
-<p>The <strong>QT GUI Time Sink</strong> lets us inspect samples in the time domain.</p>
-<p>In this experiment, it showed the shape and amplitude of our cosine. Later, we will use it to compare signals, observe delays, inspect distortion and watch what happens when different parts of a flowgraph are changed.</p>
-<p>Time is only one way to look at a signal. Later, we will also look at signals in the frequency domain.</p>
-</section>
-</section>
-<section id="a-small-detail-that-will-matter-later-data-types" class="level2">
-<h2 class="anchored" data-anchor-id="a-small-detail-that-will-matter-later-data-types">1.13 A Small Detail That Will Matter Later: Data Types</h2>
-<p>Look again at the ports connecting the blocks in the flowgraph.</p>
-<p>We may have noticed that GNU Radio uses colours for them. Those colours help indicate the type of data travelling through each connection.</p>
-<p>In our first experiment, we selected:</p>
-<pre class="text"><code>Float</code></pre>
-<p>for the Signal Source, Throttle and Time Sink.</p>
-<p>We are not going to study GNU Radio data types in detail yet, but remember one simple rule:</p>
-<blockquote class="blockquote">
-<p>Blocks connected together must use compatible data types at their connected ports.</p>
-</blockquote>
-<p>This gives us a good opportunity to deliberately break our first flowgraph.</p>
-</section>
-<section id="experiment-2-break-the-flowgraph-on-purpose" class="level2">
-<h2 class="anchored" data-anchor-id="experiment-2-break-the-flowgraph-on-purpose">1.14 Experiment 2: Break the Flowgraph on Purpose</h2>
-<p>Getting a flowgraph to work is useful. Breaking it on purpose can teach us something different.</p>
-<section id="create-a-type-mismatch" class="level3">
-<h3 class="anchored" data-anchor-id="create-a-type-mismatch">Create a Type Mismatch</h3>
-<p>Stop the flowgraph and open the Signal Source properties.</p>
-<p>Change:</p>
-<pre class="text"><code>Output Type: Float</code></pre>
-<p>to:</p>
-<pre class="text"><code>Output Type: Complex</code></pre>
-<p>Leave the Throttle set to <code>Float</code>.</p>
-<p>Now look at the connection between the two blocks and try to run or reconnect the flowgraph.</p>
-<p>GNU Radio should indicate that the two ports are not compatible.</p>
-<p>We have not learned what complex samples are yet, so we do not need to worry about <strong>why</strong> Float and Complex are different. That comes later. The lesson here is simply that the data produced by one block must be compatible with the data expected by the next.</p>
-<p>When we are finished, change the Signal Source back to <code>Float</code>.</p>
-</section>
-<section id="remove-throttle" class="level3">
-<h3 class="anchored" data-anchor-id="remove-throttle">Remove Throttle</h3>
-<p>Restore the working flowgraph.</p>
-<p>Now remove the Throttle block and connect:</p>
-<p><strong>Signal Source → QT GUI Time Sink</strong></p>
-<p>Run the flowgraph again.</p>
-<p>The flowgraph may still run. Without Throttle, however, there is no block in this simple chain intentionally limiting the sample-processing rate to <code>samp_rate</code>. GNU Radio can therefore process samples as quickly as the computer and the downstream block allow. Depending on the system, we may notice higher CPU usage or less predictable GUI behaviour.</p>
-<p>This tells us something important about Throttle. The cosine does not mathematically require it. We use it because this experiment has no real hardware setting the sample timing.</p>
-<p>Stop the flowgraph and put Throttle back.</p>
-<p>We will return to the meaning of sample rate when we study sampling in detail.</p>
-</section>
-</section>
-<section id="a-flowgraph-can-be-wrong-without-crashing" class="level2">
-<h2 class="anchored" data-anchor-id="a-flowgraph-can-be-wrong-without-crashing">1.15 A Flowgraph Can Be Wrong Without Crashing</h2>
-<p>Sometimes GNU Radio makes a problem obvious. Two ports may be incompatible, a parameter may be invalid, or the flowgraph may refuse to start.</p>
-<p>Those problems are relatively easy to find because the software tells us something is wrong.</p>
-<p>Later, we will meet a more subtle kind of mistake: a flowgraph can run perfectly and still produce the wrong signal-processing result.</p>
-<p>GNU Radio cannot always know what result we intended. A poor parameter choice or an incorrectly designed processing chain may still be perfectly valid software.</p>
-<p>That is why we will keep using the same habit throughout the book: predict, run, observe and explain.</p>
-<p>Quite often we will also break a working system, observe what changed and work out why.</p>
-<p>This is more useful than simply memorizing which blocks should be connected together.</p>
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">7.11 GNU Radio Toolbox</h2>
+<p>This chapter introduced several blocks in measurement roles rather than only as signal-generation or display tools.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio block</th>
+<th>What we used it for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Generated Gaussian noise</td>
+</tr>
+<tr class="even">
+<td>Add</td>
+<td>Combined the cosine and noise</td>
+</tr>
+<tr class="odd">
+<td>Multiply</td>
+<td>Squared real samples for power measurement</td>
+</tr>
+<tr class="even">
+<td>Moving Average</td>
+<td>Averaged squared samples to estimate power</td>
+</tr>
+<tr class="odd">
+<td>Divide</td>
+<td>Calculated (P_s/P_n)</td>
+</tr>
+<tr class="even">
+<td>Log10</td>
+<td>Calculated the base-10 logarithm</td>
+</tr>
+<tr class="odd">
+<td>Multiply Const</td>
+<td>Multiplied the logarithmic result by 10</td>
+</tr>
+<tr class="even">
+<td>QT GUI Number Sink</td>
+<td>Displayed signal power, noise power, and SNR</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Range</td>
+<td>Changed noise amplitude or filter cutoff while running</td>
+</tr>
+<tr class="even">
+<td>Low Pass Filter</td>
+<td>Restricted the accepted noise bandwidth</td>
+</tr>
+</tbody>
+</table>
+<p>A useful pattern from this chapter is</p>
+<p><span class="math display">\[
+x[n]\rightarrow x^2[n]\rightarrow\text{average}\rightarrow P
+\]</span></p>
+<p>for real-signal power, followed by</p>
+<p><span class="math display">\[
+P_s,P_n\rightarrow\frac{P_s}{P_n}\rightarrow10\log_{10}(\cdot)\rightarrow\mathrm{SNR}_{\mathrm{dB}}
+\]</span></p>
+<p>This is an important shift in how we use GNU Radio. We are no longer only generating and viewing signals. We are beginning to build measurements directly from basic processing blocks.</p>
 </section>
 <section id="explore-further" class="level2">
-<h2 class="anchored" data-anchor-id="explore-further">1.16 Explore Further</h2>
-<p>Before closing the flowgraph, let us experiment with it for a few minutes.</p>
-<p>Start by changing the Signal Source frequency from:</p>
-<pre class="text"><code>1000</code></pre>
-<p>to:</p>
-<pre class="text"><code>2000</code></pre>
-<p>Run the flowgraph again. What changed in the Time Sink?</p>
-<p>Now return the frequency to <code>1000</code> and change the amplitude:</p>
-<pre class="text"><code>Amplitude = 0.5</code></pre>
-<p>What changed this time?</p>
-<p>Try:</p>
-<pre class="text"><code>Amplitude = 2</code></pre>
-<p>Then try changing the Offset.</p>
-<p>Finally, return the other settings to their original values and change:</p>
-<pre class="text"><code>Waveform: Cosine</code></pre>
-<p>to:</p>
-<pre class="text"><code>Waveform: Square</code></pre>
-<p>Run the flowgraph again.</p>
-<p>What changed? Which settings stayed the same?</p>
-<p>We do not need to explain every detail mathematically yet. In particular, there is much more to say about why a square wave looks and behaves differently from a cosine. We will get there later.</p>
-<p>For now, one habit matters most:</p>
-<blockquote class="blockquote">
-<p>Change one thing at a time, predict what should happen, and compare that prediction with what GNU Radio actually shows.</p>
-</blockquote>
-<p>Unexpected results are often the most useful ones to investigate.</p>
+<h2 class="anchored" data-anchor-id="explore-further">7.12 Explore Further</h2>
+<p>The same flowgraphs give us several useful experiments to try.</p>
+<ol type="1">
+<li><p>Increase the Moving Average length in the SNR experiment. Observe how the power and SNR readings become steadier, then change the noise amplitude quickly and compare the response time.</p></li>
+<li><p>Set the noise amplitude to <code>1</code> and compare the signal in the Time Sink with the Frequency Sink. The measured SNR should be near -3 dB. Does the spectral tone remain identifiable?</p></li>
+<li><p>Double the noise amplitude from <code>0.5</code> to <code>1.0</code>, then from <code>1.0</code> to <code>2.0</code>. Check whether each doubling reduces the measured SNR by approximately 6 dB.</p></li>
+<li><p>In the bandwidth experiment, compare the filtered noise power at 1 kHz, 2 kHz, and 4 kHz cutoff settings. Does each approximate doubling produce close to 3 dB more noise power?</p></li>
+<li><p>Reduce the Low Pass Filter cutoff until it begins to affect a useful signal placed inside the same branch. This shows why receiver bandwidth cannot be reduced indefinitely.</p></li>
+</ol>
+<p>Before changing a parameter, predict the effect first. Then run the flowgraph and compare the observation with the prediction.</p>
 </section>
 <section id="what-we-learned" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-learned">1.17 What We Learned</h2>
-<p>We started this chapter with a simple question: what does a radio actually do?</p>
-<p>At a high level, a receiver takes in signals, selects and processes the one we are interested in, and recovers useful information from it. Software Defined Radio allows many of those processing functions to be performed digitally and controlled through software.</p>
-<p>We also saw that <strong>software defined</strong> does not mean <strong>hardware free</strong>. A practical SDR still has an analog side containing the antenna and RF front end. The ADC provides the transition into the digital domain, where the signal is represented by samples and can be processed numerically.</p>
-<p>Most importantly, we built our first GNU Radio flowgraph, with the signal path <strong>Signal Source → Throttle → QT GUI Time Sink</strong>.</p>
-<p>Along the way, we created a variable, configured and connected blocks, generated a known signal and viewed it in the time domain. We also introduced GNU Radio data types, learned why Throttle is useful in this software-only experiment and deliberately created a type mismatch to see how GNU Radio reacts.</p>
-<p>We have not gone deeply into the mathematics yet, and that is intentional. First, we need to become comfortable looking at signals, changing them and asking sensible questions about what we observe.</p>
+<h2 class="anchored" data-anchor-id="what-we-learned">7.13 What We Learned</h2>
+<p>We began with noise by itself. Gaussian noise looked irregular in the time domain, while its approximately white spectrum occupied a broad frequency range.</p>
+<p>A single finite FFT of random noise did not look perfectly flat because each block contains a different random realization. FFT averaging reduced some of the frame-to-frame variation without changing the underlying noisy samples.</p>
+<p>We then added a 1 kHz cosine to the noise. As the noise amplitude increased, the sinusoid became progressively harder to recognize in the time domain, while its persistent spectral components could remain visible near () kHz.</p>
+<p>This led to the idea of the noise floor and then to a more quantitative description:</p>
+<p><span class="math display">\[
+\mathrm{SNR}=\frac{P_s}{P_n}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\mathrm{SNR}_{\mathrm{dB}}=10\log_{10}\left(\frac{P_s}{P_n}\right)
+\]</span></p>
+<p>For our real amplitude-1 cosine,</p>
+<p><span class="math display">\[
+P_s\approx0.5
+\]</span></p>
+<p>and for the real Gaussian Noise Source,</p>
+<p><span class="math display">\[
+P_n=A_n^2
+\]</span></p>
+<p>in expectation.</p>
+<p>We built those measurements directly from GNU Radio blocks and confirmed the predicted SNR values experimentally.</p>
+<p>Two decibel relationships are especially useful:</p>
+<p><span class="math display">\[
+\text{Noise amplitude}\times2\Rightarrow\text{noise power}\times4\Rightarrow\text{SNR decreases by about }6\text{ dB}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\text{Noise bandwidth}\times2\Rightarrow\text{noise power}\times2\Rightarrow\text{noise power increases by about }3\text{ dB}
+\]</span></p>
+<p>These are different effects. One comes from the square relationship between amplitude and power. The other comes from collecting approximately white noise over a wider frequency range.</p>
+<p>Most importantly, we now have a clearer picture of how noise, bandwidth, filtering, and SNR are connected inside a receiver.</p>
 </section>
 <section id="connecting-to-the-next-chapter" class="level2">
-<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">1.18 Connecting to the Next Chapter</h2>
-<p>Our first GNU Radio experiment generated a 1 kHz cosine. We could see it on the screen, but we used several words without exploring them properly:</p>
-<p><strong>amplitude</strong>, <strong>frequency</strong>, <strong>phase</strong>, <strong>period</strong> and <strong>offset</strong>.</p>
-<p>What do those quantities mean when we look at a waveform? What changes when we double the frequency? What does a phase shift look like? What happens when we add an offset?</p>
-<p>In Chapter 2, we will answer those questions by changing the signal and observing what happens.</p>
-<blockquote class="blockquote">
-<p><strong>What exactly is a signal?</strong></p>
-</blockquote>
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">7.14 Connecting to the Next Chapter</h2>
+<p>Throughout this chapter, the useful signal was already located at the frequency where we wanted to observe it.</p>
+<p>A radio receiver often has another task first: move a signal from one part of the spectrum to another while preserving the information it carries.</p>
+<p>We introduced the basic idea of mixing earlier when building I/Q signals. In the next chapter, we will study frequency translation more directly and systematically.</p>
+<p>We will see why real mixing produces both sum and difference frequencies, how downconversion moves a signal toward baseband, and why complex mixing is particularly useful in SDR.</p>
 
 
 </section>
@@ -1392,13 +1879,13 @@ x(t)=A\cos(2\pi ft+\phi)
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../index.html" class="pagination-link" aria-label="Home">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Home</span></span>
+      <a href="../book/06-time-domain-to-frequency-domain.html" class="pagination-link" aria-label="Chapter 6: From Time Domain to Frequency Domain">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../book/02-understanding-signals.html" class="pagination-link" aria-label="Chapter 2: Understanding Signals">
-        <span class="nav-page-text"><span class="chapter-title">Chapter 2: Understanding Signals</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../book/08-mixture-and-frequency-translation.html" class="pagination-link" aria-label="Chapter 8: Mixing and Frequency Translation">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1410,7 +1897,7 @@ x(t)=A\cos(2\pi ft+\phi)
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/01-what-is-software-defined-radio.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/07-noise-and-snr.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

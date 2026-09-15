@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 19: The Wireless Channel – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/20-channel-equalization.html" rel="next">
+<link href="../book/18-pulse-shaping-and-matched-filtering.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/19-wireless-channel.html">Part VI: The Wireless Channel</a></li><li class="breadcrumb-item"><a href="../book/19-wireless-channel.html"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#experiment-19.1-a-clean-reference-link" id="toc-experiment-19.1-a-clean-reference-link" class="nav-link" data-scroll-target="#experiment-19.1-a-clean-reference-link">19.1 Experiment 19.1: A Clean Reference Link</a></li>
+  <li><a href="#the-simplest-channel-effect-attenuation" id="toc-the-simplest-channel-effect-attenuation" class="nav-link" data-scroll-target="#the-simplest-channel-effect-attenuation">19.2 The Simplest Channel Effect: Attenuation</a></li>
+  <li><a href="#experiment-19.2-channel-attenuation" id="toc-experiment-19.2-channel-attenuation" class="nav-link" data-scroll-target="#experiment-19.2-channel-attenuation">19.3 Experiment 19.2: Channel Attenuation</a>
+  <ul class="collapse">
+  <li><a href="#physical-meaning-of-the-gain" id="toc-physical-meaning-of-the-gain" class="nav-link" data-scroll-target="#physical-meaning-of-the-gain">Physical Meaning of the Gain</a></li>
+  </ul></li>
+  <li><a href="#a-weak-signal-must-compete-with-noise" id="toc-a-weak-signal-must-compete-with-noise" class="nav-link" data-scroll-target="#a-weak-signal-must-compete-with-noise">19.4 A Weak Signal Must Compete with Noise</a></li>
+  <li><a href="#experiment-19.3-attenuation-and-noise" id="toc-experiment-19.3-attenuation-and-noise" class="nav-link" data-scroll-target="#experiment-19.3-attenuation-and-noise">19.5 Experiment 19.3: Attenuation and Noise</a></li>
+  <li><a href="#when-the-transmitter-and-receiver-disagree-about-frequency" id="toc-when-the-transmitter-and-receiver-disagree-about-frequency" class="nav-link" data-scroll-target="#when-the-transmitter-and-receiver-disagree-about-frequency">19.6 When the Transmitter and Receiver Disagree About Frequency</a></li>
+  <li><a href="#experiment-19.4-carrier-frequency-offset" id="toc-experiment-19.4-carrier-frequency-offset" class="nav-link" data-scroll-target="#experiment-19.4-carrier-frequency-offset">19.7 Experiment 19.4: Carrier Frequency Offset</a>
+  <ul class="collapse">
+  <li><a href="#why-does-a-frequency-offset-produce-a-ring" id="toc-why-does-a-frequency-offset-produce-a-ring" class="nav-link" data-scroll-target="#why-does-a-frequency-offset-produce-a-ring">Why Does a Frequency Offset Produce a Ring?</a></li>
+  </ul></li>
+  <li><a href="#the-channel-can-deliver-more-than-one-copy" id="toc-the-channel-can-deliver-more-than-one-copy" class="nav-link" data-scroll-target="#the-channel-can-deliver-more-than-one-copy">19.8 The Channel Can Deliver More Than One Copy</a></li>
+  <li><a href="#experiment-19.5-one-delayed-copy" id="toc-experiment-19.5-one-delayed-copy" class="nav-link" data-scroll-target="#experiment-19.5-one-delayed-copy">19.9 Experiment 19.5: One Delayed Copy</a>
+  <ul class="collapse">
+  <li><a href="#what-does-changing-the-delay-mean-physically" id="toc-what-does-changing-the-delay-mean-physically" class="nav-link" data-scroll-target="#what-does-changing-the-delay-mean-physically">What Does Changing the Delay Mean Physically?</a></li>
+  <li><a href="#zero-relative-delay" id="toc-zero-relative-delay" class="nav-link" data-scroll-target="#zero-relative-delay">Zero Relative Delay</a></li>
+  <li><a href="#quarter-symbol-delayed-echo" id="toc-quarter-symbol-delayed-echo" class="nav-link" data-scroll-target="#quarter-symbol-delayed-echo">Quarter-Symbol Delayed Echo</a></li>
+  <li><a href="#one-symbol-delayed-echo" id="toc-one-symbol-delayed-echo" class="nav-link" data-scroll-target="#one-symbol-delayed-echo">One-Symbol Delayed Echo</a></li>
+  <li><a href="#this-is-not-16-qam" id="toc-this-is-not-16-qam" class="nav-link" data-scroll-target="#this-is-not-16-qam">This Is Not 16-QAM</a></li>
+  <li><a href="#connection-to-chapter-18" id="toc-connection-to-chapter-18" class="nav-link" data-scroll-target="#connection-to-chapter-18">Connection to Chapter 18</a></li>
+  </ul></li>
+  <li><a href="#multipath-and-fading" id="toc-multipath-and-fading" class="nav-link" data-scroll-target="#multipath-and-fading">19.10 Multipath and Fading</a></li>
+  <li><a href="#experiment-19.6-gnu-radio-channel-model" id="toc-experiment-19.6-gnu-radio-channel-model" class="nav-link" data-scroll-target="#experiment-19.6-gnu-radio-channel-model">19.11 Experiment 19.6: GNU Radio Channel Model</a></li>
+  <li><a href="#when-the-sampling-clocks-disagree" id="toc-when-the-sampling-clocks-disagree" class="nav-link" data-scroll-target="#when-the-sampling-clocks-disagree">19.12 When the Sampling Clocks Disagree</a></li>
+  <li><a href="#experiment-19.7-sample-rate-mismatch" id="toc-experiment-19.7-sample-rate-mismatch" class="nav-link" data-scroll-target="#experiment-19.7-sample-rate-mismatch">19.13 Experiment 19.7: Sample-Rate Mismatch</a></li>
+  <li><a href="#reading-channel-impairments-from-the-constellation" id="toc-reading-channel-impairments-from-the-constellation" class="nav-link" data-scroll-target="#reading-channel-impairments-from-the-constellation">19.14 Reading Channel Impairments from the Constellation</a></li>
+  <li><a href="#channel-impairment-is-not-receiver-correction" id="toc-channel-impairment-is-not-receiver-correction" class="nav-link" data-scroll-target="#channel-impairment-is-not-receiver-correction">19.15 Channel Impairment Is Not Receiver Correction</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">19.16 GNU Radio Toolbox</a>
+  <ul class="collapse">
+  <li><a href="#delay" id="toc-delay" class="nav-link" data-scroll-target="#delay">Delay</a></li>
+  <li><a href="#channel-model" id="toc-channel-model" class="nav-link" data-scroll-target="#channel-model">Channel Model</a></li>
+  <li><a href="#keep-1-in-n" id="toc-keep-1-in-n" class="nav-link" data-scroll-target="#keep-1-in-n">Keep 1 in N</a></li>
+  </ul></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">19.17 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">19.18 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">19.19 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/19-wireless-channel.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/19-wireless-channel.html">Part VI: The Wireless Channel</a></li><li class="breadcrumb-item"><a href="../book/19-wireless-channel.html"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 19: The Wireless Channel</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>Why does the receiver never see exactly what the transmitter sent?</strong></p>
+<p>Chapter 18 developed the pulse-shaping and matched-filtering structure of a digital link.</p>
+<p>We saw how symbols can be shaped with a root-raised-cosine (RRC) filter, passed through a matching receiver filter, and sampled at suitable symbol instants. Under ideal conditions, the receiver can recover clean symbol observations.</p>
+<p>This chapter keeps that same basic architecture but uses QPSK so that channel effects are easy to recognize in the constellation.</p>
+<p>The important new assumption to remove is the channel itself.</p>
+<p>A real wireless channel is not a transparent connection between transmitter and receiver. The electromagnetic wave propagates through space and through an environment containing distance, obstacles, reflections, noise, and independent transmitter and receiver oscillators.</p>
+<p>By the time the waveform reaches the receiver, it may be weaker, noisy, frequency shifted, mixed with delayed copies of itself, or sampled with a clock that does not quite agree with the transmitter clock.</p>
+<p>This chapter focuses on those <strong>impairments</strong>, not on correcting them.</p>
+<p>We will begin with a clean pulse-shaped QPSK link and then disturb one assumption at a time. For each impairment, we will ask what it means physically, what it does to the waveform or constellation, and what problem it creates for the receiver.</p>
+</section>
+<section id="experiment-19.1-a-clean-reference-link" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.1-a-clean-reference-link">19.1 Experiment 19.1: A Clean Reference Link</h2>
+<p>Our first experiment establishes a reference.</p>
+<p>We reuse the pulse-shaping and matched-filtering structure from Chapter 18, now with QPSK symbols.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;"><code>32000</code> samples/s</td>
+</tr>
+<tr class="even">
+<td>Symbol rate</td>
+<td style="text-align: right;"><code>1000</code> symbols/s</td>
+</tr>
+<tr class="odd">
+<td>Samples per symbol</td>
+<td style="text-align: right;"><code>32</code></td>
+</tr>
+<tr class="even">
+<td>RRC span</td>
+<td style="text-align: right;"><code>8</code> symbols</td>
+</tr>
+<tr class="odd">
+<td>Number of RRC taps</td>
+<td style="text-align: right;"><code>257</code></td>
+</tr>
+<tr class="even">
+<td>RRC roll-off factor</td>
+<td style="text-align: right;"><code>0.35</code></td>
+</tr>
+<tr class="odd">
+<td>QPSK I values</td>
+<td style="text-align: right;"><code>[-1, +1]</code></td>
+</tr>
+<tr class="even">
+<td>QPSK Q values</td>
+<td style="text-align: right;"><code>[-1, +1]</code></td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp1-clean-reference-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Clean QPSK reference flowgraph</figcaption>
+</figure>
+</div>
+<p>The signal passes through the TX RRC filter, an ideal channel, the RX matched RRC filter, and a fixed symbol-rate sampler before reaching the Constellation Sink.</p>
+<p>For an ideal channel,</p>
+<p><span class="math display">\[
+r(t)=s(t)
+\]</span></p>
+<p>The channel does not attenuate, rotate, delay, distort, or add noise to the waveform.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp1-clean-reference-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Clean received QPSK constellation</figcaption>
+</figure>
+</div>
+<p>The four clusters remain close to</p>
+<p><span class="math display">\[
+(\pm1,\pm1)
+\]</span></p>
+<p>This is our reference. Each later experiment changes one part of the channel and compares the result with this clean case.</p>
+</section>
+<section id="the-simplest-channel-effect-attenuation" class="level2">
+<h2 class="anchored" data-anchor-id="the-simplest-channel-effect-attenuation">19.2 The Simplest Channel Effect: Attenuation</h2>
+<p>Imagine increasing the distance between a transmitter and receiver.</p>
+<p>The radio wave spreads as it propagates. Buildings, terrain, walls, antenna orientation, absorption, and other propagation effects can further reduce the signal reaching the receiving antenna.</p>
+<p>A simple first model is</p>
+<p><span class="math display">\[
+r(t)=A\,s(t)
+\]</span></p>
+<p>where <span class="math inline">\(A\)</span> is the channel amplitude gain.</p>
+<p>If</p>
+<p><span class="math display">\[
+0&lt;A&lt;1
+\]</span></p>
+<p>the signal is attenuated.</p>
+<p>Attenuation changes the signal amplitude without, by itself, adding randomness or memory to the channel.</p>
+</section>
+<section id="experiment-19.2-channel-attenuation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.2-channel-attenuation">19.3 Experiment 19.2: Channel Attenuation</h2>
+<p>We extend the clean link by scaling the transmitted complex signal before the receiver matched filter.</p>
+<p>The control is</p>
+<pre class="text"><code>ID: channel_gain
+Label: Channel Gain
+Default Value: 1.0</code></pre>
+<p>For the retained result,</p>
+<pre class="text"><code>Channel Gain: 0.5</code></pre>
+<p>If the original QPSK points are near <span class="math inline">\((\pm1,\pm1)\)</span>, multiplying the signal by 0.5 should move them toward <span class="math inline">\((\pm0.5,\pm0.5)\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp2-attenuation-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation with channel gain 0.5</figcaption>
+</figure>
+</div>
+<p>That is what we observe.</p>
+<section id="physical-meaning-of-the-gain" class="level3">
+<h3 class="anchored" data-anchor-id="physical-meaning-of-the-gain">Physical Meaning of the Gain</h3>
+<p>A lower <code>channel_gain</code> represents a smaller received signal amplitude.</p>
+<p>If the complex amplitude is multiplied by <span class="math inline">\(A\)</span>, signal power scales as</p>
+<p><span class="math display">\[
+P_r=A^2P_t
+\]</span></p>
+<p>For</p>
+<p><span class="math display">\[
+A=0.5
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+A^2=0.25
+\]</span></p>
+<p>so halving the amplitude corresponds to one quarter of the original signal power.</p>
+<p>The constellation has contracted, but the four symbol locations are still clearly distinguishable. Attenuation becomes more serious when the desired signal must compete with noise.</p>
+</section>
+</section>
+<section id="a-weak-signal-must-compete-with-noise" class="level2">
+<h2 class="anchored" data-anchor-id="a-weak-signal-must-compete-with-noise">19.4 A Weak Signal Must Compete with Noise</h2>
+<p>Every practical receiver contains unwanted random contributions from thermal processes, receiver electronics, and the surrounding electromagnetic environment.</p>
+<p>A simple model is</p>
+<p><span class="math display">\[
+r(t)=A\,s(t)+n(t)
+\]</span></p>
+<p>where <span class="math inline">\(n(t)\)</span> represents additive noise.</p>
+<p>If the desired signal becomes weaker while the noise level does not decrease by the same proportion, the receiver has less separation between the desired signal and the random disturbance.</p>
+<p>This is the physical meaning of a falling signal-to-noise ratio.</p>
+</section>
+<section id="experiment-19.3-attenuation-and-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.3-attenuation-and-noise">19.5 Experiment 19.3: Attenuation and Noise</h2>
+<p>We now combine attenuation with Gaussian noise.</p>
+<p>The useful controls are</p>
+<pre class="text"><code>Channel Gain
+Noise Amplitude</code></pre>
+<p>For the retained comparison,</p>
+<pre class="text"><code>Noise Amplitude: 0.1</code></pre>
+<p>is held fixed while the channel gain is changed.</p>
+<p>At the higher received signal level, the four noisy clusters remain well separated.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp3-high-snr-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>High-SNR received QPSK constellation</figcaption>
+</figure>
+</div>
+<p>Now reduce the desired signal strength while leaving the noise unchanged.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp3-low-snr-constellation.png" class="img-fluid figure-img"></p>
+<figcaption>Low-SNR received QPSK constellation</figcaption>
+</figure>
+</div>
+<p>The two mechanisms have different signatures.</p>
+<p>Attenuation contracts the constellation toward the origin. Additive noise spreads individual samples randomly around their ideal locations.</p>
+<p>When the desired signal becomes too small relative to the noise, the constellation clouds approach or cross the decision boundaries and symbol decisions become less reliable.</p>
+</section>
+<section id="when-the-transmitter-and-receiver-disagree-about-frequency" class="level2">
+<h2 class="anchored" data-anchor-id="when-the-transmitter-and-receiver-disagree-about-frequency">19.6 When the Transmitter and Receiver Disagree About Frequency</h2>
+<p>Real radios use independent oscillators. Their carrier references are never mathematically identical.</p>
+<p>If the residual carrier-frequency difference is <span class="math inline">\(\Delta f\)</span>, the complex-baseband signal can be represented as</p>
+<p><span class="math display">\[
+r(t)=s(t)e^{j2\pi\Delta f t}
+\]</span></p>
+<p>The corresponding phase error is</p>
+<p><span class="math display">\[
+\phi(t)=2\pi\Delta f t
+\]</span></p>
+<p>A fixed frequency error therefore does not produce one fixed phase rotation. The phase error continues to accumulate with time.</p>
+<p>Oscillator tolerance, temperature drift, differences between hardware references, and Doppler can all contribute to this relative frequency error.</p>
+</section>
+<section id="experiment-19.4-carrier-frequency-offset" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.4-carrier-frequency-offset">19.7 Experiment 19.4: Carrier Frequency Offset</h2>
+<p>We introduce a carrier-frequency mismatch into the clean link.</p>
+<p>The retained result uses</p>
+<pre class="text"><code>Frequency Offset: 20 Hz</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp4-frequency-offset-20hz.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK constellation with 20 Hz carrier-frequency offset</figcaption>
+</figure>
+</div>
+<p>Instead of four stationary clusters, the accumulated samples trace a ring-like pattern.</p>
+<section id="why-does-a-frequency-offset-produce-a-ring" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-a-frequency-offset-produce-a-ring">Why Does a Frequency Offset Produce a Ring?</h3>
+<p>At any one instant, QPSK still has four symbol states separated by <span class="math inline">\(90^\circ\)</span>.</p>
+<p>The modulation has not changed into a continuous ring constellation.</p>
+<p>The frequency offset rotates all four QPSK points continuously. The Constellation Sink displays a history of samples collected during that rotation, so the four points sweep around the origin and eventually produce a ring-like trace.</p>
+<p>This is very different from attenuation.</p>
+<p>Attenuation changes the radius of the constellation. Carrier-frequency offset continuously changes its angle.</p>
+<p>We deliberately do not correct the offset in this chapter. Carrier synchronization is a receiver function, not a channel impairment.</p>
+</section>
+</section>
+<section id="the-channel-can-deliver-more-than-one-copy" class="level2">
+<h2 class="anchored" data-anchor-id="the-channel-can-deliver-more-than-one-copy">19.8 The Channel Can Deliver More Than One Copy</h2>
+<p>A radio wave can reach the receiver through several propagation paths.</p>
+<p>One path may be direct. Another may reflect from a wall, building, vehicle, terrain feature, or another object.</p>
+<p>The reflected path is usually longer, so its copy arrives later. It is also often weaker because it has travelled farther and because a reflecting surface does not redirect all incident energy toward the receiving antenna.</p>
+<p>A reflected component can also have a different phase. Extra propagation distance creates additional carrier phase accumulation, and the reflection itself may introduce another phase change.</p>
+<p>A multipath component is therefore characterized by its delay and by a generally complex path coefficient that describes its amplitude and phase.</p>
+<p>A simple two-path model is</p>
+<p><span class="math display">\[
+r(t)=s(t)+a\,s(t-\tau)
+\]</span></p>
+<p>where <span class="math inline">\(\tau\)</span> is the relative delay and <span class="math inline">\(a\)</span> is the coefficient of the delayed path.</p>
+<p>In the retained experiment, <code>echo_gain</code> is a positive real value, so we vary the delayed-path strength without separately introducing a path phase shift.</p>
+</section>
+<section id="experiment-19.5-one-delayed-copy" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.5-one-delayed-copy">19.9 Experiment 19.5: One Delayed Copy</h2>
+<p>Before using a packaged channel model, we build one delayed path explicitly.</p>
+<p>The transmitted waveform is split into two branches. One branch passes directly to an Add block. The second passes through Delay and Gain before being added back to the direct path.</p>
+<p>The controls are</p>
+<pre class="text"><code>ID: echo_delay
+Label: Echo Delay (samples)
+Default Value: 8
+Start: 0
+Stop: 32
+Step: 1</code></pre>
+<p>and</p>
+<pre class="text"><code>ID: echo_gain
+Label: Echo Gain
+Default Value: 0
+Start: 0
+Stop: 1
+Step: 0.05</code></pre>
+<section id="what-does-changing-the-delay-mean-physically" class="level3">
+<h3 class="anchored" data-anchor-id="what-does-changing-the-delay-mean-physically">What Does Changing the Delay Mean Physically?</h3>
+<p>If a reflected path is longer than the direct path by an excess distance <span class="math inline">\(\Delta d\)</span>, its relative propagation delay is approximately</p>
+<p><span class="math display">\[
+\tau=\frac{\Delta d}{c}
+\]</span></p>
+<p>In the discrete-time simulation,</p>
+<p><span class="math display">\[
+\tau=\frac{D}{f_s}
+\]</span></p>
+<p>where <span class="math inline">\(D\)</span> is the delay in samples.</p>
+<p>With <code>sps = 32</code>,</p>
+<pre class="text"><code>8 samples  = 0.25 symbol period
+16 samples = 0.50 symbol period
+32 samples = 1.00 symbol period</code></pre>
+<p>Increasing <code>echo_delay</code> therefore represents a greater excess propagation delay relative to the symbol duration.</p>
+</section>
+<section id="zero-relative-delay" class="level3">
+<h3 class="anchored" data-anchor-id="zero-relative-delay">Zero Relative Delay</h3>
+<p>First use</p>
+<pre class="text"><code>Echo Gain: 0.5
+Echo Delay: 0 samples</code></pre>
+<p>Then</p>
+<p><span class="math display">\[
+r(t)=s(t)+0.5s(t)=1.5s(t)
+\]</span></p>
+<p>The two copies are aligned and add constructively.</p>
+<p>This is an important result: the mere existence of a second path does not automatically create ISI.</p>
+</section>
+<section id="quarter-symbol-delayed-echo" class="level3">
+<h3 class="anchored" data-anchor-id="quarter-symbol-delayed-echo">Quarter-Symbol Delayed Echo</h3>
+<p>Now use</p>
+<pre class="text"><code>Echo Gain: 0.5
+Echo Delay: 8 samples</code></pre>
+<p>so that</p>
+<p><span class="math display">\[
+\tau=0.25T_s
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp5-quarter-symbol-delayed-echo.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK with a quarter-symbol delayed echo</figcaption>
+</figure>
+</div>
+<p>The constellation spreading is structured rather than random.</p>
+<p>The echo is not independent noise. It is a delayed copy of the transmitted pulse-shaped waveform, so its effect depends on the transmitted symbol sequence.</p>
+<p>This delayed copy disturbs the zero-ISI relationships established by the pulse-shaping and matched-filtering pair.</p>
+</section>
+<section id="one-symbol-delayed-echo" class="level3">
+<h3 class="anchored" data-anchor-id="one-symbol-delayed-echo">One-Symbol Delayed Echo</h3>
+<p>Now set</p>
+<pre class="text"><code>Echo Gain: 0.5
+Echo Delay: 32 samples</code></pre>
+<p>At the symbol sampling instants, the retained setup is well described by</p>
+<p><span class="math display">\[
+r_k=s_k+0.5s_{k-1}
+\]</span></p>
+<p>The current received sample now contains the current QPSK symbol plus half of the previous symbol.</p>
+<p>The channel has memory.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp5-one-symbol-delayed-echo.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK with a one-symbol delayed echo</figcaption>
+</figure>
+</div>
+<p>For example, if</p>
+<p><span class="math display">\[
+s_k=1+j
+\]</span></p>
+<p>then the previous symbol can be</p>
+<p><span class="math display">\[
+s_{k-1}\in\{1+j,\;1-j,\;-1+j,\;-1-j\}
+\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[
+0.5s_{k-1}\in\{0.5+j0.5,\;0.5-j0.5,\;-0.5+j0.5,\;-0.5-j0.5\}
+\]</span></p>
+<p>The resulting I and Q coordinates are drawn from</p>
+<p><span class="math display">\[
+I,Q\in\{-1.5,-0.5,+0.5,+1.5\}
+\]</span></p>
+<p>so the received samples can form approximately sixteen locations.</p>
+</section>
+<section id="this-is-not-16-qam" class="level3">
+<h3 class="anchored" data-anchor-id="this-is-not-16-qam">This Is Not 16-QAM</h3>
+<p>The transmitter is still sending QPSK.</p>
+<p>The additional locations appear because each received sample depends on both the current and previous QPSK symbols. They are a channel-distortion pattern, not a new modulation format.</p>
+<p>This is ISI in a direct form: one symbol contributes to the observation used to decide another.</p>
+</section>
+<section id="connection-to-chapter-18" class="level3">
+<h3 class="anchored" data-anchor-id="connection-to-chapter-18">Connection to Chapter 18</h3>
+<p>Nyquist pulse shaping allows neighbouring pulses to overlap while their unwanted contributions vanish at the intended sampling instants.</p>
+<p>Multipath adds shifted copies of the waveform. Those copies are no longer guaranteed to have their zero crossings aligned with the receiver’s symbol decisions.</p>
+<p>The wireless channel can therefore reintroduce ISI even when the transmitter and receiver pulse-shaping filters are correctly designed.</p>
+</section>
+</section>
+<section id="multipath-and-fading" class="level2">
+<h2 class="anchored" data-anchor-id="multipath-and-fading">19.10 Multipath and Fading</h2>
+<p>The two-path experiment used a positive real echo coefficient.</p>
+<p>In a real channel, different paths can have different amplitudes, delays, and phases.</p>
+<p>Their contributions may reinforce one another or partially cancel. If the transmitter, receiver, or surrounding environment moves, those relationships can change with time, causing the received signal strength to rise and fall.</p>
+<p>This is the beginning of the idea of <strong>fading</strong>.</p>
+<p>Path loss describes an overall reduction in received signal strength. Multipath describes the presence of several propagation copies. Fading describes variation in the received signal as those path contributions combine differently.</p>
+<p>We do not develop Rayleigh or Rician fading statistics here. The purpose is to establish the physical connection between multiple propagation paths and time-varying received signal strength.</p>
+</section>
+<section id="experiment-19.6-gnu-radio-channel-model" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.6-gnu-radio-channel-model">19.11 Experiment 19.6: GNU Radio Channel Model</h2>
+<p>Until now, we built impairments separately so that their meanings remained visible.</p>
+<p>GNU Radio also provides a <strong>Channel Model</strong> block that packages several common channel effects into one simulation component.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp6-channel-model-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK link using the GNU Radio Channel Model</figcaption>
+</figure>
+</div>
+<p>The neutral settings are</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0
+Epsilon: 1
+Taps: [1.0]
+Seed: 0</code></pre>
+<p>With these values, the clean QPSK link is preserved.</p>
+<p>Increasing <code>Noise Voltage</code> adds random spreading, as expected from Experiment 19.3.</p>
+<p>The Channel Model frequency offset is normalized to the sample rate:</p>
+<p><span class="math display">\[
+f_{\text{norm}}=\frac{\Delta f}{f_s}
+\]</span></p>
+<p>For a 20 Hz offset at 32 kHz,</p>
+<p><span class="math display">\[
+f_{\text{norm}}=\frac{20}{32000}=0.000625
+\]</span></p>
+<p>We therefore use the physical control</p>
+<pre class="text"><code>ID: freq_offset_hz
+Label: Frequency Offset (Hz)
+Default Value: 0
+Start: 0
+Stop: 100
+Step: 5</code></pre>
+<p>and supply</p>
+<pre class="text"><code>freq_offset_hz / samp_rate</code></pre>
+<p>to the Channel Model.</p>
+<p>The <code>Taps</code> parameter represents a discrete-time channel impulse response:</p>
+<p><span class="math display">\[
+r[n]=\sum_{\ell}h[\ell]s[n-\ell]
+\]</span></p>
+<p>Tap delay represents relative propagation delay. Tap magnitude represents path strength, and tap phase represents path phase shift.</p>
+<p>The explicit Delay + Gain + Add experiment remains the clearer physical demonstration of a second propagation path. The Channel Model is useful once that physical meaning is understood.</p>
+<p><code>Seed</code> is different from the other parameters. It selects a pseudorandom noise realization for the simulation; it is not itself a physical channel impairment.</p>
+<p>One parameter remains: <code>Epsilon</code>.</p>
+</section>
+<section id="when-the-sampling-clocks-disagree" class="level2">
+<h2 class="anchored" data-anchor-id="when-the-sampling-clocks-disagree">19.12 When the Sampling Clocks Disagree</h2>
+<p>A digital receiver depends on a sampling clock as well as a carrier reference.</p>
+<p>If the transmitter and receiver sampling rates differ slightly, their relative timing position does not remain fixed. It drifts.</p>
+<p>This is different from a fixed timing offset.</p>
+<p>A fixed timing offset shifts the sampling position by approximately the same amount from symbol to symbol. A sample-rate mismatch accumulates, so the receiver gradually samples different parts of the symbol waveform.</p>
+<p>Chapter 18 showed why the sampling position matters. The eye diagram describes the oversampled waveform around possible sampling instants and therefore shows the available timing margin.</p>
+<p>The constellation is a different view. It shows the complex samples actually selected by the receiver. If a fixed sampler gradually moves away from the correct symbol centres, those selected constellation samples become distorted even though the transmitted QPSK constellation itself has not changed.</p>
+</section>
+<section id="experiment-19.7-sample-rate-mismatch" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-19.7-sample-rate-mismatch">19.13 Experiment 19.7: Sample-Rate Mismatch</h2>
+<p>We reuse the Channel Model with</p>
+<pre class="text"><code>Noise Voltage: 0
+Frequency Offset: 0
+Taps: [1.0]</code></pre>
+<p>and vary <code>Epsilon</code>.</p>
+<p>The ideal value is</p>
+<pre class="text"><code>Epsilon: 1.0</code></pre>
+<p>The retained result uses</p>
+<pre class="text"><code>Epsilon: 1.001</code></pre>
+<p>so</p>
+<p><span class="math display">\[
+\epsilon-1=0.001
+\]</span></p>
+<p>which corresponds to a 0.1% relative mismatch in this model.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch19/ch19-exp7-sample-rate-mismatch.png" class="img-fluid figure-img"></p>
+<figcaption>QPSK with sample-rate mismatch</figcaption>
+</figure>
+</div>
+<p>The mismatch is small, but a rate error accumulates with time.</p>
+<p>Our fixed <code>Keep 1 in N</code> sampler does not contain a timing-recovery loop that can follow that drift.</p>
+<p>At some moments it samples near the desired symbol centre. At others it samples closer to transitions, where neighbouring pulse contributions are larger.</p>
+<p>The transmitter has not changed the QPSK symbol alphabet. The receiver is progressively observing the waveform at the wrong times.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Impairment</th>
+<th>What changes with time?</th>
+<th>Typical constellation effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Carrier-frequency offset</td>
+<td>carrier phase</td>
+<td>constellation rotates</td>
+</tr>
+<tr class="even">
+<td>Sample-rate mismatch</td>
+<td>sampling position</td>
+<td>constellation spreads and distorts</td>
+</tr>
+</tbody>
+</table>
+<p>Larger exploratory values such as <code>1.01</code> and <code>1.1</code> make the effect more obvious, but <code>1.001</code> is more instructive because it shows why a small persistent mismatch cannot simply be ignored.</p>
+<p>Timing recovery is deliberately not added here. It is a receiver correction that will be introduced later.</p>
+</section>
+<section id="reading-channel-impairments-from-the-constellation" class="level2">
+<h2 class="anchored" data-anchor-id="reading-channel-impairments-from-the-constellation">19.14 Reading Channel Impairments from the Constellation</h2>
+<p>The same QPSK link now shows several distinct visual signatures.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Impairment</th>
+<th>Physical cause</th>
+<th>Main constellation signature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Attenuation</td>
+<td>weaker received propagation path</td>
+<td>constellation contracts toward origin</td>
+</tr>
+<tr class="even">
+<td>Additive noise</td>
+<td>unwanted random contributions</td>
+<td>random clouds around symbol locations</td>
+</tr>
+<tr class="odd">
+<td>Frequency offset</td>
+<td>TX/RX carrier mismatch</td>
+<td>continuous constellation rotation</td>
+</tr>
+<tr class="even">
+<td>Delayed copy</td>
+<td>multipath propagation</td>
+<td>structured distortion or splitting</td>
+</tr>
+<tr class="odd">
+<td>Sample-rate mismatch</td>
+<td>TX/RX sampling-rate mismatch</td>
+<td>drifting sampling phase and widespread distortion</td>
+</tr>
+</tbody>
+</table>
+<p>These are useful patterns, not perfect diagnostic rules.</p>
+<p>A real receiver may contain several impairments at the same time, and their signatures can overlap.</p>
+</section>
+<section id="channel-impairment-is-not-receiver-correction" class="level2">
+<h2 class="anchored" data-anchor-id="channel-impairment-is-not-receiver-correction">19.15 Channel Impairment Is Not Receiver Correction</h2>
+<p>It is important to separate what the channel does from what the receiver later does in response.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Channel or link impairment</th>
+<th>Typical receiver response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>attenuation</td>
+<td>gain control</td>
+</tr>
+<tr class="even">
+<td>carrier-frequency offset</td>
+<td>carrier synchronization</td>
+</tr>
+<tr class="odd">
+<td>timing drift</td>
+<td>timing recovery</td>
+</tr>
+<tr class="even">
+<td>multipath-induced ISI</td>
+<td>equalization</td>
+</tr>
+<tr class="odd">
+<td>unknown channel response</td>
+<td>channel estimation</td>
+</tr>
+</tbody>
+</table>
+<p>This chapter focuses on the left-hand side.</p>
+<p>The next chapters progressively develop the receiver mechanisms on the right-hand side.</p>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">19.16 GNU Radio Toolbox</h2>
+<p>Several GNU Radio blocks play important roles in the channel experiments.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Multiply Const</td>
+<td>models simple amplitude scaling</td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>adds Gaussian disturbance</td>
+</tr>
+<tr class="odd">
+<td>Delay</td>
+<td>creates a delayed copy of the waveform</td>
+</tr>
+<tr class="even">
+<td>Add</td>
+<td>combines direct and delayed paths</td>
+</tr>
+<tr class="odd">
+<td>Channel Model</td>
+<td>packages noise, frequency offset, sample-rate mismatch, and channel taps</td>
+</tr>
+<tr class="even">
+<td>Keep 1 in N</td>
+<td>provides the fixed symbol-rate sampling used for observation</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Constellation Sink</td>
+<td>shows the complex samples selected by the receiver</td>
+</tr>
+</tbody>
+</table>
+<section id="delay" class="level3">
+<h3 class="anchored" data-anchor-id="delay">Delay</h3>
+<p>The <strong>Delay</strong> block shifts a stream by a specified number of samples.</p>
+<p>In Experiment 19.5, it represents the additional propagation time of the reflected path.</p>
+<p>The block does not create new information. It creates a later copy of the same complex-baseband waveform.</p>
+</section>
+<section id="channel-model" class="level3">
+<h3 class="anchored" data-anchor-id="channel-model">Channel Model</h3>
+<p>The <strong>Channel Model</strong> block combines several common effects:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Physical interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Noise Voltage</code></td>
+<td>additive random noise</td>
+</tr>
+<tr class="even">
+<td><code>Frequency Offset</code></td>
+<td>normalized carrier-frequency mismatch</td>
+</tr>
+<tr class="odd">
+<td><code>Epsilon</code></td>
+<td>relative sample-rate mismatch</td>
+</tr>
+<tr class="even">
+<td><code>Taps</code></td>
+<td>discrete-time channel impulse response</td>
+</tr>
+<tr class="odd">
+<td><code>Seed</code></td>
+<td>pseudorandom noise realization</td>
+</tr>
+</tbody>
+</table>
+<p>The block is most useful after the effects have been understood separately.</p>
+<p>It is a convenient simulator, not a substitute for the underlying physical interpretation.</p>
+</section>
+<section id="keep-1-in-n" class="level3">
+<h3 class="anchored" data-anchor-id="keep-1-in-n">Keep 1 in N</h3>
+<p>The <strong>Keep 1 in N</strong> block selects one sample out of every <code>N</code> samples.</p>
+<p>In these experiments it acts as a deliberately simple fixed symbol-rate sampler.</p>
+<p>It does not perform timing recovery. If the correct sampling phase changes, as it does under sample-rate mismatch, the block continues selecting samples at the same fixed pattern and eventually moves away from the desired decision instants.</p>
+</section>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">19.17 Explore Further</h2>
+<p>The channel experiments are well suited to prediction before execution.</p>
+<ol type="1">
+<li><p>Keep the noise level fixed and gradually reduce <code>channel_gain</code>. Predict how the constellation radius and decision margin should change.</p></li>
+<li><p>Keep the gain fixed and increase the Gaussian-noise amplitude. Compare this random spreading with the structured distortion produced by multipath.</p></li>
+<li><p>In the carrier-frequency-offset experiment, compare small and larger offsets. Observe how the rate of constellation rotation changes.</p></li>
+<li><p>In the two-path experiment, keep <code>Echo Gain = 0.5</code> and compare delays of 0, 8, 16, and 32 samples.</p></li>
+<li><p>Keep the echo delay fixed and change the echo gain. Observe how strongly the delayed path influences the received constellation.</p></li>
+<li><p>Replace a positive real echo coefficient with a complex coefficient and observe how path phase changes the multipath pattern.</p></li>
+<li><p>In the Channel Model, compare <code>Epsilon = 1.0</code>, <code>1.001</code>, and <code>1.01</code>. Watch how a small rate mismatch accumulates over time.</p></li>
+<li><p>Compare an oversampled time or eye view with the constellation when timing is drifting. Keep in mind that the eye describes timing margin around possible sample positions, while the constellation shows the samples actually selected.</p></li>
+</ol>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">19.18 What We Learned</h2>
+<p>The wireless channel is not a transparent wire.</p>
+<p>Attenuation reduces the received signal amplitude, and signal power scales with the square of that amplitude.</p>
+<p>Attenuation becomes more important when the receiver noise does not decrease with the desired signal. Additive noise spreads constellation samples randomly, while attenuation contracts the entire constellation.</p>
+<p>Carrier-frequency mismatch creates a phase error that accumulates with time. In a Constellation Sink, the history of continuously rotating QPSK points can appear as a ring.</p>
+<p>Multipath means that the receiver can observe delayed, scaled, and phase-shifted copies of the transmitted waveform. A second path with zero relative delay does not automatically create ISI, but delayed copies can disturb the zero-ISI relationships created by pulse shaping and matched filtering.</p>
+<p>A one-symbol echo makes the current received sample depend on the previous symbol. The additional received locations in that experiment are not 16-QAM. The transmitter remains QPSK; the extra points are created by channel memory.</p>
+<p>Multiple propagation paths can reinforce or cancel one another, which leads naturally to the idea of fading.</p>
+<p>GNU Radio’s Channel Model packages several common impairments after their physical meanings are understood. Its frequency-offset input is normalized to the sample rate, its channel taps describe a discrete-time impulse response, and <code>Epsilon</code> models relative sample-rate mismatch.</p>
+<p>Sample-rate mismatch differs from a fixed timing offset because the timing error accumulates. Even a small persistent mismatch can cause a fixed sampler to move away from the desired symbol centres.</p>
+<p>The eye diagram and constellation remain different measurements. The eye describes the oversampled waveform and timing margin around possible sampling instants. The constellation shows the complex samples actually selected for symbol decisions.</p>
+<p>Most importantly, each simulation control now has a physical interpretation.</p>
+<p>A smaller gain represents a weaker received signal. Added noise represents random unwanted contributions. Frequency offset represents disagreement between carrier references. A delayed copy represents another propagation path. Echo delay represents excess path delay. Echo gain represents path strength. <code>Epsilon</code> represents sampling rates that do not exactly agree.</p>
+<p>Once those meanings are clear, the changing constellation becomes a picture of what the communication link is doing to the waveform.</p>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">19.19 Connecting to the Next Chapter</h2>
+<p>Chapter 18 showed how pulse shaping and matched filtering can create clean symbol observations when the channel is ideal.</p>
+<p>This chapter showed how the wireless channel can break that result.</p>
+<p>Among the impairments we introduced, multipath is especially important because it gives the channel memory. A delayed copy can make the current received symbol depend on previous symbols:</p>
+<p><span class="math display">\[
+r_k=s_k+0.5s_{k-1}
+\]</span></p>
+<p>The receiver now needs a way to compensate for that predictable channel distortion.</p>
+<p>That leads directly to <strong>Chapter 20: Channel Equalization</strong>.</p>
+<p>We will begin by assuming that the multipath channel is known and ask how a receiver filter can undo part of its effect. From there, we can move toward adaptive equalizers that learn the required correction from the received signal itself.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="pagination-link" aria-label="Chapter 18: Pulse Shaping and Matched Filtering">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/20-channel-equalization.html" class="pagination-link" aria-label="Chapter 20: Channel Equalization">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 20: Channel Equalization</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/19-wireless-channel.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

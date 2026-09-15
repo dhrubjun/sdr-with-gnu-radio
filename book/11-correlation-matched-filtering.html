@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 11: Correlation, Matched Filtering and Signal Detection – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/12-modulation.html" rel="next">
+<link href="../book/10-impulse-response-and-convolution.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/08-mixture-and-frequency-translation.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/11-correlation-matched-filtering.html"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#main-question" id="toc-main-question" class="nav-link active" data-scroll-target="#main-question">Main Question</a></li>
+  <li><a href="#from-convolution-to-detection" id="toc-from-convolution-to-detection" class="nav-link" data-scroll-target="#from-convolution-to-detection">11.1 From Convolution to Detection</a></li>
+  <li><a href="#correlation-as-a-sliding-similarity-test" id="toc-correlation-as-a-sliding-similarity-test" class="nav-link" data-scroll-target="#correlation-as-a-sliding-similarity-test">11.2 Correlation as a Sliding Similarity Test</a>
+  <ul class="collapse">
+  <li><a href="#correlation-and-convolution" id="toc-correlation-and-convolution" class="nav-link" data-scroll-target="#correlation-and-convolution">Correlation and Convolution</a></li>
+  </ul></li>
+  <li><a href="#experiment-11.1-basic-correlation" id="toc-experiment-11.1-basic-correlation" class="nav-link" data-scroll-target="#experiment-11.1-basic-correlation">11.3 Experiment 11.1: Basic Correlation</a>
+  <ul class="collapse">
+  <li><a href="#why-does-the-peak-appear-later-than-the-start-of-the-pattern" id="toc-why-does-the-peak-appear-later-than-the-start-of-the-pattern" class="nav-link" data-scroll-target="#why-does-the-peak-appear-later-than-the-start-of-the-pattern">Why Does the Peak Appear Later Than the Start of the Pattern?</a></li>
+  </ul></li>
+  <li><a href="#peak-height-and-peak-location" id="toc-peak-height-and-peak-location" class="nav-link" data-scroll-target="#peak-height-and-peak-location">11.4 Peak Height and Peak Location</a>
+  <ul class="collapse">
+  <li><a href="#experiment-11.2-shift-the-pattern" id="toc-experiment-11.2-shift-the-pattern" class="nav-link" data-scroll-target="#experiment-11.2-shift-the-pattern">Experiment 11.2: Shift the Pattern</a></li>
+  <li><a href="#experiment-11.3-a-mismatched-pattern" id="toc-experiment-11.3-a-mismatched-pattern" class="nav-link" data-scroll-target="#experiment-11.3-a-mismatched-pattern">Experiment 11.3: A Mismatched Pattern</a></li>
+  </ul></li>
+  <li><a href="#experiment-11.4-correlation-in-noise" id="toc-experiment-11.4-correlation-in-noise" class="nav-link" data-scroll-target="#experiment-11.4-correlation-in-noise">11.5 Experiment 11.4: Correlation in Noise</a>
+  <ul class="collapse">
+  <li><a href="#displaying-one-frame-at-a-time" id="toc-displaying-one-frame-at-a-time" class="nav-link" data-scroll-target="#displaying-one-frame-at-a-time">Displaying One Frame at a Time</a></li>
+  </ul></li>
+  <li><a href="#experiment-11.5-a-longer-known-pattern" id="toc-experiment-11.5-a-longer-known-pattern" class="nav-link" data-scroll-target="#experiment-11.5-a-longer-known-pattern">11.6 Experiment 11.5: A Longer Known Pattern</a></li>
+  <li><a href="#from-correlation-to-the-matched-filter" id="toc-from-correlation-to-the-matched-filter" class="nav-link" data-scroll-target="#from-correlation-to-the-matched-filter">11.7 From Correlation to the Matched Filter</a>
+  <ul class="collapse">
+  <li><a href="#experiment-11.6-correlation-vs.-matched-filter" id="toc-experiment-11.6-correlation-vs.-matched-filter" class="nav-link" data-scroll-target="#experiment-11.6-correlation-vs.-matched-filter">Experiment 11.6: Correlation vs.&nbsp;Matched Filter</a></li>
+  </ul></li>
+  <li><a href="#experiment-11.7-matched-vs.-mismatched-filter" id="toc-experiment-11.7-matched-vs.-mismatched-filter" class="nav-link" data-scroll-target="#experiment-11.7-matched-vs.-mismatched-filter">11.8 Experiment 11.7: Matched vs.&nbsp;Mismatched Filter</a></li>
+  <li><a href="#experiment-11.8-threshold-based-detection" id="toc-experiment-11.8-threshold-based-detection" class="nav-link" data-scroll-target="#experiment-11.8-threshold-based-detection">11.9 Experiment 11.8: Threshold-Based Detection</a>
+  <ul class="collapse">
+  <li><a href="#moving-the-threshold-to-zero" id="toc-moving-the-threshold-to-zero" class="nav-link" data-scroll-target="#moving-the-threshold-to-zero">Moving the Threshold to Zero</a></li>
+  <li><a href="#converting-the-detector-output-for-display" id="toc-converting-the-detector-output-for-display" class="nav-link" data-scroll-target="#converting-the-detector-output-for-display">Converting the Detector Output for Display</a></li>
+  </ul></li>
+  <li><a href="#false-alarms-and-missed-detections" id="toc-false-alarms-and-missed-detections" class="nav-link" data-scroll-target="#false-alarms-and-missed-detections">11.10 False Alarms and Missed Detections</a></li>
+  <li><a href="#complex-sdr-signals" id="toc-complex-sdr-signals" class="nav-link" data-scroll-target="#complex-sdr-signals">11.11 Complex SDR Signals</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">11.12 GNU Radio Toolbox</a></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">11.13 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">11.14 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">11.15 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/11-correlation-matched-filtering.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/08-mixture-and-frequency-translation.html">Part III: Moving and Shaping Signals</a></li><li class="breadcrumb-item"><a href="../book/11-correlation-matched-filtering.html"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="main-question" class="level2">
+<h2 class="anchored" data-anchor-id="main-question">Main Question</h2>
+<p><strong>How can a receiver find a known signal hidden inside another signal?</strong></p>
+<p>In Chapter 10, we looked at an LTI system from a useful point of view. We treated a signal as a collection of shifted and scaled impulses, then built the output by adding shifted and scaled copies of the system’s impulse response.</p>
+<p>That gave us convolution.</p>
+<p>In this chapter, we reuse the same machinery for a different purpose.</p>
+<p>Instead of asking what a system does to a signal, we ask whether a known waveform appears somewhere inside the received samples.</p>
+<p>That question appears throughout receiver design. A radar receiver may search for a delayed copy of a transmitted pulse. A digital receiver may search for a preamble marking the start of a packet. GNSS receivers search for known spreading codes. Sonar systems search for echoes of known acoustic waveforms.</p>
+<p>The received waveform may be noisy, delayed, or difficult to recognise by eye. The receiver still needs a reliable way to find it.</p>
+<p>The main tool is <strong>correlation</strong>. From correlation, we will move naturally to the <strong>matched filter</strong>, and then to a simple detection rule based on a <strong>threshold</strong>.</p>
+</section>
+<section id="from-convolution-to-detection" class="level2">
+<h2 class="anchored" data-anchor-id="from-convolution-to-detection">11.1 From Convolution to Detection</h2>
+<p>Suppose the short sequence</p>
+<p><span class="math display">\[
+p[n]=(1,\;1,\;-1,\;1)
+\]</span></p>
+<p>may appear somewhere inside a longer received sequence.</p>
+<p>For example,</p>
+<p><span class="math display">\[
+x[n]=(0,\;0,\;0,\;1,\;1,\;-1,\;1,\;0,\;0,\;0).
+\]</span></p>
+<p>In this small example, the pattern is easy to see. A real receiver may process thousands or millions of samples, and the samples may contain noise.</p>
+<p>We therefore need a numerical way to ask:</p>
+<blockquote class="blockquote">
+<p>How well do the received samples match the known pattern at this position?</p>
+</blockquote>
+<p>Then we shift the comparison and ask the same question again.</p>
+<p>That is the basic idea of correlation.</p>
+</section>
+<section id="correlation-as-a-sliding-similarity-test" class="level2">
+<h2 class="anchored" data-anchor-id="correlation-as-a-sliding-similarity-test">11.2 Correlation as a Sliding Similarity Test</h2>
+<p>Consider the known pattern</p>
+<p><span class="math display">\[
+p[n]=(1,\;1,\;-1,\;1).
+\]</span></p>
+<p>If it lines up perfectly with the same four samples in the received signal, the comparison gives</p>
+<p><span class="math display">\[
+R=1(1)+1(1)+(-1)(-1)+1(1)=4.
+\]</span></p>
+<p>Every sample agrees, so every product contributes positively.</p>
+<p>At a poor alignment, some products may be positive, some negative, and some may involve zeros. The sum is then smaller.</p>
+<p>This gives us a useful first interpretation:</p>
+<blockquote class="blockquote">
+<p><strong>Correlation measures similarity as one signal is shifted relative to another.</strong></p>
+</blockquote>
+<p>For the simple real-valued sequences used here, a large positive value means the received samples strongly resemble the known pattern at that alignment.</p>
+<section id="correlation-and-convolution" class="level3">
+<h3 class="anchored" data-anchor-id="correlation-and-convolution">Correlation and Convolution</h3>
+<p>Correlation is closely related to the convolution we studied in Chapter 10.</p>
+<p>For a real known sequence of length (N), we can reverse the sequence and use it as the impulse response of an FIR filter:</p>
+<p><span class="math display">\[
+h[n]=p[N-1-n].
+\]</span></p>
+<p>For our four-sample pattern,</p>
+<p><span class="math display">\[
+p[n]=(1,\;1,\;-1,\;1),
+\]</span></p>
+<p>the reversed sequence is</p>
+<p><span class="math display">\[
+h[n]=(1,\;-1,\;1,\;1).
+\]</span></p>
+<p>An FIR filter with these taps performs convolution, but because the taps contain the reversed known pattern, the output acts as the correlation sequence for this experiment.</p>
+<p>For complex signals, the corresponding matched sequence is both reversed and conjugated:</p>
+<p><span class="math display">\[
+h[n]=p^*[N-1-n].
+\]</span></p>
+<p>We will return to the conjugation when we introduce the matched filter.</p>
+</section>
+</section>
+<section id="experiment-11.1-basic-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-11.1-basic-correlation">11.3 Experiment 11.1: Basic Correlation</h2>
+<p>Our first experiment asks whether GNU Radio can locate the four-sample pattern inside a longer sequence.</p>
+<p>We create a 100-sample frame with the pattern beginning after 20 zeros:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span>,)<span class="op">*</span><span class="dv">20</span> <span class="op">+</span> (<span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="op">+</span> (<span class="dv">0</span>,)<span class="op">*</span><span class="dv">76</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The frame contains</p>
+<p><span class="math display">\[
+20+4+76=100
+\]</span></p>
+<p>samples.</p>
+<p>Use the Vector Source settings:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Vector</td>
+<td><code>(0,)*20 + (1, 1, -1, 1) + (0,)*76</code></td>
+</tr>
+<tr class="odd">
+<td>Repeat</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Vector Length</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The FIR filter uses the reversed pattern:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use the Decimating FIR Filter with:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Decimation</td>
+<td><code>1</code></td>
+</tr>
+<tr class="even">
+<td>Taps</td>
+<td><code>(1, -1, 1, 1)</code></td>
+</tr>
+</tbody>
+</table>
+<p>The Vector Source is connected directly to one input of the QT GUI Time Sink and through the FIR filter to the other input.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp01_basic_correlation_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Basic correlation flowgraph</figcaption>
+</figure>
+</div>
+<p>For the saved display, we use 44 points so that the pattern and its correlation response are easy to inspect.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp01_basic_correlation.png" class="img-fluid figure-img"></p>
+<figcaption>Basic correlation result</figcaption>
+</figure>
+</div>
+<p>The blue samples are the received sequence. The red samples are the correlation output.</p>
+<p>The important feature is the peak:</p>
+<p><span class="math display">\[
+R_{\max}=4.
+\]</span></p>
+<p>That is exactly the value expected from a perfect four-sample match.</p>
+<section id="why-does-the-peak-appear-later-than-the-start-of-the-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-the-peak-appear-later-than-the-start-of-the-pattern">Why Does the Peak Appear Later Than the Start of the Pattern?</h3>
+<p>The pattern begins at sample 20, but the full correlation peak appears three samples later.</p>
+<p>The correlator needs all four samples before the complete four-sample comparison is available. If a pattern of length (N) begins at sample (n_0), then for this FIR implementation the full-alignment peak occurs at</p>
+<p><span class="math display">\[
+n_{\text{peak}}=n_0+N-1.
+\]</span></p>
+<p>Here,</p>
+<p><span class="math display">\[
+n_{\text{peak}}=20+4-1=23.
+\]</span></p>
+<p>The peak therefore tells us not only that a match occurred, but also when the full pattern became aligned with the filter.</p>
+</section>
+</section>
+<section id="peak-height-and-peak-location" class="level2">
+<h2 class="anchored" data-anchor-id="peak-height-and-peak-location">11.4 Peak Height and Peak Location</h2>
+<p>The correlation output contains two different kinds of information.</p>
+<p>The <strong>height of the peak</strong> tells us how strongly the received samples resemble the known pattern.</p>
+<p>The <strong>location of the peak</strong> tells us where the pattern occurred.</p>
+<p>We can demonstrate both ideas by changing the experiment.</p>
+<section id="experiment-11.2-shift-the-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-11.2-shift-the-pattern">Experiment 11.2: Shift the Pattern</h3>
+<p>Move the same pattern ten samples later:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span>,)<span class="op">*</span><span class="dv">30</span> <span class="op">+</span> (<span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="op">+</span> (<span class="dv">0</span>,)<span class="op">*</span><span class="dv">66</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Nothing else changes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp02_shifted_pattern.png" class="img-fluid figure-img"></p>
+<figcaption>Shifted pattern correlation</figcaption>
+</figure>
+</div>
+<p>The correlation peak still reaches approximately</p>
+<p><span class="math display">\[
+4,
+\]</span></p>
+<p>because the waveform itself is unchanged.</p>
+<p>But the pattern now begins at sample 30, so the full-alignment peak occurs at</p>
+<p><span class="math display">\[
+n_{\text{peak}}=30+4-1=33.
+\]</span></p>
+<p>The peak has moved by exactly ten samples.</p>
+<p>This is why correlation is so useful for timing and synchronization. The receiver may not know exactly when a known event will arrive, but the location of the correlation peak reveals its timing.</p>
+</section>
+<section id="experiment-11.3-a-mismatched-pattern" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-11.3-a-mismatched-pattern">Experiment 11.3: A Mismatched Pattern</h3>
+<p>Now keep the correlator unchanged but alter the received pattern to</p>
+<p><span class="math display">\[
+(1,\;-1,\;-1,\;1).
+\]</span></p>
+<p>The Vector Source becomes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span>,)<span class="op">*</span><span class="dv">20</span> <span class="op">+</span> (<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="op">+</span> (<span class="dv">0</span>,)<span class="op">*</span><span class="dv">76</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The FIR taps remain:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The receiver is still searching for the original pattern</p>
+<p><span class="math display">\[
+(1,\;1,\;-1,\;1).
+\]</span></p>
+<p>At the intended alignment,</p>
+<p><span class="math display">\[
+R=1(1)+1(-1)+(-1)(-1)+1(1)=2.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp03_mismatched_pattern.png" class="img-fluid figure-img"></p>
+<figcaption>Mismatched pattern</figcaption>
+</figure>
+</div>
+<p>The perfect-match value of 4 is gone. The intended alignment now gives only 2.</p>
+<p>Negative correlation values can also appear at other alignments. A negative value does not simply mean that something has failed. It indicates that, at that alignment, the received samples have a stronger opposite or inverted relationship to the known pattern.</p>
+<p>For our present detector, the main lesson is simple:</p>
+<blockquote class="blockquote">
+<p><strong>A better match produces a stronger positive correlation response at the intended alignment.</strong></p>
+</blockquote>
+</section>
+</section>
+<section id="experiment-11.4-correlation-in-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-11.4-correlation-in-noise">11.5 Experiment 11.4: Correlation in Noise</h2>
+<p>Clean sequences are useful for learning, but real receivers usually work with noise.</p>
+<p>Let the received signal be</p>
+<p><span class="math display">\[
+r[n]=s[n]+w[n],
+\]</span></p>
+<p>where (s[n]) is the signal of interest and (w[n]) is noise.</p>
+<p>At the correct alignment, the known signal contributes in an organised way. Matching samples reinforce one another.</p>
+<p>Noise is not deliberately arranged to match the known pattern. Some noise samples increase the correlation while others decrease it. Noise does not disappear, but the known waveform can still produce a recognisable peak.</p>
+<p>For this experiment, use a 44-sample frame:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span>,)<span class="op">*</span><span class="dv">20</span> <span class="op">+</span> (<span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="op">+</span> (<span class="dv">0</span>,)<span class="op">*</span><span class="dv">20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add Gaussian noise using:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Noise Type</td>
+<td>Gaussian</td>
+</tr>
+<tr class="even">
+<td>Amplitude</td>
+<td><code>0.5</code></td>
+</tr>
+<tr class="odd">
+<td>Seed</td>
+<td><code>0</code></td>
+</tr>
+<tr class="even">
+<td>Output Type</td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<p>With <code>Seed = 0</code>, GNU Radio chooses a seed from the system clock, so each run can produce a different noise sequence. A non-zero seed is preferable when an exactly repeatable noise realization is required.</p>
+<p>The noisy signal is sent both to the display and to the FIR correlator.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp04_correlation_with_noise_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Correlation with noise flowgraph</figcaption>
+</figure>
+</div>
+<section id="displaying-one-frame-at-a-time" class="level3">
+<h3 class="anchored" data-anchor-id="displaying-one-frame-at-a-time">Displaying One Frame at a Time</h3>
+<p>With Gaussian noise running continuously, a QT GUI Time Sink behaves like a live oscilloscope and keeps refreshing. For this controlled experiment, it is more useful to display one fixed frame at a time.</p>
+<p>Each Stream to Vector block uses:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IO Type</td>
+<td>Float</td>
+</tr>
+<tr class="even">
+<td>Num Items</td>
+<td><code>44</code></td>
+</tr>
+<tr class="odd">
+<td>Vector Length</td>
+<td><code>1</code></td>
+</tr>
+</tbody>
+</table>
+<p>The QT GUI Vector Sink then displays those 44 values against fixed sample indices.</p>
+<p>Use:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Vector Size</td>
+<td><code>44</code></td>
+</tr>
+<tr class="even">
+<td>X-Axis Start Value</td>
+<td><code>0</code></td>
+</tr>
+<tr class="odd">
+<td>X-Axis Step Value</td>
+<td><code>1</code></td>
+</tr>
+<tr class="even">
+<td>X-Axis Label</td>
+<td><code>Sample Index</code></td>
+</tr>
+<tr class="odd">
+<td>Y-Axis Label</td>
+<td><code>Amplitude</code></td>
+</tr>
+<tr class="even">
+<td>Grid</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Autoscale</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Average</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<td>Number of Inputs</td>
+<td><code>2</code></td>
+</tr>
+<tr class="even">
+<td>Update Period</td>
+<td><code>2</code> s</td>
+</tr>
+</tbody>
+</table>
+<p>Label the two traces:</p>
+<ul>
+<li><code>Noisy Received Signal</code></li>
+<li><code>Correlation Output</code></li>
+</ul>
+<p>The two-second update period changes only the GUI refresh rate. It does not change the DSP.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp04_correlation_with_noise.png" class="img-fluid figure-img"></p>
+<figcaption>Correlation with noise</figcaption>
+</figure>
+</div>
+<p>The received waveform is now much harder to interpret directly.</p>
+<p>The correlation output still produces a strong response near the expected pattern location, but the peak is no longer guaranteed to be exactly 4. Noise can push it upward or downward.</p>
+<p>Correlation fluctuations also appear elsewhere because a random noise realization can accidentally resemble part of the known pattern.</p>
+<p>The limitation is now clear:</p>
+<blockquote class="blockquote">
+<p><strong>Four samples do not give the receiver much evidence.</strong></p>
+</blockquote>
+<p>A longer known pattern should help.</p>
+</section>
+</section>
+<section id="experiment-11.5-a-longer-known-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-11.5-a-longer-known-pattern">11.6 Experiment 11.5: A Longer Known Pattern</h2>
+<p>Increase the pattern from 4 samples to 16 samples:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Place it after 20 zeros in a 64-sample frame:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span>,)<span class="op">*</span><span class="dv">20</span> <span class="op">+</span> (<span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>           <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>) <span class="op">+</span> (<span class="dv">0</span>,)<span class="op">*</span><span class="dv">28</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The FIR taps are the reversed pattern:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Because the frame is now 64 samples long, use <code>Num Items = 64</code> in both Stream to Vector blocks and <code>Vector Size = 64</code> in the Vector Sink.</p>
+<p>Keep the noise amplitude at <code>0.5</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp05_longer_pattern_in_noise.png" class="img-fluid figure-img"></p>
+<figcaption>Longer pattern in noise</figcaption>
+</figure>
+</div>
+<p>The strongest useful response appears around sample 35.</p>
+<p>The pattern begins at sample 20 and contains 16 samples, so</p>
+<p><span class="math display">\[
+n_{\text{peak}}=20+16-1=35.
+\]</span></p>
+<p>Without noise, a perfect match would give</p>
+<p><span class="math display">\[
+R_{\max}=16,
+\]</span></p>
+<p>because every one of the sixteen () samples contributes (+1) at full alignment.</p>
+<p>With noise present, the peak is perturbed, but it stands out much more clearly than the four-sample case.</p>
+<p>The reason is important. At the correct alignment, the desired signal contributes coherently across many samples. The noise contributions do not all reinforce in the same structured way.</p>
+<p>A longer known sequence therefore gives the receiver more evidence to accumulate.</p>
+<p>This is one reason practical communication and ranging systems use preambles, training sequences, spreading codes, or coded pulses rather than trying to detect an event from only a few samples.</p>
+</section>
+<section id="from-correlation-to-the-matched-filter" class="level2">
+<h2 class="anchored" data-anchor-id="from-correlation-to-the-matched-filter">11.7 From Correlation to the Matched Filter</h2>
+<p>We now know the waveform we want to detect, and we know that reversing it and using it as FIR taps produces a strong response when the waveform arrives.</p>
+<p>That leads to the matched filter.</p>
+<p>For a known discrete-time waveform (p[n]) of length (N), the matched-filter impulse response is</p>
+<p><span class="math display">\[
+h[n]=p^*[N-1-n].
+\]</span></p>
+<p>The star denotes complex conjugation.</p>
+<p>For our real-valued () sequence,</p>
+<p><span class="math display">\[
+p^*[n]=p[n],
+\]</span></p>
+<p>so the matched-filter taps are simply the reversed pattern:</p>
+<p><span class="math display">\[
+h[n]=p[N-1-n].
+\]</span></p>
+<p>For the real-valued experiments in this chapter, correlation with the known pattern and filtering with this matched filter lead to the same FIR output.</p>
+<p>The two viewpoints answer slightly different questions.</p>
+<p><strong>Correlation viewpoint:</strong> How similar is the received signal to the known waveform at each alignment?</p>
+<p><strong>Matched-filter viewpoint:</strong> What FIR filter should we use to produce a strong response when that known waveform arrives?</p>
+<p>For additive white Gaussian noise, the matched filter has an important theoretical property: it maximises the output signal-to-noise ratio at the chosen sampling instant for the known waveform.</p>
+<p>We do not need the full proof here. The experiments make the practical effect visible.</p>
+<section id="experiment-11.6-correlation-vs.-matched-filter" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-11.6-correlation-vs.-matched-filter">Experiment 11.6: Correlation vs.&nbsp;Matched Filter</h3>
+<p>Send the same noisy received signal into two Decimating FIR Filters.</p>
+<p>Both use exactly the same taps:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Label one branch <code>Correlation Output</code> and the other <code>Matched Filter Output</code>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp06_correlation_vs_matched_filter_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Correlation versus matched filter flowgraph</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp06_correlation_vs_matched_filter.png" class="img-fluid figure-img"></p>
+<figcaption>Correlation versus matched filter</figcaption>
+</figure>
+</div>
+<p>The two curves lie on top of one another because both filters receive the same input and use the same taps.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+y_{\text{corr}}[n]=y_{\text{MF}}[n].
+\]</span></p>
+<p>For this real-valued sequence and this implementation, our correlator is the matched filter.</p>
+<p>This connects directly back to Chapter 10. An ordinary FIR filter can become a detector for a known waveform simply by choosing its impulse response appropriately.</p>
+</section>
+</section>
+<section id="experiment-11.7-matched-vs.-mismatched-filter" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-11.7-matched-vs.-mismatched-filter">11.8 Experiment 11.7: Matched vs.&nbsp;Mismatched Filter</h2>
+<p>The word <em>matched</em> matters because the filter is designed for a particular waveform.</p>
+<p>Keep the first FIR filter correctly matched to the transmitted 16-sample pattern:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For the second filter, deliberately use a different 16-sample sequence:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Both filters receive exactly the same noisy samples.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp07_matched_vs_mismatched.png" class="img-fluid figure-img"></p>
+<figcaption>Matched versus mismatched filter</figcaption>
+</figure>
+</div>
+<p>Near the expected full-alignment position around sample 35, the matched filter produces a strong positive peak.</p>
+<p>The mismatched filter does not.</p>
+<p>For the correctly matched filter, the signal contributions reinforce. In the ideal noise-free case,</p>
+<p><span class="math display">\[
+1^2+1^2+(-1)^2+\cdots+(-1)^2=16.
+\]</span></p>
+<p>With the mismatched filter, some terms reinforce and others oppose one another, so much more cancellation occurs.</p>
+<p>A matched filter does not necessarily make the whole output waveform look clean. Its job is more specific:</p>
+<blockquote class="blockquote">
+<p><strong>It produces a strong response at the detection instant for the waveform it was designed to match.</strong></p>
+</blockquote>
+</section>
+<section id="experiment-11.8-threshold-based-detection" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-11.8-threshold-based-detection">11.9 Experiment 11.8: Threshold-Based Detection</h2>
+<p>So far, we have looked at the graph and recognised a large peak.</p>
+<p>A practical receiver needs a rule that can be applied automatically.</p>
+<p>The simplest rule is a threshold.</p>
+<p>For this experiment, choose</p>
+<p><span class="math display">\[
+T=8.
+\]</span></p>
+<p>This is an experimental value for the signal and noise levels used here. It is not a universal or optimal threshold.</p>
+<p>We want to declare a detection when the matched-filter output is greater than the threshold:</p>
+<p><span class="math display">\[
+y[n]&gt;T.
+\]</span></p>
+<p>In this GNU Radio flowgraph, the comparison is built from basic blocks:</p>
+<p><code>Matched Filter → Add Const (-8) → Binary Slicer → Char to Float → Detection Output</code></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp08_threshold_detection_flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>Threshold detection flowgraph</figcaption>
+</figure>
+</div>
+<section id="moving-the-threshold-to-zero" class="level3">
+<h3 class="anchored" data-anchor-id="moving-the-threshold-to-zero">Moving the Threshold to Zero</h3>
+<p>The Binary Slicer makes its decision around zero, so we first subtract 8:</p>
+<p><span class="math display">\[
+z[n]=y[n]-8.
+\]</span></p>
+<p>The Add Const block adds a constant. To subtract 8, use:</p>
+<pre class="text"><code>Constant = -8</code></pre>
+<p>If</p>
+<p><span class="math display">\[
+y[n]=11,
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+z[n]=11-8=3,
+\]</span></p>
+<p>which is positive.</p>
+<p>If</p>
+<p><span class="math display">\[
+y[n]=5,
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+z[n]=5-8=-3,
+\]</span></p>
+<p>which is negative.</p>
+<p>The Binary Slicer converts positive input to binary <code>1</code> and negative input to binary <code>0</code>.</p>
+<p>The exact case (y[n]=8), which produces zero after subtraction, lies exactly on the decision boundary and is not important for this experiment. Our intended detection rule is based on crossing above the threshold.</p>
+</section>
+<section id="converting-the-detector-output-for-display" class="level3">
+<h3 class="anchored" data-anchor-id="converting-the-detector-output-for-display">Converting the Detector Output for Display</h3>
+<p>The Binary Slicer produces byte/char samples. The Char to Float block converts those values to floating-point samples so that they can be displayed alongside the matched-filter output.</p>
+<p>With the default scale,</p>
+<pre class="text"><code>0 -&gt; 0.0
+1 -&gt; 1.0</code></pre>
+<p>This conversion does not change the detection logic.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch11/ch11_exp08_threshold_detection.png" class="img-fluid figure-img"></p>
+<figcaption>Threshold detection</figcaption>
+</figure>
+</div>
+<p>The blue curve is the matched-filter output.</p>
+<p>The red curve is the binary detection output.</p>
+<p>When the matched-filter response rises above the chosen threshold, the detector produces a <code>1</code>.</p>
+<p>We have now moved from a visual judgement to a rule that the receiver can apply sample by sample.</p>
+</section>
+</section>
+<section id="false-alarms-and-missed-detections" class="level2">
+<h2 class="anchored" data-anchor-id="false-alarms-and-missed-detections">11.10 False Alarms and Missed Detections</h2>
+<p>Choosing a threshold introduces a trade-off.</p>
+<p>Suppose we lower the threshold from</p>
+<p><span class="math display">\[
+T=8
+\]</span></p>
+<p>to</p>
+<p><span class="math display">\[
+T=4.
+\]</span></p>
+<p>The detector becomes more sensitive. A weaker signal has a better chance of crossing the threshold, but noise fluctuations also have a better chance of crossing it.</p>
+<p>If the receiver declares a signal when no desired signal is actually present, that is a <strong>false alarm</strong>.</p>
+<p>Now suppose we raise the threshold to</p>
+<p><span class="math display">\[
+T=12.
+\]</span></p>
+<p>Noise is less likely to trigger a detection, but a real signal weakened by noise, fading, or other channel effects may also fail to cross the threshold.</p>
+<p>If the signal is present but the receiver does not detect it, that is a <strong>missed detection</strong>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Threshold Choice</th>
+<th>Typical Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lower threshold</td>
+<td>Greater sensitivity, but more false alarms</td>
+</tr>
+<tr class="even">
+<td>Higher threshold</td>
+<td>Fewer false alarms, but greater risk of missed detections</td>
+</tr>
+</tbody>
+</table>
+<p>There is no threshold that is automatically correct for every receiver.</p>
+<p>Practical systems choose thresholds using the noise environment, expected signal strength, desired probability of detection, acceptable false-alarm probability, and the cost of making the wrong decision.</p>
+<p>A full statistical treatment belongs to detection theory. For now, the key relationship is enough:</p>
+<blockquote class="blockquote">
+<p><strong>Correlation or matched filtering creates a detection statistic. The threshold turns that statistic into a decision.</strong></p>
+</blockquote>
+</section>
+<section id="complex-sdr-signals" class="level2">
+<h2 class="anchored" data-anchor-id="complex-sdr-signals">11.11 Complex SDR Signals</h2>
+<p>The experiments in this chapter deliberately use real-valued () sequences so that the underlying idea remains easy to see.</p>
+<p>SDR systems often work with complex I/Q samples.</p>
+<p>For a complex known waveform, simply reversing the samples is not enough. We also take the complex conjugate:</p>
+<p><span class="math display">\[
+h[n]=p^*[N-1-n].
+\]</span></p>
+<p>The intuition remains the same. The receiver asks how strongly the current part of the received complex signal matches the complex waveform it expects.</p>
+<p>The conjugation ensures that the complex phases combine correctly during the comparison.</p>
+<p>This is why complex signals, I/Q representation, correlation, and matched filtering fit together naturally in SDR.</p>
+<p>It is also worth keeping one distinction clear. In these experiments, the matched-filter output is real because the known sequence and received test sequence are real. In a general complex receiver, the matched-filter output can be complex, and a detector may work with its magnitude or magnitude squared rather than comparing the raw complex value directly with a real threshold.</p>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">11.12 GNU Radio Toolbox</h2>
+<p>Several familiar GNU Radio blocks take on new roles in this chapter.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Vector Source</td>
+<td>Generates known sample sequences and places the test pattern at controlled positions</td>
+</tr>
+<tr class="even">
+<td>Decimating FIR Filter</td>
+<td>Implements the correlator or matched filter with <code>Decimation = 1</code></td>
+</tr>
+<tr class="odd">
+<td>Noise Source</td>
+<td>Adds Gaussian noise to the received sequence</td>
+</tr>
+<tr class="even">
+<td>Add</td>
+<td>Forms (r[n]=s[n]+w[n])</td>
+</tr>
+<tr class="odd">
+<td>Stream to Vector</td>
+<td>Groups a fixed number of scalar samples into one vector for frame-based display</td>
+</tr>
+<tr class="even">
+<td>QT GUI Vector Sink</td>
+<td>Displays fixed sample indices for the received frame and detector outputs</td>
+</tr>
+<tr class="odd">
+<td>Add Const</td>
+<td>Subtracts the chosen threshold by adding a negative constant</td>
+</tr>
+<tr class="even">
+<td>Binary Slicer</td>
+<td>Converts the sign of the threshold-shifted value into a binary decision</td>
+</tr>
+<tr class="odd">
+<td>Char to Float</td>
+<td>Converts the binary byte/char stream into floating-point values for display</td>
+</tr>
+</tbody>
+</table>
+<p>The Vector Source and FIR filter are especially important conceptually. We know exactly what samples enter the experiment, and the FIR taps let us turn convolution into correlation or matched filtering.</p>
+<p>For noisy experiments, the distinction between signal processing and display processing also matters. Stream to Vector and QT GUI Vector Sink make the frame easier to inspect, but they do not create the correlation peak. The peak is produced by the FIR operation itself.</p>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">11.13 Explore Further</h2>
+<p>The experiments become more useful when we deliberately change one thing at a time and predict the result before running the flowgraph.</p>
+<ol type="1">
+<li><p>Move the four-sample pattern to a new location. Predict the new peak position using (n_{}=n_0+N-1).</p></li>
+<li><p>Change one or two signs in the received pattern while keeping the correlator taps unchanged. Predict how the intended-match correlation value should change.</p></li>
+<li><p>Increase the Gaussian noise amplitude. Observe how both the desired peak and the off-peak fluctuations change.</p></li>
+<li><p>Replace the 16-sample pattern with another known () sequence. Reverse the new sequence for the FIR taps and verify the new full-alignment peak.</p></li>
+<li><p>Change the threshold from 8 to 4 and then to 12. Compare the number of detections and consider the false-alarm versus missed-detection trade-off.</p></li>
+<li><p>Use a non-zero Noise Source seed and repeat the experiment. The same seed should reproduce the same noise sequence, which makes controlled comparisons easier.</p></li>
+<li><p>Deliberately use the unreversed pattern as the FIR taps. Compare the result with the correctly reversed matched sequence and identify how the useful peak changes.</p></li>
+</ol>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">11.14 What We Learned</h2>
+<p>We began with a simple question: how can a receiver find a known waveform inside received samples?</p>
+<p>Correlation gave us a sliding similarity measurement.</p>
+<p>For the four-sample pattern</p>
+<p><span class="math display">\[
+(1,\;1,\;-1,\;1),
+\]</span></p>
+<p>a perfect match produced</p>
+<p><span class="math display">\[
+R_{\max}=4.
+\]</span></p>
+<p>Moving the pattern moved the correlation peak by the same amount. Changing one sample reduced the intended-match response.</p>
+<p>When Gaussian noise was added, the received waveform became harder to recognise directly, but the correlation output could still show a useful peak near the correct location.</p>
+<p>Increasing the known pattern from 4 samples to 16 gave the receiver more coherent evidence to accumulate. In the noise-free case, the full match would produce</p>
+<p><span class="math display">\[
+R_{\max}=16.
+\]</span></p>
+<p>For a real known waveform, correlation can be implemented using an FIR filter whose taps are the reversed waveform.</p>
+<p>For a general complex waveform, the matched-filter taps are</p>
+<p><span class="math display">\[
+h[n]=p^*[N-1-n].
+\]</span></p>
+<p>A correctly matched filter produces a much stronger useful response than a deliberately mismatched filter.</p>
+<p>Finally, a threshold converts the matched-filter output into a detection decision.</p>
+<p>The full receiver idea is therefore:</p>
+<p><code>Received Samples → Correlation / Matched Filter → Detection Statistic → Threshold → Detection Decision</code></p>
+<p>The most important lesson is not the particular threshold or pattern used in these experiments.</p>
+<p>It is the idea that prior knowledge of a waveform can be turned into a practical signal-processing operation that helps the receiver find that waveform in noisy data.</p>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">11.15 Connecting to the Next Chapter</h2>
+<p>So far, the known patterns in this chapter have been abstract baseband sample sequences.</p>
+<p>We have deliberately avoided asking how information is placed onto a carrier for transmission.</p>
+<p>That is the next major step.</p>
+<p>In Chapter 12, <strong>Why Modulation Exists</strong>, we will ask why practical radio systems move information away from its original low-frequency form and place it onto a carrier.</p>
+<p>That will take us from baseband DSP toward analog communication and modulation.</p>
+<p>Correlation and matched filtering will return later. Once a receiver has tuned, sampled, and demodulated a signal, it still needs to find timing, synchronization sequences, packet boundaries, symbols, pulses, and other known structures.</p>
+<p>The central idea from this chapter will remain useful throughout the rest of the book:</p>
+<blockquote class="blockquote">
+<p><strong>Knowing what waveform to look for can make a weak or delayed signal much easier to find.</strong></p>
+</blockquote>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/10-impulse-response-and-convolution.html" class="pagination-link" aria-label="Chapter 10: Impulse Response and Convolution">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/12-modulation.html" class="pagination-link" aria-label="Chapter 12: Why Modulation Exists">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/11-correlation-matched-filtering.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

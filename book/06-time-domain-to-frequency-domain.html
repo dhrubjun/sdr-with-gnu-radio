@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Chapter 6: From Time Domain to Frequency Domain – SDR with GNU Radio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/07-noise-and-snr.html" rel="next">
+<link href="../book/05-i-q-signals.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-10d9e83853970fb83a751b0eb6abfe31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3140716a2825ea2766a4065f2e924fc5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">SDR with GNU Radio</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/dhrubjun/sdr-with-gnu-radio" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I: Learning to Think in Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-what-is-software-defined-radio.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-sampling-and-aliasing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-complex-numbers.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 4: Complex Numbers for SDR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-i-q-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 5: I and Q Signals</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II: Seeing What Is Inside a Signal</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-time-domain-to-frequency-domain.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-noise-and-snr.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III: Moving and Shaping Signals</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-mixture-and-frequency-translation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 8: Mixing and Frequency Translation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-filters-and-channel-selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 9: Filters and Channel Selection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-impulse-response-and-convolution.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 10: Impulse Response and Convolution</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11-correlation-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 11: Correlation, Matched Filtering and Signal Detection</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV: Analog Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 12: Why Modulation Exists</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-amplitude-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V: From Bits to Waveforms</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-bits-symbols.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-linear-modulation-and-PAM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 16: Linear Modulation and PAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-bpsk-qpsk-qam.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 17: BPSK, QPSK and QAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-pulse-shaping-and-matched-filtering.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 18: Pulse Shaping and Matched Filtering</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI: The Wireless Channel</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-wireless-channel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 19: The Wireless Channel</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-channel-equalization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 20: Channel Equalization</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VII: Teaching the Receiver Where to Look</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-PLL-and-carrier-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 21: PLL and Carrier Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-symbol-timing-synchronization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 22: Symbol Timing Synchronization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-frame-synchronization-and-packet-detection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 23: Frame Synchronization and Packet Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-building-complete-receiver.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 24: Building a Complete Single-Carrier Digital Receiver</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VIII: OFDM and Multicarrier Communication</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-OFDM.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 25: Why OFDM?</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#one-signal-two-ways-of-looking-at-it" id="toc-one-signal-two-ways-of-looking-at-it" class="nav-link active" data-scroll-target="#one-signal-two-ways-of-looking-at-it">6.1 One Signal, Two Ways of Looking at It</a></li>
+  <li><a href="#experiment-1-three-simple-tones-one-complicated-waveform" id="toc-experiment-1-three-simple-tones-one-complicated-waveform" class="nav-link" data-scroll-target="#experiment-1-three-simple-tones-one-complicated-waveform">6.2 Experiment 1: Three Simple Tones, One Complicated Waveform</a></li>
+  <li><a href="#what-is-the-fourier-transform-doing" id="toc-what-is-the-fourier-transform-doing" class="nav-link" data-scroll-target="#what-is-the-fourier-transform-doing">6.3 What Is the Fourier Transform Doing?</a></li>
+  <li><a href="#from-the-fourier-transform-to-the-dft" id="toc-from-the-fourier-transform-to-the-dft" class="nav-link" data-scroll-target="#from-the-fourier-transform-to-the-dft">6.4 From the Fourier Transform to the DFT</a>
+  <ul class="collapse">
+  <li><a href="#a-practical-warning-about-magnitude" id="toc-a-practical-warning-about-magnitude" class="nav-link" data-scroll-target="#a-practical-warning-about-magnitude">A Practical Warning About Magnitude</a></li>
+  </ul></li>
+  <li><a href="#dft-and-fft-the-same-transform-different-computation" id="toc-dft-and-fft-the-same-transform-different-computation" class="nav-link" data-scroll-target="#dft-and-fft-the-same-transform-different-computation">6.5 DFT and FFT: The Same Transform, Different Computation</a></li>
+  <li><a href="#looking-inside-a-radix-2-fft" id="toc-looking-inside-a-radix-2-fft" class="nav-link" data-scroll-target="#looking-inside-a-radix-2-fft">6.6 Looking Inside a Radix-2 FFT</a>
+  <ul class="collapse">
+  <li><a href="#even-and-odd-decomposition" id="toc-even-and-odd-decomposition" class="nav-link" data-scroll-target="#even-and-odd-decomposition">Even and Odd Decomposition</a></li>
+  <li><a href="#twiddle-factors" id="toc-twiddle-factors" class="nav-link" data-scroll-target="#twiddle-factors">Twiddle Factors</a></li>
+  <li><a href="#the-butterfly" id="toc-the-butterfly" class="nav-link" data-scroll-target="#the-butterfly">The Butterfly</a></li>
+  <li><a href="#an-8-point-example" id="toc-an-8-point-example" class="nav-link" data-scroll-target="#an-8-point-example">An 8-Point Example</a></li>
+  </ul></li>
+  <li><a href="#fft-bins-and-observation-time" id="toc-fft-bins-and-observation-time" class="nav-link" data-scroll-target="#fft-bins-and-observation-time">6.7 FFT Bins and Observation Time</a>
+  <ul class="collapse">
+  <li><a href="#bin-spacing-is-not-the-whole-story" id="toc-bin-spacing-is-not-the-whole-story" class="nav-link" data-scroll-target="#bin-spacing-is-not-the-whole-story">Bin Spacing Is Not the Whole Story</a></li>
+  </ul></li>
+  <li><a href="#experiment-2-building-the-fft-chain-explicitly" id="toc-experiment-2-building-the-fft-chain-explicitly" class="nav-link" data-scroll-target="#experiment-2-building-the-fft-chain-explicitly">6.8 Experiment 2: Building the FFT Chain Explicitly</a>
+  <ul class="collapse">
+  <li><a href="#stream-to-vector" id="toc-stream-to-vector" class="nav-link" data-scroll-target="#stream-to-vector">Stream to Vector</a></li>
+  <li><a href="#fft-configuration" id="toc-fft-configuration" class="nav-link" data-scroll-target="#fft-configuration">FFT Configuration</a></li>
+  <li><a href="#complex-to-mag²" id="toc-complex-to-mag²" class="nav-link" data-scroll-target="#complex-to-mag²">Complex to Mag²</a></li>
+  <li><a href="#real-1-khz-cosine" id="toc-real-1-khz-cosine" class="nav-link" data-scroll-target="#real-1-khz-cosine">Real 1 kHz Cosine</a></li>
+  <li><a href="#complex-1-khz-tone" id="toc-complex-1-khz-tone" class="nav-link" data-scroll-target="#complex-1-khz-tone">Complex 1 kHz Tone</a></li>
+  </ul></li>
+  <li><a href="#experiment-3-what-changes-when-we-increase-fft-size" id="toc-experiment-3-what-changes-when-we-increase-fft-size" class="nav-link" data-scroll-target="#experiment-3-what-changes-when-we-increase-fft-size">6.9 Experiment 3: What Changes When We Increase FFT Size?</a>
+  <ul class="collapse">
+  <li><a href="#fft-size-32" id="toc-fft-size-32" class="nav-link" data-scroll-target="#fft-size-32">FFT Size 32</a></li>
+  <li><a href="#fft-size-256" id="toc-fft-size-256" class="nav-link" data-scroll-target="#fft-size-256">FFT Size 256</a></li>
+  <li><a href="#fft-size-2048" id="toc-fft-size-2048" class="nav-link" data-scroll-target="#fft-size-2048">FFT Size 2048</a></li>
+  </ul></li>
+  <li><a href="#zero-padding-frequency-span-and-db" id="toc-zero-padding-frequency-span-and-db" class="nav-link" data-scroll-target="#zero-padding-frequency-span-and-db">6.10 Zero-Padding, Frequency Span and dB</a>
+  <ul class="collapse">
+  <li><a href="#zero-padding" id="toc-zero-padding" class="nav-link" data-scroll-target="#zero-padding">Zero-Padding</a></li>
+  <li><a href="#frequency-span" id="toc-frequency-span" class="nav-link" data-scroll-target="#frequency-span">Frequency Span</a></li>
+  <li><a href="#why-spectrum-displays-use-db" id="toc-why-spectrum-displays-use-db" class="nav-link" data-scroll-target="#why-spectrum-displays-use-db">Why Spectrum Displays Use dB</a></li>
+  </ul></li>
+  <li><a href="#experiment-4-spectral-leakage" id="toc-experiment-4-spectral-leakage" class="nav-link" data-scroll-target="#experiment-4-spectral-leakage">6.11 Experiment 4: Spectral Leakage</a>
+  <ul class="collapse">
+  <li><a href="#bin-centred-tone" id="toc-bin-centred-tone" class="nav-link" data-scroll-target="#bin-centred-tone">Bin-Centred Tone</a></li>
+  <li><a href="#move-the-tone-off-the-bin" id="toc-move-the-tone-off-the-bin" class="nav-link" data-scroll-target="#move-the-tone-off-the-bin">Move the Tone Off the Bin</a></li>
+  <li><a href="#why-leakage-appears" id="toc-why-leakage-appears" class="nav-link" data-scroll-target="#why-leakage-appears">Why Leakage Appears</a></li>
+  </ul></li>
+  <li><a href="#experiment-5-window-functions" id="toc-experiment-5-window-functions" class="nav-link" data-scroll-target="#experiment-5-window-functions">6.12 Experiment 5: Window Functions</a>
+  <ul class="collapse">
+  <li><a href="#rectangular" id="toc-rectangular" class="nav-link" data-scroll-target="#rectangular">Rectangular</a></li>
+  <li><a href="#hann" id="toc-hann" class="nav-link" data-scroll-target="#hann">Hann</a></li>
+  <li><a href="#hamming" id="toc-hamming" class="nav-link" data-scroll-target="#hamming">Hamming</a></li>
+  <li><a href="#blackman-harris" id="toc-blackman-harris" class="nav-link" data-scroll-target="#blackman-harris">Blackman-Harris</a></li>
+  <li><a href="#kaiser" id="toc-kaiser" class="nav-link" data-scroll-target="#kaiser">Kaiser</a></li>
+  <li><a href="#flat-top" id="toc-flat-top" class="nav-link" data-scroll-target="#flat-top">Flat-Top</a></li>
+  </ul></li>
+  <li><a href="#averaging-and-the-waterfall" id="toc-averaging-and-the-waterfall" class="nav-link" data-scroll-target="#averaging-and-the-waterfall">6.13 Averaging and the Waterfall</a>
+  <ul class="collapse">
+  <li><a href="#fft-averaging" id="toc-fft-averaging" class="nav-link" data-scroll-target="#fft-averaging">FFT Averaging</a></li>
+  <li><a href="#experiment-6-watching-frequency-change-over-time" id="toc-experiment-6-watching-frequency-change-over-time" class="nav-link" data-scroll-target="#experiment-6-watching-frequency-change-over-time">Experiment 6: Watching Frequency Change Over Time</a></li>
+  </ul></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">6.14 GNU Radio Toolbox</a></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">6.15 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">6.16 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">6.17 Connecting to the Next Chapter</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/06-time-domain-to-frequency-domain.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html">Part II: Seeing What Is Inside a Signal</a></li><li class="breadcrumb-item"><a href="../book/06-time-domain-to-frequency-domain.html"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Chapter 6: From Time Domain to Frequency Domain</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapters, we used the frequency domain repeatedly. We watched mixer products move, compared positive and negative complex frequencies, and used the Frequency Sink to understand I/Q signals.</p>
+<p>Until now, however, we have mostly treated the spectrum as something GNU Radio displays for us.</p>
+<p>This chapter looks more closely at what that display means and how it is produced.</p>
+<p>The central question is simple:</p>
+<blockquote class="blockquote">
+<p>How can several frequencies exist inside one waveform?</p>
+</blockquote>
+<p>We will begin with an experiment, then connect what we observe to the Fourier transform, the DFT and the FFT. After looking briefly inside a radix-2 FFT, we will return to practical GNU Radio experiments involving FFT size, spectral leakage, window functions and the waterfall display.</p>
+<section id="one-signal-two-ways-of-looking-at-it" class="level2">
+<h2 class="anchored" data-anchor-id="one-signal-two-ways-of-looking-at-it">6.1 One Signal, Two Ways of Looking at It</h2>
+<p>A time-domain plot answers the question:</p>
+<blockquote class="blockquote">
+<p>How does the signal change with time?</p>
+</blockquote>
+<p>That view is useful for seeing oscillations, pulses, delays, clipping, transients and many other behaviours.</p>
+<p>The frequency domain asks a different question:</p>
+<blockquote class="blockquote">
+<p>What frequency components are present in the signal?</p>
+</blockquote>
+<p>These are not two different signals. They are two different descriptions of the same signal.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>View</th>
+<th>Main question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Time domain</td>
+<td>How does the signal change with time?</td>
+</tr>
+<tr class="even">
+<td>Frequency domain</td>
+<td>What frequency components are present?</td>
+</tr>
+</tbody>
+</table>
+<p>A waveform that looks complicated in time can sometimes have a very simple frequency-domain description. Our first experiment makes that visible.</p>
+</section>
+<section id="experiment-1-three-simple-tones-one-complicated-waveform" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-1-three-simple-tones-one-complicated-waveform">6.2 Experiment 1: Three Simple Tones, One Complicated Waveform</h2>
+<p>We begin with three cosine waves:</p>
+<p><span class="math display">\[
+x_1(t)=\cos(2\pi 1000t)
+\]</span></p>
+<p><span class="math display">\[
+x_2(t)=\cos(2\pi 3000t)
+\]</span></p>
+<p><span class="math display">\[
+x_3(t)=\cos(2\pi 6000t)
+\]</span></p>
+<p>We add them:</p>
+<p><span class="math display">\[
+x(t)=x_1(t)+x_2(t)+x_3(t)
+\]</span></p>
+<p>Before running the flowgraph, we can make a simple prediction. In the time domain, the sum should no longer look like a single sinusoid. In the frequency domain, we should still be able to identify the three frequencies that were deliberately placed in the signal.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-three-tone-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for generating and observing three tones</figcaption>
+</figure>
+</div>
+<p>The combined signal is sent to both a QT GUI Time Sink and a QT GUI Frequency Sink. Both displays therefore observe the same stream of samples.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-three-tone-time-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>The combined three-tone signal in the time and frequency domains</figcaption>
+</figure>
+</div>
+<p>The time-domain waveform looks much more complicated than any of the original cosines. The frequency-domain view, however, reveals the components immediately.</p>
+<p>Because the sources are real-valued cosines, each tone has a symmetric pair of complex-frequency components. A real cosine can be written as</p>
+<p><span class="math display">\[
+\cos(2\pi f_0t)=\frac{1}{2}e^{j2\pi f_0t}+\frac{1}{2}e^{-j2\pi f_0t}
+\]</span></p>
+<p>so a centred two-sided spectrum contains components at</p>
+<p><span class="math display">\[
++f_0 \qquad\text{and}\qquad -f_0
+\]</span></p>
+<p>for each cosine.</p>
+<p>Our three tones therefore appear at</p>
+<p><span class="math display">\[
+\pm1\text{ kHz},\qquad \pm3\text{ kHz},\qquad \pm6\text{ kHz}
+\]</span></p>
+<p>We already developed the positive- and negative-frequency interpretation in the previous chapters. Here, the important observation is simpler:</p>
+<blockquote class="blockquote">
+<p>A waveform that looks complicated in time can have a simple frequency-domain description.</p>
+</blockquote>
+</section>
+<section id="what-is-the-fourier-transform-doing" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-fourier-transform-doing">6.3 What Is the Fourier Transform Doing?</h2>
+<p>Suppose we are given an unknown signal and want to know whether it contains a particular frequency.</p>
+<p>One possible idea is to compare the signal against a sinusoidal reference at that frequency. If the frequency is strongly present, the comparison should reinforce. If it is absent, positive and negative contributions should tend to cancel.</p>
+<p>Fourier analysis formalises this idea across frequency.</p>
+<p>For a continuous-time signal, the Fourier transform is</p>
+<p><span class="math display">\[
+X(f)=\int_{-\infty}^{\infty}x(t)e^{-j2\pi ft}\,dt
+\]</span></p>
+<p>and the inverse Fourier transform is</p>
+<p><span class="math display">\[
+x(t)=\int_{-\infty}^{\infty}X(f)e^{j2\pi ft}\,df
+\]</span></p>
+<p>We do not need to derive these integrals here. The physical idea matters more at this stage.</p>
+<p>The time-domain function <span class="math inline">\(x(t)\)</span> tells us how the signal changes with time. The frequency-domain function <span class="math inline">\(X(f)\)</span> tells us how the signal is distributed across frequency.</p>
+<p>The Fourier transform does not create new frequencies. It provides another representation of the same signal.</p>
+</section>
+<section id="from-the-fourier-transform-to-the-dft" class="level2">
+<h2 class="anchored" data-anchor-id="from-the-fourier-transform-to-the-dft">6.4 From the Fourier Transform to the DFT</h2>
+<p>An SDR works with sampled data rather than an infinitely long continuous waveform.</p>
+<p>Suppose we take a finite block containing <span class="math inline">\(N\)</span> samples:</p>
+<p><span class="math display">\[
+x[0],x[1],x[2],\ldots,x[N-1]
+\]</span></p>
+<p>The Discrete Fourier Transform, or DFT, gives us a frequency-domain representation of that block:</p>
+<p><span class="math display">\[
+X[k]=\sum_{n=0}^{N-1}x[n]e^{-j2\pi kn/N},\qquad k=0,1,\ldots,N-1
+\]</span></p>
+<p>The symbols have straightforward roles:</p>
+<ul>
+<li><span class="math inline">\(n\)</span> is the sample index,</li>
+<li><span class="math inline">\(N\)</span> is the number of samples in the block,</li>
+<li><span class="math inline">\(k\)</span> is the frequency-bin index,</li>
+<li><span class="math inline">\(X[k]\)</span> is the complex result for bin <span class="math inline">\(k\)</span>.</li>
+</ul>
+<p>The complex exponential</p>
+<p><span class="math display">\[
+e^{-j2\pi kn/N}
+\]</span></p>
+<p>acts as a frequency-dependent reference. A useful intuition is that the DFT checks how strongly the finite block of samples matches each complex sinusoidal pattern represented by the available bins.</p>
+<p>When a component matches a bin well, the contributions add coherently. When it does not, the rotating complex contributions tend to cancel more strongly.</p>
+<p>The DFT output is generally complex. Its magnitude</p>
+<p><span class="math display">\[
+|X[k]|
+\]</span></p>
+<p>contains information about the strength of the component, while its angle</p>
+<p><span class="math display">\[
+\angle X[k]
+\]</span></p>
+<p>contains phase information.</p>
+<section id="a-practical-warning-about-magnitude" class="level3">
+<h3 class="anchored" data-anchor-id="a-practical-warning-about-magnitude">A Practical Warning About Magnitude</h3>
+<p>The raw value of <span class="math inline">\(|X[k]|\)</span> is not automatically the physical amplitude of a sinusoid, and <span class="math inline">\(|X[k]|^2\)</span> is not automatically calibrated RF power.</p>
+<p>The displayed level can depend on FFT length, normalisation, window choice, one-sided or two-sided scaling, and the way a particular display converts the FFT result into amplitude or power.</p>
+<p>For now, our main goals are to understand where spectral components appear, how their shapes change, and how they move when we change signal parameters.</p>
+</section>
+</section>
+<section id="dft-and-fft-the-same-transform-different-computation" class="level2">
+<h2 class="anchored" data-anchor-id="dft-and-fft-the-same-transform-different-computation">6.5 DFT and FFT: The Same Transform, Different Computation</h2>
+<p>The DFT is the mathematical operation we want to calculate.</p>
+<p>The FFT, or Fast Fourier Transform, is a family of efficient algorithms for calculating that same DFT.</p>
+<p>A direct evaluation of the DFT requires on the order of</p>
+<p><span class="math display">\[
+O(N^2)
+\]</span></p>
+<p>operations, while common FFT algorithms reduce the computational growth to roughly</p>
+<p><span class="math display">\[
+O(N\log_2N)
+\]</span></p>
+<p>for power-of-two transform lengths.</p>
+<p>This matters in SDR because FFTs are often calculated continuously on blocks containing hundreds or thousands of samples.</p>
+<p>The FFT gains its efficiency by exploiting the regular structure and symmetry of the complex exponential terms instead of recalculating closely related operations independently.</p>
+</section>
+<section id="looking-inside-a-radix-2-fft" class="level2">
+<h2 class="anchored" data-anchor-id="looking-inside-a-radix-2-fft">6.6 Looking Inside a Radix-2 FFT</h2>
+<p>We do not normally build FFT algorithms manually in GNU Radio. Still, looking briefly inside one helps us understand words such as <em>twiddle factor</em>, <em>butterfly</em> and <em>bit reversal</em> when they appear in DSP literature.</p>
+<p>A radix-2 FFT is convenient when</p>
+<p><span class="math display">\[
+N=2^m
+\]</span></p>
+<p>Examples include 8, 32, 1024 and 2048 points.</p>
+<p>One common organisation is the radix-2 Decimation-in-Time, or DIT, FFT.</p>
+<section id="even-and-odd-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="even-and-odd-decomposition">Even and Odd Decomposition</h3>
+<p>DIT begins by separating the input into even- and odd-indexed samples:</p>
+<p><span class="math display">\[
+x[0],x[2],x[4],\ldots
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+x[1],x[3],x[5],\ldots
+\]</span></p>
+<p>Define the basic twiddle factor as</p>
+<p><span class="math display">\[
+W_N=e^{-j2\pi/N}
+\]</span></p>
+<p>The <span class="math inline">\(N\)</span>-point DFT can then be written in terms of two <span class="math inline">\(N/2\)</span>-point DFTs:</p>
+<p><span class="math display">\[
+X[k]=E[k]+W_N^kO[k]
+\]</span></p>
+<p><span class="math display">\[
+X[k+N/2]=E[k]-W_N^kO[k]
+\]</span></p>
+<p>where <span class="math inline">\(E[k]\)</span> is the DFT of the even-indexed samples and <span class="math inline">\(O[k]\)</span> is the DFT of the odd-indexed samples.</p>
+<p>The same decomposition can be applied repeatedly to the smaller transforms.</p>
+</section>
+<section id="twiddle-factors" class="level3">
+<h3 class="anchored" data-anchor-id="twiddle-factors">Twiddle Factors</h3>
+<p>The quantity</p>
+<p><span class="math display">\[
+W_N^k=e^{-j2\pi k/N}
+\]</span></p>
+<p>is called a <strong>twiddle factor</strong>.</p>
+<p>Using Euler’s relation,</p>
+<p><span class="math display">\[
+e^{j\theta}=\cos\theta+j\sin\theta
+\]</span></p>
+<p>we can write</p>
+<p><span class="math display">\[
+W_N^k=\cos\left(\frac{2\pi k}{N}\right)-j\sin\left(\frac{2\pi k}{N}\right)
+\]</span></p>
+<p>A twiddle factor is therefore a unit-magnitude complex rotation. The same rotating-vector mathematics we used for I/Q signals appears again inside the FFT.</p>
+</section>
+<section id="the-butterfly" class="level3">
+<h3 class="anchored" data-anchor-id="the-butterfly">The Butterfly</h3>
+<p>The repeated computation used in a radix-2 FFT is called a <strong>butterfly</strong>.</p>
+<p>For inputs <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, first form</p>
+<p><span class="math display">\[
+T=BW_N^k
+\]</span></p>
+<p>then calculate</p>
+<p><span class="math display">\[
+Y_{\text{upper}}=A+T
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+Y_{\text{lower}}=A-T
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-butterfly.png" class="img-fluid figure-img"></p>
+<figcaption>Basic radix-2 FFT butterfly operation</figcaption>
+</figure>
+</div>
+<p>The butterfly therefore performs one complex rotation followed by an addition and a subtraction.</p>
+<p>For example, let</p>
+<p><span class="math display">\[
+A=3+j
+\]</span></p>
+<p><span class="math display">\[
+B=1-j
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+W_N^k=-j
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+T=(1-j)(-j)=-1-j
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+Y_{\text{upper}}=(3+j)+(-1-j)=2
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+Y_{\text{lower}}=(3+j)-(-1-j)=4+2j
+\]</span></p>
+</section>
+<section id="an-8-point-example" class="level3">
+<h3 class="anchored" data-anchor-id="an-8-point-example">An 8-Point Example</h3>
+<p>Because</p>
+<p><span class="math display">\[
+8=2^3
+\]</span></p>
+<p>an 8-point radix-2 FFT has three stages. In general,</p>
+<p><span class="math display">\[
+\text{Number of radix-2 stages}=\log_2N
+\]</span></p>
+<p>A common iterative DIT implementation arranges its inputs in bit-reversed order. For an 8-point FFT:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Normal index</th>
+<th style="text-align: center;">Binary</th>
+<th style="text-align: center;">Bits reversed</th>
+<th style="text-align: right;">New index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: center;">000</td>
+<td style="text-align: center;">000</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: center;">001</td>
+<td style="text-align: center;">100</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: center;">010</td>
+<td style="text-align: center;">010</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: center;">011</td>
+<td style="text-align: center;">110</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: center;">100</td>
+<td style="text-align: center;">001</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: center;">101</td>
+<td style="text-align: center;">101</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: center;">110</td>
+<td style="text-align: center;">011</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">7</td>
+<td style="text-align: center;">111</td>
+<td style="text-align: center;">111</td>
+<td style="text-align: right;">7</td>
+</tr>
+</tbody>
+</table>
+<p>The corresponding input order is</p>
+<p><span class="math display">\[
+x[0],x[4],x[2],x[6],x[1],x[5],x[3],x[7]
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-8point-dit-fft.png" class="img-fluid figure-img"></p>
+<figcaption>Eight-point radix-2 decimation-in-time FFT</figcaption>
+</figure>
+</div>
+<p>Each stage contains <span class="math inline">\(N/2=4\)</span> butterflies, so the complete 8-point transform contains</p>
+<p><span class="math display">\[
+\frac{N}{2}\log_2N=4\times3=12
+\]</span></p>
+<p>butterflies.</p>
+<p>Bit reversal is not a property of the DFT itself. It is an organisational feature of certain FFT implementations. Library FFT routines normally hide these details from us.</p>
+<p>Decimation in Frequency, or DIF, is another way of organising the radix-2 calculation. DIT and DIF both calculate the same DFT; they arrange the intermediate work differently.</p>
+<p>For the rest of this book, we do not need to construct butterflies manually. GNU Radio’s FFT block and numerical libraries handle these calculations for us.</p>
+</section>
+</section>
+<section id="fft-bins-and-observation-time" class="level2">
+<h2 class="anchored" data-anchor-id="fft-bins-and-observation-time">6.7 FFT Bins and Observation Time</h2>
+<p>An <span class="math inline">\(N\)</span>-point DFT produces <span class="math inline">\(N\)</span> discrete frequency samples, commonly called <strong>FFT bins</strong>.</p>
+<p>If the sample rate is <span class="math inline">\(f_s\)</span>, adjacent bins are separated by</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}
+\]</span></p>
+<p>For example, if</p>
+<p><span class="math display">\[
+f_s=32\,000\text{ samples/s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+N=1024
+\]</span></p>
+<p>then</p>
+<p><span class="math display">\[
+\Delta f=\frac{32000}{1024}=31.25\text{ Hz}
+\]</span></p>
+<p>For a fixed sample rate, increasing <span class="math inline">\(N\)</span> makes the frequency grid denser:</p>
+<p><span class="math display">\[
+N\uparrow\quad\Rightarrow\quad\Delta f\downarrow
+\]</span></p>
+<p>But a larger transform also uses a longer block of actual samples. The observation time is</p>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}
+\]</span></p>
+<p>This gives us a useful connection:</p>
+<p><span class="math display">\[
+\Delta f=\frac{1}{T_{\text{obs}}}
+\]</span></p>
+<p>when <span class="math inline">\(N\)</span> actual samples are used without zero-padding.</p>
+<section id="bin-spacing-is-not-the-whole-story" class="level3">
+<h3 class="anchored" data-anchor-id="bin-spacing-is-not-the-whole-story">Bin Spacing Is Not the Whole Story</h3>
+<p>It is tempting to call <span class="math inline">\(\Delta f\)</span> the frequency resolution. That is useful as an initial intuition, but practical resolution also depends on the observation interval and the window applied to the samples.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Mainly affected by</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bin spacing</td>
+<td><span class="math inline">\(f_s/N\)</span></td>
+<td>Distance between FFT frequency samples</td>
+</tr>
+<tr class="even">
+<td>Main-lobe width</td>
+<td>Observation length and window</td>
+<td>Width of a spectral component’s dominant lobe</td>
+</tr>
+<tr class="odd">
+<td>Sidelobe level</td>
+<td>Window</td>
+<td>Amount of spectral spreading away from the main lobe</td>
+</tr>
+</tbody>
+</table>
+<p>Two nearby tones do not automatically become clearly distinguishable merely because their separation is slightly larger than one FFT-bin interval.</p>
+</section>
+</section>
+<section id="experiment-2-building-the-fft-chain-explicitly" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-2-building-the-fft-chain-explicitly">6.8 Experiment 2: Building the FFT Chain Explicitly</h2>
+<p>Until now, the QT GUI Frequency Sink has performed the spectral analysis and display internally. In this experiment, we expose the main processing stages ourselves.</p>
+<p>The signal path is:</p>
+<p><strong>Signal Source → Throttle → Stream to Vector → FFT → Complex to Mag² → QT GUI Vector Sink</strong></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for explicit FFT processing</figcaption>
+</figure>
+</div>
+<section id="stream-to-vector" class="level3">
+<h3 class="anchored" data-anchor-id="stream-to-vector">Stream to Vector</h3>
+<p>The Signal Source produces a continuous stream:</p>
+<pre class="text"><code>x[0], x[1], x[2], x[3], ...</code></pre>
+<p>An <span class="math inline">\(N\)</span>-point FFT operates on a block containing <span class="math inline">\(N\)</span> samples. With</p>
+<p><span class="math display">\[
+N=1024
+\]</span></p>
+<p>Stream to Vector groups consecutive samples into vectors of length 1024 before passing them to the FFT block.</p>
+<p>This is an important practical point:</p>
+<blockquote class="blockquote">
+<p>An FFT repeatedly processes finite blocks of samples. It does not transform an infinitely long stream all at once.</p>
+</blockquote>
+</section>
+<section id="fft-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="fft-configuration">FFT Configuration</h3>
+<p>For this experiment, we use a sample rate of 32 kS/s and an FFT size of 1024. The vector display is configured to show a centred frequency axis from approximately <span class="math inline">\(-16\)</span> kHz to <span class="math inline">\(+16\)</span> kHz.</p>
+<p>The bin spacing is</p>
+<p><span class="math display">\[
+\Delta f=\frac{32000}{1024}=31.25\text{ Hz}
+\]</span></p>
+<p>GNU Radio’s FFT block also provides a shift option for placing DC at the centre of a complex spectrum. The display and FFT ordering must be configured consistently so that the vector indices map to the intended frequency axis.</p>
+</section>
+<section id="complex-to-mag²" class="level3">
+<h3 class="anchored" data-anchor-id="complex-to-mag²">Complex to Mag²</h3>
+<p>The FFT output is complex:</p>
+<p><span class="math display">\[
+X[k]
+\]</span></p>
+<p>Complex to Mag² calculates</p>
+<p><span class="math display">\[
+|X[k]|^2
+\]</span></p>
+<p>for each FFT bin. The QT GUI Vector Sink then plots those real values against the configured frequency positions.</p>
+<p>The vertical scale here is raw magnitude-squared. It is not calibrated power in watts or dBm, and it should not be compared directly with the relative dB scale of the QT GUI Frequency Sink.</p>
+</section>
+<section id="real-1-khz-cosine" class="level3">
+<h3 class="anchored" data-anchor-id="real-1-khz-cosine">Real 1 kHz Cosine</h3>
+<p>First use a real 1 kHz cosine:</p>
+<p><span class="math display">\[
+x(t)=\cos(2\pi1000t)
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-real-cosine.png" class="img-fluid figure-img"></p>
+<figcaption>Explicit FFT of a 1 kHz real cosine showing components at positive and negative frequencies</figcaption>
+</figure>
+</div>
+<p>The spectrum contains components at</p>
+<p><span class="math display">\[
+-1\text{ kHz}\qquad\text{and}\qquad+1\text{ kHz}
+\]</span></p>
+<p>as expected for a real cosine.</p>
+</section>
+<section id="complex-1-khz-tone" class="level3">
+<h3 class="anchored" data-anchor-id="complex-1-khz-tone">Complex 1 kHz Tone</h3>
+<p>Now use a complex tone</p>
+<p><span class="math display">\[
+x(t)=e^{j2\pi1000t}
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-explicit-fft-complex-tone.png" class="img-fluid figure-img"></p>
+<figcaption>Explicit FFT of a 1 kHz complex tone showing a single positive-frequency component</figcaption>
+</figure>
+</div>
+<p>Only the positive-frequency component remains:</p>
+<p><span class="math display">\[
++1\text{ kHz}
+\]</span></p>
+<p>The comparison is useful:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Input signal</th>
+<th>FFT result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Real 1 kHz cosine</td>
+<td>Components at <span class="math inline">\(-1\)</span> kHz and <span class="math inline">\(+1\)</span> kHz</td>
+</tr>
+<tr class="even">
+<td>Complex 1 kHz tone</td>
+<td>Component at <span class="math inline">\(+1\)</span> kHz</td>
+</tr>
+</tbody>
+</table>
+<p>This is the same positive- and negative-frequency behaviour we studied with I/Q signals, now observed using the FFT block directly.</p>
+<p>The experiment also connects three levels of understanding:</p>
+<p><strong>DFT equation → efficient FFT algorithm → GNU Radio FFT block</strong></p>
+<p>The DFT tells us what is being calculated. The FFT tells us how it can be calculated efficiently. The GNU Radio block gives us a practical implementation that we can place inside a signal-processing chain.</p>
+</section>
+</section>
+<section id="experiment-3-what-changes-when-we-increase-fft-size" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-3-what-changes-when-we-increase-fft-size">6.9 Experiment 3: What Changes When We Increase FFT Size?</h2>
+<p>We now generate two cosine tones at</p>
+<p><span class="math display">\[
+1.0\text{ kHz}\qquad\text{and}\qquad1.1\text{ kHz}
+\]</span></p>
+<p>Their separation is</p>
+<p><span class="math display">\[
+100\text{ Hz}
+\]</span></p>
+<p>and the sample rate remains</p>
+<p><span class="math display">\[
+f_s=32\text{ kS/s}
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for investigating FFT frequency resolution</figcaption>
+</figure>
+</div>
+<section id="fft-size-32" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-32">FFT Size 32</h3>
+<p>For</p>
+<p><span class="math display">\[
+N=32
+\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[
+\Delta f=\frac{32000}{32}=1000\text{ Hz}
+\]</span></p>
+<p>The two tones are only 100 Hz apart, so this transform provides very little frequency detail around them.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-32.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 32, the two closely spaced tones cannot be clearly separated</figcaption>
+</figure>
+</div>
+</section>
+<section id="fft-size-256" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-256">FFT Size 256</h3>
+<p>For</p>
+<p><span class="math display">\[
+N=256
+\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[
+\Delta f=\frac{32000}{256}=125\text{ Hz}
+\]</span></p>
+<p>The frequency grid is much denser, and the two components begin to become distinguishable, although their spectral shapes can still overlap.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-256.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 256, the two nearby tones begin to separate</figcaption>
+</figure>
+</div>
+</section>
+<section id="fft-size-2048" class="level3">
+<h3 class="anchored" data-anchor-id="fft-size-2048">FFT Size 2048</h3>
+<p>Finally,</p>
+<p><span class="math display">\[
+N=2048
+\]</span></p>
+<p>gives</p>
+<p><span class="math display">\[
+\Delta f=\frac{32000}{2048}=15.625\text{ Hz}
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-fft-resolution-2048.png" class="img-fluid figure-img"></p>
+<figcaption>With an FFT size of 2048, the 1.0 kHz and 1.1 kHz tones are much more clearly separated</figcaption>
+</figure>
+</div>
+<p>The two components are now much easier to distinguish.</p>
+<p>The extra detail did not appear for free. A larger FFT uses a longer block of actual samples:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">FFT size</th>
+<th style="text-align: right;">Bin spacing</th>
+<th style="text-align: right;">Observation time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">1 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">125 Hz</td>
+<td style="text-align: right;">8 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2048</td>
+<td style="text-align: right;">15.625 Hz</td>
+<td style="text-align: right;">64 ms</td>
+</tr>
+</tbody>
+</table>
+<p>This gives us an important engineering lesson:</p>
+<blockquote class="blockquote">
+<p>Finer frequency detail from actual samples generally requires a longer observation interval.</p>
+</blockquote>
+</section>
+</section>
+<section id="zero-padding-frequency-span-and-db" class="level2">
+<h2 class="anchored" data-anchor-id="zero-padding-frequency-span-and-db">6.10 Zero-Padding, Frequency Span and dB</h2>
+<p>Several practical ideas are easy to confuse with FFT size, so it is useful to separate them.</p>
+<section id="zero-padding" class="level3">
+<h3 class="anchored" data-anchor-id="zero-padding">Zero-Padding</h3>
+<p>Suppose we collect only 256 actual samples but append zeros before calculating a 2048-point FFT.</p>
+<p>The FFT now evaluates a denser frequency grid, so the plotted spectrum may look smoother. But the observation still contains only 256 measured samples.</p>
+<p>Zero-padding therefore does not create new information or provide the same resolving ability as observing 2048 actual samples.</p>
+<blockquote class="blockquote">
+<p>Zero-padding gives a denser frequency grid, not a longer observation of the signal.</p>
+</blockquote>
+</section>
+<section id="frequency-span" class="level3">
+<h3 class="anchored" data-anchor-id="frequency-span">Frequency Span</h3>
+<p>For a sampled complex-baseband signal with sample rate <span class="math inline">\(f_s\)</span>, a centred full spectrum commonly spans approximately</p>
+<p><span class="math display">\[
+-\frac{f_s}{2}\quad\text{to}\quad+\frac{f_s}{2}
+\]</span></p>
+<p>At 32 kS/s, this corresponds to approximately</p>
+<p><span class="math display">\[
+-16\text{ kHz}\quad\text{to}\quad+16\text{ kHz}
+\]</span></p>
+<p>This is the available sampled frequency span. It is not necessarily the occupied bandwidth of the signal.</p>
+<p>With actual SDR hardware, the centre of this display may correspond to a tuned RF frequency rather than 0 Hz. The FFT bins then represent offsets around that centre frequency.</p>
+</section>
+<section id="why-spectrum-displays-use-db" class="level3">
+<h3 class="anchored" data-anchor-id="why-spectrum-displays-use-db">Why Spectrum Displays Use dB</h3>
+<p>Spectral components can differ by large ratios. A logarithmic scale allows strong and weak components to appear on the same display.</p>
+<p>For an amplitude ratio,</p>
+<p><span class="math display">\[
+A_{\text{dB}}=20\log_{10}\left(\frac{A}{A_{\text{ref}}}\right)
+\]</span></p>
+<p>For a power ratio,</p>
+<p><span class="math display">\[
+P_{\text{dB}}=10\log_{10}\left(\frac{P}{P_{\text{ref}}}\right)
+\]</span></p>
+<p>Useful reference points include approximately <span class="math inline">\(-6\)</span> dB for half the amplitude and approximately <span class="math inline">\(-3\)</span> dB for half the power.</p>
+<p>A dB value in a GUI is not automatically a dBm measurement. dBm is an absolute power unit referenced to 1 mW. Unless the complete SDR measurement chain has been calibrated, the Frequency Sink should be treated as a relative spectral display rather than an absolute RF power meter.</p>
+</section>
+</section>
+<section id="experiment-4-spectral-leakage" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-4-spectral-leakage">6.11 Experiment 4: Spectral Leakage</h2>
+<p>A pure sinusoid might seem as though it should always produce one perfectly sharp FFT line. In practice, its energy can spread across neighbouring bins.</p>
+<p>This is <strong>spectral leakage</strong>.</p>
+<p>A tone lies exactly on an FFT bin when</p>
+<p><span class="math display">\[
+f_{\text{tone}}=k\frac{f_s}{N}=k\Delta f
+\]</span></p>
+<p>for some integer <span class="math inline">\(k\)</span>.</p>
+<section id="bin-centred-tone" class="level3">
+<h3 class="anchored" data-anchor-id="bin-centred-tone">Bin-Centred Tone</h3>
+<p>For the selected sample rate and FFT size, first choose a tone that satisfies the bin-centred condition.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-bin-centered-tone.png" class="img-fluid figure-img"></p>
+<figcaption>Spectrum of a bin-centred tone</figcaption>
+</figure>
+</div>
+<p>Its energy is concentrated strongly at the expected bin location or locations.</p>
+</section>
+<section id="move-the-tone-off-the-bin" class="level3">
+<h3 class="anchored" data-anchor-id="move-the-tone-off-the-bin">Move the Tone Off the Bin</h3>
+<p>Next choose a tone that does not fall exactly on an FFT-bin frequency. In the saved experiment, 1.1 kHz is the off-bin example for the chosen configuration.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-spectral-leakage-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph used to investigate spectral leakage</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-spectral-leakage-1100hz.png" class="img-fluid figure-img"></p>
+<figcaption>An off-bin 1.1 kHz tone spreads energy into neighbouring FFT bins</figcaption>
+</figure>
+</div>
+<p>The tone has not physically turned into many separate sinusoids. The spreading comes from the finite observation used by the FFT.</p>
+</section>
+<section id="why-leakage-appears" class="level3">
+<h3 class="anchored" data-anchor-id="why-leakage-appears">Why Leakage Appears</h3>
+<p>The FFT sees only a finite block of samples. One way to interpret the DFT is to imagine that finite block repeating periodically.</p>
+<p>If the beginning and end of the block join smoothly, the repeated sequence can remain continuous. If they do not match, the repeated sequence contains a discontinuity at each boundary.</p>
+<p>Those discontinuities require additional spectral components in the finite-block representation, so energy spreads into other bins.</p>
+<p>More formally, selecting a finite block is equivalent to multiplying the signal by a window in time. Multiplication in time corresponds to convolution in frequency, so the ideal signal spectrum is shaped by the spectrum of that window.</p>
+<p>This leads directly to window functions.</p>
+</section>
+</section>
+<section id="experiment-5-window-functions" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-5-window-functions">6.12 Experiment 5: Window Functions</h2>
+<p>Before the FFT, we can multiply the sample block by a window <span class="math inline">\(w[n]\)</span>:</p>
+<p><span class="math display">\[
+x_w[n]=x[n]w[n]
+\]</span></p>
+<p>The window changes the weighting of samples across the finite observation interval. Many useful windows taper the edges so that the block boundaries contribute less abruptly.</p>
+<p>The trade-off appears in the frequency domain. A window affects the main-lobe width, sidelobe levels, leakage behaviour and amplitude characteristics of the spectral estimate.</p>
+<p>There is no universally best window.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-window-comparison-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for comparing FFT window functions</figcaption>
+</figure>
+</div>
+<p>In this experiment, we keep the signal and FFT settings fixed and compare six windows:</p>
+<ol type="1">
+<li>Rectangular</li>
+<li>Hann</li>
+<li>Hamming</li>
+<li>Blackman-Harris</li>
+<li>Kaiser</li>
+<li>Flat-top</li>
+</ol>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-window-comparison.png" class="img-fluid figure-img"></p>
+<figcaption>Comparison of six FFT window functions</figcaption>
+</figure>
+</div>
+<section id="rectangular" class="level3">
+<h3 class="anchored" data-anchor-id="rectangular">Rectangular</h3>
+<p>A rectangular window gives equal weight to every sample. It provides a narrow main lobe, but its sidelobes are relatively high. Off-bin tones can therefore produce substantial leakage.</p>
+</section>
+<section id="hann" class="level3">
+<h3 class="anchored" data-anchor-id="hann">Hann</h3>
+<p>The Hann window tapers smoothly to zero at the edges. Its sidelobes are much lower than those of the rectangular window, at the cost of a wider main lobe.</p>
+</section>
+<section id="hamming" class="level3">
+<h3 class="anchored" data-anchor-id="hamming">Hamming</h3>
+<p>The Hamming window uses a different taper and produces a different compromise between main-lobe width and sidelobe behaviour.</p>
+</section>
+<section id="blackman-harris" class="level3">
+<h3 class="anchored" data-anchor-id="blackman-harris">Blackman-Harris</h3>
+<p>Blackman-Harris strongly suppresses sidelobes. This can help when a weak component lies near a much stronger one, although the main lobe becomes wider.</p>
+</section>
+<section id="kaiser" class="level3">
+<h3 class="anchored" data-anchor-id="kaiser">Kaiser</h3>
+<p>The Kaiser window is adjustable through a parameter commonly called <span class="math inline">\(\beta\)</span>. Increasing <span class="math inline">\(\beta\)</span> generally gives stronger sidelobe suppression while widening the main lobe.</p>
+</section>
+<section id="flat-top" class="level3">
+<h3 class="anchored" data-anchor-id="flat-top">Flat-Top</h3>
+<p>The flat-top window is designed to improve amplitude estimation near spectral peaks when the FFT scaling is handled appropriately. Its main lobe is broad, so it is usually not the first choice when the main objective is separating very closely spaced tones.</p>
+<p>The signal itself has not changed during this experiment. Only the analysis window changed, yet the displayed spectral shape changed significantly.</p>
+<p>That is an important lesson:</p>
+<blockquote class="blockquote">
+<p>The spectrum we observe depends on both the signal and the way we analyse the finite block of samples.</p>
+</blockquote>
+</section>
+</section>
+<section id="averaging-and-the-waterfall" class="level2">
+<h2 class="anchored" data-anchor-id="averaging-and-the-waterfall">6.13 Averaging and the Waterfall</h2>
+<p>Real received signals are rarely as clean and stationary as our generated tones.</p>
+<section id="fft-averaging" class="level3">
+<h3 class="anchored" data-anchor-id="fft-averaging">FFT Averaging</h3>
+<p>Successive spectral estimates can fluctuate, especially in the presence of noise. Averaging smooths those changes and can make persistent components easier to see.</p>
+<p>The trade-off is response time. More averaging produces a steadier display, but the display reacts more slowly when the signal changes.</p>
+</section>
+<section id="experiment-6-watching-frequency-change-over-time" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-6-watching-frequency-change-over-time">Experiment 6: Watching Frequency Change Over Time</h3>
+<p>A normal Frequency Sink shows the current spectrum well, but it does not preserve spectral history. Once a tone moves to another frequency, its old location disappears from the current trace.</p>
+<p>A waterfall solves that problem by stacking successive spectral estimates over time.</p>
+<p>In this experiment, a QT GUI Range controls the frequency of a cosine while both a Frequency Sink and a Waterfall Sink observe the same signal. Because the flowgraph is software-only, a Throttle block controls the processing rate.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-frequency-evolution-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for observing frequency evolution over time</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch06/ch06-frequency-evolution-waterfall.png" class="img-fluid figure-img"></p>
+<figcaption>Frequency evolution shown using the Waterfall and Frequency Sinks</figcaption>
+</figure>
+</div>
+<p>The Frequency Sink shows the current spectral estimate. The Waterfall Sink preserves earlier estimates, so frequency changes remain visible as a history.</p>
+<p>A useful way to think about the waterfall is that each horizontal spectral slice represents another FFT-based estimate, and those slices are stacked over time. Depending on the GUI orientation and settings, one axis represents frequency, another represents time, and colour represents spectral magnitude.</p>
+<p>This makes several patterns easy to recognise:</p>
+<ul>
+<li>a constant-frequency signal remains at one frequency,</li>
+<li>a drifting signal moves gradually,</li>
+<li>a chirp forms a sloped trace,</li>
+<li>a short transmission appears only for a limited duration,</li>
+<li>a wideband signal occupies a broader frequency region.</li>
+</ul>
+<p>The waterfall therefore adds something the ordinary Frequency Sink does not provide: <strong>spectral history</strong>.</p>
+</section>
+</section>
+<section id="gnu-radio-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">6.14 GNU Radio Toolbox</h2>
+<p>This chapter gives several familiar GNU Radio controls a clearer signal-processing meaning.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Block or setting</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>QT GUI Frequency Sink</td>
+<td>Calculates and displays a spectrum for convenient observation</td>
+</tr>
+<tr class="even">
+<td>Stream to Vector</td>
+<td>Groups a stream into fixed-length vectors for block processing</td>
+</tr>
+<tr class="odd">
+<td>FFT</td>
+<td>Calculates the DFT efficiently for each input vector</td>
+</tr>
+<tr class="even">
+<td>Complex to Mag²</td>
+<td>Converts complex FFT values to <span class="math inline">\(|X[k]|^2\)</span></td>
+</tr>
+<tr class="odd">
+<td>QT GUI Vector Sink</td>
+<td>Displays vector values directly against a configurable x-axis</td>
+</tr>
+<tr class="even">
+<td>QT GUI Waterfall Sink</td>
+<td>Displays successive spectra over time</td>
+</tr>
+<tr class="odd">
+<td>FFT Size</td>
+<td>Sets the number of samples used in each transform</td>
+</tr>
+<tr class="even">
+<td>Window Type</td>
+<td>Controls how the finite sample block is weighted</td>
+</tr>
+<tr class="odd">
+<td>Averaging</td>
+<td>Smooths successive spectral estimates</td>
+</tr>
+<tr class="even">
+<td>Center Frequency</td>
+<td>Sets the frequency represented at the centre of the display</td>
+</tr>
+<tr class="odd">
+<td>Bandwidth</td>
+<td>Maps the spectral bins onto the displayed frequency axis</td>
+</tr>
+</tbody>
+</table>
+<p>The QT GUI Frequency Sink is the most convenient choice when we simply want to inspect a spectrum. Using the FFT block directly is useful when the FFT results need to feed later processing such as detection, estimation, channelisation or classification.</p>
+</section>
+<section id="explore-further" class="level2">
+<h2 class="anchored" data-anchor-id="explore-further">6.15 Explore Further</h2>
+<p>The best way to reinforce these ideas is to change one parameter at a time and predict the result before running the flowgraph.</p>
+<ol type="1">
+<li><p>Use the two closely spaced tones and reduce the FFT size. Calculate <span class="math inline">\(\Delta f=f_s/N\)</span> first and predict how the display will change.</p></li>
+<li><p>Calculate the bin spacing, choose one tone at an exact bin frequency and another between bins, then compare their spectra.</p></li>
+<li><p>Keep the signal unchanged and switch among Rectangular, Hann, Hamming, Blackman-Harris, Kaiser and Flat-top windows. Compare both the main-lobe width and the sidelobe behaviour.</p></li>
+<li><p>Keep <span class="math inline">\(N\)</span> fixed and increase the sample rate. Predict what happens to both <span class="math inline">\(\Delta f\)</span> and <span class="math inline">\(T_{\text{obs}}\)</span>.</p></li>
+<li><p>Increase the Frequency Sink averaging, then change the signal quickly. Compare display smoothness with response speed.</p></li>
+<li><p>Return to the explicit FFT flowgraph. Compare a real 1 kHz cosine with a complex 1 kHz tone and observe what happens to the negative-frequency component.</p></li>
+<li><p>Move a tone between several frequencies while watching both the Frequency Sink and Waterfall Sink. Compare what the two displays retain.</p></li>
+</ol>
+</section>
+<section id="what-we-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-we-learned">6.16 What We Learned</h2>
+<p>We began with a waveform made from several simple tones and saw that the time and frequency domains provide different views of the same signal.</p>
+<p>Fourier analysis gives us the mathematical connection between those views. For sampled data, the DFT evaluates a finite block at discrete frequency bins, while the FFT provides an efficient way to calculate the same transform.</p>
+<p>Looking briefly inside a radix-2 FFT showed that its efficiency comes from repeatedly reusing smaller calculations. Twiddle factors are complex rotations, butterflies combine intermediate values, and implementation details such as bit reversal help organise the computation.</p>
+<p>In GNU Radio, the FFT becomes practical signal processing. Stream to Vector creates finite blocks, the FFT block transforms them, Complex to Mag² provides a magnitude-squared representation, and a Vector Sink can display the result directly.</p>
+<p>We also saw that FFT size affects both bin spacing and observation time:</p>
+<p><span class="math display">\[
+\Delta f=\frac{f_s}{N}
+\]</span></p>
+<p><span class="math display">\[
+T_{\text{obs}}=\frac{N}{f_s}
+\]</span></p>
+<p>A denser FFT grid does not automatically mean better physical resolution. Window shape and observation length also matter, and zero-padding cannot replace a longer observation of the actual signal.</p>
+<p>Spectral leakage appears because the FFT analyses a finite block. Window functions change the resulting main-lobe and sidelobe behaviour, so the choice of window should depend on what we are trying to measure.</p>
+<p>Finally, we distinguished two useful spectrum displays. The Frequency Sink shows the current spectrum, while the Waterfall Sink shows how that spectrum evolves with time.</p>
+<p>The frequency domain should now feel less like a graph that GNU Radio produces for us and more like a representation whose behaviour we can predict from the samples, FFT settings and analysis choices.</p>
+</section>
+<section id="connecting-to-the-next-chapter" class="level2">
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">6.17 Connecting to the Next Chapter</h2>
+<p>Our experiments so far have used signals that are almost unrealistically clean.</p>
+<p>Real receivers contain something else almost all the time: <strong>noise</strong>.</p>
+<p>Noise raises the spectral background, disturbs time-domain waveforms and makes weak signals harder to distinguish. Later, it will also spread constellation points and affect symbol decisions.</p>
+<p>The next question is therefore practical:</p>
+<blockquote class="blockquote">
+<p>How weak can a signal become before noise makes it difficult to detect or recover?</p>
+</blockquote>
+<p>In the next chapter, we will study noise, noise floor and signal-to-noise ratio, and observe how noise appears in both the time and frequency domains.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/05-i-q-signals.html" class="pagination-link" aria-label="Chapter 5: I and Q Signals">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 5: I and Q Signals</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/07-noise-and-snr.html" class="pagination-link" aria-label="Chapter 7: Noise, Noise Floor, and SNR">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 7: Noise, Noise Floor, and SNR</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>SDR with GNU Radio · Dhrubjun Nath Saikia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/06-time-domain-to-frequency-domain.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

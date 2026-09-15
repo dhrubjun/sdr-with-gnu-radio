@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Chapter 2: Understanding Signals – SDR with GNU Radio</title>
+<title>Chapter 14: Frequency Modulation – SDR with GNU Radio</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -36,8 +36,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../book/03-sampling-and-aliasing.html" rel="next">
-<link href="../book/01-what-is-software-defined-radio.html" rel="prev">
+<link href="../book/15-bits-symbols.html" rel="next">
+<link href="../book/13-amplitude-modulation.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -284,7 +284,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/02-understanding-signals.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/12-modulation.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/14-frequency-modulation.html"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -334,7 +334,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
+  <a href="../book/02-understanding-signals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 2: Understanding Signals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -427,7 +427,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
+  <a href="../book/14-frequency-modulation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a>
   </div>
 </li>
       </ul>
@@ -541,71 +541,52 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#a-signal-is-something-that-changes" id="toc-a-signal-is-something-that-changes" class="nav-link active" data-scroll-target="#a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</a></li>
-  <li><a href="#amplitude-how-large-is-the-signal" id="toc-amplitude-how-large-is-the-signal" class="nav-link" data-scroll-target="#amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</a>
+  <li><a href="#let-the-frequency-carry-the-message" id="toc-let-the-frequency-carry-the-message" class="nav-link active" data-scroll-target="#let-the-frequency-carry-the-message">14.1 Let the Frequency Carry the Message</a></li>
+  <li><a href="#experiment-14.1-seeing-frequency-modulation" id="toc-experiment-14.1-seeing-frequency-modulation" class="nav-link" data-scroll-target="#experiment-14.1-seeing-frequency-modulation">14.2 Experiment 14.1: Seeing Frequency Modulation</a>
   <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-comparing-amplitudes" id="toc-gnu-radio-experiment-comparing-amplitudes" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</a></li>
-  <li><a href="#a-small-gnu-radio-detail" id="toc-a-small-gnu-radio-detail" class="nav-link" data-scroll-target="#a-small-gnu-radio-detail">A Small GNU Radio Detail</a></li>
+  <li><a href="#start-with-zero-deviation" id="toc-start-with-zero-deviation" class="nav-link" data-scroll-target="#start-with-zero-deviation">Start with Zero Deviation</a></li>
   </ul></li>
-  <li><a href="#frequency-how-fast-does-the-signal-repeat" id="toc-frequency-how-fast-does-the-signal-repeat" class="nav-link" data-scroll-target="#frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</a></li>
-  <li><a href="#period-how-long-does-one-cycle-take" id="toc-period-how-long-does-one-cycle-take" class="nav-link" data-scroll-target="#period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</a>
+  <li><a href="#from-instantaneous-frequency-to-the-fm-equation" id="toc-from-instantaneous-frequency-to-the-fm-equation" class="nav-link" data-scroll-target="#from-instantaneous-frequency-to-the-fm-equation">14.3 From Instantaneous Frequency to the FM Equation</a></li>
+  <li><a href="#experiment-14.2-exploring-the-fm-sidebands" id="toc-experiment-14.2-exploring-the-fm-sidebands" class="nav-link" data-scroll-target="#experiment-14.2-exploring-the-fm-sidebands">14.4 Experiment 14.2: Exploring the FM Sidebands</a>
   <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-frequency-and-period" id="toc-gnu-radio-experiment-frequency-and-period" class="nav-link" data-scroll-target="#gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</a></li>
-  <li><a href="#gnu-radio-toolbox-number-of-points" id="toc-gnu-radio-toolbox-number-of-points" class="nav-link" data-scroll-target="#gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</a></li>
+  <li><a href="#change-deviation-while-keeping-the-message-frequency-fixed" id="toc-change-deviation-while-keeping-the-message-frequency-fixed" class="nav-link" data-scroll-target="#change-deviation-while-keeping-the-message-frequency-fixed">Change Deviation While Keeping the Message Frequency Fixed</a></li>
+  <li><a href="#change-message-frequency-while-keeping-deviation-fixed" id="toc-change-message-frequency-while-keeping-deviation-fixed" class="nav-link" data-scroll-target="#change-message-frequency-while-keeping-deviation-fixed">Change Message Frequency While Keeping Deviation Fixed</a></li>
   </ul></li>
-  <li><a href="#phase-where-is-the-signal-in-its-cycle" id="toc-phase-where-is-the-signal-in-its-cycle" class="nav-link" data-scroll-target="#phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</a>
+  <li><a href="#why-fm-produces-many-sidebands" id="toc-why-fm-produces-many-sidebands" class="nav-link" data-scroll-target="#why-fm-produces-many-sidebands">14.5 Why FM Produces Many Sidebands</a></li>
+  <li><a href="#experiment-14.3-narrowband-fm" id="toc-experiment-14.3-narrowband-fm" class="nav-link" data-scroll-target="#experiment-14.3-narrowband-fm">14.6 Experiment 14.3: Narrowband FM</a></li>
+  <li><a href="#estimating-fm-bandwidth" id="toc-estimating-fm-bandwidth" class="nav-link" data-scroll-target="#estimating-fm-bandwidth">14.7 Estimating FM Bandwidth</a></li>
+  <li><a href="#experiment-14.4-recovering-the-message" id="toc-experiment-14.4-recovering-the-message" class="nav-link" data-scroll-target="#experiment-14.4-recovering-the-message">14.8 Experiment 14.4: Recovering the Message</a>
   <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-comparing-phase" id="toc-gnu-radio-experiment-comparing-phase" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</a></li>
+  <li><a href="#scaling-the-demodulator-output-into-hertz" id="toc-scaling-the-demodulator-output-into-hertz" class="nav-link" data-scroll-target="#scaling-the-demodulator-output-into-hertz">Scaling the Demodulator Output into Hertz</a></li>
   </ul></li>
-  <li><a href="#dc-offset-moving-the-whole-signal-up-or-down" id="toc-dc-offset-moving-the-whole-signal-up-or-down" class="nav-link" data-scroll-target="#dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</a>
+  <li><a href="#where-the-information-lives" id="toc-where-the-information-lives" class="nav-link" data-scroll-target="#where-the-information-lives">14.9 Where the Information Lives</a></li>
+  <li><a href="#experiment-14.5-multiplicative-amplitude-variation" id="toc-experiment-14.5-multiplicative-amplitude-variation" class="nav-link" data-scroll-target="#experiment-14.5-multiplicative-amplitude-variation">14.10 Experiment 14.5: Multiplicative Amplitude Variation</a></li>
+  <li><a href="#experiment-14.6-additive-noise" id="toc-experiment-14.6-additive-noise" class="nav-link" data-scroll-target="#experiment-14.6-additive-noise">14.11 Experiment 14.6: Additive Noise</a>
   <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-comparing-offset" id="toc-gnu-radio-experiment-comparing-offset" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</a></li>
+  <li><a href="#clean-channel" id="toc-clean-channel" class="nav-link" data-scroll-target="#clean-channel">Clean Channel</a></li>
+  <li><a href="#moderate-noise" id="toc-moderate-noise" class="nav-link" data-scroll-target="#moderate-noise">Moderate Noise</a></li>
+  <li><a href="#stronger-noise" id="toc-stronger-noise" class="nav-link" data-scroll-target="#stronger-noise">Stronger Noise</a></li>
   </ul></li>
-  <li><a href="#waveform-shape" id="toc-waveform-shape" class="nav-link" data-scroll-target="#waveform-shape">2.7 Waveform Shape</a>
+  <li><a href="#fm-and-phase-modulation" id="toc-fm-and-phase-modulation" class="nav-link" data-scroll-target="#fm-and-phase-modulation">14.12 FM and Phase Modulation</a></li>
+  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">14.13 GNU Radio Toolbox</a>
   <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-comparing-waveforms" id="toc-gnu-radio-experiment-comparing-waveforms" class="nav-link" data-scroll-target="#gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</a></li>
-  <li><a href="#a-note-about-the-square-wave-settings" id="toc-a-note-about-the-square-wave-settings" class="nav-link" data-scroll-target="#a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</a></li>
+  <li><a href="#vco-complex" id="toc-vco-complex" class="nav-link" data-scroll-target="#vco-complex">VCO (complex)</a></li>
+  <li><a href="#quadrature-demod" id="toc-quadrature-demod" class="nav-link" data-scroll-target="#quadrature-demod">Quadrature Demod</a></li>
+  <li><a href="#complex-to-mag" id="toc-complex-to-mag" class="nav-link" data-scroll-target="#complex-to-mag">Complex to Mag</a></li>
   </ul></li>
-  <li><a href="#what-happens-when-signals-meet" id="toc-what-happens-when-signals-meet" class="nav-link" data-scroll-target="#what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</a></li>
-  <li><a href="#adding-two-signals" id="toc-adding-two-signals" class="nav-link" data-scroll-target="#adding-two-signals">2.9 Adding Two Signals</a>
-  <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-the-add-block" id="toc-gnu-radio-experiment-the-add-block" class="nav-link" data-scroll-target="#gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</a></li>
-  <li><a href="#gnu-radio-toolbox-branching-a-stream" id="toc-gnu-radio-toolbox-branching-a-stream" class="nav-link" data-scroll-target="#gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</a></li>
-  </ul></li>
-  <li><a href="#phase-changes-the-result-of-addition" id="toc-phase-changes-the-result-of-addition" class="nav-link" data-scroll-target="#phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</a>
-  <ul class="collapse">
-  <li><a href="#case-1-phase-difference-0" id="toc-case-1-phase-difference-0" class="nav-link" data-scroll-target="#case-1-phase-difference-0">Case 1: Phase Difference = 0°</a></li>
-  <li><a href="#case-2-phase-difference-90" id="toc-case-2-phase-difference-90" class="nav-link" data-scroll-target="#case-2-phase-difference-90">Case 2: Phase Difference = 90°</a></li>
-  <li><a href="#case-3-phase-difference-180" id="toc-case-3-phase-difference-180" class="nav-link" data-scroll-target="#case-3-phase-difference-180">Case 3: Phase Difference = 180°</a></li>
-  <li><a href="#the-bigger-lesson" id="toc-the-bigger-lesson" class="nav-link" data-scroll-target="#the-bigger-lesson">The Bigger Lesson</a></li>
-  </ul></li>
-  <li><a href="#beats-when-frequencies-are-almost-the-same" id="toc-beats-when-frequencies-are-almost-the-same" class="nav-link" data-scroll-target="#beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</a>
-  <ul class="collapse">
-  <li><a href="#gnu-radio-experiment-beats" id="toc-gnu-radio-experiment-beats" class="nav-link" data-scroll-target="#gnu-radio-experiment-beats">GNU Radio Experiment: Beats</a></li>
-  <li><a href="#beats-are-a-phase-story" id="toc-beats-are-a-phase-story" class="nav-link" data-scroll-target="#beats-are-a-phase-story">Beats Are a Phase Story</a></li>
-  </ul></li>
-  <li><a href="#gnu-radio-toolbox" id="toc-gnu-radio-toolbox" class="nav-link" data-scroll-target="#gnu-radio-toolbox">2.12 GNU Radio Toolbox</a>
-  <ul class="collapse">
-  <li><a href="#multiple-time-sink-inputs" id="toc-multiple-time-sink-inputs" class="nav-link" data-scroll-target="#multiple-time-sink-inputs">Multiple Time Sink Inputs</a></li>
-  <li><a href="#number-of-points" id="toc-number-of-points" class="nav-link" data-scroll-target="#number-of-points">Number of Points</a></li>
-  <li><a href="#variables-and-expressions" id="toc-variables-and-expressions" class="nav-link" data-scroll-target="#variables-and-expressions">Variables and Expressions</a></li>
-  <li><a href="#add" id="toc-add" class="nav-link" data-scroll-target="#add">Add</a></li>
-  <li><a href="#branching" id="toc-branching" class="nav-link" data-scroll-target="#branching">Branching</a></li>
-  <li><a href="#reusing-a-flowgraph" id="toc-reusing-a-flowgraph" class="nav-link" data-scroll-target="#reusing-a-flowgraph">Reusing a Flowgraph</a></li>
-  </ul></li>
-  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">2.13 Explore Further</a></li>
-  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">2.14 What We Learned</a></li>
-  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">2.15 Connecting to the Next Chapter</a></li>
+  <li><a href="#explore-further" id="toc-explore-further" class="nav-link" data-scroll-target="#explore-further">14.14 Explore Further</a></li>
+  <li><a href="#what-we-learned" id="toc-what-we-learned" class="nav-link" data-scroll-target="#what-we-learned">14.15 What We Learned</a></li>
+  <li><a href="#connecting-to-the-next-chapter" id="toc-connecting-to-the-next-chapter" class="nav-link" data-scroll-target="#connecting-to-the-next-chapter">14.16 Connecting to the Next Chapter</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/02-understanding-signals.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/14-frequency-modulation.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/01-what-is-software-defined-radio.html">Part I: Learning to Think in Signals</a></li><li class="breadcrumb-item"><a href="../book/02-understanding-signals.html"><span class="chapter-title">Chapter 2: Understanding Signals</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/12-modulation.html">Part IV: Analog Communication</a></li><li class="breadcrumb-item"><a href="../book/14-frequency-modulation.html"><span class="chapter-title">Chapter 14: Frequency Modulation</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Chapter 2: Understanding Signals</span></h1>
+<h1 class="title"><span class="chapter-title">Chapter 14: Frequency Modulation</span></h1>
 </div>
 
 
@@ -622,574 +603,917 @@ window.Quarto = {
 </header>
 
 
-<p>In Chapter 1, we generated our first signal in GNU Radio: a simple cosine wave. Even that basic waveform had several properties we had not yet explored properly, including amplitude, frequency, period, phase, offset and waveform shape.</p>
-<p>These ideas appear throughout signal processing and communication systems. Before going deeper into SDR, we need to develop an intuitive feel for what each one means and what changes when we adjust it.</p>
-<p>Rather than starting with definitions alone, we will change one property at a time and observe the result in GNU Radio. Later in the chapter, we will combine signals and see how amplitude, frequency and phase interact.</p>
-<section id="a-signal-is-something-that-changes" class="level2">
-<h2 class="anchored" data-anchor-id="a-signal-is-something-that-changes">2.1 A Signal Is Something That Changes</h2>
-<p>A microphone produces an electrical signal that changes as sound reaches it. A temperature sensor may produce a slowly varying voltage. A radio antenna responds to electromagnetic fields that can change extremely quickly.</p>
-<p>In signal processing, a <strong>signal</strong> represents a quantity that varies with time or with some other independent variable. In this book, time will usually be the variable of interest.</p>
-<p>For much of this chapter, we will use a cosine because it is simple, predictable and fundamental to communication systems.</p>
-<p>A cosine signal can be written as <span class="math display">\[
-x(t)=A\cos(2\pi ft+\phi)+C
-\]</span> Each quantity controls something we can observe directly:</p>
-<ul>
-<li><span class="math inline">\(A\)</span> controls the amplitude,</li>
-<li><span class="math inline">\(f\)</span> controls the frequency,</li>
-<li><span class="math inline">\(\phi\)</span> controls the phase,</li>
-<li><span class="math inline">\(C\)</span> controls the DC offset.</li>
-</ul>
-<p>Instead of trying to understand all of them at once, we will change them one at a time.</p>
-</section>
-<section id="amplitude-how-large-is-the-signal" class="level2">
-<h2 class="anchored" data-anchor-id="amplitude-how-large-is-the-signal">2.2 Amplitude: How Large Is the Signal?</h2>
-<p>A useful intuition for amplitude comes from audio. If the electrical signal driving a speaker becomes larger while everything else remains unchanged, the sound will generally become louder. The signal is larger, but it does not play faster simply because its amplitude increased.</p>
-<p>For a cosine centred around zero, <span class="math display">\[
-x(t)=A\cos(2\pi ft)
-\]</span> the value <span class="math inline">\(A\)</span> is the amplitude. It tells us how far the waveform moves away from its centre value.</p>
-<p>If <span class="math display">\[
-A=1
-\]</span> the signal reaches approximately +1 and -1. If <span class="math display">\[
-A=2
-\]</span> it reaches approximately +2 and -2.</p>
-<p>The waveform becomes taller, but its repetition rate does not change.</p>
-<section id="gnu-radio-experiment-comparing-amplitudes" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-amplitudes">GNU Radio Experiment: Comparing Amplitudes</h3>
-<p>We will generate three cosine waves with identical frequency, phase and offset, but different amplitudes.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Signal</th>
-<th style="text-align: right;">Frequency</th>
-<th style="text-align: right;">Amplitude</th>
-<th style="text-align: right;">Phase</th>
-<th style="text-align: right;">Offset</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Signal 1</td>
-<td style="text-align: right;">1 kHz</td>
-<td style="text-align: right;">0.5</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-</tr>
-<tr class="even">
-<td>Signal 2</td>
-<td style="text-align: right;">1 kHz</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-</tr>
-<tr class="odd">
-<td>Signal 3</td>
-<td style="text-align: right;">1 kHz</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-</tr>
-</tbody>
-</table>
-<p>The sample rate remains <span class="math display">\[
-f_s=32\,000\text{ samples/s}
-\]</span> The important experimental rule is simple:</p>
+<p>In Chapter 13, the message changed the amplitude of a carrier.</p>
+<p>But amplitude is only one property of a sinusoid. A carrier also has frequency and phase.</p>
+<p>That gives us another way to carry information: keep the carrier magnitude essentially constant and let the message change how quickly its phase rotates.</p>
+<p>That is <strong>frequency modulation</strong>, or <strong>FM</strong>.</p>
+<p>FM is familiar from broadcast radio, but the underlying idea is more general. It shows that information does not need to appear as a changing amplitude. It can be carried by the evolution of phase and instantaneous frequency.</p>
+<p>In this chapter, we will build that idea experimentally. We will watch the carrier speed up and slow down, examine the sidebands that appear, introduce frequency deviation and modulation index, estimate bandwidth, recover the message, and then disturb the signal in two different ways.</p>
+<p>The final pair of experiments answers an important question:</p>
 <blockquote class="blockquote">
-<p>Change one property at a time.</p>
+<p><strong>If FM does not carry information in amplitude, does that mean noise cannot affect it?</strong></p>
 </blockquote>
-<p>Because frequency, phase and offset remain fixed, any difference between the three waveforms comes from amplitude.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/amplitude-comparison-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph for comparing three signal amplitudes.</figcaption>
-</figure>
-</div>
-<p>The three signals are connected to the same QT GUI Time Sink by setting <strong>Number of Inputs</strong> to <code>3</code>.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/amplitude-comparison.png" class="img-fluid figure-img"></p>
-<figcaption>Three 1 kHz cosine signals with different amplitudes.</figcaption>
-</figure>
-</div>
-<p>The peaks and zero crossings occur at the same times, so the three signals are oscillating at the same rate. Only their vertical size changes.</p>
-<p>That vertical size is the amplitude.</p>
-</section>
-<section id="a-small-gnu-radio-detail" class="level3">
-<h3 class="anchored" data-anchor-id="a-small-gnu-radio-detail">A Small GNU Radio Detail</h3>
-<p>GNU Radio may display an amplitude of <code>0.5</code> as</p>
-<pre class="text"><code>500m</code></pre>
-<p>Here, <code>m</code> means <strong>milli</strong>, so <span class="math display">\[
-500m=500\times10^{-3}=0.5
-\]</span> GNU Radio frequently uses engineering prefixes such as <code>m</code>, <code>k</code> and <code>M</code>. We will see them often as the flowgraphs become more complicated.</p>
-</section>
-</section>
-<section id="frequency-how-fast-does-the-signal-repeat" class="level2">
-<h2 class="anchored" data-anchor-id="frequency-how-fast-does-the-signal-repeat">2.3 Frequency: How Fast Does the Signal Repeat?</h2>
-<p>Imagine two blinking lights. One flashes once every second, while the other flashes ten times every second. Both repeat, but one repeats much faster.</p>
-<p><strong>Frequency</strong> tells us how many complete cycles occur per second. Its unit is hertz (Hz).</p>
-<p>A frequency of <span class="math display">\[
-f=1\text{ Hz}
-\]</span> means one cycle per second, while <span class="math display">\[
-f=1000\text{ Hz}
-\]</span> means 1000 cycles per second. We can also write <span class="math display">\[
-1000\text{ Hz}=1\text{ kHz}
-\]</span> A higher frequency therefore means more cycles in the same amount of time.</p>
-</section>
-<section id="period-how-long-does-one-cycle-take" class="level2">
-<h2 class="anchored" data-anchor-id="period-how-long-does-one-cycle-take">2.4 Period: How Long Does One Cycle Take?</h2>
-<p>Frequency tells us how many cycles occur in one second. <strong>Period</strong> asks the complementary question: how long does one cycle take?</p>
-<p>The period is represented by <span class="math inline">\(T\)</span>, and frequency and period are related by <span class="math display">\[
-T=\frac{1}{f}
-\]</span> or equivalently <span class="math display">\[
-f=\frac{1}{T}
-\]</span> For a 1 kHz signal, <span class="math display">\[
-T=\frac{1}{1000}=0.001\text{ s}=1\text{ ms}
-\]</span> Each cycle therefore lasts 1 ms.</p>
-<section id="gnu-radio-experiment-frequency-and-period" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-frequency-and-period">GNU Radio Experiment: Frequency and Period</h3>
-<p>We can reuse the same three-signal flowgraph from the amplitude experiment. This time, all amplitudes remain at <code>1</code>, while only the frequencies change.</p>
+<section id="let-the-frequency-carry-the-message" class="level2">
+<h2 class="anchored" data-anchor-id="let-the-frequency-carry-the-message">14.1 Let the Frequency Carry the Message</h2>
+<p>Consider an unmodulated carrier:</p>
+<p><span class="math display">\[
+c(t)=A_c\cos(2\pi f_ct).
+\]</span></p>
+<p>Its amplitude is fixed at (A_c), and its frequency is fixed at (f_c).</p>
+<p>With FM, the message controls the <strong>instantaneous frequency</strong>.</p>
+<p>For a normalized message (m(t)), we can write</p>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\,m(t),
+\]</span></p>
+<p>where (f) is the peak frequency deviation.</p>
+<p>Suppose</p>
+<p><span class="math display">\[
+f_c=10\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\Delta f=2\text{ kHz}.
+\]</span></p>
+<p>If the message reaches (+1), the instantaneous frequency becomes</p>
+<p><span class="math display">\[
+f_i=12\text{ kHz}.
+\]</span></p>
+<p>If the message reaches (-1),</p>
+<p><span class="math display">\[
+f_i=8\text{ kHz}.
+\]</span></p>
+<p>At a message value of zero,</p>
+<p><span class="math display">\[
+f_i=10\text{ kHz}.
+\]</span></p>
+<p>The carrier therefore speeds up and slows down around its center frequency.</p>
+<p>For a sinusoidal message,</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi f_mt),
+\]</span></p>
+<p>the instantaneous frequency is</p>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\cos(2\pi f_mt).
+\]</span></p>
+<p>Three quantities will appear repeatedly:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Signal</th>
-<th style="text-align: right;">Frequency</th>
-<th style="text-align: right;">Amplitude</th>
+<th>Quantity</th>
+<th>Meaning</th>
+<th>What it mainly controls</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Signal 1</td>
+<td>(f_c)</td>
+<td>Carrier frequency</td>
+<td>Center of the FM spectrum</td>
+</tr>
+<tr class="even">
+<td>(f_m)</td>
+<td>Message frequency</td>
+<td>How quickly the deviation changes and the spacing of single-tone sidebands</td>
+</tr>
+<tr class="odd">
+<td>(f)</td>
+<td>Peak frequency deviation</td>
+<td>How far the instantaneous frequency moves from (f_c)</td>
+</tr>
+</tbody>
+</table>
+<p>Keeping these three roles separate makes the rest of the chapter much easier to follow.</p>
+</section>
+<section id="experiment-14.1-seeing-frequency-modulation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.1-seeing-frequency-modulation">14.2 Experiment 14.1: Seeing Frequency Modulation</h2>
+<p>The first experiment makes FM visible in both time and frequency.</p>
+<p>A sinusoidal message controls a complex VCO. Two QT GUI Range controls let us change the message frequency and frequency deviation while the flowgraph is running.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-fm-basics-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for exploring the basic behavior of frequency modulation</figcaption>
+</figure>
+</div>
+<p>Use:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency (f_c)</td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="odd">
+<td>Initial message frequency (f_m)</td>
+<td style="text-align: right;">500 Hz</td>
+</tr>
+<tr class="even">
+<td>Message amplitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>Initial frequency deviation (f)</td>
+<td style="text-align: right;">2 kHz</td>
+</tr>
+</tbody>
+</table>
+<p>The VCO control signal is arranged so that it represents</p>
+<p><span class="math display">\[
+u(t)=f_c+\Delta f\,m(t)
+\]</span></p>
+<p>in hertz.</p>
+<p>The complex VCO uses:</p>
+<pre class="text"><code>Sample Rate: 64k
+Sensitivity: 6.28319
+Amplitude: 1</code></pre>
+<p>GNU Radio defines VCO sensitivity in radians/s per input unit. Since</p>
+<p><span class="math display">\[
+2\pi\text{ rad/s}=1\text{ Hz},
+\]</span></p>
+<p>using</p>
+<p><span class="math display">\[
+\text{Sensitivity}=2\pi
+\]</span></p>
+<p>means a VCO input value of 10,000 produces a 10 kHz output frequency.</p>
+<section id="start-with-zero-deviation" class="level3">
+<h3 class="anchored" data-anchor-id="start-with-zero-deviation">Start with Zero Deviation</h3>
+<p>Set:</p>
+<pre class="text"><code>Frequency Deviation = 0 Hz
+Message Frequency   = 500 Hz
+Carrier Frequency   = 10 kHz</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-zero-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>FM experiment with zero frequency deviation</figcaption>
+</figure>
+</div>
+<p>The message is still present in the flowgraph, but it has no effect on the VCO because its contribution has been multiplied by zero.</p>
+<p>The output is simply an unmodulated 10 kHz complex carrier.</p>
+<p>Now increase the frequency deviation.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp1-combined-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>Effect of increasing frequency deviation on the FM waveform and spectrum</figcaption>
+</figure>
+</div>
+<p>The time-domain waveform begins to crowd together in some regions and spread apart in others.</p>
+<p>That is the visual signature we expect.</p>
+<p>Closely spaced cycles correspond to higher instantaneous frequency. Widely spaced cycles correspond to lower instantaneous frequency.</p>
+<p>The amplitude does not need to change. What changes is the <strong>rate of phase rotation</strong>.</p>
+</section>
+</section>
+<section id="from-instantaneous-frequency-to-the-fm-equation" class="level2">
+<h2 class="anchored" data-anchor-id="from-instantaneous-frequency-to-the-fm-equation">14.3 From Instantaneous Frequency to the FM Equation</h2>
+<p>Frequency and phase are directly related:</p>
+<p><span class="math display">\[
+f_i(t)=\frac{1}{2\pi}\frac{d\theta(t)}{dt}.
+\]</span></p>
+<p>So if the message controls instantaneous frequency, it also controls how phase accumulates.</p>
+<p>For a single-tone message,</p>
+<p><span class="math display">\[
+m(t)=\cos(2\pi f_mt),
+\]</span></p>
+<p>integrating the frequency deviation gives the familiar FM signal</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right),
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+\beta=\frac{\Delta f}{f_m}.
+\]</span></p>
+<p>The quantity () is the <strong>FM modulation index</strong>.</p>
+<p>Unlike conventional AM, the message-dependent term is not multiplying the carrier amplitude. It appears inside the phase.</p>
+<p>That is the mathematical reason FM behaves so differently from AM.</p>
+</section>
+<section id="experiment-14.2-exploring-the-fm-sidebands" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.2-exploring-the-fm-sidebands">14.4 Experiment 14.2: Exploring the FM Sidebands</h2>
+<p>The time-domain plot shows frequency changing with time. The Frequency Sink reveals another property of FM: a single-tone message can create many spectral components.</p>
+<p>We reuse the first flowgraph and change the two controls.</p>
+<section id="change-deviation-while-keeping-the-message-frequency-fixed" class="level3">
+<h3 class="anchored" data-anchor-id="change-deviation-while-keeping-the-message-frequency-fixed">Change Deviation While Keeping the Message Frequency Fixed</h3>
+<p>Keep</p>
+<p><span class="math display">\[
+f_m=500\text{ Hz}
+\]</span></p>
+<p>and increase (f).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp2-sidebands-vs-frequency-deviation.png" class="img-fluid figure-img"></p>
+<figcaption>FM sidebands as frequency deviation is increased while message frequency remains fixed</figcaption>
+</figure>
+</div>
+<p>With (f_m=500) Hz:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">(f)</th>
+<th style="text-align: right;">(f_m)</th>
+<th style="text-align: right;">(=f/f_m)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">500 Hz</td>
 <td style="text-align: right;">500 Hz</td>
 <td style="text-align: right;">1</td>
 </tr>
 <tr class="even">
-<td>Signal 2</td>
 <td style="text-align: right;">1000 Hz</td>
-<td style="text-align: right;">1</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="odd">
-<td>Signal 3</td>
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p>As the deviation grows, more sideband orders become significant and the practical spectrum spreads farther from the carrier.</p>
+<p>The spacing between neighbouring spectral lines remains 500 Hz because the message frequency has not changed.</p>
+</section>
+<section id="change-message-frequency-while-keeping-deviation-fixed" class="level3">
+<h3 class="anchored" data-anchor-id="change-message-frequency-while-keeping-deviation-fixed">Change Message Frequency While Keeping Deviation Fixed</h3>
+<p>Now keep</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>and change (f_m).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp2-sideband-spacing-vs-message-frequency.png" class="img-fluid figure-img"></p>
+<figcaption>FM sideband spacing as message frequency is changed while frequency deviation remains fixed</figcaption>
+</figure>
+</div>
+<p>For single-tone FM, adjacent spectral components are separated by</p>
+<p><span class="math display">\[
+f_m.
+\]</span></p>
+<p>At the same time, increasing (f_m) while holding (f) fixed reduces the modulation index:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">(f)</th>
+<th style="text-align: right;">(f_m)</th>
+<th style="text-align: right;">()</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">500 Hz</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2000 Hz</td>
+<td style="text-align: right;">1000 Hz</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000 Hz</td>
 <td style="text-align: right;">2000 Hz</td>
 <td style="text-align: right;">1</td>
 </tr>
 </tbody>
 </table>
-<p>Keep the phase and offset at zero.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/frequency-period-comparison.png" class="img-fluid figure-img"></p>
-<figcaption>Comparison of 500 Hz, 1 kHz, and 2 kHz cosine signals.</figcaption>
-</figure>
-</div>
-<p>Over a 4 ms interval:</p>
-<ul>
-<li>the 500 Hz signal completes 2 cycles,</li>
-<li>the 1 kHz signal completes 4 cycles,</li>
-<li>the 2 kHz signal completes 8 cycles.</li>
-</ul>
-<p>The corresponding periods are:</p>
+<p>So the two controls do different jobs.</p>
+<p>Increasing (f) at fixed (f_m) tends to make more sideband orders important.</p>
+<p>Changing (f_m) changes the sideband spacing and also changes () if the deviation is held fixed.</p>
+<p>Changing (f_c) simply moves the entire FM spectrum to another center frequency.</p>
+</section>
+</section>
+<section id="why-fm-produces-many-sidebands" class="level2">
+<h2 class="anchored" data-anchor-id="why-fm-produces-many-sidebands">14.5 Why FM Produces Many Sidebands</h2>
+<p>Single-tone conventional AM gave us only</p>
+<p><span class="math display">\[
+f_c-f_m,\qquad f_c,\qquad f_c+f_m.
+\]</span></p>
+<p>Single-tone FM can contain components at</p>
+<p><span class="math display">\[
+f_c\pm nf_m,\qquad n=0,1,2,3,\ldots
+\]</span></p>
+<p>The amplitudes are governed by <strong>Bessel functions of the first kind</strong>.</p>
+<p>For</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right),
+\]</span></p>
+<p>the carrier coefficient is (J_0()), the first sideband pair is associated with (J_1()), the second pair with (J_2()), and so on.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: right;">Frequency</th>
-<th style="text-align: right;">Period</th>
+<th>Spectral Component</th>
+<th>Relative Coefficient</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">500 Hz</td>
-<td style="text-align: right;">2 ms</td>
+<td>Carrier at (f_c)</td>
+<td>(J_0())</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">1000 Hz</td>
-<td style="text-align: right;">1 ms</td>
+<td>(f_cf_m)</td>
+<td>(J_1())</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">2000 Hz</td>
-<td style="text-align: right;">0.5 ms</td>
+<td>(f_c2f_m)</td>
+<td>(J_2())</td>
+</tr>
+<tr class="even">
+<td>(f_c3f_m)</td>
+<td>(J_3())</td>
+</tr>
+<tr class="odd">
+<td>Higher orders</td>
+<td>(J_n())</td>
 </tr>
 </tbody>
 </table>
-<p>When frequency doubles, the period is halved. That inverse relationship is exactly what <span class="math inline">\(T=1/f\)</span> describes.</p>
+<p>The signs of the Bessel coefficients also carry phase information, so it is safer to think of (J_n()) as the spectral coefficient rather than only as a positive amplitude.</p>
+<p>The practical lesson is simpler:</p>
+<blockquote class="blockquote">
+<p><strong>Changing () redistributes FM energy among the carrier and different sideband orders.</strong></p>
+</blockquote>
+<p>This explains why one spectral line may grow while another becomes weaker as the modulation index changes.</p>
+<p>At certain values of (),</p>
+<p><span class="math display">\[
+J_0(\beta)=0,
+\]</span></p>
+<p>so the spectral line at the carrier frequency disappears even though the FM waveform is still present.</p>
+<p>Ideal single-tone FM has infinitely many mathematical sidebands, but distant high-order terms eventually become very small. Engineering bandwidth therefore depends on the <strong>significant</strong> sidebands rather than on every mathematically nonzero term.</p>
 </section>
-<section id="gnu-radio-toolbox-number-of-points" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-number-of-points">GNU Radio Toolbox: Number of Points</h3>
-<p>This experiment also gives us a useful reason to look more closely at the QT GUI Time Sink.</p>
-<p>In Chapter 1, we used:</p>
-<pre class="text"><code>Number of Points = 1024
-Sample Rate = 32000</code></pre>
-<p>At a sample rate of 32,000 samples/s, 1024 displayed samples correspond to <span class="math display">\[
-\frac{1024}{32000}=0.032\text{ s}=32\text{ ms}
-\]</span> For the frequency comparison, 32 ms shows many cycles. If we want to examine only a few cycles, a shorter window is more useful.</p>
+<section id="experiment-14.3-narrowband-fm" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.3-narrowband-fm">14.6 Experiment 14.3: Narrowband FM</h2>
+<p>To see the other extreme, reduce the modulation index to</p>
+<p><span class="math display">\[
+\beta=0.1.
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp3-narrowband-fm-beta-0p1.png" class="img-fluid figure-img"></p>
+<figcaption>Narrowband FM spectrum for a modulation index of 0.1</figcaption>
+</figure>
+</div>
+<p>For</p>
+<p><span class="math display">\[
+\beta\ll1,
+\]</span></p>
+<p>the useful approximations are</p>
+<p><span class="math display">\[
+J_0(\beta)\approx1
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+J_1(\beta)\approx\frac{\beta}{2},
+\]</span></p>
+<p>while higher-order terms are very small.</p>
+<p>Most of the visible energy is therefore concentrated in the carrier and first sideband pair.</p>
+<p>This is the <strong>narrowband FM</strong> region.</p>
+<p>As () becomes larger, more sideband orders become important and we move toward <strong>wideband FM</strong>.</p>
+<p>There is no need to treat the names as a switch at one magical numerical value. The important behaviour is gradual: small () gives relatively few important sidebands, while larger () spreads the spectrum across more orders.</p>
+</section>
+<section id="estimating-fm-bandwidth" class="level2">
+<h2 class="anchored" data-anchor-id="estimating-fm-bandwidth">14.7 Estimating FM Bandwidth</h2>
+<p>FM creates an awkward theoretical result: ideal single-tone FM has infinitely many sidebands.</p>
+<p>A useful engineering estimate is <strong>Carson’s rule</strong>.</p>
+<p>For a single-tone message,</p>
+<p><span class="math display">\[
+B\approx2(\Delta f+f_m).
+\]</span></p>
+<p>For a general message, (f_m) is replaced by the highest significant message frequency (f_{m,}):</p>
+<p><span class="math display">\[
+B\approx2(\Delta f+f_{m,\max}).
+\]</span></p>
+<p>Carson’s rule is an approximation. It does not say that all spectrum outside this range is exactly zero.</p>
+<p>Using the values from our experiment,</p>
+<p><span class="math display">\[
+\Delta f=2000\text{ Hz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_m=500\text{ Hz},
+\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[
+\beta=\frac{2000}{500}=4.
+\]</span></p>
+<p>Carson’s rule gives</p>
+<p><span class="math display">\[
+B\approx2(2000+500)=5000\text{ Hz}.
+\]</span></p>
+<p>So the useful occupied bandwidth is roughly 5 kHz for this single-tone case.</p>
+<p>This gives us an important engineering trade-off: larger deviation can improve some FM performance characteristics, but it also consumes more spectrum.</p>
+</section>
+<section id="experiment-14.4-recovering-the-message" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.4-recovering-the-message">14.8 Experiment 14.4: Recovering the Message</h2>
+<p>At the transmitter, the message moved the instantaneous frequency around the 10 kHz center frequency.</p>
+<p>At the receiver, we need to estimate that instantaneous frequency and convert the deviation back into the message.</p>
+<p>Add a <strong>Quadrature Demod</strong> block.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp4-fm-demodulation-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for FM demodulation and message recovery</figcaption>
+</figure>
+</div>
+<p>Use:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
+</tr>
+<tr class="even">
+<td>Carrier frequency</td>
+<td style="text-align: right;">10 kHz</td>
+</tr>
+<tr class="odd">
+<td>Message frequency</td>
+<td style="text-align: right;">500 Hz</td>
+</tr>
+<tr class="even">
+<td>Frequency deviation</td>
+<td style="text-align: right;">2 kHz</td>
+</tr>
+<tr class="odd">
+<td>Message amplitude</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>The Quadrature Demod block estimates the phase change between consecutive complex samples.</p>
+<p>If</p>
+<p><span class="math display">\[
+x[n]=A[n]e^{j\phi[n]},
+\]</span></p>
+<p>then the product</p>
+<p><span class="math display">\[
+x[n]x^*[n-1]
+\]</span></p>
+<p>has phase approximately</p>
+<p><span class="math display">\[
+\phi[n]-\phi[n-1].
+\]</span></p>
+<p>That phase difference is proportional to instantaneous frequency.</p>
+<section id="scaling-the-demodulator-output-into-hertz" class="level3">
+<h3 class="anchored" data-anchor-id="scaling-the-demodulator-output-into-hertz">Scaling the Demodulator Output into Hertz</h3>
+<p>For a sampled complex sinusoid, the phase change per sample is</p>
+<p><span class="math display">\[
+\Delta\phi=2\pi\frac{f}{f_s}.
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+f=\frac{f_s}{2\pi}\Delta\phi.
+\]</span></p>
+<p>Use the Quadrature Demod gain</p>
+<p><span class="math display">\[
+G=\frac{f_s}{2\pi}.
+\]</span></p>
 <p>With</p>
-<pre class="text"><code>Number of Points = 128</code></pre>
-<p>the displayed duration becomes <span class="math display">\[
-\frac{128}{32000}=0.004\text{ s}=4\text{ ms}
-\]</span> For a streaming Time Sink, the approximate time span represented by <span class="math inline">\(N\)</span> displayed samples is <span class="math display">\[
-T_{\text{display}}=\frac{N}{f_s}
-\]</span> This connection between sample rate, number of displayed samples and visible time will be useful throughout the book.</p>
+<p><span class="math display">\[
+f_s=64\,000\text{ samples/s},
+\]</span></p>
+<p>this becomes</p>
+<p><span class="math display">\[
+G\approx10\,185.9.
+\]</span></p>
+<p>In GNU Radio:</p>
+<pre class="text"><code>Gain = 10.1859k</code></pre>
+<p>With this scaling, the raw demodulator output can be interpreted approximately in hertz.</p>
+<p>For our FM signal it moves between about</p>
+<p><span class="math display">\[
+8\text{ kHz}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+12\text{ kHz}.
+\]</span></p>
+<p>Subtract the 10 kHz center frequency:</p>
+<pre class="text"><code>Constant = -10k</code></pre>
+<p>Then scale by the inverse of the 2 kHz deviation:</p>
+<pre class="text"><code>Constant = 500u</code></pre>
+<p>because</p>
+<p><span class="math display">\[
+\frac{1}{\Delta f}=\frac{1}{2000}=0.0005.
+\]</span></p>
+<p>The result should have approximately unit amplitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp4-original-and-recovered-message.png" class="img-fluid figure-img"></p>
+<figcaption>Original message compared with the message recovered from FM</figcaption>
+</figure>
+</div>
+<p>The recovered trace follows the original message closely.</p>
+<p>The receiver has effectively implemented</p>
+<p><span class="math display">\[
+\hat{m}(t)\approx\frac{f_i(t)-f_c}{\Delta f}.
+\]</span></p>
+<p>This closes the FM loop: message values became frequency deviation at the transmitter, and frequency deviation became message values again at the receiver.</p>
 </section>
 </section>
-<section id="phase-where-is-the-signal-in-its-cycle" class="level2">
-<h2 class="anchored" data-anchor-id="phase-where-is-the-signal-in-its-cycle">2.5 Phase: Where Is the Signal in Its Cycle?</h2>
-<p>Two signals can have the same amplitude and frequency and still fail to line up. One may reach its peak earlier than the other even though both complete each cycle in the same amount of time.</p>
-<p>That relative position within a cycle is described by <strong>phase</strong>.</p>
-<p>A useful picture is to imagine two people moving around the same circular track at the same speed. If they start side by side, they remain together. If one starts a quarter of a lap ahead, their speed is unchanged, but their positions around the track differ.</p>
-<p>A complete cycle corresponds to <span class="math display">\[
-360^\circ=2\pi\text{ radians}
-\]</span> Some common phase values are:</p>
+<section id="where-the-information-lives" class="level2">
+<h2 class="anchored" data-anchor-id="where-the-information-lives">14.9 Where the Information Lives</h2>
+<p>For ideal complex FM,</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_ce^{j\theta(t)},
+\]</span></p>
+<p>so its magnitude is</p>
+<p><span class="math display">\[
+|s_{\mathrm{FM}}(t)|=A_c.
+\]</span></p>
+<p>The information therefore does not require a changing magnitude.</p>
+<p>A useful I/Q picture is a vector whose length stays constant while its rotation rate changes.</p>
+<p>That gives FM its <strong>constant-envelope</strong> property.</p>
+<p>The receiver from Experiment 14.4 reinforces the same point. Quadrature Demod looks at phase change between samples, not at the absolute magnitude itself.</p>
+<p>This suggests a useful test.</p>
+<p>What happens if we deliberately disturb only the amplitude while leaving the phase trajectory intact?</p>
+</section>
+<section id="experiment-14.5-multiplicative-amplitude-variation" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.5-multiplicative-amplitude-variation">14.10 Experiment 14.5: Multiplicative Amplitude Variation</h2>
+<p>The original figure names use the phrase <em>amplitude noise</em>, but the experiment is more accurately described as <strong>multiplicative amplitude variation</strong>.</p>
+<p>We form</p>
+<p><span class="math display">\[
+r(t)=A(t)s_{\mathrm{FM}}(t),
+\]</span></p>
+<p>where (A(t)) changes the magnitude.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-amplitude-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for applying amplitude variation to an FM signal</figcaption>
+</figure>
+</div>
+<p>First observe the undisturbed case.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-no-amplitude-noise.png" class="img-fluid figure-img"></p>
+<figcaption>FM message recovery with no amplitude disturbance</figcaption>
+</figure>
+</div>
+<p>The FM magnitude is approximately 1, and the recovered message follows the original.</p>
+<p>Now increase the amplitude variation.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp5-amplitude-noise-0p3.png" class="img-fluid figure-img"></p>
+<figcaption>FM message recovery with amplitude disturbance level 0.3</figcaption>
+</figure>
+</div>
+<p>The received magnitude fluctuates, but the recovered message remains essentially unchanged.</p>
+<p>For positive real amplitude scaling,</p>
+<p><span class="math display">\[
+r[n]=A[n]e^{j\phi[n]},\qquad A[n]&gt;0,
+\]</span></p>
+<p>the amplitude factors affect the magnitude of</p>
+<p><span class="math display">\[
+r[n]r^*[n-1]
+\]</span></p>
+<p>but not its phase.</p>
+<p>The phase difference still contains approximately</p>
+<p><span class="math display">\[
+\phi[n]-\phi[n-1].
+\]</span></p>
+<p>That is why the ideal quadrature demodulator can tolerate this kind of amplitude variation.</p>
+<p>The condition (A[n]&gt;0) matters. If the multiplier crosses through zero or changes sign, the phase behaviour can become ambiguous or acquire a () reversal. So the experiment should not be interpreted as saying that every possible amplitude disturbance is harmless.</p>
+<p>The practical lesson is that FM receivers can use <strong>amplitude limiting</strong> to reduce unwanted magnitude variation before demodulation, provided the phase information is preserved.</p>
+<p>But this does not mean FM is immune to noise.</p>
+</section>
+<section id="experiment-14.6-additive-noise" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-14.6-additive-noise">14.11 Experiment 14.6: Additive Noise</h2>
+<p>Now disturb the FM signal in a fundamentally different way.</p>
+<p>Instead of multiplying by a changing amplitude, add complex Gaussian noise:</p>
+<p><span class="math display">\[
+r(t)=s_{\mathrm{FM}}(t)+n(t).
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-flowgraph.png" class="img-fluid figure-img"></p>
+<figcaption>GNU Radio flowgraph for passing FM through an additive Gaussian noise channel</figcaption>
+</figure>
+</div>
+<p>Keep:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: right;">Degrees</th>
-<th style="text-align: right;">Radians</th>
+<th>Parameter</th>
+<th style="text-align: right;">Value</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">0°</td>
-<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td>Sample rate</td>
+<td style="text-align: right;">64 kS/s</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">90°</td>
-<td style="text-align: right;"><span class="math inline">\(\pi/2\)</span></td>
+<td>Carrier frequency</td>
+<td style="text-align: right;">10 kHz</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">180°</td>
-<td style="text-align: right;"><span class="math inline">\(\pi\)</span></td>
+<td>Message frequency</td>
+<td style="text-align: right;">500 Hz</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">270°</td>
-<td style="text-align: right;"><span class="math inline">\(3\pi/2\)</span></td>
+<td>Frequency deviation</td>
+<td style="text-align: right;">2 kHz</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">360°</td>
-<td style="text-align: right;"><span class="math inline">\(2\pi\)</span></td>
+<td>FM amplitude scale</td>
+<td style="text-align: right;">1</td>
 </tr>
 </tbody>
 </table>
-<p>GNU Radio’s Signal Source specifies <strong>Initial Phase</strong> in radians.</p>
-<p>Phase is most useful when a reference exists. Saying that one signal is 90° ahead of another tells us how the two cycles are positioned relative to each other.</p>
-<section id="gnu-radio-experiment-comparing-phase" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-phase">GNU Radio Experiment: Comparing Phase</h3>
-<p>Keep the following parameters fixed:</p>
-<pre class="text"><code>Frequency = 1 kHz
-Amplitude = 1
-Offset = 0</code></pre>
-<p>Use three initial phases:</p>
-<pre class="text"><code>Signal 1: 0
-Signal 2: pi/2
-Signal 3: pi</code></pre>
-<p>To make <code>pi</code> available in the flowgraph, add a Variable block:</p>
-<pre class="text"><code>ID: pi
-Value: 3.14159</code></pre>
-<p>GNU Radio can then evaluate expressions such as <code>pi/2</code> directly in block properties. This is often clearer than entering a decimal approximation everywhere.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/phase-comparison.png" class="img-fluid figure-img"></p>
-<figcaption>Three equal-frequency signals with different initial phases.</figcaption>
-</figure>
-</div>
-<p>At <span class="math inline">\(t=0\)</span>, the 0° cosine starts at +1, the 90° cosine starts at 0, and the 180° cosine starts at -1.</p>
-<p>Their amplitudes and frequencies are identical. What changes is their position within the cycle.</p>
-</section>
-</section>
-<section id="dc-offset-moving-the-whole-signal-up-or-down" class="level2">
-<h2 class="anchored" data-anchor-id="dc-offset-moving-the-whole-signal-up-or-down">2.6 DC Offset: Moving the Whole Signal Up or Down</h2>
-<p>Until now, our cosine waves have been centred around zero. A cosine with amplitude 1 therefore moves between -1 and +1.</p>
-<p>If we add 1 to every value, <span class="math display">\[
-x(t)=\cos(2\pi ft)+1
-\]</span> the waveform now moves between 0 and 2.</p>
-<p>Its shape and frequency have not changed, and its amplitude about its centre is still 1. The entire waveform has simply moved upward.</p>
-<p>That shift in the centre value is called a <strong>DC offset</strong>.</p>
-<section id="gnu-radio-experiment-comparing-offset" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-offset">GNU Radio Experiment: Comparing Offset</h3>
-<p>Reuse the same three-signal structure and keep:</p>
-<pre class="text"><code>Frequency = 1 kHz
-Amplitude = 1
-Phase = 0</code></pre>
-<p>Change only the offsets:</p>
-<pre class="text"><code>Signal 1: Offset = 0
-Signal 2: Offset = +1
-Signal 3: Offset = -1</code></pre>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/dc-offset-comparison.png" class="img-fluid figure-img"></p>
-<figcaption>Cosine signals with different DC offsets.</figcaption>
-</figure>
-</div>
-<p>The first waveform is centred at 0, the second at +1 and the third at -1.</p>
-<p>The +1-offset signal reaches a maximum value of +2, but its amplitude is <strong>not 2</strong>. It moves one unit above and below its centre value of +1, so its amplitude remains 1.</p>
-<p>This distinction between amplitude and absolute signal level will matter later when we work with more complicated signals.</p>
-</section>
-</section>
-<section id="waveform-shape" class="level2">
-<h2 class="anchored" data-anchor-id="waveform-shape">2.7 Waveform Shape</h2>
-<p>Frequency tells us how often a periodic signal repeats, but it does not tell us what happens during one cycle.</p>
-<p>A cosine, square wave and triangle wave can all repeat 1000 times per second while having very different shapes.</p>
-<section id="gnu-radio-experiment-comparing-waveforms" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-comparing-waveforms">GNU Radio Experiment: Comparing Waveforms</h3>
-<p>Generate three 1 kHz periodic signals:</p>
+<p>Observe three quantities:</p>
 <ul>
-<li>cosine,</li>
-<li>square,</li>
-<li>triangle.</li>
+<li>original and recovered messages;</li>
+<li>raw Quadrature Demod output;</li>
+<li>magnitude of the noisy FM signal.</li>
 </ul>
+<section id="clean-channel" class="level3">
+<h3 class="anchored" data-anchor-id="clean-channel">Clean Channel</h3>
+<p>Set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch02/waveform-shape-comparison.png" class="img-fluid figure-img"></p>
-<figcaption>Comparison of cosine, square, and triangle waveforms.</figcaption>
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-000.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission through a clean channel with zero additive noise</figcaption>
 </figure>
 </div>
-<p>The cosine changes smoothly. The square wave switches abruptly between two levels. The triangle wave changes linearly between its minimum and maximum.</p>
-<p>We do not need a separate sine example here. Sine and cosine have the same basic waveform shape and differ by a phase shift, which we have already explored.</p>
+<p>The magnitude remains close to 1.</p>
+<p>The raw demodulator output follows the instantaneous frequency cleanly between roughly 8 kHz and 12 kHz.</p>
+<p>The recovered message follows the original.</p>
 </section>
-<section id="a-note-about-the-square-wave-settings" class="level3">
-<h3 class="anchored" data-anchor-id="a-note-about-the-square-wave-settings">A Note About the Square-Wave Settings</h3>
-<p>For this comparison, we want the real-valued square wave to switch between approximately -1 and +1.</p>
-<p>With GNU Radio’s Signal Source, a real square wave uses <code>Offset</code> for one level and <code>Amplitude + Offset</code> for the other. Therefore we use:</p>
-<pre class="text"><code>Amplitude = 2
-Offset = -1</code></pre>
-<p>which gives levels of approximately -1 and +1.</p>
-<p>This is a GNU Radio block-parameter detail worth noticing. For a cosine, the Amplitude field directly corresponds to the centre-to-peak amplitude. For this square-wave implementation, the same field controls the separation between the two output levels together with Offset.</p>
-<p>All three waveforms repeat at 1 kHz, yet their shapes are different. The reason becomes much clearer when we later examine signals in the <strong>frequency domain</strong>. For now, the important observation is that repetition frequency alone does not completely describe a waveform.</p>
-</section>
-</section>
-<section id="what-happens-when-signals-meet" class="level2">
-<h2 class="anchored" data-anchor-id="what-happens-when-signals-meet">2.8 What Happens When Signals Meet?</h2>
-<p>So far, we have mainly studied signals one at a time. Real radio systems rarely have that luxury.</p>
-<p>An antenna may receive signals from several transmitters. Noise is added to useful signals. Reflections create delayed copies. Interference can arrive at the same receiver together with the signal we want.</p>
-<p>To understand these situations, we need to see what happens when signals are combined.</p>
-</section>
-<section id="adding-two-signals" class="level2">
-<h2 class="anchored" data-anchor-id="adding-two-signals">2.9 Adding Two Signals</h2>
-<p>Suppose we have two signals, <span class="math inline">\(x_1(t)\)</span> and <span class="math inline">\(x_2(t)\)</span>. Their sum is <span class="math display">\[
-y(t)=x_1(t)+x_2(t)
-\]</span> At each instant, the two signal values are added. If <span class="math inline">\(x_1=1\)</span> and <span class="math inline">\(x_2=0.5\)</span>, then <span class="math inline">\(y=1.5\)</span>. If <span class="math inline">\(x_1=-1\)</span> while <span class="math inline">\(x_2=0.5\)</span>, then <span class="math inline">\(y=-0.5\)</span>.</p>
-<p>GNU Radio lets us observe this directly.</p>
-<section id="gnu-radio-experiment-the-add-block" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-the-add-block">GNU Radio Experiment: The Add Block</h3>
-<p>Generate two cosine signals:</p>
-<pre class="text"><code>Signal 1
-Frequency = 1 kHz
-Amplitude = 1
-Signal 2
-Frequency = 2 kHz
-Amplitude = 0.5</code></pre>
-<p>Then add an <strong>Add</strong> block.</p>
+<section id="moderate-noise" class="level3">
+<h3 class="anchored" data-anchor-id="moderate-noise">Moderate Noise</h3>
+<p>Set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0.10</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch02/signal-addition-flowgraph.png" class="img-fluid figure-img"></p>
-<figcaption>GNU Radio flowgraph showing two signals being added.</figcaption>
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-010.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission with additive channel-noise amplitude 0.10</figcaption>
 </figure>
 </div>
-<p>The Add block performs sample-by-sample addition: <span class="math display">\[
-y[n]=x_1[n]+x_2[n]
-\]</span> Each original signal is also branched to the QT GUI Time Sink so that the two inputs and their sum can be compared directly.</p>
+<p>The magnitude now fluctuates.</p>
+<p>More importantly, the raw instantaneous-frequency estimate becomes noisy, and the recovered message begins to show visible corruption.</p>
+</section>
+<section id="stronger-noise" class="level3">
+<h3 class="anchored" data-anchor-id="stronger-noise">Stronger Noise</h3>
+<p>Set:</p>
+<pre class="text"><code>Channel Noise Amplitude = 0.30</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="../figures/ch02/signal-addition.png" class="img-fluid figure-img"></p>
-<figcaption>Two cosine signals and their sum.</figcaption>
+<p><img src="../figures/ch14/ch14-exp6-fm-additive-noise-030.png" class="img-fluid figure-img"></p>
+<figcaption>FM transmission with additive channel-noise amplitude 0.30</figcaption>
 </figure>
 </div>
-<p>The sum no longer looks like either original cosine. A more complicated waveform has appeared simply because two simple signals were added together.</p>
-<p>This is a basic operation, but it is central to what happens in real receivers. Desired signals, interference, noise and multipath components can all combine at the receiver input.</p>
-</section>
-<section id="gnu-radio-toolbox-branching-a-stream" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-toolbox-branching-a-stream">GNU Radio Toolbox: Branching a Stream</h3>
-<p>The flowgraph also introduces a useful GNU Radio behaviour. The output of each Throttle block is connected to two destinations: one path goes directly to the Time Sink, while the other goes to the Add block.</p>
-<p>No special splitter block is required. A stream can feed multiple downstream blocks directly.</p>
-<p>Branching does <strong>not</strong> divide the numerical amplitude of the stream. Each downstream block receives the same sample values.</p>
-</section>
-</section>
-<section id="phase-changes-the-result-of-addition" class="level2">
-<h2 class="anchored" data-anchor-id="phase-changes-the-result-of-addition">2.10 Phase Changes the Result of Addition</h2>
-<p>We can now connect two ideas from earlier in the chapter: <strong>phase</strong> and <strong>addition</strong>.</p>
-<p>Consider two cosine signals with the same frequency and the same amplitude. If their relative phase changes, their sum changes too.</p>
-<p>Use two 1 kHz cosine signals, each with amplitude 1. Keep the first signal at</p>
-<pre class="text"><code>Phase = 0</code></pre>
-<p>and run the experiment three times while changing only the initial phase of the second signal.</p>
-<section id="case-1-phase-difference-0" class="level3">
-<h3 class="anchored" data-anchor-id="case-1-phase-difference-0">Case 1: Phase Difference = 0°</h3>
-<p>The two signals are aligned. When one reaches +1, the other also reaches +1, and when one reaches -1, the other reaches -1.</p>
-<p>Their sum therefore reaches approximately +2 and -2.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/phase-addition-0deg.png" class="img-fluid figure-img"></p>
-<figcaption>Addition of two equal signals with 0 degree phase difference.</figcaption>
-</figure>
-</div>
-<p>The two signals reinforce each other completely. This is <strong>constructive interference</strong>.</p>
-</section>
-<section id="case-2-phase-difference-90" class="level3">
-<h3 class="anchored" data-anchor-id="case-2-phase-difference-90">Case 2: Phase Difference = 90°</h3>
-<p>Now shift the second signal by <span class="math display">\[
-90^\circ=\frac{\pi}{2}
-\]</span> The signals still have the same amplitude and frequency, but their peaks no longer occur at the same time.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/phase-addition-90deg.png" class="img-fluid figure-img"></p>
-<figcaption>Addition of two signals with a 90 degree phase difference.</figcaption>
-</figure>
-</div>
-<p>The sum is still a sinusoid at the same frequency. Its amplitude is approximately <span class="math display">\[
-\sqrt{2}\approx1.414
-\]</span> and its phase lies between the phases of the two original signals.</p>
-<p>The signals still reinforce each other, but less strongly than in the 0° case.</p>
-</section>
-<section id="case-3-phase-difference-180" class="level3">
-<h3 class="anchored" data-anchor-id="case-3-phase-difference-180">Case 3: Phase Difference = 180°</h3>
-<p>Finally, shift the second signal by <span class="math display">\[
-180^\circ=\pi
-\]</span> Now the second cosine is the negative of the first: <span class="math display">\[
-x_2(t)=-x_1(t)
-\]</span> so <span class="math display">\[
-x_1(t)+x_2(t)=0
-\]</span> <img src="../figures/ch02/phase-addition-180deg.png" class="img-fluid" alt="Addition of two signals with a 180 degree phase difference."></p>
-<p>The sum becomes a line at zero. The two input signals have not disappeared individually; their instantaneous values simply cancel in the sum.</p>
-<p>This is <strong>destructive interference</strong>, and in this ideal equal-amplitude case the cancellation is complete.</p>
-</section>
-<section id="the-bigger-lesson" class="level3">
-<h3 class="anchored" data-anchor-id="the-bigger-lesson">The Bigger Lesson</h3>
-<p>For two equal-amplitude sinusoids of the same frequency, the amplitude of their sum depends on the phase difference <span class="math inline">\(\Delta\phi\)</span>.</p>
-<p>For individual amplitude <span class="math inline">\(A\)</span>, <span class="math display">\[
-A_{\text{sum}}=2A\left|\cos\left(\frac{\Delta\phi}{2}\right)\right|
-\]</span> There is no need to memorise this expression yet. The experiment already shows the important behaviour:</p>
-<ul>
-<li>0° gives maximum reinforcement,</li>
-<li>90° gives partial reinforcement,</li>
-<li>180° gives complete cancellation.</li>
-</ul>
-<p>Relative phase matters whenever signals of the same frequency combine.</p>
+<p>The degradation is much stronger.</p>
+<p>The important difference from Experiment 14.5 is that additive noise changes the I and Q components themselves. It therefore perturbs both magnitude and phase.</p>
+<p>Since the demodulator extracts information from phase change, random phase perturbations become instantaneous-frequency errors.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Disturbance</th>
+<th>Magnitude Affected?</th>
+<th>Phase Affected?</th>
+<th>Simple FM Demodulation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Constant positive amplitude scaling</td>
+<td>Yes</td>
+<td>No</td>
+<td>Essentially unchanged</td>
+</tr>
+<tr class="even">
+<td>Positive multiplicative amplitude variation</td>
+<td>Yes</td>
+<td>Ideally no</td>
+<td>Largely unchanged</td>
+</tr>
+<tr class="odd">
+<td>Additive complex noise</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Increasingly degraded</td>
+</tr>
+</tbody>
+</table>
+<p>The conclusion is precise:</p>
+<blockquote class="blockquote">
+<p><strong>FM is relatively insensitive to pure positive amplitude variation, but it is not immune to additive noise.</strong></p>
+</blockquote>
+<p>A practical FM receiver would usually include filtering, limiting, and other stages. Our deliberately simple receiver exposes the raw effect so that the mechanism is easy to see.</p>
 </section>
 </section>
-<section id="beats-when-frequencies-are-almost-the-same" class="level2">
-<h2 class="anchored" data-anchor-id="beats-when-frequencies-are-almost-the-same">2.11 Beats: When Frequencies Are Almost the Same</h2>
-<p>Now consider two signals whose frequencies are close, but not identical: <span class="math display">\[
-f_1=1000\text{ Hz}
-\]</span> and <span class="math display">\[
-f_2=1050\text{ Hz}
-\]</span> The 1050 Hz signal completes its cycles slightly faster. Even if the two signals begin aligned, they cannot stay aligned because their relative phase changes continuously.</p>
-<p>At some times they reinforce each other strongly. Later they move towards opposite phase and nearly cancel. Eventually they align again.</p>
-<p>This repeated reinforcement and cancellation produces <strong>beats</strong>.</p>
-<section id="gnu-radio-experiment-beats" class="level3">
-<h3 class="anchored" data-anchor-id="gnu-radio-experiment-beats">GNU Radio Experiment: Beats</h3>
-<p>Reuse the addition flowgraph with:</p>
-<pre class="text"><code>Signal 1
-Frequency = 1000 Hz
-Amplitude = 1
-Signal 2
-Frequency = 1050 Hz
-Amplitude = 1</code></pre>
-<p>To make the slow amplitude variation visible, increase the Time Sink window to about 40 ms.</p>
-<p>With <span class="math display">\[
-f_s=32000\text{ samples/s}
-\]</span> a 40 ms window requires <span class="math display">\[
-N=32000\times0.04=1280
-\]</span> samples, so set</p>
-<pre class="text"><code>Number of Points = 1280</code></pre>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="../figures/ch02/beats.png" class="img-fluid figure-img"></p>
-<figcaption>Beat pattern produced by adding 1000 Hz and 1050 Hz signals.</figcaption>
-</figure>
-</div>
-<p>The summed waveform grows in amplitude, becomes very small, grows again and continues repeating.</p>
-<p>Around 0 ms, the two signals are approximately aligned and reinforce strongly. Around 10 ms, they are approximately 180° apart and nearly cancel. Around 20 ms, they align again.</p>
-<p>The frequency difference is <span class="math display">\[
-\Delta f=|1050-1000|=50\text{ Hz}
-\]</span> For two nearby sinusoids, the beat rate is the magnitude of this difference: <span class="math display">\[
-f_{\text{beat}}=|f_2-f_1|=50\text{ Hz}
-\]</span> so the beat pattern repeats every <span class="math display">\[
-T_{\text{beat}}=\frac{1}{50}=20\text{ ms}
-\]</span> which matches the spacing between successive strong-reinforcement regions in the plot.</p>
-</section>
-<section id="beats-are-a-phase-story" class="level3">
-<h3 class="anchored" data-anchor-id="beats-are-a-phase-story">Beats Are a Phase Story</h3>
-<p>Beats are not a separate mystery. They follow directly from the phase-addition behaviour we just observed.</p>
-<p>With equal frequencies, the relative phase stays fixed. With slightly different frequencies, the relative phase changes steadily with time. The signals therefore move repeatedly through constructive and destructive combinations.</p>
-<p>The chain of ideas is:</p>
-<p><strong>frequency difference → changing relative phase → changing reinforcement and cancellation</strong></p>
-<p>That physical connection is more useful than memorising the beat-frequency formula by itself.</p>
-</section>
+<section id="fm-and-phase-modulation" class="level2">
+<h2 class="anchored" data-anchor-id="fm-and-phase-modulation">14.12 FM and Phase Modulation</h2>
+<p>FM has a close relative: <strong>phase modulation</strong>, or PM.</p>
+<p>With PM, the message changes carrier phase directly:</p>
+<p><span class="math display">\[
+s_{\mathrm{PM}}(t)=A_c\cos\left(2\pi f_ct+k_pm(t)\right),
+\]</span></p>
+<p>where (k_p) sets the phase sensitivity.</p>
+<p>The difference between FM and PM is easiest to state in terms of what the message controls directly.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Modulation</th>
+<th>Message Directly Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>AM</td>
+<td>Carrier amplitude</td>
+</tr>
+<tr class="even">
+<td>FM</td>
+<td>Instantaneous frequency</td>
+</tr>
+<tr class="odd">
+<td>PM</td>
+<td>Carrier phase</td>
+</tr>
+</tbody>
+</table>
+<p>For PM,</p>
+<p><span class="math display">\[
+\phi_{\mathrm{PM}}(t)\propto m(t).
+\]</span></p>
+<p>For FM,</p>
+<p><span class="math display">\[
+f_i(t)-f_c\propto m(t).
+\]</span></p>
+<p>Because frequency is the rate of phase change,</p>
+<p><span class="math display">\[
+f_i(t)=\frac{1}{2\pi}\frac{d\phi(t)}{dt},
+\]</span></p>
+<p>FM and PM are closely related and are often grouped together as <strong>angle modulation</strong>.</p>
+<p>For a general FM message, the phase is</p>
+<p><span class="math display">\[
+\theta_{\mathrm{FM}}(t)=2\pi f_ct+2\pi k_f\int_0^t m(\tau)\,d\tau,
+\]</span></p>
+<p>so</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+2\pi k_f\int_0^t m(\tau)\,d\tau\right).
+\]</span></p>
+<p>In PM, the message itself appears in the phase term:</p>
+<p><span class="math display">\[
+s_{\mathrm{PM}}(t)=A_c\cos\left(2\pi f_ct+k_pm(t)\right).
+\]</span></p>
+<p>We will not build a separate PM experiment here. Its main purpose in this chapter is to connect the analog idea of changing phase continuously with the digital phase states we will meet later in PSK.</p>
 </section>
 <section id="gnu-radio-toolbox" class="level2">
-<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">2.12 GNU Radio Toolbox</h2>
-<p>This chapter introduced several useful GNU Radio concepts.</p>
-<section id="multiple-time-sink-inputs" class="level3">
-<h3 class="anchored" data-anchor-id="multiple-time-sink-inputs">Multiple Time Sink Inputs</h3>
-<p>A QT GUI Time Sink can display several streams at once by increasing <strong>Number of Inputs</strong>. This lets us compare signals on the same time axis.</p>
+<h2 class="anchored" data-anchor-id="gnu-radio-toolbox">14.13 GNU Radio Toolbox</h2>
+<p>The chapter introduces a small number of blocks in important new roles.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>GNU Radio Block</th>
+<th>Role in This Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>VCO (complex)</td>
+<td>Generates a complex oscillator whose instantaneous frequency is controlled by a float input</td>
+</tr>
+<tr class="even">
+<td>Quadrature Demod</td>
+<td>Measures phase change between consecutive complex samples to recover frequency information</td>
+</tr>
+<tr class="odd">
+<td>Complex to Mag</td>
+<td>Displays the magnitude of the complex FM signal</td>
+</tr>
+<tr class="even">
+<td>Noise Source</td>
+<td>Adds random channel noise for the additive-noise experiment</td>
+</tr>
+<tr class="odd">
+<td>QT GUI Range</td>
+<td>Changes message frequency, deviation, and disturbance strength interactively</td>
+</tr>
+</tbody>
+</table>
+<section id="vco-complex" class="level3">
+<h3 class="anchored" data-anchor-id="vco-complex">VCO (complex)</h3>
+<p>GNU Radio defines VCO sensitivity in radians/s per input unit.</p>
+<p>In our experiment, the control input is expressed directly in hertz, so we use</p>
+<p><span class="math display">\[
+\text{Sensitivity}=2\pi.
+\]</span></p>
+<p>That makes the VCO input numerically equal to the desired instantaneous frequency.</p>
 </section>
-<section id="number-of-points" class="level3">
-<h3 class="anchored" data-anchor-id="number-of-points">Number of Points</h3>
-<p>For a streaming Time Sink, the approximate displayed duration is <span class="math display">\[
-T_{\text{display}}=\frac{N}{f_s}
-\]</span> where <span class="math inline">\(N\)</span> is the Number of Points and <span class="math inline">\(f_s\)</span> is the sample rate.</p>
+<section id="quadrature-demod" class="level3">
+<h3 class="anchored" data-anchor-id="quadrature-demod">Quadrature Demod</h3>
+<p>The block estimates the phase difference between adjacent complex samples.</p>
+<p>Using</p>
+<p><span class="math display">\[
+G=\frac{f_s}{2\pi}
+\]</span></p>
+<p>converts that phase increment into a frequency-like output in hertz.</p>
+<p>The block therefore gives us a direct experimental bridge between phase evolution and instantaneous frequency.</p>
 </section>
-<section id="variables-and-expressions" class="level3">
-<h3 class="anchored" data-anchor-id="variables-and-expressions">Variables and Expressions</h3>
-<p>We continued using</p>
-<pre class="text"><code>samp_rate</code></pre>
-<p>and introduced</p>
-<pre class="text"><code>pi</code></pre>
-<p>as another variable. GNU Radio block properties can also evaluate expressions such as</p>
-<pre class="text"><code>pi/2</code></pre>
-<p>which makes parameter relationships easier to read and modify.</p>
-</section>
-<section id="add" class="level3">
-<h3 class="anchored" data-anchor-id="add">Add</h3>
-<p>The <strong>Add</strong> block accepts multiple compatible input streams and produces their sample-by-sample sum.</p>
-</section>
-<section id="branching" class="level3">
-<h3 class="anchored" data-anchor-id="branching">Branching</h3>
-<p>One output stream can feed more than one downstream block. We used this to send the same signal both to the Add block and directly to the Time Sink.</p>
-</section>
-<section id="reusing-a-flowgraph" class="level3">
-<h3 class="anchored" data-anchor-id="reusing-a-flowgraph">Reusing a Flowgraph</h3>
-<p>Several experiments used the same basic flowgraph while changing only one parameter. This is often the clearest way to investigate a signal property because everything else remains fixed.</p>
+<section id="complex-to-mag" class="level3">
+<h3 class="anchored" data-anchor-id="complex-to-mag">Complex to Mag</h3>
+<p>For</p>
+<p><span class="math display">\[
+z=I+jQ,
+\]</span></p>
+<p>the magnitude is</p>
+<p><span class="math display">\[
+|z|=\sqrt{I^2+Q^2}.
+\]</span></p>
+<p>This lets us see whether an FM disturbance changes the signal magnitude even when the message is carried in phase/frequency.</p>
 </section>
 </section>
 <section id="explore-further" class="level2">
-<h2 class="anchored" data-anchor-id="explore-further">2.13 Explore Further</h2>
-<p>Before moving on, we can use the same flowgraphs to test a few predictions.</p>
+<h2 class="anchored" data-anchor-id="explore-further">14.14 Explore Further</h2>
+<p>The FM flowgraphs are especially useful for prediction-driven experiments.</p>
 <ol type="1">
-<li><p>Change the amplitude comparison from <code>0.5, 1, 2</code> to <code>1, 2, 3</code>. Which features of the waveforms change, and which stay fixed?</p></li>
-<li><p>Change the frequency comparison to <code>250 Hz, 500 Hz, 1 kHz</code>. Before running it, predict how many cycles of each signal will appear in the same time window.</p></li>
-<li><p>Try a phase difference of 45°: <span class="math display">\[
-45^\circ=\frac{\pi}{4}
-\]</span> Before running the flowgraph, predict whether the resulting amplitude should be closer to 2, closer to 0, or somewhere in between.</p></li>
-<li><p>Change the beat experiment from</p></li>
+<li><p>Keep (f_m=500) Hz and increase (f). Predict how () and the number of significant sidebands should change.</p></li>
+<li><p>Keep (f=2) kHz and increase (f_m). Predict both the sideband spacing and the new modulation index.</p></li>
+<li><p>Reduce () well below 1 and compare the observed spectrum with the narrowband approximations.</p></li>
+<li><p>Use Carson’s rule before changing the controls, then compare the estimated bandwidth with the Frequency Sink.</p></li>
+<li><p>Change the carrier frequency while leaving (f_m) and (f) unchanged. The spectral shape should stay similar while its center moves.</p></li>
+<li><p>Change the Quadrature Demod gain away from (f_s/(2)). The recovered shape should remain related to the message, but the numerical scaling will no longer represent hertz directly.</p></li>
+<li><p>Increase the multiplicative amplitude variation and watch both magnitude and recovered message. Then compare the result with additive noise at a similar visible magnitude fluctuation.</p></li>
+<li><p>In the additive-noise experiment, increase the noise gradually through values such as <code>0.05</code>, <code>0.10</code>, <code>0.20</code>, and <code>0.30</code>. Observe how the raw demodulator output degrades before deciding that the receiver has simply “failed.”</p></li>
 </ol>
-<pre class="text"><code>1000 Hz + 1050 Hz</code></pre>
-<p>to</p>
-<pre class="text"><code>1000 Hz + 1010 Hz</code></pre>
-<p>Predict whether the beat pattern will become faster or slower.</p>
-<ol start="5" type="1">
-<li>Then try</li>
-</ol>
-<pre class="text"><code>1000 Hz + 1100 Hz</code></pre>
-<p>and compare the result.</p>
-<p>The useful habit is the same one we established in Chapter 1: change one thing, predict the effect, run the experiment and compare the observation with the prediction.</p>
+<p>The useful habit is to predict which quantity should change before moving a slider.</p>
 </section>
 <section id="what-we-learned" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-learned">2.14 What We Learned</h2>
-<p>By changing one property at a time, we found that:</p>
-<ul>
-<li><strong>amplitude</strong> controls how far a waveform moves from its centre value,</li>
-<li><strong>frequency</strong> tells us how many cycles occur per second,</li>
-<li><strong>period</strong> tells us how long one cycle takes,</li>
-<li><strong>phase</strong> describes position within a cycle relative to a reference,</li>
-<li><strong>DC offset</strong> moves the centre value of a waveform,</li>
-<li><strong>waveform shape</strong> describes how the signal changes during each cycle.</li>
-</ul>
-<p>We then allowed signals to interact. The experiments showed that signals add sample by sample, relative phase determines how equal-frequency sinusoids reinforce or cancel, and a small frequency difference makes the relative phase change continuously, producing beats.</p>
-<p>These ideas are simple in isolation, but they will reappear throughout the rest of the book.</p>
+<h2 class="anchored" data-anchor-id="what-we-learned">14.15 What We Learned</h2>
+<p>FM carries information through instantaneous frequency and phase evolution rather than through the signal magnitude.</p>
+<p>For a normalized message,</p>
+<p><span class="math display">\[
+f_i(t)=f_c+\Delta f\,m(t).
+\]</span></p>
+<p>For a sinusoidal message,</p>
+<p><span class="math display">\[
+s_{\mathrm{FM}}(t)=A_c\cos\left(2\pi f_ct+\beta\sin(2\pi f_mt)\right),
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+\beta=\frac{\Delta f}{f_m}.
+\]</span></p>
+<p>The carrier frequency sets the spectral center.</p>
+<p>The message frequency sets the spacing between single-tone FM components.</p>
+<p>The frequency deviation controls how far the instantaneous frequency moves.</p>
+<p>The modulation index helps describe how strongly the spectrum spreads among different sideband orders.</p>
+<p>Those sideband coefficients are governed by Bessel functions, which explains why FM contains many sidebands and why individual spectral components can grow, shrink, or even pass through zero as () changes.</p>
+<p>For small (), only the first few components matter and the spectrum behaves like narrowband FM.</p>
+<p>Carson’s rule gives a practical bandwidth estimate:</p>
+<p><span class="math display">\[
+B\approx2(\Delta f+f_{m,\max}).
+\]</span></p>
+<p>At the receiver, Quadrature Demod recovers frequency information by measuring phase change from sample to sample.</p>
+<p>The last two experiments made another distinction clear.</p>
+<p>Pure positive amplitude variation can leave the phase trajectory intact, so an ideal FM demodulator may be largely unaffected.</p>
+<p>Additive noise is different. It disturbs I and Q, which can disturb phase and therefore the instantaneous-frequency estimate.</p>
+<p>So the useful conclusion is not that FM is “immune to noise.”</p>
+<p>It is:</p>
+<blockquote class="blockquote">
+<p><strong>FM does not need amplitude to carry the message, but anything that corrupts phase can corrupt the recovered information.</strong></p>
+</blockquote>
 </section>
 <section id="connecting-to-the-next-chapter" class="level2">
-<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">2.15 Connecting to the Next Chapter</h2>
-<p>So far, the signals in our GNU Radio experiments have already existed as digital samples inside the computer.</p>
-<p>A physical signal arriving from the real world is different. Before software can process it, the analog waveform must be represented by a sequence of samples.</p>
-<p>That raises several practical questions. How often should the signal be measured? What happens if the sampling rate is too low? Can two different analog frequencies produce the same sequence of digital samples?</p>
-<p>These questions lead directly to one of the most important ideas in digital signal processing: <strong>sampling and aliasing</strong>.</p>
+<h2 class="anchored" data-anchor-id="connecting-to-the-next-chapter">14.16 Connecting to the Next Chapter</h2>
+<p>Across Chapters 12 through 14, we have moved from asking why modulation is necessary to building the main ideas of analog carrier modulation.</p>
+<p>AM used changing amplitude.</p>
+<p>FM used changing instantaneous frequency.</p>
+<p>PM showed that information can also be placed directly into phase.</p>
+<p>The next part of the book begins from a different kind of information:</p>
+<pre class="text"><code>1 0 1 1 0 0 1 0 ...</code></pre>
+<p>These are bits.</p>
+<p>But a bit is an abstract piece of information, not a radio waveform. Before we can build BPSK, QPSK, QAM, or other digital modulation schemes, we need to understand how bits are grouped, what symbols are, how bit rate differs from symbol rate, and how digital information is mapped onto physical signal states.</p>
+<p>That takes us to Chapter 15, <strong>Bits, Symbols and Digital Communication</strong>.</p>
 
 
 </section>
@@ -1610,13 +1934,13 @@ T_{\text{display}}=\frac{N}{f_s}
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../book/01-what-is-software-defined-radio.html" class="pagination-link" aria-label="Chapter 1: What Is Software Defined Radio?">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 1: What Is Software Defined Radio?</span></span>
+      <a href="../book/13-amplitude-modulation.html" class="pagination-link" aria-label="Chapter 13: Amplitude Modulation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Chapter 13: Amplitude Modulation</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../book/03-sampling-and-aliasing.html" class="pagination-link" aria-label="Chapter 3: Sampling and Aliasing">
-        <span class="nav-page-text"><span class="chapter-title">Chapter 3: Sampling and Aliasing</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../book/15-bits-symbols.html" class="pagination-link" aria-label="Chapter 15: Bits, Symbols and Digital Communication">
+        <span class="nav-page-text"><span class="chapter-title">Chapter 15: Bits, Symbols and Digital Communication</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1628,7 +1952,7 @@ T_{\text{display}}=\frac{N}{f_s}
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/02-understanding-signals.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/dhrubjun/sdr-with-gnu-radio/blob/main/book/14-frequency-modulation.md" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>
